@@ -48,10 +48,19 @@ function shuffleDeck(cardIds: string[]): string[] {
   return deck;
 }
 
+// ─── Bot ID Generation ──────────────────────────────────────
+// Bots use valid UUIDs with a recognizable prefix: b0700000-xxxx-4xxx-bxxx-xxxxxxxxxxxx
+// The "b07" prefix ("BOT" in hex-speak) lets us identify bots while staying UUID-compliant.
+function generateBotUUID(): string {
+  const uuid = crypto.randomUUID();
+  // Replace first 8 chars with b0700000 to mark as bot
+  return `b0700000-${uuid.slice(9)}`;
+}
+
 // ─── Add Bot to Game ────────────────────────────────────────
 export async function addBot(gameId: string): Promise<{ botId: string; botName: string }> {
   const sb = getClientSupabase();
-  const botId = `bot-${crypto.randomUUID().slice(0, 8)}`;
+  const botId = generateBotUUID();
   const botName = getRandomBotName();
 
   // Ensure bot player exists
@@ -423,8 +432,10 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
 }
 
 // ─── Check if Player is a Bot ───────────────────────────────
+// Bots are identified by the "b0700000" UUID prefix.
+// Also supports legacy "bot-" prefix for backward compatibility.
 export function isBot(playerId: string): boolean {
-  return playerId.startsWith("bot-");
+  return playerId.startsWith("b0700000-") || playerId.startsWith("bot-");
 }
 
 // ─── Get All Bot IDs in a Game ──────────────────────────────

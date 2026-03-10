@@ -86,3 +86,6 @@
 - [x] Sassy and cynical narrator tone throughout ALL UI text
 - [x] Rewrite all button labels, headings, and descriptions with attitude
 - [x] Add more narrator quips for game events
+
+## Bug Fixes
+- [x] Fix bot UUID format — bot IDs like 'bot-58d8ceb0' are not valid UUIDs, causing Supabase insert failure
