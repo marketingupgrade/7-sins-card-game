@@ -196,7 +196,7 @@ export default function Lobby() {
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
           <Skull className="w-12 h-12 text-wrath/40" />
         </motion.div>
-        <p className="text-sm text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>
+        <p className="text-sm text-muted-foreground/70" style={{ fontFamily: "var(--font-body)" }}>
           Summoning the lobby from the void...
         </p>
       </div>
@@ -218,7 +218,7 @@ export default function Lobby() {
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ x: -3 }}
           onClick={() => setLocation("/")}
-          className="self-start mb-4 flex items-center gap-1.5 text-xs text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors"
+          className="self-start mb-4 flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -241,7 +241,7 @@ export default function Lobby() {
             <div className="h-px w-16 bg-gradient-to-l from-transparent to-sloth/30" />
           </motion.div>
           <p
-            className="text-[10px] tracking-[0.3em] text-muted-foreground/40 uppercase mb-2"
+            className="text-[10px] tracking-[0.3em] text-muted-foreground/70 uppercase mb-2"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             The Arena Awaits (Impatiently)
@@ -262,7 +262,7 @@ export default function Lobby() {
           className="glass-panel rounded-2xl p-6 mb-6 w-full max-w-lg text-center"
         >
           <p
-            className="text-[10px] tracking-[0.2em] text-muted-foreground/40 uppercase mb-3"
+            className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-3"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             Share this code (assuming you have friends)
@@ -283,7 +283,7 @@ export default function Lobby() {
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             </motion.button>
           </div>
-          <p className="text-[9px] text-muted-foreground/25 mt-2" style={{ fontFamily: "var(--font-body)" }}>
+          <p className="text-[9px] text-muted-foreground/60 mt-2" style={{ fontFamily: "var(--font-body)" }}>
             {copied ? "Copied to clipboard. Go spam your group chat." : "Click the icon to copy. Technology is amazing."}
           </p>
         </motion.div>
@@ -297,7 +297,7 @@ export default function Lobby() {
         >
           <div className="flex items-center justify-between mb-3">
             <h2
-              className="text-xs tracking-[0.2em] text-muted-foreground/60 uppercase flex items-center gap-2"
+              className="text-xs tracking-[0.2em] text-muted-foreground/80 uppercase flex items-center gap-2"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               <Users className="w-3.5 h-3.5" />
@@ -357,12 +357,12 @@ export default function Lobby() {
                         >
                           {player.chosenSin}
                         </span>
-                        <span className="text-[8px] text-muted-foreground/30 ml-auto" style={{ fontFamily: "var(--font-body)" }}>
+                        <span className="text-[8px] text-muted-foreground/60 ml-auto" style={{ fontFamily: "var(--font-body)" }}>
                           {sinCfg.subtitle}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-xs text-muted-foreground/40 italic" style={{ fontFamily: "var(--font-body)" }}>
+                      <span className="text-xs text-muted-foreground/70 italic" style={{ fontFamily: "var(--font-body)" }}>
                         {player.id === playerId ? "That's you. Pick already." : "Still deciding... how hard is this?"}
                       </span>
                     )}
@@ -381,7 +381,7 @@ export default function Lobby() {
                 className="rounded-xl border border-dashed border-border/15 p-4 flex flex-col items-center justify-center gap-1"
               >
                 <Skull className="w-4 h-4 text-muted-foreground/10" />
-                <span className="text-[10px] text-muted-foreground/15 italic" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-[10px] text-muted-foreground/50 italic" style={{ fontFamily: "var(--font-body)" }}>
                   Waiting for a victim...
                 </span>
               </motion.div>
@@ -398,12 +398,12 @@ export default function Lobby() {
             className="w-full max-w-lg mb-6"
           >
             <h2
-              className="text-xs tracking-[0.2em] text-muted-foreground/60 uppercase mb-1 text-center"
+              className="text-xs tracking-[0.2em] text-muted-foreground/80 uppercase mb-1 text-center"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               Pick Your Poison
             </h2>
-            <p className="text-[9px] text-muted-foreground/30 text-center mb-4" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-[9px] text-muted-foreground/70 text-center mb-4" style={{ fontFamily: "var(--font-body)" }}>
               All four options are terrible. That's the point.
             </p>
             <div className="grid grid-cols-2 gap-4">
@@ -425,7 +425,7 @@ export default function Lobby() {
                     >
                       {cfg.label}
                     </h3>
-                    <p className="text-[9px] text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                    <p className="text-[10px] text-foreground/70 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                       {cfg.desc}
                     </p>
                     <div className="flex justify-center gap-1 mt-2">
@@ -433,7 +433,7 @@ export default function Lobby() {
                         <div key={i} className={`w-1.5 h-1.5 rounded-full bg-${cfg.color}`} />
                       ))}
                     </div>
-                    <p className="text-[7px] text-muted-foreground/20 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                    <p className="text-[8px] text-muted-foreground/60 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
                       {cfg.tagline}
                     </p>
                   </motion.button>
@@ -477,7 +477,7 @@ export default function Lobby() {
               <Play className="w-5 h-5" />
               {isStarting ? "UNLEASHING CHAOS..." : "LET THE SINS BEGIN"}
             </motion.button>
-            <p className="text-[9px] text-muted-foreground/20 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-[9px] text-muted-foreground/60 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
               No refunds. No mercy. No take-backsies.
             </p>
           </motion.div>
@@ -488,7 +488,7 @@ export default function Lobby() {
           <motion.p
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/40 mt-4"
+            className="text-sm text-muted-foreground/70 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Waiting for the host to stop procrastinating...
@@ -499,7 +499,7 @@ export default function Lobby() {
           <motion.p
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/40 mt-4"
+            className="text-sm text-muted-foreground/70 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Everyone needs to pick a sin. It's literally four buttons.
@@ -510,7 +510,7 @@ export default function Lobby() {
           <motion.p
             animate={{ opacity: [0.3, 0.6, 0.3] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/40 mt-4"
+            className="text-sm text-muted-foreground/70 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
             Need at least 2 sinners. Add a bot if nobody loves you.

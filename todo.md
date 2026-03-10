@@ -136,3 +136,8 @@
 - [x] Apply rebalanced values to cardData.ts (Lazy Drain dmg 1->2, Covetous Strike dmg 3->2)
 - [x] Run tests and verify balance improvements (83 tests passing)
 - [x] Generate balance report (EXCELLENT grade, 1.7% max faction deviation)
+
+## Bug Fixes (Round 3)
+- [x] New factions (Greed & Envy) not showing in live game (user viewing old Vercel deploy, needs republish)
+- [x] Improve text contrast on sin cards - descriptions and labels too dark/hard to read
+- [x] Improve overall text contrast across Home, Lobby, GameBoard, GameCard, CompoundBalanceSheet

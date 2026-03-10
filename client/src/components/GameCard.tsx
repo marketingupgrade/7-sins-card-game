@@ -174,13 +174,13 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
               <span className="text-muted-foreground/70 capitalize">{effect.type}</span>
               <span className={`font-bold ${color}`}>{effective}</span>
               {effect.target === "self" && (
-                <span className="text-muted-foreground/40">(self)</span>
+                <span className="text-muted-foreground/60">(self)</span>
               )}
               {effect.target === "all_enemies" && (
-                <span className="text-muted-foreground/40">(all)</span>
+                <span className="text-muted-foreground/60">(all)</span>
               )}
               {effect.duration > 0 && (
-                <span className="text-muted-foreground/40">{"\u00D7"}{effect.duration}r</span>
+                <span className="text-muted-foreground/60">{"\u00D7"}{effect.duration}r</span>
               )}
             </div>
           );
@@ -190,7 +190,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       {/* Flavor Text */}
       <div className="absolute bottom-1.5 left-2.5 right-2.5">
         <p
-          className="text-[6.5px] text-muted-foreground/40 italic leading-tight line-clamp-2"
+          className="text-[7px] text-muted-foreground/60 italic leading-tight line-clamp-2"
           style={{ fontFamily: "var(--font-body)" }}
         >
           {card.flavorText}

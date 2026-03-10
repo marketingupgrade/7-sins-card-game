@@ -169,7 +169,7 @@ export default function Home() {
           <div className="neon-divider w-56 mx-auto my-4" />
 
           <p
-            className="text-sm tracking-[0.3em] text-muted-foreground/70 uppercase"
+            className="text-sm tracking-[0.3em] text-muted-foreground uppercase"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             A Card Game of Questionable Morality
@@ -203,7 +203,7 @@ export default function Home() {
             {/* Username Input */}
             <div className="mb-6">
               <label
-                className="block text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase mb-2"
+                className="block text-[10px] tracking-[0.2em] text-muted-foreground uppercase mb-2"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Your Sinful Alias
@@ -235,7 +235,7 @@ export default function Home() {
               <div className="flex items-center gap-3 my-2">
                 <div className="flex-1 h-px bg-border/20" />
                 <span
-                  className="text-[9px] tracking-[0.15em] text-muted-foreground/40 uppercase"
+                  className="text-[9px] tracking-[0.15em] text-muted-foreground/70 uppercase"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   or crash someone else's party
@@ -321,7 +321,7 @@ export default function Home() {
             transition={{ delay: 0.8 }}
             className="text-center mt-6"
           >
-            <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.1em] text-muted-foreground/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+            <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.1em] text-muted-foreground/70 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
               <span className="flex items-center gap-1"><Users className="w-3 h-3" /> 2-4 Players</span>
               <span className="text-border/30">&middot;</span>
               <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> Real-time</span>
@@ -357,7 +357,7 @@ export default function Home() {
                 {sin.name}
               </h3>
               <p
-                className="text-[9px] text-muted-foreground/60 mt-1 leading-relaxed"
+                className="text-[10px] text-foreground/70 mt-1 leading-relaxed"
                 style={{ fontFamily: "var(--font-body)" }}
               >
                 {sin.desc}
@@ -368,7 +368,7 @@ export default function Home() {
                 ))}
               </div>
               <p
-                className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.15em]"
+                className="text-[8px] text-muted-foreground/70 mt-1 uppercase tracking-[0.15em]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {sin.tag}
@@ -385,7 +385,7 @@ export default function Home() {
           className="mt-12 max-w-lg text-center"
         >
           <p
-            className="text-[9px] tracking-[0.2em] text-muted-foreground/30 uppercase mb-3"
+            className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-3"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             How This Works (Pay Attention)
@@ -395,25 +395,25 @@ export default function Home() {
               <div className="w-8 h-8 rounded-full bg-wrath/10 border border-wrath/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-wrath" style={{ fontFamily: "var(--font-heading)" }}>1</span>
               </div>
-              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Pick a sin</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Pick a sin</p>
             </div>
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>2</span>
               </div>
-              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Play cards</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Play cards</p>
             </div>
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-neon-yellow/10 border border-neon-yellow/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>3</span>
               </div>
-              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Damage compounds</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Damage compounds</p>
             </div>
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-sloth/10 border border-sloth/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-sloth" style={{ fontFamily: "var(--font-heading)" }}>4</span>
               </div>
-              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Last one alive wins</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Last one alive wins</p>
             </div>
           </div>
         </motion.div>

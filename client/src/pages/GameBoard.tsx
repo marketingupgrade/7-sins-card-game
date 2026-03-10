@@ -397,7 +397,7 @@ export default function GameBoard() {
               >
                 ×{gameState.currentRound}
               </p>
-              <p className="text-[10px] text-muted-foreground/40 mt-1" style={{ fontFamily: "var(--font-body)" }}>
+              <p className="text-[10px] text-muted-foreground/70 mt-1" style={{ fontFamily: "var(--font-body)" }}>
                 Every card hits {gameState.currentRound}× harder. Enjoy the escalation.
               </p>
             </div>
@@ -550,7 +550,7 @@ export default function GameBoard() {
                 ×
               </Button>
             </div>
-            <p className="text-[10px] text-muted-foreground/40 mb-3 italic" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-[10px] text-muted-foreground/70 mb-3 italic" style={{ fontFamily: "var(--font-body)" }}>
               A record of everyone's poor decisions.
             </p>
             <div className="space-y-2">
@@ -566,7 +566,7 @@ export default function GameBoard() {
                 </div>
               ))}
               {logEntries.length === 0 && (
-                <p className="text-xs text-muted-foreground/30 italic">Nothing happened yet. How boring.</p>
+                <p className="text-xs text-muted-foreground/60 italic">Nothing happened yet. How boring.</p>
               )}
             </div>
           </motion.div>

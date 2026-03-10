@@ -178,7 +178,7 @@ export default function CompoundBalanceSheet({
               </button>
             </div>
             <p
-              className="text-[10px] text-muted-foreground/50 italic"
+              className="text-[10px] text-muted-foreground/70 italic"
               style={{ fontFamily: "var(--font-body)" }}
             >
               A forecast of everyone's upcoming misery. You're welcome.
@@ -189,7 +189,7 @@ export default function CompoundBalanceSheet({
           {playerSummary.size > 0 && (
             <div className="px-4 py-3 border-b border-border/10">
               <p
-                className="text-[9px] text-muted-foreground/40 uppercase tracking-[0.15em] mb-2"
+                className="text-[9px] text-muted-foreground/70 uppercase tracking-[0.15em] mb-2"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 Total Projected Impact
@@ -241,15 +241,15 @@ export default function CompoundBalanceSheet({
           <div className="flex-1 overflow-y-auto px-4 py-3">
             {sortedRounds.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                <Zap className="w-8 h-8 text-muted-foreground/20 mb-3" />
+                <Zap className="w-8 h-8 text-muted-foreground/50 mb-3" />
                 <p
-                  className="text-xs text-muted-foreground/40"
+                  className="text-xs text-muted-foreground/70"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   No active effects. How peaceful.
                 </p>
                 <p
-                  className="text-[10px] text-muted-foreground/25 mt-1 italic"
+                  className="text-[10px] text-muted-foreground/60 mt-1 italic"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   Don't worry, someone will ruin it soon.
@@ -286,7 +286,7 @@ export default function CompoundBalanceSheet({
                         </div>
                         <div className="flex-1 h-px bg-border/10" />
                         <span
-                          className="text-[9px] text-muted-foreground/30"
+                          className="text-[9px] text-muted-foreground/60"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           ×{round}
@@ -322,7 +322,7 @@ export default function CompoundBalanceSheet({
                                     {pe.targetName}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-1 text-[8px] text-muted-foreground/50">
+                                <div className="flex items-center gap-1 text-[8px] text-muted-foreground/70">
                                   <span>from {pe.sourceName}</span>
                                   <span>·</span>
                                   <span className="italic">{pe.cardName}</span>
@@ -337,7 +337,7 @@ export default function CompoundBalanceSheet({
                                 >
                                   {isNegative ? "-" : "+"}{pe.projectedValue}
                                 </span>
-                                <div className="text-[7px] text-muted-foreground/30" style={{ fontFamily: "var(--font-heading)" }}>
+                                <div className="text-[7px] text-muted-foreground/60" style={{ fontFamily: "var(--font-heading)" }}>
                                   {pe.remainingRounds > 0
                                     ? `${pe.remainingRounds} more`
                                     : "LAST"}
@@ -357,7 +357,7 @@ export default function CompoundBalanceSheet({
           {/* Footer */}
           <div className="px-4 py-2.5 border-t border-border/10">
             <p
-              className="text-[8px] text-muted-foreground/25 text-center italic"
+              className="text-[8px] text-muted-foreground/60 text-center italic"
               style={{ fontFamily: "var(--font-body)" }}
             >
               Values compound each round. Base × Round = Pain. Simple math, devastating consequences.
