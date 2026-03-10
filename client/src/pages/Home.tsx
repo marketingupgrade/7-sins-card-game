@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye } from "lucide-react";
+import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye, TrendingUp, SquareSlash } from "lucide-react";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
 
@@ -339,10 +339,10 @@ export default function Home() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-3xl"
         >
           {[
-            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum" },
-            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", desc: "Outlast everyone. Let the compounding do the work.", tag: "Endurance: Maximum" },
-            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum" },
-            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum" },
+            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy" },
+            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy" },
+            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
+            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },
           ].map((sin) => (
             <motion.div
               key={sin.name}
@@ -373,22 +373,167 @@ export default function Home() {
               >
                 {sin.tag}
               </p>
+              <p
+                className={`text-[8px] text-${sin.color}/60 mt-1 italic`}
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                {sin.passive}
+              </p>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Card Mechanics Explainer */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-12 max-w-2xl w-full"
+        >
+          <p
+            className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-4 text-center"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            The Two Types of Sin (Pay Attention)
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Flat Cards */}
+            <div className="glass-panel rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center">
+                  <SquareSlash className="w-4 h-4 text-neon-cyan" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neon-cyan tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                    FLAT
+                  </h3>
+                  <p className="text-[9px] text-muted-foreground/70 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                    Instant Impact
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-foreground/70 leading-relaxed mb-3" style={{ fontFamily: "var(--font-body)" }}>
+                One big hit. Resolves immediately. What you see is what you get. No waiting, no hoping, no praying.
+              </p>
+              <div className="bg-background/40 rounded-lg p-3 border border-border/10">
+                <p className="text-[10px] text-foreground/60 mb-1" style={{ fontFamily: "var(--font-heading)" }}>EXAMPLE</p>
+                <div className="flex items-center gap-2">
+                  <Flame className="w-3.5 h-3.5 text-wrath/70" />
+                  <p className="text-[11px] text-foreground/80" style={{ fontFamily: "var(--font-body)" }}>
+                    <span className="text-wrath font-semibold">Fury Strike</span> — 4 damage, right now, done.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Compounding Cards */}
+            <div className="glass-panel rounded-xl p-5">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-neon-yellow/10 border border-neon-yellow/20 flex items-center justify-center">
+                  <TrendingUp className="w-4 h-4 text-neon-yellow" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-neon-yellow tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                    COMPOUNDING
+                  </h3>
+                  <p className="text-[9px] text-muted-foreground/70 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                    3-Round Escalation
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-foreground/70 leading-relaxed mb-3" style={{ fontFamily: "var(--font-body)" }}>
+                Ticks for 3 rounds with Fibonacci scaling. Pay once, collect thrice. Patience is a sin too.
+              </p>
+              <div className="bg-background/40 rounded-lg p-3 border border-border/10">
+                <p className="text-[10px] text-foreground/60 mb-2" style={{ fontFamily: "var(--font-heading)" }}>FIBONACCI SCALING [1, 1, 2]</p>
+                <div className="flex items-center gap-3 justify-center">
+                  <div className="text-center">
+                    <div className="w-10 h-10 rounded-lg bg-neon-yellow/5 border border-neon-yellow/15 flex items-center justify-center mb-1">
+                      <span className="text-sm font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>1&times;</span>
+                    </div>
+                    <p className="text-[8px] text-muted-foreground/60" style={{ fontFamily: "var(--font-heading)" }}>TICK 1</p>
+                  </div>
+                  <div className="text-muted-foreground/30 text-xs">&rarr;</div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 rounded-lg bg-neon-yellow/5 border border-neon-yellow/15 flex items-center justify-center mb-1">
+                      <span className="text-sm font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>1&times;</span>
+                    </div>
+                    <p className="text-[8px] text-muted-foreground/60" style={{ fontFamily: "var(--font-heading)" }}>TICK 2</p>
+                  </div>
+                  <div className="text-muted-foreground/30 text-xs">&rarr;</div>
+                  <div className="text-center">
+                    <div className="w-10 h-10 rounded-lg bg-neon-yellow/10 border border-neon-yellow/30 flex items-center justify-center mb-1">
+                      <span className="text-sm font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>2&times;</span>
+                    </div>
+                    <p className="text-[8px] text-neon-yellow/70 font-semibold" style={{ fontFamily: "var(--font-heading)" }}>PAYOFF</p>
+                  </div>
+                </div>
+                <p className="text-[9px] text-foreground/50 text-center mt-2 italic" style={{ fontFamily: "var(--font-body)" }}>
+                  Total value = base &times; 4 over 3 rounds
+                </p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Corruption Energy Explainer */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.0 }}
+          className="mt-8 max-w-2xl w-full"
+        >
+          <div className="glass-panel rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-wrath/10 border border-wrath/20 flex items-center justify-center">
+                <Zap className="w-4 h-4 text-wrath" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-wrath tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  CORRUPTION ENERGY
+                </h3>
+                <p className="text-[9px] text-muted-foreground/70 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  The Fuel of Sin
+                </p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <div className="bg-background/30 rounded-lg p-3 text-center border border-border/10">
+                <p className="text-lg font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>2</p>
+                <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Start Energy</p>
+              </div>
+              <div className="bg-background/30 rounded-lg p-3 text-center border border-border/10">
+                <p className="text-lg font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>+1</p>
+                <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Per Round</p>
+              </div>
+              <div className="bg-background/30 rounded-lg p-3 text-center border border-border/10">
+                <p className="text-lg font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>7</p>
+                <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Max Cap</p>
+              </div>
+              <div className="bg-background/30 rounded-lg p-3 text-center border border-border/10">
+                <p className="text-lg font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>0-5</p>
+                <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Card Cost</p>
+              </div>
+            </div>
+            <p className="text-[10px] text-foreground/50 text-center mt-3 italic" style={{ fontFamily: "var(--font-body)" }}>
+              Spend corruption to play cards. More corruption = more powerful sins. Use it or lose it.
+            </p>
+          </div>
         </motion.div>
 
         {/* How It Works - Quick Rules */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-12 max-w-lg text-center"
+          transition={{ delay: 1.2 }}
+          className="mt-10 max-w-lg text-center"
         >
           <p
             className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-3"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            How This Works (Pay Attention)
+            How This Works (The Short Version)
           </p>
           <div className="flex gap-4 justify-center">
             <div className="text-center">
@@ -401,22 +546,33 @@ export default function Home() {
               <div className="w-8 h-8 rounded-full bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>2</span>
               </div>
-              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Play cards</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Spend corruption</p>
             </div>
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-neon-yellow/10 border border-neon-yellow/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>3</span>
               </div>
-              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Damage compounds</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Flat or compound</p>
             </div>
             <div className="text-center">
               <div className="w-8 h-8 rounded-full bg-sloth/10 border border-sloth/20 flex items-center justify-center mx-auto mb-1">
                 <span className="text-xs font-bold text-sloth" style={{ fontFamily: "var(--font-heading)" }}>4</span>
               </div>
-              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Last one alive wins</p>
+              <p className="text-[10px] text-foreground/70" style={{ fontFamily: "var(--font-body)" }}>Last sinner wins</p>
             </div>
           </div>
         </motion.div>
+
+        {/* Footer sass */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="mt-8 text-[9px] text-muted-foreground/40 text-center"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          48 cards &middot; 4 factions &middot; 10 rounds &middot; Fibonacci compounding &middot; Zero mercy
+        </motion.p>
       </div>
     </div>
   );

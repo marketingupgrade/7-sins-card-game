@@ -1,14 +1,13 @@
 /**
  * Game Logic Tests
  *
- * Tests for the core game mechanics: compounding, card data integrity,
- * deck composition, and narrator content.
+ * Tests for the core game mechanics: flat/compounding card system,
+ * card data integrity, deck composition, and narrator content.
  * Because even sins need quality assurance.
  */
 
 import { describe, expect, it } from "vitest";
 import {
-  calculateEffectiveValue,
   MAX_ROUNDS,
   STARTING_HP,
   HAND_SIZE,
@@ -20,6 +19,9 @@ import {
   WRATH_OVERCHARGE_HP_COST,
   WRATH_OVERCHARGE_ENERGY_GAIN,
   getBaseEnergyForRound,
+  getCompoundTickValue,
+  COMPOUND_MULTIPLIERS,
+  CATCHUP_HP_THRESHOLD,
 } from "../shared/gameTypes";
 import {
   WRATH_CARDS,
@@ -33,22 +35,51 @@ import {
   NARRATOR_LINES,
 } from "../shared/cardData";
 
-describe("Compounding Mechanic", () => {
-  it("calculates effective value as base × round", () => {
-    expect(calculateEffectiveValue(3, 1)).toBe(3);
-    expect(calculateEffectiveValue(3, 2)).toBe(6);
-    expect(calculateEffectiveValue(3, 5)).toBe(15);
+describe("Compounding Mechanic (Fibonacci [1, 1, 2])", () => {
+  it("COMPOUND_MULTIPLIERS is [1, 1, 2]", () => {
+    expect(COMPOUND_MULTIPLIERS).toEqual([1, 1, 2]);
   });
 
-  it("caps at MAX_ROUNDS", () => {
-    expect(calculateEffectiveValue(3, 10)).toBe(30);
-    expect(calculateEffectiveValue(3, 15)).toBe(30); // capped at 10
-    expect(calculateEffectiveValue(3, 100)).toBe(30);
+  it("tick 0: base x 1", () => {
+    expect(getCompoundTickValue(3, 0)).toBe(3);
+    expect(getCompoundTickValue(5, 0)).toBe(5);
   });
 
-  it("handles edge cases", () => {
-    expect(calculateEffectiveValue(0, 5)).toBe(0);
-    expect(calculateEffectiveValue(1, 1)).toBe(1);
+  it("tick 1: base x 1", () => {
+    expect(getCompoundTickValue(3, 1)).toBe(3);
+    expect(getCompoundTickValue(5, 1)).toBe(5);
+  });
+
+  it("tick 2: base x 2 (the payoff)", () => {
+    expect(getCompoundTickValue(3, 2)).toBe(6);
+    expect(getCompoundTickValue(5, 2)).toBe(10);
+  });
+
+  it("total over 3 ticks = base x 4", () => {
+    const base = 3;
+    const total = getCompoundTickValue(base, 0) + getCompoundTickValue(base, 1) + getCompoundTickValue(base, 2);
+    expect(total).toBe(base * 4); // 3 + 3 + 6 = 12
+  });
+
+  it("handles base value 1", () => {
+    expect(getCompoundTickValue(1, 0)).toBe(1);
+    expect(getCompoundTickValue(1, 1)).toBe(1);
+    expect(getCompoundTickValue(1, 2)).toBe(2);
+  });
+
+  it("out-of-bounds tick returns 0", () => {
+    // getCompoundMultiplier returns 0 for out-of-bounds ticks
+    expect(getCompoundTickValue(3, 5)).toBe(0);
+    expect(getCompoundTickValue(3, -1)).toBe(0);
+  });
+
+  it("always returns integers", () => {
+    for (let base = 1; base <= 10; base++) {
+      for (let tick = 0; tick < 3; tick++) {
+        const val = getCompoundTickValue(base, tick);
+        expect(Number.isInteger(val)).toBe(true);
+      }
+    }
   });
 });
 
@@ -110,6 +141,31 @@ describe("Card Data Integrity", () => {
     });
   });
 
+  it("every card has a cardType (flat or compounding)", () => {
+    ALL_CARDS.forEach((card) => {
+      expect(["flat", "compounding"]).toContain(card.cardType);
+    });
+  });
+
+  it("compounding cards have duration 3 on at least one effect", () => {
+    const compoundingCards = ALL_CARDS.filter((c) => c.cardType === "compounding");
+    expect(compoundingCards.length).toBeGreaterThan(0);
+    compoundingCards.forEach((card) => {
+      const hasDuration3 = card.effects.some((e) => e.duration === 3);
+      expect(hasDuration3).toBe(true);
+    });
+  });
+
+  it("flat cards have duration 0 on all effects", () => {
+    const flatCards = ALL_CARDS.filter((c) => c.cardType === "flat");
+    expect(flatCards.length).toBeGreaterThan(0);
+    flatCards.forEach((card) => {
+      card.effects.forEach((effect) => {
+        expect(effect.duration).toBe(0);
+      });
+    });
+  });
+
   it("every card has unique ID", () => {
     const ids = ALL_CARDS.map((c) => c.id);
     expect(new Set(ids).size).toBe(ids.length);
@@ -142,6 +198,15 @@ describe("Card Data Integrity", () => {
     expect(slothZeroCost.length).toBeGreaterThanOrEqual(1);
     expect(greedZeroCost.length).toBeGreaterThanOrEqual(1);
     expect(envyZeroCost.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("each sin has a mix of flat and compounding cards", () => {
+    [WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS].forEach((deck) => {
+      const flatCount = deck.filter((c) => c.cardType === "flat").length;
+      const compoundCount = deck.filter((c) => c.cardType === "compounding").length;
+      expect(flatCount).toBeGreaterThanOrEqual(2);
+      expect(compoundCount).toBeGreaterThanOrEqual(2);
+    });
   });
 });
 
@@ -254,9 +319,13 @@ describe("Game Constants", () => {
   it("CARDS_PER_DECK is 12", () => {
     expect(CARDS_PER_DECK).toBe(12);
   });
+
+  it("CATCHUP_HP_THRESHOLD is 10 (40% of 25 HP)", () => {
+    expect(CATCHUP_HP_THRESHOLD).toBe(10);
+  });
 });
 
-// ─── Energy / Corruption System Tests ─────────────────────────
+// Energy / Corruption System Tests
 describe("Corruption Energy System", () => {
   it("STARTING_ENERGY is 2", () => {
     expect(STARTING_ENERGY).toBe(2);
@@ -325,21 +394,7 @@ describe("Corruption Energy System", () => {
 
     it("all cards are playable on round 1 if they cost <= STARTING_ENERGY", () => {
       const round1Playable = ALL_CARDS.filter((c) => c.cost <= STARTING_ENERGY);
-      // At least some cards should be playable on round 1
       expect(round1Playable.length).toBeGreaterThanOrEqual(4);
-    });
-  });
-
-  describe("calculateEffectiveValue returns whole numbers", () => {
-    it("all base values produce integers when multiplied by round", () => {
-      ALL_CARDS.forEach((card) => {
-        card.effects.forEach((effect) => {
-          for (let round = 1; round <= 10; round++) {
-            const val = calculateEffectiveValue(effect.baseValue, round);
-            expect(Number.isInteger(val)).toBe(true);
-          }
-        });
-      });
     });
   });
 });

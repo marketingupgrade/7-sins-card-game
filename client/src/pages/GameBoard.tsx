@@ -21,10 +21,10 @@ import { useLocation, useParams } from "wouter";
 import {
   Flame, Moon, Heart, Swords, SkipForward, Trophy,
   Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp,
-  Coins, Eye
+  Coins, Eye, Timer
 } from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, calculateEffectiveValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
+import { PlayerState, getCompoundTickValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -269,14 +269,14 @@ export default function GameBoard() {
             </span>
           </div>
 
-          {/* Multiplier Badge */}
-          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20">
-            <Zap className="w-3 h-3 text-neon-cyan" />
+          {/* Compounding Info Badge */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-neon-yellow/10 border border-neon-yellow/20">
+            <Timer className="w-3 h-3 text-neon-yellow" />
             <span
-              className="text-xs font-bold text-neon-cyan"
+              className="text-xs font-bold text-neon-yellow"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              ×{gameState.currentRound} DMG
+              1× → 1× → 2×
             </span>
           </div>
 
@@ -722,7 +722,9 @@ function PlayerPanel({
         {activeEffects.length > 0 && (
           <div className="flex gap-1 mt-1.5 flex-wrap">
             {activeEffects.map((effect, i) => {
-              const effectValue = calculateEffectiveValue(effect.baseValue, currentRound);
+              const effectValue = effect.isCompounding
+                ? getCompoundTickValue(effect.baseValue, effect.currentTick || 0)
+                : effect.baseValue;
               return (
                 <motion.div
                   key={i}

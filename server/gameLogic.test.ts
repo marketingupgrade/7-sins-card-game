@@ -1,13 +1,13 @@
 /**
  * Game Logic Tests
  *
- * Tests for card data integrity, compounding mechanic,
+ * Tests for card data integrity, flat/compounding mechanic,
  * and shared game type calculations.
  */
 
 import { describe, expect, it } from "vitest";
 import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, CARD_MAP, getCardById, getDeckForSin } from "../shared/cardData";
-import { calculateEffectiveValue, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK } from "../shared/gameTypes";
+import { getCompoundTickValue, COMPOUND_MULTIPLIERS, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK } from "../shared/gameTypes";
 
 describe("Card Data Integrity", () => {
   it("has exactly 12 wrath cards", () => {
@@ -85,6 +85,31 @@ describe("Card Data Integrity", () => {
       expect(card.cost).toBeGreaterThanOrEqual(0);
     });
   });
+
+  it("every card has a cardType (flat or compounding)", () => {
+    ALL_CARDS.forEach((card) => {
+      expect(["flat", "compounding"]).toContain(card.cardType);
+    });
+  });
+
+  it("compounding cards have duration 3 on at least one effect", () => {
+    const compoundingCards = ALL_CARDS.filter((c) => c.cardType === "compounding");
+    expect(compoundingCards.length).toBeGreaterThan(0);
+    compoundingCards.forEach((card) => {
+      const hasDuration3 = card.effects.some((e) => e.duration === 3);
+      expect(hasDuration3).toBe(true);
+    });
+  });
+
+  it("flat cards have duration 0 on all effects", () => {
+    const flatCards = ALL_CARDS.filter((c) => c.cardType === "flat");
+    expect(flatCards.length).toBeGreaterThan(0);
+    flatCards.forEach((card) => {
+      card.effects.forEach((effect) => {
+        expect(effect.duration).toBe(0);
+      });
+    });
+  });
 });
 
 describe("Card Registry", () => {
@@ -136,30 +161,41 @@ describe("Card Registry", () => {
   });
 });
 
-describe("Compounding Mechanic", () => {
-  it("round 1: effective = base × 1", () => {
-    expect(calculateEffectiveValue(3, 1)).toBe(3);
+describe("Compounding Mechanic (Fibonacci [1, 1, 2])", () => {
+  it("COMPOUND_MULTIPLIERS is [1, 1, 2]", () => {
+    expect(COMPOUND_MULTIPLIERS).toEqual([1, 1, 2]);
   });
 
-  it("round 5: effective = base × 5", () => {
-    expect(calculateEffectiveValue(3, 5)).toBe(15);
+  it("tick 0: base x 1", () => {
+    expect(getCompoundTickValue(3, 0)).toBe(3);
   });
 
-  it("round 10: effective = base × 10", () => {
-    expect(calculateEffectiveValue(3, 10)).toBe(30);
+  it("tick 1: base x 1", () => {
+    expect(getCompoundTickValue(3, 1)).toBe(3);
   });
 
-  it("round 15: caps at round 10 (base × 10)", () => {
-    expect(calculateEffectiveValue(3, 15)).toBe(30);
+  it("tick 2: base x 2 (the payoff)", () => {
+    expect(getCompoundTickValue(3, 2)).toBe(6);
+  });
+
+  it("total over 3 ticks = base x 4", () => {
+    const base = 3;
+    const total = getCompoundTickValue(base, 0) + getCompoundTickValue(base, 1) + getCompoundTickValue(base, 2);
+    expect(total).toBe(base * 4);
   });
 
   it("base value 0 always returns 0", () => {
-    expect(calculateEffectiveValue(0, 5)).toBe(0);
+    expect(getCompoundTickValue(0, 0)).toBe(0);
+    expect(getCompoundTickValue(0, 1)).toBe(0);
+    expect(getCompoundTickValue(0, 2)).toBe(0);
   });
 
-  it("base value 1 equals round number", () => {
-    for (let round = 1; round <= 10; round++) {
-      expect(calculateEffectiveValue(1, round)).toBe(round);
+  it("always returns integers", () => {
+    for (let base = 1; base <= 10; base++) {
+      for (let tick = 0; tick < 3; tick++) {
+        const val = getCompoundTickValue(base, tick);
+        expect(Number.isInteger(val)).toBe(true);
+      }
     }
   });
 });
@@ -183,11 +219,11 @@ describe("Game Constants", () => {
 });
 
 describe("Card Balance Sanity Checks", () => {
-  it("no card has base damage above 6", () => {
+  it("no card has base damage above 8", () => {
     ALL_CARDS.forEach((card) => {
       card.effects.forEach((effect) => {
         if (effect.type === "damage") {
-          expect(effect.baseValue).toBeLessThanOrEqual(6);
+          expect(effect.baseValue).toBeLessThanOrEqual(8);
         }
       });
     });
@@ -196,6 +232,15 @@ describe("Card Balance Sanity Checks", () => {
   it("no card costs more than 5", () => {
     ALL_CARDS.forEach((card) => {
       expect(card.cost).toBeLessThanOrEqual(5);
+    });
+  });
+
+  it("each sin has a mix of flat and compounding cards", () => {
+    [WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS].forEach((deck) => {
+      const flatCount = deck.filter((c) => c.cardType === "flat").length;
+      const compoundCount = deck.filter((c) => c.cardType === "compounding").length;
+      expect(flatCount).toBeGreaterThanOrEqual(2);
+      expect(compoundCount).toBeGreaterThanOrEqual(2);
     });
   });
 

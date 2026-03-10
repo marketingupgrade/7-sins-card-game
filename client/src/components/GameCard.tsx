@@ -4,11 +4,13 @@
  * Each card is a tiny window into the soul of its sin.
  * Wrath bleeds crimson. Sloth oozes purple.
  * Greed gleams gold. Envy seethes emerald.
+ *
+ * Cards are either FLAT (instant, one-time) or COMPOUNDING (3-round Fibonacci escalation).
  */
 
 import { motion } from "framer-motion";
-import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye } from "lucide-react";
-import { CardDefinition, SinType, calculateEffectiveValue } from "@shared/gameTypes";
+import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye, Timer, Sparkles } from "lucide-react";
+import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
 
 interface GameCardProps {
   card: CardDefinition;
@@ -26,6 +28,8 @@ const effectIcons: Record<string, typeof Flame> = {
   shield: Shield,
   buff: Zap,
   debuff: Moon,
+  energy_drain: Zap,
+  energy_gain: Zap,
 };
 
 const effectColors: Record<string, string> = {
@@ -34,6 +38,8 @@ const effectColors: Record<string, string> = {
   shield: "text-neon-cyan",
   buff: "text-neon-yellow",
   debuff: "text-sloth",
+  energy_drain: "text-wrath",
+  energy_gain: "text-neon-green",
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
@@ -94,6 +100,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
   const actuallyPlayable = isPlayable && canAfford;
+  const isCompounding = card.cardType === "compounding";
 
   return (
     <motion.div
@@ -114,13 +121,34 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
     >
       {/* Subtle inner glow */}
       <div
-        className={`absolute inset-0 opacity-20 bg-gradient-to-b from-${cfg.color}/30 to-transparent pointer-events-none`}
+        className="absolute inset-0 opacity-20 pointer-events-none"
+        style={{ background: `linear-gradient(to bottom, var(--color-${cfg.color}) 0%, transparent 50%)`, opacity: 0.1 }}
       />
 
-      {/* Card Header: Cost & Sin */}
+      {/* Card Header: Cost, Type Badge & Sin */}
       <div className="relative px-2.5 pt-2 pb-1 flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <SinIcon className={`w-3 h-3 text-${cfg.color}`} />
+          <SinIcon className="w-3 h-3" style={{ color: `var(--color-${cfg.color})` }} />
+          {/* Card Type Badge */}
+          {isCompounding ? (
+            <span
+              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/30"
+              style={{ fontFamily: "var(--font-heading)" }}
+              title="Compounding: ticks for 3 rounds [1×, 1×, 2×]"
+            >
+              <Timer className="w-2 h-2 inline mr-0.5" />
+              3R
+            </span>
+          ) : (
+            <span
+              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30"
+              style={{ fontFamily: "var(--font-heading)" }}
+              title="Flat: instant one-time effect"
+            >
+              <Sparkles className="w-2 h-2 inline mr-0.5" />
+              FLAT
+            </span>
+          )}
           {card.tier !== "common" && (
             <span
               className={`text-[7px] px-1 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}
@@ -134,9 +162,14 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border ${
             !canAfford
               ? "border-destructive/60 text-destructive bg-destructive/10"
-              : `border-${cfg.color}/40 text-${cfg.color} bg-${cfg.color}/10`
+              : ""
           }`}
-          style={{ fontFamily: "var(--font-heading)" }}
+          style={canAfford ? {
+            fontFamily: "var(--font-heading)",
+            borderColor: `color-mix(in oklch, var(--color-${cfg.color}) 40%, transparent)`,
+            color: `var(--color-${cfg.color})`,
+            backgroundColor: `color-mix(in oklch, var(--color-${cfg.color}) 10%, transparent)`,
+          } : { fontFamily: "var(--font-heading)" }}
           title={`Corruption cost: ${card.cost}`}
         >
           {card.cost}
@@ -144,18 +177,23 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       </div>
 
       {/* Card Art Area */}
-      <div className={`mx-2 h-14 rounded-lg bg-gradient-to-br from-${cfg.color}/15 via-${cfg.color}/5 to-transparent flex items-center justify-center relative overflow-hidden`}>
+      <div
+        className="mx-2 h-12 rounded-lg flex items-center justify-center relative overflow-hidden"
+        style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}
+      >
         <div className="absolute inset-0 opacity-10">
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-${cfg.color}/30`} />
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-${cfg.color}/20`} />
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full border"
+            style={{ borderColor: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }}
+          />
         </div>
-        <SinIcon className={`w-7 h-7 text-${cfg.color}/30 relative z-10`} />
+        <SinIcon className="w-6 h-6 relative z-10" style={{ color: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }} />
       </div>
 
       {/* Card Name */}
-      <div className="px-2.5 py-1.5">
+      <div className="px-2.5 py-1">
         <h4
-          className="text-[11px] font-bold text-foreground leading-tight truncate"
+          className="text-[10px] font-bold text-foreground leading-tight truncate"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           {card.name}
@@ -166,21 +204,25 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       <div className="px-2.5 space-y-0.5">
         {card.effects.map((effect, i) => {
           const EffectIcon = effectIcons[effect.type] || Zap;
-          const effective = calculateEffectiveValue(effect.baseValue, currentRound);
           const color = effectColors[effect.type] || "text-muted-foreground";
           return (
             <div key={i} className="flex items-center gap-1 text-[8px]">
               <EffectIcon className={`w-2.5 h-2.5 ${color} flex-shrink-0`} />
               <span className="text-muted-foreground/70 capitalize">{effect.type}</span>
-              <span className={`font-bold ${color}`} title={`Base ${effect.baseValue} × Round ${currentRound}`}>{effective}</span>
+              {isCompounding ? (
+                // Show tick values: base → base → base×2
+                <span className={`font-bold ${color}`} title={`Ticks: ${COMPOUND_MULTIPLIERS.map((m) => effect.baseValue * m).join(" → ")}`}>
+                  {getCompoundTickValue(effect.baseValue, 0)}→{getCompoundTickValue(effect.baseValue, 1)}→{getCompoundTickValue(effect.baseValue, 2)}
+                </span>
+              ) : (
+                // Flat: just show base value
+                <span className={`font-bold ${color}`}>{effect.baseValue}</span>
+              )}
               {effect.target === "self" && (
                 <span className="text-muted-foreground/60">(self)</span>
               )}
               {effect.target === "all_enemies" && (
                 <span className="text-muted-foreground/60">(all)</span>
-              )}
-              {effect.duration > 0 && (
-                <span className="text-muted-foreground/60">{"\u00D7"}{effect.duration}r</span>
               )}
             </div>
           );

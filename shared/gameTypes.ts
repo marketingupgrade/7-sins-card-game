@@ -16,7 +16,7 @@ export type TargetType = "self" | "single_enemy" | "all_enemies" | "random_enemy
 export interface CardEffect {
   type: EffectType;
   baseValue: number;
-  /** How many rounds this effect persists. 0 = instant */
+  /** How many rounds this effect persists. 0 = instant (flat cards only) */
   duration: number;
   target: TargetType;
   /** Optional description override for narrator */
@@ -38,6 +38,17 @@ export interface CatchupEffect {
   condition: CatchupCondition;
 }
 
+// ─── Card Type ───────────────────────────────────────────────
+/**
+ * FLAT: One-time powerful effect. Resolves immediately, no duration.
+ * COMPOUNDING: Weaker base but ticks for 3 rounds with Fibonacci escalation [1×, 1×, 2×].
+ *   - Round 1: base × 1 (pay corruption cost)
+ *   - Round 2: base × 1 (free)
+ *   - Round 3: base × 2 (free, the payoff)
+ *   - Total value = base × 4 over 3 rounds
+ */
+export type CardType = "flat" | "compounding";
+
 // ─── Card Definition ─────────────────────────────────────────
 export interface CardDefinition {
   id: string;
@@ -45,6 +56,9 @@ export interface CardDefinition {
   sin: SinType;
   /** Corruption (energy) cost to play */
   cost: number;
+  /** Whether this card is flat (instant) or compounding (3-round escalating) */
+  cardType: CardType;
+  /** Effects for flat cards (instant resolution) */
   effects: CardEffect[];
   /** Flavor text shown on card */
   flavorText: string;
@@ -54,6 +68,43 @@ export interface CardDefinition {
   tier: "common" | "rare" | "epic";
   /** Optional catch-up mechanic — bonus when player is behind */
   catchup?: CatchupEffect;
+}
+
+// ─── Compounding Mechanic ────────────────────────────────────
+/**
+ * FIBONACCI COMPOUNDING SYSTEM
+ *
+ * Compounding cards tick for exactly 3 rounds with escalating multipliers.
+ * The Fibonacci pattern [1, 1, 2] creates a "slow build to payoff" feel:
+ *   - Tick 1: base × 1 (initial hit)
+ *   - Tick 2: base × 1 (same pressure)
+ *   - Tick 3: base × 2 (double payoff)
+ *
+ * Total value = base × (1 + 1 + 2) = base × 4
+ *
+ * This applies to ALL effect types: damage, heal, shield, debuff, etc.
+ * Only pay corruption cost on the round the card is played.
+ */
+export const COMPOUND_MULTIPLIERS = [1, 1, 2] as const;
+export const COMPOUND_DURATION = 3;
+export const COMPOUND_TOTAL_MULT = 4; // sum of [1, 1, 2]
+
+/**
+ * Get the multiplier for a specific tick of a compounding effect.
+ * @param tickIndex 0-based index (0 = first tick, 1 = second, 2 = third)
+ */
+export function getCompoundMultiplier(tickIndex: number): number {
+  if (tickIndex < 0 || tickIndex >= COMPOUND_DURATION) return 0;
+  return COMPOUND_MULTIPLIERS[tickIndex];
+}
+
+/**
+ * Calculate the value of a compounding effect at a specific tick.
+ * @param baseValue The card's base value
+ * @param tickIndex 0-based tick index (0, 1, or 2)
+ */
+export function getCompoundTickValue(baseValue: number, tickIndex: number): number {
+  return Math.round(baseValue * getCompoundMultiplier(tickIndex));
 }
 
 // ─── Energy / Corruption System ─────────────────────────────
@@ -80,9 +131,9 @@ export const ENERGY_PER_ROUND = 1;
 export const SLOTH_MAX_CARRYOVER = 2;
 export const WRATH_OVERCHARGE_HP_COST = 2;
 export const WRATH_OVERCHARGE_ENERGY_GAIN = 1;
-export const GREED_AVARICE_COST_THRESHOLD = 3; // Cards costing 3+ trigger Avarice
-export const GREED_AVARICE_BONUS = 1; // +1 bonus energy next turn
-export const ENVY_COVET_BONUS = 1; // +1 energy if any opponent has more HP
+export const GREED_AVARICE_COST_THRESHOLD = 3;
+export const GREED_AVARICE_BONUS = 1;
+export const ENVY_COVET_BONUS = 1;
 
 export function getBaseEnergyForRound(round: number): number {
   return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_ROUND, MAX_ENERGY);
@@ -100,14 +151,11 @@ export interface PlayerState {
   currentHp: number;
   maxHp: number;
   isAlive: boolean;
-  hand: string[]; // card IDs
+  hand: string[];
   deckSize: number;
   discardSize: number;
-  /** Current energy (corruption) available this turn */
   currentEnergy: number;
-  /** Max energy for this turn (base + bonuses) */
   maxEnergy: number;
-  /** Bonus energy carried from previous turn (Sloth passive) */
   bonusEnergy: number;
 }
 
@@ -120,6 +168,10 @@ export interface ActiveEffect {
   appliedAtRound: number;
   durationRounds: number;
   cardId: string;
+  /** For compounding effects: which tick we're on (0, 1, or 2) */
+  currentTick?: number;
+  /** Whether this is a compounding effect */
+  isCompounding?: boolean;
 }
 
 export interface GameState {
@@ -148,19 +200,17 @@ export interface GameLogEntry {
   timestamp: number;
 }
 
-// ─── Compounding Mechanic ────────────────────────────────────
-/**
- * The core compounding formula:
- * Effective Value = Base Value × Current Round
- * Maximum round cap: 10
- */
+// ─── Game Constants ─────────────────────────────────────────
 export const MAX_ROUNDS = 10;
 export const STARTING_HP = 25;
 export const HAND_SIZE = 5;
 export const CARDS_PER_DECK = 12;
 export const CATCHUP_HP_THRESHOLD = 10; // 40% of 25 HP
 
-export function calculateEffectiveValue(baseValue: number, currentRound: number): number {
-  const cappedRound = Math.min(currentRound, MAX_ROUNDS);
-  return Math.round(baseValue * cappedRound);
+/**
+ * @deprecated Use getCompoundTickValue() for compounding cards.
+ * Flat cards use baseValue directly with no round multiplier.
+ */
+export function calculateEffectiveValue(baseValue: number, _currentRound: number): number {
+  return Math.round(baseValue);
 }

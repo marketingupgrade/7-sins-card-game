@@ -1,16 +1,16 @@
 /**
  * Compound Effects Balance Sheet
  *
- * A chronological ledger showing ALL upcoming compound effects for every player.
- * Think of it as a financial balance sheet, but for pain and suffering.
- * Grouped by round so you can see exactly what's coming and when.
+ * A chronological ledger showing ALL active and upcoming effects for every player.
+ * Now uses the Fibonacci [1×, 1×, 2×] tick-based compounding system.
+ * Flat effects show as instant one-shots. Compounding effects show their tick timeline.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Flame, Moon, Shield, Heart, Skull, Zap, TrendingUp, X, ChevronRight, Coins, Eye
+  Flame, Moon, Shield, Heart, Skull, Zap, TrendingUp, X, ChevronRight, Coins, Eye, Timer, Sparkles
 } from "lucide-react";
-import { ActiveEffect, calculateEffectiveValue, PlayerState } from "@shared/gameTypes";
+import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, PlayerState } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { isBot } from "@/lib/botEngine";
 
@@ -22,7 +22,7 @@ interface CompoundBalanceSheetProps {
   onClose: () => void;
 }
 
-interface ProjectedEffect {
+interface ProjectedTick {
   round: number;
   targetPlayerId: string;
   targetName: string;
@@ -31,10 +31,12 @@ interface ProjectedEffect {
   sourceName: string;
   effectType: string;
   baseValue: number;
-  projectedValue: number;
+  tickIndex: number;
+  tickValue: number;
   cardName: string;
-  remainingRounds: number;
-  isNew: boolean; // true if this is the first round it applies
+  isCompounding: boolean;
+  totalTicks: number;
+  isCurrentTick: boolean;
 }
 
 const EFFECT_CONFIG: Record<string, { icon: React.ReactNode; label: string; colorClass: string; bgClass: string; borderClass: string }> = {
@@ -71,7 +73,7 @@ const EFFECT_CONFIG: Record<string, { icon: React.ReactNode; label: string; colo
 function getPlayerName(players: PlayerState[], playerId: string): string {
   const player = players.find((p) => p.id === playerId || p.gamePlayerId === playerId);
   if (!player) return "???";
-  return player.username + (isBot(player.id) ? " 🤖" : "");
+  return player.username + (isBot(player.id) ? " \u{1F916}" : "");
 }
 
 function getPlayerSin(players: PlayerState[], playerId: string): string | null {
@@ -86,65 +88,84 @@ export default function CompoundBalanceSheet({
   isOpen,
   onClose,
 }: CompoundBalanceSheetProps) {
-  // Project all active effects into future rounds
-  const projectedEffects: ProjectedEffect[] = [];
+  // Project all active effects into future ticks
+  const projectedTicks: ProjectedTick[] = [];
 
   for (const effect of activeEffects) {
-    const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
+    if (effect.isCompounding) {
+      // Compounding: project remaining ticks using Fibonacci [1, 1, 2]
+      const totalTicks = COMPOUND_MULTIPLIERS.length; // 3
+      const currentTick = effect.currentTick || 0;
 
-    // Project for each remaining round (including current)
-    for (let round = currentRound; round <= expiresAtRound; round++) {
-      const projectedValue = calculateEffectiveValue(
-        effect.baseValue,
-        round
-      );
-      // For debuffs, the actual damage is half
-      const displayValue = effect.effectType === "debuff"
-        ? Math.ceil(projectedValue / 2)
-        : projectedValue;
+      for (let tick = currentTick; tick < totalTicks; tick++) {
+        const tickValue = getCompoundTickValue(effect.baseValue, tick);
+        const roundForTick = currentRound + (tick - currentTick);
 
-      projectedEffects.push({
-        round,
-        targetPlayerId: effect.targetPlayerId,
-        targetName: getPlayerName(players, effect.targetPlayerId),
-        targetSin: getPlayerSin(players, effect.targetPlayerId),
-        sourcePlayerId: effect.sourcePlayerId,
-        sourceName: getPlayerName(players, effect.sourcePlayerId),
-        effectType: effect.effectType,
-        baseValue: effect.baseValue,
-        projectedValue: displayValue,
-        cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
-        remainingRounds: expiresAtRound - round,
-        isNew: round === currentRound,
-      });
+        projectedTicks.push({
+          round: roundForTick,
+          targetPlayerId: effect.targetPlayerId,
+          targetName: getPlayerName(players, effect.targetPlayerId),
+          targetSin: getPlayerSin(players, effect.targetPlayerId),
+          sourcePlayerId: effect.sourcePlayerId,
+          sourceName: getPlayerName(players, effect.sourcePlayerId),
+          effectType: effect.effectType,
+          baseValue: effect.baseValue,
+          tickIndex: tick,
+          tickValue,
+          cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
+          isCompounding: true,
+          totalTicks,
+          isCurrentTick: tick === currentTick,
+        });
+      }
+    } else {
+      // Flat effects that are still active (duration-based)
+      const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
+      for (let round = currentRound; round <= expiresAtRound; round++) {
+        projectedTicks.push({
+          round,
+          targetPlayerId: effect.targetPlayerId,
+          targetName: getPlayerName(players, effect.targetPlayerId),
+          targetSin: getPlayerSin(players, effect.targetPlayerId),
+          sourcePlayerId: effect.sourcePlayerId,
+          sourceName: getPlayerName(players, effect.sourcePlayerId),
+          effectType: effect.effectType,
+          baseValue: effect.baseValue,
+          tickIndex: 0,
+          tickValue: effect.baseValue,
+          cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
+          isCompounding: false,
+          totalTicks: 1,
+          isCurrentTick: round === currentRound,
+        });
+      }
     }
   }
 
   // Group by round
-  const roundGroups = new Map<number, ProjectedEffect[]>();
-  for (const pe of projectedEffects) {
-    if (!roundGroups.has(pe.round)) {
-      roundGroups.set(pe.round, []);
+  const roundGroups = new Map<number, ProjectedTick[]>();
+  for (const pt of projectedTicks) {
+    if (!roundGroups.has(pt.round)) {
+      roundGroups.set(pt.round, []);
     }
-    roundGroups.get(pe.round)!.push(pe);
+    roundGroups.get(pt.round)!.push(pt);
   }
 
-  // Sort rounds
   const sortedRounds = Array.from(roundGroups.keys()).sort((a, b) => a - b);
 
   // Calculate per-player net impact summary
   const playerSummary = new Map<string, { damage: number; healing: number; shielding: number }>();
-  for (const pe of projectedEffects) {
-    if (!playerSummary.has(pe.targetPlayerId)) {
-      playerSummary.set(pe.targetPlayerId, { damage: 0, healing: 0, shielding: 0 });
+  for (const pt of projectedTicks) {
+    if (!playerSummary.has(pt.targetPlayerId)) {
+      playerSummary.set(pt.targetPlayerId, { damage: 0, healing: 0, shielding: 0 });
     }
-    const summary = playerSummary.get(pe.targetPlayerId)!;
-    if (pe.effectType === "damage" || pe.effectType === "debuff") {
-      summary.damage += pe.projectedValue;
-    } else if (pe.effectType === "heal") {
-      summary.healing += pe.projectedValue;
-    } else if (pe.effectType === "shield") {
-      summary.shielding += pe.projectedValue;
+    const summary = playerSummary.get(pt.targetPlayerId)!;
+    if (pt.effectType === "damage" || pt.effectType === "debuff") {
+      summary.damage += pt.tickValue;
+    } else if (pt.effectType === "heal") {
+      summary.healing += pt.tickValue;
+    } else if (pt.effectType === "shield") {
+      summary.shielding += pt.tickValue;
     }
   }
 
@@ -181,7 +202,7 @@ export default function CompoundBalanceSheet({
               className="text-[10px] text-muted-foreground/70 italic"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              A forecast of everyone's upcoming misery. You're welcome.
+              Compounding effects tick for 3 rounds: base, base, then double.
             </p>
           </div>
 
@@ -260,7 +281,6 @@ export default function CompoundBalanceSheet({
                 {sortedRounds.map((round) => {
                   const effects = roundGroups.get(round)!;
                   const isCurrentRound = round === currentRound;
-                  const isFuture = round > currentRound;
 
                   return (
                     <motion.div
@@ -280,29 +300,22 @@ export default function CompoundBalanceSheet({
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           <ChevronRight className="w-2.5 h-2.5" />
-                          R{round}
-                          {isCurrentRound && " — NOW"}
-                          {isFuture && ` — in ${round - currentRound} turn${round - currentRound > 1 ? "s" : ""}`}
+                          ROUND {round}
+                          {isCurrentRound && " \u2014 NOW"}
+                          {round > currentRound && ` \u2014 in ${round - currentRound} turn${round - currentRound > 1 ? "s" : ""}`}
                         </div>
                         <div className="flex-1 h-px bg-border/10" />
-                        <span
-                          className="text-[9px] text-neon-yellow/70 font-bold"
-                          style={{ fontFamily: "var(--font-heading)" }}
-                          title={`Multiplier: base values × ${round}`}
-                        >
-                          MULTIPLIER ×{round}
-                        </span>
                       </div>
 
                       {/* Effect Rows */}
                       <div className="space-y-1.5 pl-2">
-                        {effects.map((pe, i) => {
-                          const config = EFFECT_CONFIG[pe.effectType] || EFFECT_CONFIG.damage;
-                          const isNegative = pe.effectType === "damage" || pe.effectType === "debuff";
+                        {effects.map((pt, i) => {
+                          const config = EFFECT_CONFIG[pt.effectType] || EFFECT_CONFIG.damage;
+                          const isNegative = pt.effectType === "damage" || pt.effectType === "debuff";
 
                           return (
                             <motion.div
-                              key={`${pe.targetPlayerId}-${pe.effectType}-${pe.cardName}-${i}`}
+                              key={`${pt.targetPlayerId}-${pt.effectType}-${pt.cardName}-${pt.tickIndex}-${i}`}
                               initial={{ opacity: 0, y: 5 }}
                               animate={{ opacity: 1, y: 0 }}
                               transition={{ delay: i * 0.03 }}
@@ -320,32 +333,51 @@ export default function CompoundBalanceSheet({
                                     className="text-[10px] font-bold text-foreground/90 truncate"
                                     style={{ fontFamily: "var(--font-heading)" }}
                                   >
-                                    {pe.targetName}
+                                    {pt.targetName}
                                   </span>
+                                  {pt.isCompounding && (
+                                    <span className="text-[7px] px-1 py-0 rounded bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/20 font-bold uppercase flex items-center gap-0.5">
+                                      <Timer className="w-2 h-2" />
+                                      Tick {pt.tickIndex + 1}/{pt.totalTicks}
+                                    </span>
+                                  )}
+                                  {!pt.isCompounding && (
+                                    <span className="text-[7px] px-1 py-0 rounded bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold uppercase flex items-center gap-0.5">
+                                      <Sparkles className="w-2 h-2" />
+                                      FLAT
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="flex items-center gap-1 text-[8px] text-muted-foreground/70">
-                                  <span>from {pe.sourceName}</span>
-                                  <span>·</span>
-                                  <span className="italic">{pe.cardName}</span>
+                                  <span>from {pt.sourceName}</span>
+                                  <span>&middot;</span>
+                                  <span className="italic">{pt.cardName}</span>
                                 </div>
                               </div>
 
-                              {/* Value with formula */}
+                              {/* Value with tick info */}
                               <div className="flex-shrink-0 text-right">
                                 <span
                                   className={`text-sm font-black ${config.colorClass}`}
                                   style={{ fontFamily: "var(--font-heading)" }}
                                 >
-                                  {isNegative ? "-" : "+"}{pe.projectedValue}
+                                  {isNegative ? "-" : "+"}{pt.tickValue}
                                 </span>
-                                <div className="text-[7px] text-muted-foreground/70 font-medium" style={{ fontFamily: "var(--font-heading)" }}>
-                                  {pe.baseValue}×{pe.round}={pe.projectedValue}
-                                </div>
-                                <div className="text-[7px] text-muted-foreground/50" style={{ fontFamily: "var(--font-heading)" }}>
-                                  {pe.remainingRounds > 0
-                                    ? `${pe.remainingRounds} round${pe.remainingRounds > 1 ? "s" : ""} left`
-                                    : "EXPIRES"}
-                                </div>
+                                {pt.isCompounding && (
+                                  <div className="text-[7px] text-muted-foreground/70 font-medium" style={{ fontFamily: "var(--font-heading)" }}>
+                                    {pt.baseValue}&times;{COMPOUND_MULTIPLIERS[pt.tickIndex]}
+                                  </div>
+                                )}
+                                {pt.isCompounding && pt.tickIndex < pt.totalTicks - 1 && (
+                                  <div className="text-[7px] text-neon-yellow/50" style={{ fontFamily: "var(--font-heading)" }}>
+                                    {pt.totalTicks - pt.tickIndex - 1} tick{pt.totalTicks - pt.tickIndex - 1 > 1 ? "s" : ""} left
+                                  </div>
+                                )}
+                                {pt.isCompounding && pt.tickIndex === pt.totalTicks - 1 && (
+                                  <div className="text-[7px] text-red-400/50" style={{ fontFamily: "var(--font-heading)" }}>
+                                    FINAL TICK
+                                  </div>
+                                )}
                               </div>
                             </motion.div>
                           );
@@ -365,13 +397,13 @@ export default function CompoundBalanceSheet({
                 className="text-[9px] text-neon-cyan/60 text-center font-bold"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                FORMULA: Base Value × Round Number = Actual Effect
+                COMPOUNDING: base &times;1 &rarr; base &times;1 &rarr; base &times;2
               </p>
               <p
                 className="text-[8px] text-muted-foreground/60 text-center italic"
                 style={{ fontFamily: "var(--font-body)" }}
               >
-                Shields absorb damage before it hits HP. Catch-up bonuses trigger when you're behind.
+                Shields absorb damage before HP. Catch-up bonuses trigger when behind.
               </p>
             </div>
           </div>

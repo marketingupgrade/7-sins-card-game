@@ -161,3 +161,16 @@
 
 ## Bug Fixes (Round 5)
 - [x] Fix corruption/energy bar visual - switched from dynamic Tailwind classes to inline CSS custom properties
+
+## Compounding Mechanic Rework (Fibonacci [1, 1, 2])
+- [x] Redesign compounding: cards persist as escalating effects (DoT, HoT, SoT, steal-over-time)
+- [x] Cards are either FLAT (one-time powerful) or COMPOUNDING (weaker base, ticks for 3 rounds with Fibonacci [1,1,2])
+- [x] Compounding applies to: damage, heal, shield, steal HP/shield/energy
+- [x] Redesign all 48 cards with flat vs compounding categories
+- [x] Rebalance all cards with /math EV analysis
+- [x] Update shared types (CardDefinition, CardType, COMPOUND_MULTIPLIERS, getCompoundTickValue)
+- [x] Rewrite game engines (client + server + bot) for proper escalating DoT/HoT/SoT resolution
+- [x] Update UI to show flat vs compounding indicators and active tick effects
+- [x] Update Home page with flat vs compounding mechanic explainer
+- [x] Update and run tests (101 tests passing across 4 test files)
+- [ ] Push to GitHub for Vercel deployment

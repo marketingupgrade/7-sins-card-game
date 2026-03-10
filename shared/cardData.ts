@@ -1,43 +1,45 @@
 /**
- * Card Data Definitions for 7 Deadly Sins Card Game
+ * 7 Deadly Sins Card Game - Card Data
  *
- * Four sins, each with 10 cards forming a complete deck.
- * Balanced using EV/Corruption analysis (all within 1.7% of mean 5.48 EV/C).
+ * CARD SYSTEM: Flat vs Compounding
+ * ─────────────────────────────────
+ * FLAT cards: Instant, one-time effects. Powerful but no persistence.
+ *   - duration: 0 (resolves immediately)
+ *   - Higher base values to compensate for no scaling
  *
- * Design Philosophy:
- * - Wrath: High damage, self-harm, aggressive tempo. Wants to end games fast.
- * - Sloth: Shields, heals, DoTs, debuffs. Wants to stall and let compounding do the work.
- * - Greed: Steal/drain, value tempo, heal-from-damage. Snowball advantage.
- * - Envy: Reactive debuffs, mirror shields, punish strong opponents.
+ * COMPOUNDING cards: 3-round Fibonacci escalation [1×, 1×, 2×].
+ *   - Always 3 rounds. Only pay corruption cost on round 1.
+ *   - Tick 1: base × 1 | Tick 2: base × 1 | Tick 3: base × 2
+ *   - Total value = base × 4 over 3 rounds
+ *   - Applies to ALL effect types: damage, heal, shield, debuff, steal
  *
- * Corruption Costs (0-5 range):
- * - 0: Free but risky/conditional cards
- * - 1: Basic utility cards
- * - 2: Standard mid-range cards
- * - 3: Strong multi-target or sustained effects
- * - 4: Powerful finisher-tier cards
- * - 5: Ultimate game-changers
+ * BALANCE (/math verified, EV/Cost analysis):
+ * - Wrath:  Aggressive burst + self-harm. Flat-heavy.
+ * - Sloth:  Defensive stall + compounding heals/shields. Compounding-heavy.
+ * - Greed:  Steal/drain + value tempo. Mixed flat/compounding.
+ * - Envy:   Reactive debuffs + mirror effects. Debuff-compounding focus.
+ *
+ * Each faction: 12 cards (mix of flat + compounding + 2 catch-up)
  */
 
 import { CardDefinition } from "./gameTypes";
 
-// ─── WRATH CARDS (10) ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// WRATH — Aggressive burst damage, self-harm for power
+// Passive: OVERCHARGE (burn 2 HP for +1 energy)
+// Style: Flat-heavy (7 flat, 3 compounding, 2 catch-up)
+// ═══════════════════════════════════════════════════════════════
 export const WRATH_CARDS: CardDefinition[] = [
+  // ── FLAT CARDS (instant, powerful) ──
   {
-    id: "wrath_01",
-    name: "Fury Strike",
-    sin: "wrath",
-    cost: 1,
+    id: "wrath_01", name: "Fury Strike", sin: "wrath", cost: 1, cardType: "flat",
     effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
     flavorText: "A fist clenched so hard it draws its own blood.",
     narratorQuip: "Oh look, violence. How breathtakingly original.",
     tier: "common",
   },
   {
-    id: "wrath_02",
-    name: "Blind Rage",
-    sin: "wrath",
-    cost: 1,
+    id: "wrath_02", name: "Blind Rage", sin: "wrath", cost: 1, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
@@ -47,73 +49,24 @@ export const WRATH_CARDS: CardDefinition[] = [
     tier: "common",
   },
   {
-    id: "wrath_03",
-    name: "Blood Boil",
-    sin: "wrath",
-    cost: 2,
-    effects: [{ type: "damage", baseValue: 2, duration: 2, target: "single_enemy" }],
-    flavorText: "Their veins run hot with borrowed fury.",
-    narratorQuip: "That's going to leave a mark... for several rounds. Enjoy the suffering.",
-    tier: "rare",
-  },
-  {
-    id: "wrath_04",
-    name: "Berserker's Howl",
-    sin: "wrath",
-    cost: 3,
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
-    flavorText: "The scream that silences a battlefield.",
-    narratorQuip: "Screaming at everyone equally. True equality in action.",
-    tier: "rare",
-  },
-  {
-    id: "wrath_05",
-    name: "Crimson Slash",
-    sin: "wrath",
-    cost: 1,
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
-    flavorText: "Quick. Clean. Well, not clean exactly.",
-    narratorQuip: "Efficient. I'm almost impressed. Almost.",
-    tier: "common",
-  },
-  {
-    id: "wrath_06",
-    name: "Vendetta",
-    sin: "wrath",
-    cost: 2,
+    id: "wrath_03", name: "Vendetta", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 5, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Revenge is a dish best served... scalding.",
     narratorQuip: "Self-destructive AND aggressive? Peak Wrath energy right there.",
-    tier: "epic",
+    tier: "rare",
   },
   {
-    id: "wrath_07",
-    name: "Rage Shield",
-    sin: "wrath",
-    cost: 2,
-    effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
-    flavorText: "Even fury needs a moment to breathe.",
-    narratorQuip: "Defense? From the anger child? I'm SHOCKED. Shocked, I tell you.",
-    tier: "common",
+    id: "wrath_04", name: "Berserker's Howl", sin: "wrath", cost: 3, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "all_enemies" }],
+    flavorText: "The scream that silences a battlefield.",
+    narratorQuip: "Screaming at everyone equally. True equality in action.",
+    tier: "rare",
   },
   {
-    id: "wrath_08",
-    name: "Burning Hatred",
-    sin: "wrath",
-    cost: 3,
-    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
-    flavorText: "Hatred that lingers long after the blow.",
-    narratorQuip: "Three rounds of suffering. You really know how to hold a grudge.",
-    tier: "epic",
-  },
-  {
-    id: "wrath_09",
-    name: "Corruption Surge",
-    sin: "wrath",
-    cost: 0,
+    id: "wrath_05", name: "Corruption Surge", sin: "wrath", cost: 0, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 2, duration: 0, target: "self" },
@@ -123,198 +76,187 @@ export const WRATH_CARDS: CardDefinition[] = [
     tier: "rare",
   },
   {
-    id: "wrath_10",
-    name: "Apocalypse Fist",
-    sin: "wrath",
-    cost: 5,
+    id: "wrath_06", name: "Crimson Slash", sin: "wrath", cost: 1, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    flavorText: "Quick. Clean. Well, not clean exactly.",
+    narratorQuip: "Efficient. I'm almost impressed. Almost.",
+    tier: "common",
+  },
+  {
+    id: "wrath_07", name: "Apocalypse Fist", sin: "wrath", cost: 5, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 4, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 6, duration: 0, target: "all_enemies" },
       { type: "damage", baseValue: 3, duration: 0, target: "self" },
     ],
     flavorText: "The final argument in any debate.",
     narratorQuip: "Nuclear option deployed. Mutually assured destruction never looked so fun.",
     tier: "epic",
   },
-  // ─── WRATH CATCH-UP CARDS ───
+  // ── COMPOUNDING CARDS (3-round Fibonacci [1×, 1×, 2×]) ──
   {
-    id: "wrath_11",
-    name: "Desperate Fury",
-    sin: "wrath",
-    cost: 2,
+    id: "wrath_08", name: "Blood Boil", sin: "wrath", cost: 2, cardType: "compounding",
+    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
+    flavorText: "Their veins run hot with borrowed fury.",
+    narratorQuip: "2 damage... 2 more... then 4. That's the Fibonacci of pain.",
+    tier: "rare",
+  },
+  {
+    id: "wrath_09", name: "Burning Hatred", sin: "wrath", cost: 3, cardType: "compounding",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
+    flavorText: "Hatred that lingers long after the blow.",
+    narratorQuip: "3... 3... then 6. Three rounds of suffering. You really know how to hold a grudge.",
+    tier: "epic",
+  },
+  {
+    id: "wrath_10", name: "Rage Shield", sin: "wrath", cost: 2, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 2, duration: 3, target: "self" }],
+    flavorText: "Even fury needs a moment to breathe.",
+    narratorQuip: "Shield 2... 2... 4. Anger as armor. Surprisingly effective.",
+    tier: "common",
+  },
+  // ── CATCH-UP CARDS ──
+  {
+    id: "wrath_11", name: "Desperate Fury", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "The cornered beast strikes hardest.",
-    narratorQuip: "Nothing like impending doom to sharpen your aim. Extra damage when desperate.",
+    narratorQuip: "Nothing like impending doom to sharpen your aim.",
     tier: "rare",
     catchup: { type: "bonus_damage", bonusValue: 2, condition: "hp_less_than_target" },
   },
   {
-    id: "wrath_12",
-    name: "Last Stand",
-    sin: "wrath",
-    cost: 1,
-    effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
-    ],
+    id: "wrath_12", name: "Last Stand", sin: "wrath", cost: 1, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "When there's nothing left to lose, everything becomes a weapon.",
     narratorQuip: "Below 10 HP and still fighting? Here's some HP. Don't say I never gave you anything.",
-    tier: "rare",
+    tier: "common",
     catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_below_threshold" },
   },
 ];
 
-// ─── SLOTH CARDS (10) ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// SLOTH — Defensive stall, compounding heals and shields
+// Passive: LETHARGY (unspent energy carries over, max +2)
+// Style: Compounding-heavy (4 flat, 6 compounding, 2 catch-up)
+// ═══════════════════════════════════════════════════════════════
 export const SLOTH_CARDS: CardDefinition[] = [
+  // ── FLAT CARDS ──
   {
-    id: "sloth_01",
-    name: "Drowsy Touch",
-    sin: "sloth",
-    cost: 1,
-    effects: [{ type: "debuff", baseValue: 1, duration: 2, target: "single_enemy" }],
-    flavorText: "A yawn so contagious it weakens the soul.",
-    narratorQuip: "Weaponized boredom. We've reached peak laziness, folks.",
-    tier: "common",
-  },
-  {
-    id: "sloth_02",
-    name: "Pillow Fort",
-    sin: "sloth",
-    cost: 2,
-    effects: [{ type: "shield", baseValue: 3, duration: 2, target: "self" }],
-    flavorText: "The ultimate defense: not caring enough to get hit.",
-    narratorQuip: "Hiding behind pillows. Bold strategy, let's see if it pays off.",
-    tier: "rare",
-  },
-  {
-    id: "sloth_03",
-    name: "Lazy Drain",
-    sin: "sloth",
-    cost: 2,
+    id: "sloth_01", name: "Lazy Drain", sin: "sloth", cost: 2, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
-      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Why generate your own energy when you can borrow theirs?",
     narratorQuip: "Minimum effort, maximum annoyance. Chef's kiss.",
     tier: "common",
   },
   {
-    id: "sloth_04",
-    name: "Procrastination",
-    sin: "sloth",
-    cost: 1,
-    effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
-    flavorText: "I'll deal with that... eventually.",
-    narratorQuip: "Putting off death itself. Respect, honestly.",
-    tier: "common",
-  },
-  {
-    id: "sloth_05",
-    name: "Entropy Wave",
-    sin: "sloth",
-    cost: 3,
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "all_enemies" }],
-    flavorText: "Everything decays. Sloth just... accelerates the inevitable.",
-    narratorQuip: "Making everyone else as tired as you are. Misery loves company.",
-    tier: "epic",
-  },
-  {
-    id: "sloth_06",
-    name: "Hibernate",
-    sin: "sloth",
-    cost: 3,
-    effects: [{ type: "heal", baseValue: 3, duration: 2, target: "self" }],
-    flavorText: "Sometimes the best strategy is a really long nap.",
-    narratorQuip: "Sleeping through the apocalypse. Iconic behavior.",
-    tier: "rare",
-  },
-  {
-    id: "sloth_07",
-    name: "Lethargy Aura",
-    sin: "sloth",
-    cost: 2,
-    effects: [{ type: "debuff", baseValue: 2, duration: 2, target: "single_enemy" }],
-    flavorText: "Your muscles feel like wet concrete.",
-    narratorQuip: "Spreading the lethargy like a contagious yawn. Beautiful.",
-    tier: "rare",
-  },
-  {
-    id: "sloth_08",
-    name: "Passive Resistance",
-    sin: "sloth",
-    cost: 1,
+    id: "sloth_02", name: "Deep Slumber", sin: "sloth", cost: 0, cardType: "flat",
     effects: [
-      { type: "shield", baseValue: 1, duration: 1, target: "self" },
-      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
-    ],
-    flavorText: "Not fighting back IS the strategy.",
-    narratorQuip: "Defending and poking. The bare minimum, as always. On brand.",
-    tier: "common",
-  },
-  {
-    id: "sloth_09",
-    name: "Deep Slumber",
-    sin: "sloth",
-    cost: 0,
-    effects: [
-      { type: "heal", baseValue: 2, duration: 0, target: "self" },
-      { type: "debuff", baseValue: 1, duration: 1, target: "self" },
+      { type: "heal", baseValue: 3, duration: 0, target: "self" },
+      { type: "debuff", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "A nap so deep it makes you vulnerable. Worth it.",
     narratorQuip: "Free healing with a side of vulnerability. The lazy person's gamble.",
     tier: "rare",
   },
   {
-    id: "sloth_10",
-    name: "Eternal Rest",
-    sin: "sloth",
-    cost: 4,
+    id: "sloth_03", name: "Entropy Wave", sin: "sloth", cost: 3, cardType: "flat",
     effects: [
-      { type: "heal", baseValue: 5, duration: 0, target: "self" },
-      { type: "shield", baseValue: 3, duration: 2, target: "self" },
+      { type: "damage", baseValue: 2, duration: 0, target: "all_enemies" },
+      { type: "debuff", baseValue: 1, duration: 0, target: "all_enemies" },
+    ],
+    flavorText: "Everything decays. Sloth just... accelerates the inevitable.",
+    narratorQuip: "Spreading laziness like a plague. Everyone's slower now.",
+    tier: "rare",
+  },
+  {
+    id: "sloth_04", name: "Eternal Rest", sin: "sloth", cost: 4, cardType: "flat",
+    effects: [
+      { type: "heal", baseValue: 6, duration: 0, target: "self" },
+      { type: "shield", baseValue: 4, duration: 0, target: "self" },
     ],
     flavorText: "The deepest sleep grants the strongest armor.",
-    narratorQuip: "Full heal AND a shield? That's disgustingly defensive. I love it.",
+    narratorQuip: "10 points of pure defense. Go ahead, try to wake them.",
     tier: "epic",
   },
-  // ─── SLOTH CATCH-UP CARDS ───
+  // ── COMPOUNDING CARDS (3-round Fibonacci [1×, 1×, 2×]) ──
   {
-    id: "sloth_11",
-    name: "Survival Instinct",
-    sin: "sloth",
-    cost: 1,
-    effects: [
-      { type: "shield", baseValue: 2, duration: 1, target: "self" },
-    ],
-    flavorText: "Even the laziest creature fights when cornered.",
-    narratorQuip: "Sloth actually trying? Things must be dire. Bonus heal when you're the underdog.",
+    id: "sloth_05", name: "Hibernate", sin: "sloth", cost: 2, cardType: "compounding",
+    effects: [{ type: "heal", baseValue: 2, duration: 3, target: "self" }],
+    flavorText: "Three rounds of beauty sleep.",
+    narratorQuip: "Heal 2... 2... then 4. Napping their way to victory.",
     tier: "rare",
+  },
+  {
+    id: "sloth_06", name: "Pillow Fort", sin: "sloth", cost: 2, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 2, duration: 3, target: "self" }],
+    flavorText: "The ultimate defense: not caring enough to get hit.",
+    narratorQuip: "Shield 2... 2... 4. The pillow fort grows stronger each round.",
+    tier: "rare",
+  },
+  {
+    id: "sloth_07", name: "Drowsy Touch", sin: "sloth", cost: 1, cardType: "compounding",
+    effects: [{ type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" }],
+    flavorText: "A yawn so contagious it weakens the soul.",
+    narratorQuip: "Debuff 1... 1... 2. Weaponized boredom at its finest.",
+    tier: "common",
+  },
+  {
+    id: "sloth_08", name: "Lethargy Aura", sin: "sloth", cost: 3, cardType: "compounding",
+    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
+    flavorText: "Your muscles feel like wet concrete.",
+    narratorQuip: "Debuff 2... 2... 4. They've forgotten how to fight.",
+    tier: "epic",
+  },
+  {
+    id: "sloth_09", name: "Procrastination", sin: "sloth", cost: 1, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 1, duration: 3, target: "self" }],
+    flavorText: "I'll deal with that... eventually.",
+    narratorQuip: "Shield 1... 1... 2. Putting off death one round at a time.",
+    tier: "common",
+  },
+  {
+    id: "sloth_10", name: "Passive Resistance", sin: "sloth", cost: 1, cardType: "compounding",
+    effects: [
+      { type: "shield", baseValue: 1, duration: 3, target: "self" },
+      { type: "damage", baseValue: 1, duration: 3, target: "single_enemy" },
+    ],
+    flavorText: "Not fighting back IS the strategy.",
+    narratorQuip: "Shield AND damage, compounding. 1... 1... 2 each. Lazy multitasking.",
+    tier: "common",
+  },
+  // ── CATCH-UP CARDS ──
+  {
+    id: "sloth_11", name: "Survival Instinct", sin: "sloth", cost: 1, cardType: "flat",
+    effects: [{ type: "shield", baseValue: 2, duration: 0, target: "self" }],
+    flavorText: "Even the laziest creature fights when cornered.",
+    narratorQuip: "Sloth actually trying? Things must be dire.",
+    tier: "common",
     catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_less_than_any_opponent" },
   },
   {
-    id: "sloth_12",
-    name: "Feign Death",
-    sin: "sloth",
-    cost: 2,
-    effects: [
-      { type: "shield", baseValue: 3, duration: 2, target: "self" },
-    ],
+    id: "sloth_12", name: "Feign Death", sin: "sloth", cost: 2, cardType: "flat",
+    effects: [{ type: "shield", baseValue: 3, duration: 0, target: "self" }],
     flavorText: "Playing dead is an art form. And an effective strategy.",
     narratorQuip: "Playing possum AND spreading debuffs? Devious laziness at its finest.",
-    tier: "epic",
-    catchup: { type: "bonus_debuff_all", bonusValue: 1, bonusDuration: 2, condition: "hp_below_threshold" },
+    tier: "rare",
+    catchup: { type: "bonus_debuff_all", bonusValue: 1, bonusDuration: 1, condition: "hp_below_threshold" },
   },
 ];
 
-// ─── GREED CARDS (10) ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// GREED — Steal/drain, value tempo, heal from damage
+// Passive: AVARICE (cards costing 3+ grant +1 bonus energy next turn)
+// Style: Mixed (6 flat, 4 compounding, 2 catch-up)
+// ═══════════════════════════════════════════════════════════════
 export const GREED_CARDS: CardDefinition[] = [
+  // ── FLAT CARDS ──
   {
-    id: "greed_01",
-    name: "Pocket Pick",
-    sin: "greed",
-    cost: 1,
+    id: "greed_01", name: "Pocket Pick", sin: "greed", cost: 1, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
@@ -324,89 +266,27 @@ export const GREED_CARDS: CardDefinition[] = [
     tier: "common",
   },
   {
-    id: "greed_02",
-    name: "Tax Collector",
-    sin: "greed",
-    cost: 1,
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    id: "greed_02", name: "Tax Collector", sin: "greed", cost: 1, cardType: "flat",
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
     flavorText: "Nothing is certain except death and taxes. This is both.",
     narratorQuip: "The only thing more inevitable than this damage is the paperwork.",
     tier: "common",
   },
   {
-    id: "greed_03",
-    name: "Compound Interest",
-    sin: "greed",
-    cost: 2,
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
-    flavorText: "The eighth wonder of the world, weaponized.",
-    narratorQuip: "Slow, steady, and absolutely merciless. Just like actual compound interest.",
-    tier: "rare",
-  },
-  {
-    id: "greed_04",
-    name: "Hostile Takeover",
-    sin: "greed",
-    cost: 3,
+    id: "greed_03", name: "Hostile Takeover", sin: "greed", cost: 3, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
-      { type: "heal", baseValue: 2, duration: 0, target: "self" },
+      { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 3, duration: 0, target: "self" },
     ],
     flavorText: "Your assets are being... restructured.",
     narratorQuip: "Corporate violence at its finest. The board approves.",
-    tier: "epic",
-  },
-  {
-    id: "greed_05",
-    name: "Golden Shield",
-    sin: "greed",
-    cost: 2,
-    effects: [{ type: "shield", baseValue: 2, duration: 2, target: "self" }],
-    flavorText: "Money can't buy happiness, but it makes excellent armor.",
-    narratorQuip: "Hiding behind gold. The rich person's survival strategy since forever.",
     tier: "rare",
   },
   {
-    id: "greed_06",
-    name: "Embezzle",
-    sin: "greed",
-    cost: 1,
-    effects: [
-      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
-      { type: "heal", baseValue: 2, duration: 0, target: "self" },
-    ],
-    flavorText: "Skimming off the top. Nobody will notice. Probably.",
-    narratorQuip: "Creative accounting meets creative violence. Beautiful.",
-    tier: "common",
-  },
-  {
-    id: "greed_07",
-    name: "Market Crash",
-    sin: "greed",
-    cost: 3,
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
-    flavorText: "When the market crashes, everyone loses. Except you.",
-    narratorQuip: "Economic devastation as a weapon. Wall Street would be proud.",
-    tier: "rare",
-  },
-  {
-    id: "greed_08",
-    name: "Loan Shark",
-    sin: "greed",
-    cost: 2,
-    effects: [
-      { type: "damage", baseValue: 2, duration: 2, target: "single_enemy" },
-      { type: "damage", baseValue: 1, duration: 0, target: "self" },
-    ],
-    flavorText: "The interest rate is your blood. Terms are non-negotiable.",
-    narratorQuip: "Lending pain at predatory rates. The fine print is brutal.",
-    tier: "rare",
-  },
-  {
-    id: "greed_09",
-    name: "Insider Trading",
-    sin: "greed",
-    cost: 0,
+    id: "greed_04", name: "Insider Trading", sin: "greed", cost: 0, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
@@ -416,151 +296,122 @@ export const GREED_CARDS: CardDefinition[] = [
     tier: "rare",
   },
   {
-    id: "greed_10",
-    name: "Midas Touch",
-    sin: "greed",
-    cost: 4,
+    id: "greed_05", name: "Midas Touch", sin: "greed", cost: 5, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "all_enemies" },
-      { type: "heal", baseValue: 3, duration: 0, target: "self" },
+      { type: "damage", baseValue: 4, duration: 0, target: "all_enemies" },
+      { type: "heal", baseValue: 4, duration: 0, target: "self" },
     ],
     flavorText: "Everything you touch turns to gold. Everything they touch turns to pain.",
-    narratorQuip: "The ultimate power move. Heal yourself while destroying everyone else. Peak greed.",
+    narratorQuip: "The ultimate power move. Heal yourself while destroying everyone else.",
     tier: "epic",
   },
-  // ─── GREED CATCH-UP CARDS ───
   {
-    id: "greed_11",
-    name: "Desperate Gambit",
-    sin: "greed",
-    cost: 1,
+    id: "greed_06", name: "Market Crash", sin: "greed", cost: 3, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "all_enemies" }],
+    flavorText: "When the market crashes, everyone loses. Except you.",
+    narratorQuip: "Economic devastation as a weapon. Wall Street would be proud.",
+    tier: "rare",
+  },
+  // ── COMPOUNDING CARDS (3-round Fibonacci [1×, 1×, 2×]) ──
+  {
+    id: "greed_07", name: "Compound Interest", sin: "greed", cost: 2, cardType: "compounding",
+    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
+    flavorText: "The eighth wonder of the world, weaponized.",
+    narratorQuip: "2... 2... 4 damage. Slow, steady, and absolutely merciless.",
+    tier: "rare",
+  },
+  {
+    id: "greed_08", name: "Loan Shark", sin: "greed", cost: 3, cardType: "compounding",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
+    flavorText: "The interest rate is your blood. Terms are non-negotiable.",
+    narratorQuip: "3... 3... 6 damage. Should've read the fine print.",
+    tier: "epic",
+  },
+  {
+    id: "greed_09", name: "Golden Shield", sin: "greed", cost: 2, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 1, duration: 3, target: "self" }],
+    flavorText: "Money can't buy happiness, but it makes excellent armor.",
+    narratorQuip: "Shield 1... 1... 2. Gold-plated defense.",
+    tier: "common",
+  },
+  {
+    id: "greed_10", name: "Embezzle", sin: "greed", cost: 1, cardType: "compounding",
+    effects: [{ type: "heal", baseValue: 1, duration: 3, target: "self" }],
+    flavorText: "Skimming off the top. Nobody will notice. Probably.",
+    narratorQuip: "Heal 1... 1... 2. Creative accounting meets creative healing.",
+    tier: "common",
+  },
+  // ── CATCH-UP CARDS ──
+  {
+    id: "greed_11", name: "Desperate Gambit", sin: "greed", cost: 1, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "When the chips are down, bet everything.",
     narratorQuip: "Doubling down when you're losing. Classic gambler's fallacy. But it works here.",
-    tier: "rare",
+    tier: "common",
     catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_less_than_target" },
   },
   {
-    id: "greed_12",
-    name: "Bankruptcy Protection",
-    sin: "greed",
-    cost: 2,
+    id: "greed_12", name: "Bankruptcy Protection", sin: "greed", cost: 2, cardType: "flat",
     effects: [
-      { type: "shield", baseValue: 2, duration: 1, target: "self" },
+      { type: "shield", baseValue: 2, duration: 0, target: "self" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Chapter 11: The shield that keeps on giving.",
     narratorQuip: "Filing for bankruptcy protection. In a card game. The greed is meta.",
-    tier: "epic",
+    tier: "rare",
     catchup: { type: "bonus_heal", bonusValue: 3, condition: "hp_below_threshold" },
   },
 ];
 
-// ─── ENVY CARDS (10) ────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// ENVY — Reactive debuffs, mirror effects, punish success
+// Passive: COVET (gain +1 energy if any opponent has more HP)
+// Style: Debuff-compounding focus (6 flat, 4 compounding, 2 catch-up)
+// ═══════════════════════════════════════════════════════════════
 export const ENVY_CARDS: CardDefinition[] = [
+  // ── FLAT CARDS ──
   {
-    id: "envy_01",
-    name: "Jealous Glare",
-    sin: "envy",
-    cost: 1,
+    id: "envy_01", name: "Jealous Glare", sin: "envy", cost: 1, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
-      { type: "debuff", baseValue: 1, duration: 1, target: "single_enemy" },
+      { type: "debuff", baseValue: 1, duration: 0, target: "single_enemy" },
     ],
     flavorText: "If looks could kill. Well, this one can.",
     narratorQuip: "Staring daggers, literally. The pettiest form of combat.",
     tier: "common",
   },
   {
-    id: "envy_02",
-    name: "Bitter Reflection",
-    sin: "envy",
-    cost: 2,
+    id: "envy_02", name: "Bitter Reflection", sin: "envy", cost: 2, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
-      { type: "shield", baseValue: 2, duration: 1, target: "self" },
+      { type: "shield", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Your strength becomes my shield. Poetic, isn't it?",
     narratorQuip: "Mirroring your opponent's power. Flattery through violence.",
     tier: "rare",
   },
   {
-    id: "envy_03",
-    name: "Covetous Strike",
-    sin: "envy",
-    cost: 1,
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    id: "envy_03", name: "Covetous Strike", sin: "envy", cost: 1, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
     flavorText: "I want what you have. Starting with your HP.",
     narratorQuip: "Pure jealousy, concentrated into a fist. Efficient.",
     tier: "common",
   },
   {
-    id: "envy_04",
-    name: "Green-Eyed Curse",
-    sin: "envy",
-    cost: 2,
-    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
-    flavorText: "The curse of wanting what others have. Now it's their problem.",
-    narratorQuip: "A long, lingering curse. Because envy never fades quickly.",
-    tier: "rare",
-  },
-  {
-    id: "envy_05",
-    name: "Spite Shield",
-    sin: "envy",
-    cost: 1,
-    effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
-    flavorText: "Built from pure resentment. Surprisingly durable.",
-    narratorQuip: "Shielding yourself with spite. Whatever works, I suppose.",
-    tier: "common",
-  },
-  {
-    id: "envy_06",
-    name: "Toxic Comparison",
-    sin: "envy",
-    cost: 3,
+    id: "envy_04", name: "Schadenfreude", sin: "envy", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 2, target: "single_enemy" },
-      { type: "debuff", baseValue: 1, duration: 2, target: "single_enemy" },
-    ],
-    flavorText: "Comparing yourself to others is poison. Now it's their poison too.",
-    narratorQuip: "Social media in card form. Devastating and persistent.",
-    tier: "epic",
-  },
-  {
-    id: "envy_07",
-    name: "Schadenfreude",
-    sin: "envy",
-    cost: 2,
-    effects: [
-      { type: "damage", baseValue: 1, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 2, duration: 0, target: "all_enemies" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Their pain is your pleasure. Literally.",
     narratorQuip: "Healing from other people's suffering. The most honest card in the game.",
-    tier: "common",
-  },
-  {
-    id: "envy_08",
-    name: "Copycat",
-    sin: "envy",
-    cost: 2,
-    effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
-      { type: "damage", baseValue: 1, duration: 0, target: "self" },
-    ],
-    flavorText: "Imitation is the sincerest form of violence.",
-    narratorQuip: "Copying someone else's moves but worse. The envy special.",
     tier: "rare",
   },
   {
-    id: "envy_09",
-    name: "Stolen Glory",
-    sin: "envy",
-    cost: 0,
+    id: "envy_05", name: "Stolen Glory", sin: "envy", cost: 0, cardType: "flat",
     effects: [
       { type: "heal", baseValue: 2, duration: 0, target: "self" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
@@ -570,50 +421,73 @@ export const ENVY_CARDS: CardDefinition[] = [
     tier: "rare",
   },
   {
-    id: "envy_10",
-    name: "Doppelganger",
-    sin: "envy",
-    cost: 4,
+    id: "envy_06", name: "Doppelganger", sin: "envy", cost: 4, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
-      { type: "shield", baseValue: 2, duration: 2, target: "self" },
-      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+      { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
+      { type: "shield", baseValue: 3, duration: 0, target: "self" },
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Why be yourself when you can be a better version of everyone else?",
     narratorQuip: "The ultimate identity theft. Damage, shield, AND heal. Greedy for an Envy card.",
     tier: "epic",
   },
-  // ─── ENVY CATCH-UP CARDS ───
+  // ── COMPOUNDING CARDS (3-round Fibonacci [1×, 1×, 2×]) ──
   {
-    id: "envy_11",
-    name: "Resentful Strike",
-    sin: "envy",
-    cost: 1,
+    id: "envy_07", name: "Green-Eyed Curse", sin: "envy", cost: 2, cardType: "compounding",
+    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
+    flavorText: "The curse of wanting what others have. Now it's their problem.",
+    narratorQuip: "Debuff 2... 2... 4. The green-eyed monster is hungry.",
+    tier: "rare",
+  },
+  {
+    id: "envy_08", name: "Toxic Comparison", sin: "envy", cost: 3, cardType: "compounding",
+    effects: [
+      { type: "damage", baseValue: 2, duration: 3, target: "single_enemy" },
+      { type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" },
+    ],
+    flavorText: "Comparing yourself to others is poison. Now it's their poison too.",
+    narratorQuip: "Damage 2+debuff 1... same... then 4+2. Social media in card form.",
+    tier: "epic",
+  },
+  {
+    id: "envy_09", name: "Spite Shield", sin: "envy", cost: 1, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 1, duration: 3, target: "self" }],
+    flavorText: "Built from pure resentment. Surprisingly durable.",
+    narratorQuip: "Shield 1... 1... 2. Spite is a great building material.",
+    tier: "common",
+  },
+  {
+    id: "envy_10", name: "Copycat", sin: "envy", cost: 2, cardType: "compounding",
+    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
+    flavorText: "Imitation is the sincerest form of violence.",
+    narratorQuip: "1... 1... 2 damage. Copying their moves, but worse.",
+    tier: "common",
+  },
+  // ── CATCH-UP CARDS ──
+  {
+    id: "envy_11", name: "Resentful Strike", sin: "envy", cost: 1, cardType: "flat",
     effects: [
       { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
-      { type: "debuff", baseValue: 1, duration: 1, target: "self" },
+      { type: "debuff", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "The deeper the envy, the sharper the blade.",
-    narratorQuip: "Jealousy fuels this strike. More damage when they have more HP. Poetic justice.",
+    narratorQuip: "Jealousy fuels this strike. More damage when they have more HP.",
     tier: "rare",
     catchup: { type: "bonus_damage", bonusValue: 2, condition: "hp_less_than_target" },
   },
   {
-    id: "envy_12",
-    name: "Equalizer",
-    sin: "envy",
-    cost: 3,
-    effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "all_enemies" },
-    ],
+    id: "envy_12", name: "Equalizer", sin: "envy", cost: 3, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
     flavorText: "If I can't have what they have, nobody can.",
-    narratorQuip: "The great equalizer. Damage everyone, heal yourself if you're the weakest. Fair? No. Fun? Absolutely.",
+    narratorQuip: "The great equalizer. Damage everyone, heal yourself if you're the weakest.",
     tier: "epic",
     catchup: { type: "bonus_heal", bonusValue: 3, condition: "hp_lowest" },
   },
 ];
 
-// ─── Card Registry ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════
+// CARD REGISTRY
+// ═══════════════════════════════════════════════════════════════
 export const ALL_CARDS: CardDefinition[] = [...WRATH_CARDS, ...SLOTH_CARDS, ...GREED_CARDS, ...ENVY_CARDS];
 
 export const CARD_MAP: Record<string, CardDefinition> = {};
@@ -635,7 +509,9 @@ export function getDeckForSin(sin: "wrath" | "sloth" | "greed" | "envy"): string
   return (cardMap[sin] || []).map((c) => c.id);
 }
 
-// ─── Narrator Lines (Maximum Sass & Cynicism) ────────────────
+// ═══════════════════════════════════════════════════════════════
+// NARRATOR LINES (Maximum Sass & Cynicism)
+// ═══════════════════════════════════════════════════════════════
 export const NARRATOR_LINES = {
   gameStart: [
     "Oh wonderful, another batch of sinners. Try not to embarrass yourselves.",
@@ -647,13 +523,12 @@ export const NARRATOR_LINES = {
     "Welcome back. Your persistence is either admirable or pathological.",
   ],
   roundStart: [
-    "Round {round}. The damage compounds now, because life wasn't unfair enough.",
-    "Round {round}. Things are about to get exponentially worse. You're welcome.",
-    "Welcome to Round {round}. Your cards hit harder. So does regret.",
-    "Round {round} begins. The math is getting scary and so am I.",
-    "Round {round}. Remember when damage was small? Those were the days.",
+    "Round {round}. The compounding effects are ticking. Can you feel it?",
+    "Round {round}. Those Fibonacci multipliers don't care about your feelings.",
+    "Round {round}. Tick... tick... BOOM. That's the [1×, 1×, 2×] kicking in.",
+    "Round {round} begins. Your compounding cards are doing the heavy lifting.",
+    "Round {round}. Flat cards hit once. Compounding cards hit forever. Choose wisely.",
     "Round {round}. The escalation continues. Just like your bad decisions.",
-    "Round {round}. Compounding interest, but for pain. Capitalism meets combat.",
     "Round {round}. More corruption flows. Spend it wisely. Or don't. I'm not your accountant.",
   ],
   playerEliminated: [
@@ -700,10 +575,10 @@ export const NARRATOR_LINES = {
   ],
   highDamage: [
     "MASSIVE hit! That's going to leave a crater, not just a mark.",
-    "The damage numbers are getting ridiculous. I love it.",
+    "The compounding payoff just hit. That 2× multiplier is no joke.",
     "That hit was so hard, the other players felt it too.",
     "Overkill? Never heard of it. That damage was *chef's kiss*.",
-    "The compounding mechanic was a mistake. A beautiful, violent mistake.",
+    "The Fibonacci mechanic was a mistake. A beautiful, violent mistake.",
   ],
   cardPlayed: [
     "{player} plays {card}. Bold move for someone with that HP.",
@@ -752,5 +627,11 @@ export const NARRATOR_LINES = {
     "Damage blocked by shield. Defense actually working? Shocking.",
     "The shield takes the blow. Your HP thanks you for the foresight.",
     "Absorbed! That shield earned its keep today.",
+  ],
+  compoundingTick: [
+    "Tick... tick... the compounding effect grows. {value} this round.",
+    "Fibonacci says hello. {value} damage this tick.",
+    "The compound effect ticks for {value}. Patience pays off. Violently.",
+    "Round {tick} of 3. The escalation is real.",
   ],
 };

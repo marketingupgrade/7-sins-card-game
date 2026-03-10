@@ -1,0 +1,78 @@
+{
+  "optimal_model": "fibonacci",
+  "multipliers": [
+    1,
+    1,
+    2
+  ],
+  "total_multiplier": 4,
+  "card_framework": {
+    "0": {
+      "flat_value": 2,
+      "compound_base": 1,
+      "compound_ticks": [
+        1,
+        1,
+        2
+      ],
+      "compound_total": 4,
+      "balance_ratio": 2.0
+    },
+    "1": {
+      "flat_value": 4,
+      "compound_base": 1,
+      "compound_ticks": [
+        1,
+        1,
+        2
+      ],
+      "compound_total": 4,
+      "balance_ratio": 1.0
+    },
+    "2": {
+      "flat_value": 6,
+      "compound_base": 2,
+      "compound_ticks": [
+        2,
+        2,
+        4
+      ],
+      "compound_total": 8,
+      "balance_ratio": 1.3333333333333333
+    },
+    "3": {
+      "flat_value": 9,
+      "compound_base": 2,
+      "compound_ticks": [
+        2,
+        2,
+        4
+      ],
+      "compound_total": 8,
+      "balance_ratio": 0.8888888888888888
+    },
+    "4": {
+      "flat_value": 12,
+      "compound_base": 3,
+      "compound_ticks": [
+        3,
+        3,
+        6
+      ],
+      "compound_total": 12,
+      "balance_ratio": 1.0
+    },
+    "5": {
+      "flat_value": 16,
+      "compound_base": 4,
+      "compound_ticks": [
+        4,
+        4,
+        8
+      ],
+      "compound_total": 16,
+      "balance_ratio": 1.0
+    }
+  },
+  "recommended_hp": 25
+}
