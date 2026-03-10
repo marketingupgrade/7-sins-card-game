@@ -218,3 +218,17 @@
 - [x] GameCard: Energy cost orb with sin-colored glow shadow
 - [x] All 122 tests still passing
 - [ ] Push to GitHub for Vercel deployment
+
+## Open Source Asset Integration
+- [x] Browse opensource3dassets.com for card art, faction icons, and background textures (3D models, not ideal for 2D card game)
+- [x] Browse opengameart.org for card art, icons, sound effects, and UI elements
+- [x] Download and prepare 17 SFX files (WAV→MP3 conversion) + 16 spell icons (PNG) uploaded to CDN
+- [x] Integrate Painterly Spell Icons (CC-BY 3.0) as card art — sin-specific icons for damage, heal, shield, buff, debuff, energy
+- [x] Create cardIconMap.ts mapping card effects × sins to appropriate spell icons
+- [x] Create SoundEngine (soundEngine.ts) — preloading, volume control, localStorage persistence, game event mapping
+- [x] Integrate 17 contextual SFX: fire/ice/electric damage, heal chimes, shield activate, dark magic, energy drain, card play/draw/shuffle, turn pass, teleport
+- [x] Sin-specific damage sounds: Wrath=fire, Sloth=ice, Envy=electric, Greed=sword swing
+- [x] Sound effects on Home (create/join), Lobby (sin select, add bot, start), GameBoard (play card, pass, overcharge)
+- [x] SoundToggle component with volume slider, mute toggle, hover reveal
+- [x] All 122 tests still passing across 5 files
+- [ ] Push to GitHub for Vercel deployment

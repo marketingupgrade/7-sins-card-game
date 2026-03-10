@@ -27,6 +27,8 @@ import {
 import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, getCompoundTickValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
 import EmberField from "@/components/EmberField";
+import { SoundToggle } from "@/components/SoundToggle";
+import { soundEngine } from "@/lib/soundEngine";
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -129,6 +131,25 @@ export default function GameBoard() {
 
     setIsPlayingCard(true);
     try {
+      // Play card sound effect based on card type
+      const cardEffects = card.effects.map(e => e.type);
+      if (cardEffects.includes("damage")) {
+        const sin = card.sin;
+        if (sin === "wrath") soundEngine.play("damage_fire");
+        else if (sin === "sloth") soundEngine.play("damage_ice");
+        else if (sin === "envy") soundEngine.play("damage_electric");
+        else soundEngine.play("damage_generic");
+      } else if (cardEffects.includes("heal")) {
+        soundEngine.play("heal");
+      } else if (cardEffects.includes("shield")) {
+        soundEngine.play("shield");
+      } else if (cardEffects.includes("energy_drain")) {
+        soundEngine.play("energy_drain");
+      } else if (cardEffects.includes("debuff")) {
+        soundEngine.play("steal");
+      } else {
+        soundEngine.play("card_play");
+      }
       const result = await playCard(gameId, playerId, selectedCard, selectedTarget || undefined);
       addMessage(result.narratorQuip, "action");
       setSelectedCard(null);
@@ -144,6 +165,7 @@ export default function GameBoard() {
   const handlePass = async () => {
     if (!gameId) return;
     setIsPassing(true);
+    soundEngine.play("turn_pass");
     try {
       await passTurn(gameId, playerId);
       addRandomLine("pass", { player: myPlayer?.username || "Someone" });
@@ -159,6 +181,7 @@ export default function GameBoard() {
   const handleOvercharge = async () => {
     if (!gameId) return;
     setIsOvercharging(true);
+    soundEngine.play("damage_fire");
     try {
       const result = await clientOvercharge(gameId, playerId);
       addMessage(`Overcharged! Burned ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption. The rage feeds itself.`, "action");
@@ -345,6 +368,7 @@ export default function GameBoard() {
           >
             <ScrollText className="w-4 h-4" />
           </Button>
+          <SoundToggle />
         </div>
       </div>
 

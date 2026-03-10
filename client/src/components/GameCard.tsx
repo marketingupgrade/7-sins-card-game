@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import { useRef, useCallback } from "react";
 import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye, Timer, Sparkles } from "lucide-react";
 import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
+import { getCardIcon } from "@/lib/cardIconMap";
+import { soundEngine } from "@/lib/soundEngine";
 
 interface GameCardProps {
   card: CardDefinition;
@@ -203,18 +205,34 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       </div>
 
       {/* Card Art Area */}
-      <div
-        className="mx-2 h-12 rounded-lg flex items-center justify-center relative overflow-hidden"
-        style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}
-      >
-        <div className="absolute inset-0 opacity-10">
+      {(() => {
+        const primaryEffect = card.effects[0]?.type || "damage";
+        const iconUrl = getCardIcon(primaryEffect as any, card.sin);
+        return (
           <div
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full border"
-            style={{ borderColor: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }}
-          />
-        </div>
-        <SinIcon className="w-6 h-6 relative z-10" style={{ color: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }} />
-      </div>
+            className="mx-2 h-14 rounded-lg flex items-center justify-center relative overflow-hidden"
+            style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}
+          >
+            <div className="absolute inset-0 opacity-10">
+              <div
+                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-14 h-14 rounded-full border"
+                style={{ borderColor: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }}
+              />
+            </div>
+            {iconUrl ? (
+              <img
+                src={iconUrl}
+                alt={card.name}
+                className="w-10 h-10 relative z-10 object-contain drop-shadow-lg"
+                style={{ filter: `drop-shadow(0 0 6px color-mix(in oklch, var(--color-${cfg.color}) 40%, transparent))` }}
+                loading="lazy"
+              />
+            ) : (
+              <SinIcon className="w-6 h-6 relative z-10" style={{ color: `color-mix(in oklch, var(--color-${cfg.color}) 30%, transparent)` }} />
+            )}
+          </div>
+        );
+      })()}
 
       {/* Card Name */}
       <div className="px-2.5 py-1">

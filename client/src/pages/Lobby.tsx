@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
 import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import { soundEngine } from "@/lib/soundEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { chooseSin, startGame, getGameState } from "@/lib/gameEngine";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
@@ -147,6 +148,7 @@ export default function Lobby() {
 
   const handleChooseSin = async (sin: SinType) => {
     if (!gameId) return;
+    soundEngine.play("ui_click");
     try {
       await chooseSin(gameId, playerId, sin);
       const cfg = SIN_CONFIG[sin];
@@ -161,6 +163,7 @@ export default function Lobby() {
     if (!gameId || isAddingBot) return;
     setIsAddingBot(true);
     try {
+      soundEngine.play("teleport");
       const { botId, botName } = await addBot(gameId);
       const chosenSin = await botChooseSin(gameId, botId);
       addMessage(
@@ -178,6 +181,7 @@ export default function Lobby() {
   const handleStart = async () => {
     if (!gameId || isStarting) return;
     setIsStarting(true);
+    soundEngine.play("game_start");
     try {
       await startGame(gameId);
       setLocation(`/game/${gameId}`);

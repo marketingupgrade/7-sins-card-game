@@ -15,6 +15,7 @@ import EmberField from "@/components/EmberField";
 import { useCard3DTilt } from "@/hooks/useCard3DTilt";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
+import { soundEngine } from "@/lib/soundEngine";
 
 const SASSY_TAGLINES = [
   "Where your sins become someone else's problem.",
@@ -69,6 +70,7 @@ export default function Home() {
     }
     setError(null);
     setIsCreating(true);
+    soundEngine.play("card_shuffle");
     localStorage.setItem("7sins_username", username.trim());
     try {
       const result = await createGame(playerId, username.trim());
@@ -91,6 +93,7 @@ export default function Home() {
     }
     setError(null);
     setIsJoining(true);
+    soundEngine.play("teleport");
     localStorage.setItem("7sins_username", username.trim());
     try {
       const result = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
