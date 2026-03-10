@@ -1,0 +1,439 @@
+/**
+ * Bot Engine - AI-controlled players for solo testing
+ *
+ * Bots have sassy names, auto-choose sins, and play cards
+ * with basic strategic intelligence. They add a slight delay
+ * to simulate "thinking" because even fake players deserve drama.
+ */
+
+import { getClientSupabase } from "../../../shared/supabaseClient";
+import { getCardById, getDeckForSin, WRATH_CARDS, SLOTH_CARDS } from "../../../shared/cardData";
+import {
+  SinType,
+  HAND_SIZE,
+  STARTING_HP,
+  calculateEffectiveValue,
+} from "../../../shared/gameTypes";
+
+// ─── Bot Names (sassy and cynical) ──────────────────────────
+const BOT_NAMES = [
+  "NotAHuman_420",
+  "DefinitelyReal",
+  "BeepBoop_lol",
+  "SkynetJr",
+  "NPC_Energy",
+  "CtrlAltDefeat",
+  "Error404Soul",
+  "BotOfDuty",
+  "SiliconSinner",
+  "RageQuitBot",
+  "LazyAlgorithm",
+  "ChaosModule",
+  "GlitchDemon",
+  "PixelPeasant",
+  "BufferOverlord",
+];
+
+function getRandomBotName(): string {
+  return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
+}
+
+// ─── Shuffle Helper ─────────────────────────────────────────
+function shuffleDeck(cardIds: string[]): string[] {
+  const deck = [...cardIds];
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+
+// ─── Add Bot to Game ────────────────────────────────────────
+export async function addBot(gameId: string): Promise<{ botId: string; botName: string }> {
+  const sb = getClientSupabase();
+  const botId = `bot-${crypto.randomUUID().slice(0, 8)}`;
+  const botName = getRandomBotName();
+
+  // Ensure bot player exists
+  await sb.from("players").upsert({ id: botId, username: botName }, { onConflict: "id" });
+
+  // Get current players to find next seat
+  const { data: players } = await sb
+    .from("game_players")
+    .select("seat_index")
+    .eq("game_id", gameId)
+    .order("seat_index");
+
+  const takenSeats = new Set((players || []).map((p) => p.seat_index));
+  let seatIndex = 0;
+  while (takenSeats.has(seatIndex)) seatIndex++;
+
+  if (seatIndex >= 4) throw new Error("Game is full, genius. No room for more bots.");
+
+  // Join the game
+  const { error } = await sb.from("game_players").insert({
+    game_id: gameId,
+    player_id: botId,
+    seat_index: seatIndex,
+  });
+
+  if (error) throw new Error(`Bot failed to join: ${error.message}`);
+
+  return { botId, botName };
+}
+
+// ─── Bot Choose Sin ─────────────────────────────────────────
+export async function botChooseSin(gameId: string, botId: string): Promise<SinType> {
+  const sb = getClientSupabase();
+
+  // Get existing sin choices to try to balance
+  const { data: players } = await sb
+    .from("game_players")
+    .select("chosen_sin")
+    .eq("game_id", gameId);
+
+  const wrathCount = (players || []).filter((p) => p.chosen_sin === "wrath").length;
+  const slothCount = (players || []).filter((p) => p.chosen_sin === "sloth").length;
+
+  // Slightly prefer the underrepresented sin, with randomness
+  let sin: SinType;
+  if (wrathCount > slothCount) {
+    sin = Math.random() > 0.3 ? "sloth" : "wrath";
+  } else if (slothCount > wrathCount) {
+    sin = Math.random() > 0.3 ? "wrath" : "sloth";
+  } else {
+    sin = Math.random() > 0.5 ? "wrath" : "sloth";
+  }
+
+  await sb
+    .from("game_players")
+    .update({ chosen_sin: sin })
+    .eq("game_id", gameId)
+    .eq("player_id", botId);
+
+  return sin;
+}
+
+// ─── Bot Play Turn ──────────────────────────────────────────
+export async function botPlayTurn(gameId: string, botId: string): Promise<{
+  action: "play" | "pass";
+  cardName?: string;
+  narratorQuip?: string;
+}> {
+  const sb = getClientSupabase();
+
+  // Get game state
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active") return { action: "pass" };
+
+  // Get bot player
+  const { data: botPlayer } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("player_id", botId)
+    .single();
+
+  if (!botPlayer || !botPlayer.is_alive) return { action: "pass" };
+
+  // Get all alive players
+  const { data: allPlayers } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("seat_index");
+
+  if (!allPlayers) return { action: "pass" };
+
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+  const currentTurnPlayer = alivePlayers[game.current_player_index % alivePlayers.length];
+  if (currentTurnPlayer.player_id !== botId) return { action: "pass" };
+
+  const hand: string[] = botPlayer.hand || [];
+  if (hand.length === 0) {
+    // Pass and draw
+    await drawCardForBot(botPlayer);
+    await sb.from("game_log").insert({
+      game_id: gameId,
+      player_id: botPlayer.id,
+      action_type: "pass",
+      action_data: {},
+      round_number: game.current_round,
+    });
+    await advanceBotTurn(gameId);
+    return { action: "pass" };
+  }
+
+  // Smart card selection
+  const cardToPlay = selectBestCard(hand, botPlayer, allPlayers, game.current_round);
+
+  if (!cardToPlay) {
+    await drawCardForBot(botPlayer);
+    await sb.from("game_log").insert({
+      game_id: gameId,
+      player_id: botPlayer.id,
+      action_type: "pass",
+      action_data: {},
+      round_number: game.current_round,
+    });
+    await advanceBotTurn(gameId);
+    return { action: "pass" };
+  }
+
+  const card = getCardById(cardToPlay.cardId);
+  if (!card) return { action: "pass" };
+
+  // Find target
+  const enemies = alivePlayers.filter((p) => p.player_id !== botId);
+  const targetId = cardToPlay.targetId || (enemies.length > 0 ? selectBestTarget(enemies) : undefined);
+
+  // Remove card from hand, add to discard
+  const newHand = hand.filter((id) => id !== cardToPlay.cardId);
+  const discard: string[] = botPlayer.discard_pile || [];
+  discard.push(cardToPlay.cardId);
+  await sb
+    .from("game_players")
+    .update({ hand: newHand, discard_pile: discard })
+    .eq("id", botPlayer.id);
+
+  // Resolve effects
+  for (const effect of card.effects) {
+    const effectiveValue = calculateEffectiveValue(effect.baseValue, game.current_round);
+    const targets = resolveTargets(effect, botPlayer, allPlayers, targetId);
+
+    for (const target of targets) {
+      if (effect.duration > 0) {
+        await sb.from("active_effects").insert({
+          game_id: gameId,
+          target_player_id: target.id,
+          source_player_id: botPlayer.id,
+          effect_type: effect.type,
+          base_value: effect.baseValue,
+          applied_at_round: game.current_round,
+          duration_rounds: effect.duration,
+          card_id: cardToPlay.cardId,
+        });
+      } else {
+        await applyInstantEffect(effect.type, effectiveValue, target);
+      }
+    }
+  }
+
+  // Log
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    player_id: botPlayer.id,
+    action_type: "play_card",
+    action_data: { cardId: cardToPlay.cardId, targetPlayerId: targetId },
+    round_number: game.current_round,
+  });
+
+  await advanceBotTurn(gameId);
+
+  return {
+    action: "play",
+    cardName: card.name,
+    narratorQuip: card.narratorQuip,
+  };
+}
+
+// ─── Smart Card Selection ───────────────────────────────────
+function selectBestCard(
+  hand: string[],
+  bot: any,
+  allPlayers: any[],
+  currentRound: number
+): { cardId: string; targetId?: string } | null {
+  const cards = hand.map((id) => getCardById(id)).filter(Boolean);
+  if (cards.length === 0) return null;
+
+  const botHpPercent = bot.current_hp / bot.max_hp;
+  const enemies = allPlayers.filter((p) => p.is_alive && p.player_id !== bot.player_id);
+
+  // Priority: heal if low HP
+  if (botHpPercent < 0.4) {
+    const healCard = cards.find((c) => c!.effects.some((e) => e.type === "heal"));
+    if (healCard) return { cardId: healCard.id };
+  }
+
+  // Priority: shield if mid HP
+  if (botHpPercent < 0.6) {
+    const shieldCard = cards.find((c) => c!.effects.some((e) => e.type === "shield"));
+    if (shieldCard) return { cardId: shieldCard.id };
+  }
+
+  // Priority: damage the weakest enemy
+  const damageCards = cards.filter((c) => c!.effects.some((e) => e.type === "damage" && e.target !== "self"));
+  if (damageCards.length > 0) {
+    // Pick highest damage card
+    const best = damageCards.sort((a, b) => {
+      const aDmg = a!.effects.reduce((sum, e) => sum + (e.type === "damage" && e.target !== "self" ? e.baseValue : 0), 0);
+      const bDmg = b!.effects.reduce((sum, e) => sum + (e.type === "damage" && e.target !== "self" ? e.baseValue : 0), 0);
+      return bDmg - aDmg;
+    })[0];
+    if (best) return { cardId: best.id };
+  }
+
+  // Play any card
+  const randomCard = cards[Math.floor(Math.random() * cards.length)];
+  return randomCard ? { cardId: randomCard.id } : null;
+}
+
+// ─── Select Best Target ─────────────────────────────────────
+function selectBestTarget(enemies: any[]): string | undefined {
+  if (enemies.length === 0) return undefined;
+  // Target the player with lowest HP
+  const sorted = [...enemies].sort((a, b) => a.current_hp - b.current_hp);
+  return sorted[0]?.player_id;
+}
+
+// ─── Resolve Targets (same logic as main engine) ────────────
+function resolveTargets(effect: any, source: any, allPlayers: any[], targetPlayerId?: string): any[] {
+  const alive = allPlayers.filter((p) => p.is_alive);
+  switch (effect.target) {
+    case "self":
+      return [source];
+    case "single_enemy":
+      if (targetPlayerId) {
+        const target = alive.find((p) => p.player_id === targetPlayerId);
+        return target ? [target] : [];
+      }
+      return alive.filter((p) => p.player_id !== source.player_id).slice(0, 1);
+    case "all_enemies":
+      return alive.filter((p) => p.player_id !== source.player_id);
+    case "random_enemy": {
+      const enemies = alive.filter((p) => p.player_id !== source.player_id);
+      return enemies.length > 0 ? [enemies[Math.floor(Math.random() * enemies.length)]] : [];
+    }
+    default:
+      return [];
+  }
+}
+
+// ─── Apply Instant Effect ───────────────────────────────────
+async function applyInstantEffect(type: string, value: number, target: any): Promise<void> {
+  const sb = getClientSupabase();
+  switch (type) {
+    case "damage": {
+      const newHp = Math.max(0, target.current_hp - value);
+      await sb.from("game_players").update({ current_hp: newHp, is_alive: newHp > 0 }).eq("id", target.id);
+      break;
+    }
+    case "heal": {
+      const newHp = Math.min(target.max_hp, target.current_hp + value);
+      await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
+      break;
+    }
+  }
+}
+
+// ─── Draw Card for Bot ──────────────────────────────────────
+async function drawCardForBot(player: any): Promise<void> {
+  const sb = getClientSupabase();
+  let deck: string[] = player.deck || [];
+  const hand: string[] = player.hand || [];
+  let discard: string[] = player.discard_pile || [];
+
+  if (deck.length === 0 && discard.length > 0) {
+    deck = shuffleDeck(discard);
+    discard = [];
+  }
+
+  if (deck.length > 0) {
+    const drawn = deck.shift()!;
+    hand.push(drawn);
+    await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
+  }
+}
+
+// ─── Advance Turn (same logic as main engine) ───────────────
+async function advanceBotTurn(gameId: string): Promise<void> {
+  const sb = getClientSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game) return;
+
+  const { data: allPlayers } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("seat_index");
+
+  if (!allPlayers) return;
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+
+  if (alivePlayers.length <= 1) {
+    const winner = alivePlayers[0];
+    await sb.from("games").update({
+      status: "finished",
+      winner_id: winner?.player_id || null,
+      finished_at: new Date().toISOString(),
+    }).eq("id", gameId);
+    return;
+  }
+
+  let nextIndex = (game.current_player_index + 1) % alivePlayers.length;
+  let newRound = game.current_round;
+
+  if (nextIndex === 0) {
+    newRound = Math.min(game.current_round + 1, 10);
+    // Resolve persistent effects
+    await resolveActiveEffects(gameId, newRound);
+    // Draw for each alive player
+    for (const p of alivePlayers) {
+      const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
+      if (freshPlayer && freshPlayer.is_alive) {
+        await drawCardForBot(freshPlayer);
+      }
+    }
+  }
+
+  await sb.from("games").update({ current_player_index: nextIndex, current_round: newRound }).eq("id", gameId);
+}
+
+// ─── Resolve Active Effects ─────────────────────────────────
+async function resolveActiveEffects(gameId: string, currentRound: number): Promise<void> {
+  const sb = getClientSupabase();
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
+  if (!effects) return;
+
+  for (const effect of effects) {
+    const roundsActive = currentRound - effect.applied_at_round;
+    if (roundsActive > effect.duration_rounds) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+    const effectiveValue = calculateEffectiveValue(effect.base_value, currentRound);
+    const { data: target } = await sb.from("game_players").select("*").eq("id", effect.target_player_id).single();
+    if (!target || !target.is_alive) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+    switch (effect.effect_type) {
+      case "damage":
+        await applyInstantEffect("damage", effectiveValue, target);
+        break;
+      case "heal":
+        await applyInstantEffect("heal", effectiveValue, target);
+        break;
+      case "debuff":
+        await applyInstantEffect("damage", Math.ceil(effectiveValue / 2), target);
+        break;
+    }
+  }
+}
+
+// ─── Check if Player is a Bot ───────────────────────────────
+export function isBot(playerId: string): boolean {
+  return playerId.startsWith("bot-");
+}
+
+// ─── Get All Bot IDs in a Game ──────────────────────────────
+export async function getBotIds(gameId: string): Promise<string[]> {
+  const sb = getClientSupabase();
+  const { data: players } = await sb
+    .from("game_players")
+    .select("player_id")
+    .eq("game_id", gameId);
+
+  return (players || []).filter((p) => isBot(p.player_id)).map((p) => p.player_id);
+}

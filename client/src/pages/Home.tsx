@@ -1,160 +1,446 @@
 /**
- * Home Page - Game Lobby
+ * Home Page - The Gateway to Sin
  *
- * Landing page with cyberpunk aesthetic. Players can:
- * - Create a new game (generates room code)
- * - Join an existing game (enter room code)
- *
- * Uses direct Supabase calls via client-side game engine.
+ * Premium dark neon cyberpunk landing page.
+ * Create or join a game. Every piece of text drips with attitude.
+ * Invader Zim × Freaky Fred aesthetic with maximum sass.
  */
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
+import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles } from "lucide-react";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
-import { useLocation } from "wouter";
-import { Flame, Moon, Swords, Users, Zap } from "lucide-react";
+
+const SASSY_TAGLINES = [
+  "Where your sins become someone else's problem.",
+  "4 players. 7 sins. 0 moral compass.",
+  "Therapy is expensive. This is free.",
+  "The only game where rage-quitting is on-brand.",
+  "Because board games weren't toxic enough.",
+  "Your character flaws, weaponized.",
+  "Friendship-ending technology, perfected.",
+  "Come for the cards. Stay for the emotional damage.",
+];
+
+const FLOATING_ICONS = [Flame, Moon, Skull, Swords, Shield, Zap];
 
 export default function Home() {
   const playerId = usePlayerId();
   const [, setLocation] = useLocation();
+  const [username, setUsername] = useState(() => localStorage.getItem("7sins_username") || "");
   const [roomCode, setRoomCode] = useState("");
-  const [username, setUsername] = useState("");
-  const [showJoin, setShowJoin] = useState(false);
-  const [error, setError] = useState("");
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [taglineIndex, setTaglineIndex] = useState(0);
+  const [showJoinPanel, setShowJoinPanel] = useState(false);
+
+  // Rotate taglines
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTaglineIndex((prev) => (prev + 1) % SASSY_TAGLINES.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleCreate = async () => {
-    if (!username.trim()) { setError("Enter a username, sinner."); return; }
+    if (!username.trim()) {
+      setError("A name, genius. We need a name. Even villains have names.");
+      return;
+    }
+    setError(null);
     setIsCreating(true);
-    setError("");
+    localStorage.setItem("7sins_username", username.trim());
     try {
-      const data = await createGame(playerId, username.trim());
-      setLocation(`/lobby/${data.gameId}`);
+      const result = await createGame(playerId, username.trim());
+      setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Something broke. Shocking, I know.");
     } finally {
       setIsCreating(false);
     }
   };
 
   const handleJoin = async () => {
-    if (!username.trim()) { setError("Enter a username, sinner."); return; }
-    if (!roomCode.trim()) { setError("Enter a room code."); return; }
+    if (!username.trim()) {
+      setError("A name. You need a name. This isn't that hard.");
+      return;
+    }
+    if (!roomCode.trim()) {
+      setError("Room code. The thing your friend gave you. Type it.");
+      return;
+    }
+    setError(null);
     setIsJoining(true);
-    setError("");
+    localStorage.setItem("7sins_username", username.trim());
     try {
-      const data = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
-      setLocation(`/lobby/${data.gameId}`);
+      const result = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
+      setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Invalid code. Try again, sinner.");
     } finally {
       setIsJoining(false);
     }
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[oklch(0.08_0.03_270)] via-background to-[oklch(0.08_0.02_25)]" />
-      <div className="absolute inset-0 scanlines opacity-30" />
-
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 rounded-full"
-            style={{
-              background: i % 2 === 0 ? "oklch(0.55 0.25 25)" : "oklch(0.45 0.15 290)",
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{ y: [0, -30, 0], opacity: [0.2, 0.8, 0.2] }}
-            transition={{ duration: 3 + Math.random() * 4, repeat: Infinity, delay: Math.random() * 2 }}
-          />
-        ))}
+    <div className="min-h-screen bg-arena relative overflow-hidden noise-overlay">
+      {/* Floating ambient icons */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {Array.from({ length: 18 }).map((_, i) => {
+          const Icon = FLOATING_ICONS[i % FLOATING_ICONS.length];
+          return (
+            <motion.div
+              key={i}
+              className="absolute"
+              style={{
+                left: `${5 + Math.random() * 90}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -80, 0],
+                opacity: [0.02, 0.06, 0.02],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 15 + Math.random() * 20,
+                repeat: Infinity,
+                delay: Math.random() * 10,
+                ease: "linear",
+              }}
+            >
+              <Icon className="w-5 h-5 text-foreground" />
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Content */}
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4">
-        {/* Title */}
+      {/* Decorative corner accents */}
+      <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-sloth/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-wrath/3 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-sloth/3 to-transparent pointer-events-none" />
+
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+        {/* Logo / Title Section */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-12"
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="text-center mb-10"
         >
-          <h1 className="text-5xl md:text-7xl font-bold tracking-wider text-glow-wrath" style={{ fontFamily: "var(--font-heading)" }}>
-            <span className="text-wrath">7</span>{" "}
-            <span className="text-foreground">DEADLY</span>{" "}
-            <span className="text-sloth">SINS</span>
+          {/* Decorative top element */}
+          <motion.div
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 4, repeat: Infinity }}
+            className="flex items-center justify-center gap-4 mb-6"
+          >
+            <div className="h-px w-20 bg-gradient-to-r from-transparent to-wrath/40" />
+            <Skull className="w-5 h-5 text-wrath/50" />
+            <div className="h-px w-8 bg-neon-cyan/30" />
+            <Skull className="w-5 h-5 text-sloth/50" />
+            <div className="h-px w-20 bg-gradient-to-l from-transparent to-sloth/40" />
+          </motion.div>
+
+          <h1
+            className="text-5xl md:text-7xl font-black tracking-wider mb-2"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            <motion.span
+              className="text-wrath text-glow-wrath inline-block"
+              animate={{ textShadow: ["0 0 12px oklch(0.6 0.28 25 / 0.7)", "0 0 24px oklch(0.6 0.28 25 / 0.9)", "0 0 12px oklch(0.6 0.28 25 / 0.7)"] }}
+              transition={{ duration: 3, repeat: Infinity }}
+            >
+              7
+            </motion.span>{" "}
+            <span className="text-foreground/90">DEADLY</span>{" "}
+            <motion.span
+              className="text-sloth text-glow-sloth inline-block"
+              animate={{ textShadow: ["0 0 12px oklch(0.52 0.18 290 / 0.7)", "0 0 24px oklch(0.52 0.18 290 / 0.9)", "0 0 12px oklch(0.52 0.18 290 / 0.7)"] }}
+              transition={{ duration: 3, repeat: Infinity, delay: 1.5 }}
+            >
+              SINS
+            </motion.span>
           </h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="narrator-text text-xl md:text-2xl mt-4">
-            "Welcome, sinners. Choose your vice wisely."
-          </motion.p>
-        </motion.div>
 
-        {/* Game controls */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="w-full max-w-md space-y-6">
-          {/* Username input */}
-          <div>
-            <label className="block text-sm text-muted-foreground mb-2 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Your Name, Sinner</label>
-            <Input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter username..." maxLength={20} className="bg-card border-border text-foreground text-lg h-12" style={{ fontFamily: "var(--font-body)" }} />
-          </div>
+          <div className="neon-divider w-56 mx-auto my-4" />
 
-          {/* Error display */}
-          <AnimatePresence>
-            {error && (
-              <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="text-destructive text-sm narrator-text">{error}</motion.p>
-            )}
-          </AnimatePresence>
+          <p
+            className="text-sm tracking-[0.3em] text-muted-foreground/70 uppercase"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            A Card Game of Questionable Morality
+          </p>
 
-          {/* Action buttons */}
-          <div className="grid grid-cols-2 gap-4">
-            <Button size="lg" className="bg-wrath hover:bg-wrath-glow text-white h-14 glow-wrath" style={{ fontFamily: "var(--font-heading)" }} onClick={handleCreate} disabled={isCreating}>
-              <Swords className="w-5 h-5 mr-2" /> {isCreating ? "CREATING..." : "CREATE GAME"}
-            </Button>
-            <Button size="lg" variant="outline" className="border-sloth text-sloth hover:bg-sloth/10 h-14 glow-sloth" style={{ fontFamily: "var(--font-heading)" }} onClick={() => setShowJoin(!showJoin)}>
-              <Users className="w-5 h-5 mr-2" /> JOIN GAME
-            </Button>
-          </div>
-
-          {/* Join form */}
-          <AnimatePresence>
-            {showJoin && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3">
-                <Input value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} placeholder="ROOM CODE" maxLength={8} className="bg-card border-sloth/50 text-foreground text-center text-2xl tracking-[0.3em] h-14 uppercase" style={{ fontFamily: "var(--font-heading)" }} />
-                <Button className="w-full bg-sloth hover:bg-sloth-glow text-white h-12 glow-sloth" style={{ fontFamily: "var(--font-heading)" }} onClick={handleJoin} disabled={isJoining}>
-                  {isJoining ? "JOINING..." : "ENTER ROOM"}
-                </Button>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Feature cards */}
-          <div className="grid grid-cols-3 gap-3 pt-6">
-            {[
-              { icon: Flame, label: "WRATH", color: "text-wrath", desc: "Burst damage" },
-              { icon: Moon, label: "SLOTH", color: "text-sloth", desc: "Stall & drain" },
-              { icon: Zap, label: "\u00D7ROUND", color: "text-neon-cyan", desc: "Compounding" },
-            ].map((item, i) => (
-              <motion.div key={item.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 + i * 0.1 }} className="bg-card/50 border border-border rounded-lg p-3 text-center">
-                <item.icon className={`w-6 h-6 mx-auto mb-1 ${item.color}`} />
-                <p className={`text-xs font-bold ${item.color}`} style={{ fontFamily: "var(--font-heading)" }}>{item.label}</p>
-                <p className="text-[10px] text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
+          {/* Rotating taglines */}
+          <div className="h-8 mt-4 overflow-hidden">
+            <AnimatePresence mode="wait">
+              <motion.p
+                key={taglineIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.4 }}
+                className="narrator-text text-lg"
+              >
+                "{SASSY_TAGLINES[taglineIndex]}"
+              </motion.p>
+            </AnimatePresence>
           </div>
         </motion.div>
 
-        {/* Footer narrator */}
-        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 0.5 }} transition={{ delay: 1.5 }} className="absolute bottom-6 narrator-text text-sm">
-          "Four souls enter. One leaves slightly less damaged."
-        </motion.p>
+        {/* Game Panel */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="w-full max-w-md"
+        >
+          <div className="glass-panel rounded-2xl p-8">
+            {/* Username Input */}
+            <div className="mb-6">
+              <label
+                className="block text-[10px] tracking-[0.2em] text-muted-foreground/60 uppercase mb-2"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                Your Sinful Alias
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="What do they call you, sinner?"
+                maxLength={20}
+                className="w-full bg-background/60 border border-border/40 rounded-xl px-4 py-3 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-neon-cyan/50 focus:ring-1 focus:ring-neon-cyan/20 transition-all"
+                style={{ fontFamily: "var(--font-body)" }}
+              />
+            </div>
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={handleCreate}
+                disabled={isCreating}
+                className="w-full btn-wrath rounded-xl py-3.5 px-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Flame className="w-4 h-4" />
+                {isCreating ? "SUMMONING ARENA..." : "CREATE GAME"}
+              </motion.button>
+
+              <div className="flex items-center gap-3 my-2">
+                <div className="flex-1 h-px bg-border/20" />
+                <span
+                  className="text-[9px] tracking-[0.15em] text-muted-foreground/40 uppercase"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  or crash someone else's party
+                </span>
+                <div className="flex-1 h-px bg-border/20" />
+              </div>
+
+              <AnimatePresence>
+                {!showJoinPanel ? (
+                  <motion.button
+                    key="join-toggle"
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowJoinPanel(true)}
+                    className="w-full btn-sloth rounded-xl py-3.5 px-6 text-sm flex items-center justify-center gap-2"
+                  >
+                    <Users className="w-4 h-4" />
+                    JOIN GAME
+                  </motion.button>
+                ) : (
+                  <motion.div
+                    key="join-panel"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-3 overflow-hidden"
+                  >
+                    <input
+                      type="text"
+                      value={roomCode}
+                      onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+                      placeholder="ROOM CODE"
+                      maxLength={6}
+                      className="w-full bg-background/60 border border-border/40 rounded-xl px-4 py-3 text-foreground text-center tracking-[0.4em] uppercase placeholder:text-muted-foreground/30 placeholder:tracking-normal placeholder:normal-case focus:outline-none focus:border-sloth/50 focus:ring-1 focus:ring-sloth/20 transition-all text-lg font-bold"
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    />
+                    <div className="flex gap-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleJoin}
+                        disabled={isJoining}
+                        className="flex-1 btn-sloth rounded-xl py-3 px-4 text-sm disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {isJoining ? "JOINING..." : "ENTER THE ARENA"}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setShowJoinPanel(false)}
+                        className="px-4 py-3 rounded-xl border border-border/20 text-muted-foreground/60 text-sm hover:border-border/40 transition-colors"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        NAH
+                      </motion.button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Error Display */}
+            <AnimatePresence>
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -5 }}
+                  className="mt-4 p-3 rounded-xl bg-wrath/10 border border-wrath/20"
+                >
+                  <p className="text-sm text-wrath text-center" style={{ fontFamily: "var(--font-body)" }}>
+                    {error}
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Bottom info */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.8 }}
+            className="text-center mt-6"
+          >
+            <div className="flex items-center justify-center gap-4 text-[10px] tracking-[0.1em] text-muted-foreground/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="flex items-center gap-1"><Users className="w-3 h-3" /> 2-4 Players</span>
+              <span className="text-border/30">&middot;</span>
+              <span className="flex items-center gap-1"><Sparkles className="w-3 h-3" /> Real-time</span>
+              <span className="text-border/30">&middot;</span>
+              <span className="flex items-center gap-1"><Bot className="w-3 h-3" /> Bots for the Friendless</span>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Sin Preview Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="flex gap-6 mt-12"
+        >
+          {/* Wrath Preview */}
+          <motion.div
+            whileHover={{ y: -8, scale: 1.04 }}
+            className="glass-panel-wrath rounded-xl p-5 w-48 text-center group"
+          >
+            <Flame className="w-8 h-8 text-wrath mx-auto mb-2 group-hover:drop-shadow-[0_0_16px_oklch(0.55_0.25_25)] transition-all" />
+            <h3
+              className="text-sm font-bold text-wrath tracking-wider mb-1"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              WRATH
+            </h3>
+            <p
+              className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Burn fast. Hit hard. Ask questions never. Self-harm is just a bonus.
+            </p>
+            <div className="flex justify-center gap-1 mt-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-wrath" : "bg-wrath/20"}`} />
+              ))}
+            </div>
+            <p
+              className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.2em]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Aggression: Maximum
+            </p>
+          </motion.div>
+
+          {/* Sloth Preview */}
+          <motion.div
+            whileHover={{ y: -8, scale: 1.04 }}
+            className="glass-panel-sloth rounded-xl p-5 w-48 text-center group"
+          >
+            <Moon className="w-8 h-8 text-sloth mx-auto mb-2 group-hover:drop-shadow-[0_0_16px_oklch(0.45_0.15_290)] transition-all" />
+            <h3
+              className="text-sm font-bold text-sloth tracking-wider mb-1"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              SLOTH
+            </h3>
+            <p
+              className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Outlast everyone. Effort is overrated. Let the compounding do the work.
+            </p>
+            <div className="flex justify-center gap-1 mt-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-sloth" : "bg-sloth/20"}`} />
+              ))}
+            </div>
+            <p
+              className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.2em]"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Endurance: Maximum
+            </p>
+          </motion.div>
+        </motion.div>
+
+        {/* How It Works - Quick Rules */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1 }}
+          className="mt-12 max-w-lg text-center"
+        >
+          <p
+            className="text-[9px] tracking-[0.2em] text-muted-foreground/30 uppercase mb-3"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            How This Works (Pay Attention)
+          </p>
+          <div className="flex gap-4 justify-center">
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-wrath/10 border border-wrath/20 flex items-center justify-center mx-auto mb-1">
+                <span className="text-xs font-bold text-wrath" style={{ fontFamily: "var(--font-heading)" }}>1</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Pick a sin</p>
+            </div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center mx-auto mb-1">
+                <span className="text-xs font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>2</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Play cards</p>
+            </div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-neon-yellow/10 border border-neon-yellow/20 flex items-center justify-center mx-auto mb-1">
+                <span className="text-xs font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>3</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Damage compounds</p>
+            </div>
+            <div className="text-center">
+              <div className="w-8 h-8 rounded-full bg-sloth/10 border border-sloth/20 flex items-center justify-center mx-auto mb-1">
+                <span className="text-xs font-bold text-sloth" style={{ fontFamily: "var(--font-heading)" }}>4</span>
+              </div>
+              <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-body)" }}>Last one alive wins</p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     </div>
   );

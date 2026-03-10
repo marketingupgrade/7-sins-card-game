@@ -61,3 +61,28 @@
 - [x] Push to GitHub repository
 - [x] Deploy to Vercel
 - [x] Configure environment variables on Vercel
+
+## Bot Players
+- [x] Add bot player logic to client-side game engine
+- [x] Bot AI: auto-choose sin, auto-play cards, auto-pass
+- [x] "Add Bot" button in lobby UI
+- [x] Bot turn execution with slight delay for realism
+- [x] Bot difficulty: smart card selection based on game state
+
+## Design Overhaul
+- [x] Redesign Home page with premium layout, better visual hierarchy
+- [x] Redesign card components with glassmorphism, gradients, and depth
+- [x] Improve lobby page with better spacing, card-based player slots
+- [x] Redesign game board with cleaner layout and visual polish
+- [x] Better typography hierarchy and spacing throughout
+- [x] Improved color palette with more depth and contrast
+- [x] Add subtle background textures and ambient effects
+- [x] Better button styles with hover states and micro-interactions
+- [x] Improve HP bars with animated gradients
+- [x] Better narrator text presentation
+- [x] Mobile responsive improvements
+
+## Tone of Voice
+- [x] Sassy and cynical narrator tone throughout ALL UI text
+- [x] Rewrite all button labels, headings, and descriptions with attitude
+- [x] Add more narrator quips for game events

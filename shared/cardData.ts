@@ -12,7 +12,6 @@
 import { CardDefinition } from "./gameTypes";
 
 // ─── WRATH CARDS (10) ────────────────────────────────────────
-// Theme: Blood red fury, explosive damage, reckless aggression
 export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_01",
@@ -21,7 +20,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     cost: 1,
     effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
     flavorText: "A fist clenched so hard it draws its own blood.",
-    narratorQuip: "Oh, how delightfully... violent.",
+    narratorQuip: "Oh look, violence. How breathtakingly original.",
     tier: "common",
   },
   {
@@ -34,7 +33,7 @@ export const WRATH_CARDS: CardDefinition[] = [
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Rage doesn't care who it hurts. Even you.",
-    narratorQuip: "Hitting yourself? Bold strategy, let's see if it pays off.",
+    narratorQuip: "Hitting yourself to hit others harder? Therapy called. You didn't answer.",
     tier: "common",
   },
   {
@@ -44,7 +43,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     cost: 2,
     effects: [{ type: "damage", baseValue: 2, duration: 2, target: "single_enemy" }],
     flavorText: "Their veins run hot with borrowed fury.",
-    narratorQuip: "A slow burn. How uncharacteristically patient of you.",
+    narratorQuip: "That's going to leave a mark... for several rounds. Enjoy the suffering.",
     tier: "rare",
   },
   {
@@ -54,7 +53,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     cost: 3,
     effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
     flavorText: "The scream that silences a battlefield.",
-    narratorQuip: "Everyone gets a piece! How generous of our little rage monster.",
+    narratorQuip: "Screaming at everyone equally. True equality in action.",
     tier: "rare",
   },
   {
@@ -64,7 +63,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     cost: 1,
     effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "Quick. Clean. Well, not clean exactly.",
-    narratorQuip: "Efficient. I'm almost impressed.",
+    narratorQuip: "Efficient. I'm almost impressed. Almost.",
     tier: "common",
   },
   {
@@ -77,7 +76,7 @@ export const WRATH_CARDS: CardDefinition[] = [
       { type: "damage", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Revenge is a dish best served... scalding.",
-    narratorQuip: "That's going to leave a mark. On both of you.",
+    narratorQuip: "Self-destructive AND aggressive? Peak Wrath energy right there.",
     tier: "epic",
   },
   {
@@ -87,7 +86,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     cost: 2,
     effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
     flavorText: "Even fury needs a moment to breathe.",
-    narratorQuip: "Defense? From the anger child? I'm shocked. SHOCKED.",
+    narratorQuip: "Defense? From the anger child? I'm SHOCKED. Shocked, I tell you.",
     tier: "common",
   },
   {
@@ -109,7 +108,7 @@ export const WRATH_CARDS: CardDefinition[] = [
       { type: "damage", baseValue: 3, duration: 0, target: "random_enemy" },
     ],
     flavorText: "Who needs aim when you have momentum?",
-    narratorQuip: "Closing your eyes and swinging. Classic wrath.",
+    narratorQuip: "Closing your eyes and swinging. Classic wrath. No thoughts, just fists.",
     tier: "common",
   },
   {
@@ -128,7 +127,6 @@ export const WRATH_CARDS: CardDefinition[] = [
 ];
 
 // ─── SLOTH CARDS (10) ────────────────────────────────────────
-// Theme: Muted purple lethargy, shields, stalling, passive damage
 export const SLOTH_CARDS: CardDefinition[] = [
   {
     id: "sloth_01",
@@ -137,7 +135,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 1,
     effects: [{ type: "debuff", baseValue: 1, duration: 2, target: "single_enemy" }],
     flavorText: "A yawn so contagious it weakens the soul.",
-    narratorQuip: "How exciting. They're... slightly sleepier now.",
+    narratorQuip: "Weaponized boredom. We've reached peak laziness, folks.",
     tier: "common",
   },
   {
@@ -147,7 +145,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 2,
     effects: [{ type: "shield", baseValue: 3, duration: 2, target: "self" }],
     flavorText: "The ultimate defense: not caring enough to get hit.",
-    narratorQuip: "Ah yes, the impenetrable fortress of apathy.",
+    narratorQuip: "Hiding behind pillows. Bold strategy, let's see if it pays off.",
     tier: "rare",
   },
   {
@@ -160,7 +158,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Why generate your own energy when you can borrow theirs?",
-    narratorQuip: "Stealing life force. The laziest form of sustenance.",
+    narratorQuip: "Minimum effort, maximum annoyance. Chef's kiss.",
     tier: "common",
   },
   {
@@ -170,7 +168,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 1,
     effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
     flavorText: "I'll deal with that... eventually.",
-    narratorQuip: "Putting off damage. Truly on brand.",
+    narratorQuip: "Putting off death itself. Respect, honestly.",
     tier: "common",
   },
   {
@@ -180,7 +178,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 3,
     effects: [{ type: "damage", baseValue: 1, duration: 3, target: "all_enemies" }],
     flavorText: "Everything decays. Sloth just... accelerates the inevitable.",
-    narratorQuip: "Slow, inevitable doom for everyone. How very sloth of you.",
+    narratorQuip: "Making everyone else as tired as you are. Misery loves company.",
     tier: "epic",
   },
   {
@@ -190,7 +188,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 3,
     effects: [{ type: "heal", baseValue: 3, duration: 2, target: "self" }],
     flavorText: "Sometimes the best strategy is a really long nap.",
-    narratorQuip: "Sleeping through the apocalypse. Respect.",
+    narratorQuip: "Sleeping through the apocalypse. Iconic behavior.",
     tier: "rare",
   },
   {
@@ -200,7 +198,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 2,
     effects: [{ type: "debuff", baseValue: 2, duration: 2, target: "single_enemy" }],
     flavorText: "Your muscles feel like wet concrete.",
-    narratorQuip: "Making others as lazy as you. Misery loves company.",
+    narratorQuip: "Spreading the lethargy like a contagious yawn. Beautiful.",
     tier: "rare",
   },
   {
@@ -213,7 +211,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
       { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
     ],
     flavorText: "Not fighting back IS the strategy.",
-    narratorQuip: "Defending and poking. The bare minimum, as always.",
+    narratorQuip: "Defending and poking. The bare minimum, as always. On brand.",
     tier: "common",
   },
   {
@@ -223,7 +221,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 2,
     effects: [{ type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" }],
     flavorText: "Time moves slower when you're bored to death.",
-    narratorQuip: "Three rounds of existential ennui. Devastating.",
+    narratorQuip: "Three rounds of existential ennui. Absolutely devastating.",
     tier: "common",
   },
   {
@@ -258,31 +256,92 @@ export function getDeckForSin(sin: "wrath" | "sloth"): string[] {
   return cards.map((c) => c.id);
 }
 
-// ─── Narrator Lines ──────────────────────────────────────────
+// ─── Narrator Lines (Maximum Sass & Cynicism) ────────────────
 export const NARRATOR_LINES = {
   gameStart: [
-    "Welcome, sinners. Let the suffering begin.",
-    "Four souls enter. One leaves slightly less damaged.",
-    "Oh good, you're all here. Let's get this over with.",
+    "Oh wonderful, another batch of sinners. Try not to embarrass yourselves.",
+    "Welcome to the arena, where your poor life choices become entertainment.",
+    "Four players enter. One survives. The rest get therapy bills.",
+    "Let the sin-fueled chaos begin. I'll be here, judging. Not silently.",
+    "Another game? You'd think you people would learn. But no.",
+    "The arena opens its maw. Step inside, you beautiful disasters.",
+    "Welcome back. Your persistence is either admirable or pathological.",
   ],
   roundStart: [
-    "Round {round}. The stakes compound. Your regrets multiply.",
-    "Round {round}. Things are about to get... exponentially worse.",
-    "Round {round}. Remember when this seemed like a good idea?",
+    "Round {round}. The damage compounds now, because life wasn't unfair enough.",
+    "Round {round}. Things are about to get exponentially worse. You're welcome.",
+    "Welcome to Round {round}. Your cards hit harder. So does regret.",
+    "Round {round} begins. The math is getting scary and so am I.",
+    "Round {round}. Remember when damage was small? Those were the days.",
+    "Round {round}. The escalation continues. Just like your bad decisions.",
+    "Round {round}. Compounding interest, but for pain. Capitalism meets combat.",
   ],
   playerEliminated: [
-    "{player} has been removed from the equation. How tidy.",
-    "And {player} is done. One less sinner to worry about.",
-    "{player} exits stage left. Permanently.",
+    "{player} has been eliminated. Don't let the door hit you on the way out.",
+    "And {player} is DEAD. Another one bites the metaphorical dust.",
+    "{player} is gone. Reduced to a spectator. How embarrassing for them.",
+    "RIP {player}. Your sin wasn't strong enough. Tragic, really.",
+    "{player} has left the mortal coil. The remaining sinners barely noticed.",
+    "{player} is out. Their contribution to this game will not be remembered.",
+    "And just like that, {player} becomes a cautionary tale.",
   ],
   gameEnd: [
-    "{winner} wins! Everyone else can cry about it.",
-    "Congratulations, {winner}. You're the least dead.",
-    "{winner} stands victorious. The rest of you... well.",
+    "{winner} wins! Was it skill? Luck? Probably just everyone else being worse.",
+    "Congratulations, {winner}. You're the best at being the worst. Truly inspiring.",
+    "{winner} stands victorious! The crowd goes mild!",
+    "And the crown of sin goes to {winner}. Try not to let it go to your head.",
+    "{winner} wins! Achievement unlocked: 'Slightly Less Terrible Than Everyone Else.'",
+    "{winner} survives! Not through merit, mind you. Through everyone else's incompetence.",
   ],
   pass: [
-    "{player} passes. Riveting gameplay.",
-    "{player} does nothing. Bold.",
-    "A pass from {player}. The crowd goes mild.",
+    "{player} passes. Riveting gameplay. Truly edge-of-your-seat stuff.",
+    "{player} does nothing. Groundbreaking strategy.",
+    "A pass from {player}. The coward's choice, but a valid one.",
+    "{player} passes their turn. Even the cards are disappointed.",
+    "{player} chooses inaction. Sloth would be proud. Wrath? Not so much.",
+    "{player} passes. The audience yawns. So do I.",
+    "{player} decides to do absolutely nothing. Inspiring.",
+  ],
+  botThinking: [
+    "The bot is 'thinking.' It's literally random numbers, but sure.",
+    "Processing... beep boop... pretending to strategize...",
+    "The AI contemplates its next move. (It's a coin flip. Don't tell anyone.)",
+    "Bot brain engaged. Results may vary. Mostly toward chaos.",
+    "The bot stares into the void. The void stares back. It plays a card.",
+    "Artificial intelligence making artificial decisions. How poetic.",
+    "The bot calculates. It has no feelings about this. Lucky it.",
+  ],
+  lowHp: [
+    "{player} is looking rough. One good hit and it's curtains.",
+    "{player}'s HP is embarrassingly low. Might want to do something about that.",
+    "Someone get {player} a medic. Or a priest. Probably a priest.",
+    "{player} is clinging to life like it's a personality trait.",
+    "{player}'s HP bar is giving 'check engine light' energy.",
+  ],
+  highDamage: [
+    "MASSIVE hit! That's going to leave a crater, not just a mark.",
+    "The damage numbers are getting ridiculous. I love it.",
+    "That hit was so hard, the other players felt it too.",
+    "Overkill? Never heard of it. That damage was *chef's kiss*.",
+    "The compounding mechanic was a mistake. A beautiful, violent mistake.",
+  ],
+  cardPlayed: [
+    "{player} plays {card}. Bold move for someone with that HP.",
+    "{player} slaps down {card}. The audacity is almost admirable.",
+    "{card} hits the field. {player} chose violence today.",
+    "{player} plays {card}. Somewhere, a game designer weeps.",
+    "Oh look, {player} remembered they have cards. {card} it is.",
+    "{player} drops {card} like it's hot. It is. Metaphorically.",
+    "{card} enters the arena. {player}'s opponents enter the denial stage.",
+  ],
+  shieldUp: [
+    "A shield? In THIS economy? How defensive of you.",
+    "Hiding behind a shield. Very brave. Very original.",
+    "Shield activated. Because actually fighting is too mainstream.",
+  ],
+  healUsed: [
+    "Healing? That's just procrastinating death with extra steps.",
+    "A heal card. Delaying the inevitable with style.",
+    "Patching yourself up. The duct tape of combat strategies.",
   ],
 };
