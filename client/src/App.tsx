@@ -9,7 +9,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
+import TutorialOverlay from "./components/TutorialOverlay";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { TutorialProvider } from "./contexts/TutorialContext";
 import Home from "./pages/Home";
 import Lobby from "./pages/Lobby";
 import GameBoard from "./pages/GameBoard";
@@ -30,10 +32,13 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <TutorialProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <TutorialOverlay />
+          </TooltipProvider>
+        </TutorialProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

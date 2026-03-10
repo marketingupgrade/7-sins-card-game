@@ -17,6 +17,7 @@ import { playCard, passTurn, getGameLog, clientOvercharge } from "@/lib/gameEngi
 import { isBot } from "@/lib/botEngine";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import {
   Flame, Moon, Heart, Swords, SkipForward, Trophy,
@@ -40,6 +41,12 @@ export default function GameBoard() {
   const [isPassing, setIsPassing] = useState(false);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
   const [isOvercharging, setIsOvercharging] = useState(false);
+  const { setCurrentPage } = useTutorial();
+
+  // Register this page with the tutorial system
+  useEffect(() => {
+    setCurrentPage("game");
+  }, [setCurrentPage]);
 
   // Bot controller - auto-plays when it's a bot's turn
   useBotController({
@@ -317,6 +324,7 @@ export default function GameBoard() {
           </AnimatePresence>
 
           <Button
+            data-tutorial="balance-sheet-btn"
             variant="ghost"
             size="sm"
             onClick={() => { setShowBalanceSheet(!showBalanceSheet); if (showLog) setShowLog(false); }}
@@ -354,7 +362,7 @@ export default function GameBoard() {
       {/* ─── Main Game Area ──────────────────────────────────── */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         {/* Opponents */}
-        <div className="flex justify-center gap-3 px-4 py-3 flex-wrap">
+        <div data-tutorial="player-panel" className="flex justify-center gap-3 px-4 py-3 flex-wrap">
           {gameState.players
             .filter((p) => p.id !== playerId)
             .map((player) => (
@@ -421,7 +429,7 @@ export default function GameBoard() {
         )}
 
         {/* Card Hand */}
-        <div className="px-4 pb-3">
+        <div data-tutorial="card-hand" className="px-4 pb-3">
           <div className="flex items-end justify-center gap-2 overflow-x-auto pb-2">
             <AnimatePresence>
               {myCards.map((card, i) => (
@@ -485,6 +493,7 @@ export default function GameBoard() {
                 </motion.button>
               )}
               <motion.button
+                data-tutorial="pass-btn"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 className="px-6 py-2.5 rounded-lg border border-border/30 text-muted-foreground text-sm hover:border-border/60 transition-colors"

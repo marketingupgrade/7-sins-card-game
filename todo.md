@@ -173,4 +173,25 @@
 - [x] Update UI to show flat vs compounding indicators and active tick effects
 - [x] Update Home page with flat vs compounding mechanic explainer
 - [x] Update and run tests (101 tests passing across 4 test files)
+- [x] Push to GitHub for Vercel deployment
+
+## Tutorial / Onboarding Flow
+- [x] Design tutorial system architecture (step-based state machine with localStorage persistence)
+- [x] Build TutorialProvider context with step tracking, highlight targets, and tooltip positioning
+- [x] Create TutorialOverlay component with spotlight cutout, animated tooltip, step counter, and next/skip/back controls
+- [x] Tutorial Step: Welcome overlay explaining the game concept
+- [x] Tutorial Step: Home — create game, join game, factions, card mechanics
+- [x] Tutorial Step: Lobby — room code, sin selection, add bots, start game
+- [x] Tutorial Step: Game Board — HP bars, energy bar, turn order, targeting
+- [x] Tutorial Step: Hand/Cards — flat vs compounding card types, cost, and effects
+- [x] Tutorial Step: Compounding effects — 3-round tick system (1×, 1×, 2×)
+- [x] Tutorial Step: Balance Sheet — effects ledger and upcoming ticks
+- [x] Tutorial Step: Pass turn — when doing nothing is the right move
+- [x] Tutorial Step: End of tutorial — congratulate and offer to replay or dismiss
+- [x] Add "How to Play" button on Home page that launches tutorial
+- [x] Persist tutorial completion in localStorage so it doesn't repeat
+- [x] Auto-trigger tutorial for first-time visitors (1.5s delay)
+- [x] Add data-tutorial attributes to Home, Lobby, and GameBoard pages
+- [x] Keyboard navigation (arrow keys, Enter, Escape)
+- [x] Write tests for tutorial state machine (122 tests passing across 5 files)
 - [ ] Push to GitHub for Vercel deployment

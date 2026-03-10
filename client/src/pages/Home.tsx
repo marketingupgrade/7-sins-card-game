@@ -7,9 +7,10 @@
  */
 
 import { useState, useEffect } from "react";
+import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye, TrendingUp, SquareSlash } from "lucide-react";
+import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye, TrendingUp, SquareSlash, GraduationCap } from "lucide-react";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
 
@@ -28,6 +29,20 @@ const FLOATING_ICONS = [Flame, Moon, Skull, Swords, Shield, Zap];
 
 export default function Home() {
   const playerId = usePlayerId();
+  const { startTutorial, hasCompleted: tutorialCompleted, isActive: tutorialActive, setCurrentPage } = useTutorial();
+
+  // Register this page with the tutorial system
+  useEffect(() => {
+    setCurrentPage("home");
+  }, [setCurrentPage]);
+
+  // Auto-start tutorial for first-time visitors
+  useEffect(() => {
+    if (!tutorialCompleted && !tutorialActive) {
+      const timer = setTimeout(() => startTutorial("home"), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [tutorialCompleted, tutorialActive, startTutorial]);
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState(() => localStorage.getItem("7sins_username") || "");
   const [roomCode, setRoomCode] = useState("");
@@ -222,6 +237,7 @@ export default function Home() {
             {/* Action Buttons */}
             <div className="space-y-3">
               <motion.button
+                data-tutorial="create-game"
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={handleCreate}
@@ -230,6 +246,19 @@ export default function Home() {
               >
                 <Flame className="w-4 h-4" />
                 {isCreating ? "SUMMONING ARENA..." : "CREATE GAME"}
+              </motion.button>
+
+              {/* How to Play button */}
+              <motion.button
+                data-tutorial="how-to-play"
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => startTutorial("home")}
+                className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-neon-cyan/20 text-neon-cyan/80 hover:bg-neon-cyan/5 hover:border-neon-cyan/30 transition-all flex items-center justify-center gap-2"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                HOW TO PLAY
               </motion.button>
 
               <div className="flex items-center gap-3 my-2">
@@ -247,6 +276,7 @@ export default function Home() {
                 {!showJoinPanel ? (
                   <motion.button
                     key="join-toggle"
+                    data-tutorial="join-game"
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowJoinPanel(true)}
@@ -336,6 +366,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
+          data-tutorial="faction-cards"
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-3xl"
         >
           {[
@@ -388,6 +419,7 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.8 }}
+          data-tutorial="card-mechanics"
           className="mt-12 max-w-2xl w-full"
         >
           <p

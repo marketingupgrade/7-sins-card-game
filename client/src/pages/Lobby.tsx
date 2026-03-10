@@ -6,6 +6,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
+import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
 import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
@@ -94,6 +95,12 @@ export default function Lobby() {
   const [isAddingBot, setIsAddingBot] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { displayedText, addMessage, addRandomLine } = useNarrator();
+  const { setCurrentPage } = useTutorial();
+
+  // Register this page with the tutorial system
+  useEffect(() => {
+    setCurrentPage("lobby");
+  }, [setCurrentPage]);
 
   // Random lobby quip on mount
   useEffect(() => {
@@ -259,6 +266,7 @@ export default function Lobby() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
+          data-tutorial="room-code"
           className="glass-panel rounded-2xl p-6 mb-6 w-full max-w-lg text-center"
         >
           <p
@@ -305,6 +313,7 @@ export default function Lobby() {
             </h2>
             {isHost && emptySeats > 0 && (
               <motion.button
+                data-tutorial="add-bot"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAddBot}
@@ -395,6 +404,7 @@ export default function Lobby() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
+            data-tutorial="sin-selection"
             className="w-full max-w-lg mb-6"
           >
             <h2
@@ -467,6 +477,7 @@ export default function Lobby() {
             className="w-full max-w-lg"
           >
             <motion.button
+              data-tutorial="start-game"
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleStart}
