@@ -1,37 +1,45 @@
 /**
- * Vercel Serverless Function - API Handler
+ * Vercel Serverless Function - tRPC API Handler
  *
- * This file wraps the Express app for Vercel's serverless runtime.
- * It handles all /api/* routes including tRPC, OAuth, and chat.
+ * Minimal Express wrapper that only handles /api/trpc routes.
+ * No Manus OAuth or chat routes needed for Vercel deployment.
  */
 
-import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "../server/_core/oauth";
-import { registerChatRoutes } from "../server/_core/chat";
 import { appRouter } from "../server/routers";
-import { createContext } from "../server/_core/context";
+import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 
 const app = express();
 
+// Enable CORS for all origins
+app.use(cors({ origin: true, credentials: true }));
+
 // Body parser
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ limit: "50mb", extended: true }));
+app.use(express.json({ limit: "10mb" }));
 
-// OAuth callback
-registerOAuthRoutes(app);
+// Simple context (no Manus auth on Vercel)
+function createVercelContext(opts: CreateExpressContextOptions) {
+  return {
+    req: opts.req,
+    res: opts.res,
+    user: null,
+  };
+}
 
-// Chat API
-registerChatRoutes(app);
-
-// tRPC API
+// tRPC API - mount at /api/trpc
 app.use(
   "/api/trpc",
   createExpressMiddleware({
     router: appRouter,
-    createContext,
+    createContext: createVercelContext,
   })
 );
+
+// Health check
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 
 export default app;
