@@ -89,3 +89,9 @@
 
 ## Bug Fixes
 - [x] Fix bot UUID format — bot IDs like 'bot-58d8ceb0' are not valid UUIDs, causing Supabase insert failure
+- [x] Fix missing Supabase env vars on Vercel deployment (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY)
+- [x] SECURITY: Remove env var names from UI error messages — never expose internal config to users
+- [x] Make Supabase client handle missing env vars gracefully with console-only logging
+
+## Compound Effects UI
+- [x] Add compound effects balance sheet — chronological timeline showing upcoming effects per player

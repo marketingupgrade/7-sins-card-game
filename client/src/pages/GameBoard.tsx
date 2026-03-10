@@ -8,6 +8,7 @@
 
 import { Button } from "@/components/ui/button";
 import GameCard from "@/components/GameCard";
+import CompoundBalanceSheet from "@/components/CompoundBalanceSheet";
 import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
@@ -19,7 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   Flame, Moon, Heart, Swords, SkipForward, Trophy,
-  Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft
+  Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp
 } from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, calculateEffectiveValue } from "@shared/gameTypes";
@@ -36,6 +37,7 @@ export default function GameBoard() {
   const [logEntries, setLogEntries] = useState<any[]>([]);
   const [isPlayingCard, setIsPlayingCard] = useState(false);
   const [isPassing, setIsPassing] = useState(false);
+  const [showBalanceSheet, setShowBalanceSheet] = useState(false);
 
   // Bot controller - auto-plays when it's a bot's turn
   useBotController({
@@ -299,8 +301,18 @@ export default function GameBoard() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setShowLog(!showLog)}
-            className="text-muted-foreground hover:text-neon-cyan"
+            onClick={() => { setShowBalanceSheet(!showBalanceSheet); if (showLog) setShowLog(false); }}
+            className={`transition-colors ${showBalanceSheet ? 'text-neon-cyan' : 'text-muted-foreground hover:text-neon-cyan'}`}
+            title="Effects Ledger"
+          >
+            <TrendingUp className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setShowLog(!showLog); if (showBalanceSheet) setShowBalanceSheet(false); }}
+            className={`transition-colors ${showLog ? 'text-neon-cyan' : 'text-muted-foreground hover:text-neon-cyan'}`}
+            title="Combat Log"
           >
             <ScrollText className="w-4 h-4" />
           </Button>
@@ -468,6 +480,15 @@ export default function GameBoard() {
           )}
         </div>
       </div>
+
+      {/* ─── Compound Balance Sheet ──────────────────────────── */}
+      <CompoundBalanceSheet
+        activeEffects={gameState.activeEffects}
+        players={gameState.players}
+        currentRound={gameState.currentRound}
+        isOpen={showBalanceSheet}
+        onClose={() => setShowBalanceSheet(false)}
+      />
 
       {/* ─── Game Log Sidebar ────────────────────────────────── */}
       <AnimatePresence>
