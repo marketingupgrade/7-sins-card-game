@@ -16,6 +16,8 @@ import { useCard3DTilt } from "@/hooks/useCard3DTilt";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
 import { soundEngine } from "@/lib/soundEngine";
+import { musicEngine } from "@/lib/musicEngine";
+import { MusicToggle } from "@/components/MusicToggle";
 
 const SASSY_TAGLINES = [
   "Where your sins become someone else's problem.",
@@ -38,6 +40,12 @@ export default function Home() {
   useEffect(() => {
     setCurrentPage("home");
   }, [setCurrentPage]);
+
+  // Start menu music
+  useEffect(() => {
+    musicEngine.init();
+    musicEngine.setScene("menu");
+  }, []);
 
   // Auto-start tutorial for first-time visitors
   useEffect(() => {
@@ -138,6 +146,11 @@ export default function Home() {
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Music toggle — top right */}
+      <div className="absolute top-4 right-4 z-30">
+        <MusicToggle />
       </div>
 
       {/* Decorative corner accents — enhanced with larger gradients */}
@@ -578,6 +591,19 @@ export default function Home() {
         >
           48 cards &middot; 4 factions &middot; 10 rounds &middot; Fibonacci compounding &middot; Zero mercy
         </motion.p>
+
+        {/* Attribution credits for open source assets */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="mt-6 text-[8px] text-muted-foreground/30 text-center space-y-0.5"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>
+          <p>SFX: Card Game Sounds (CC0) &middot; JC Sounds Fantasy SFX Pack (CC-BY 4.0) &middot; Icons: Painterly Spell Icons by J. W. Bjerk (CC-BY 3.0)</p>
+          <p>All assets from <a href="https://opengameart.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-muted-foreground/50 transition-colors">OpenGameArt.org</a></p>
+        </motion.div>
       </div>
     </div>
   );

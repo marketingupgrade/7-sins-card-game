@@ -217,7 +217,7 @@
 - [x] GameCard: badge-flat / badge-compound animated type badges
 - [x] GameCard: Energy cost orb with sin-colored glow shadow
 - [x] All 122 tests still passing
-- [ ] Push to GitHub for Vercel deployment
+- [x] Push to GitHub for Vercel deployment
 
 ## Open Source Asset Integration
 - [x] Browse opensource3dassets.com for card art, faction icons, and background textures (3D models, not ideal for 2D card game)
@@ -230,5 +230,21 @@
 - [x] Sin-specific damage sounds: Wrath=fire, Sloth=ice, Envy=electric, Greed=sword swing
 - [x] Sound effects on Home (create/join), Lobby (sin select, add bot, start), GameBoard (play card, pass, overcharge)
 - [x] SoundToggle component with volume slider, mute toggle, hover reveal
+- [x] All 122 tests still passing across 5 files
+- [x] Push to GitHub for Vercel deployment
+
+## Ambient Background Music
+- [x] Browse OpenGameArt for dark ambient/cyberpunk looping music tracks (CC-BY 3.0)
+- [x] Selected: "Dark City" by Muncheybobo (menu), "Dark Ambient" by Alexandr Zhelanov (arena), "Dark Ambient Loop 13" by MundoSound (arena drone)
+- [x] Download and convert WAV tracks to MP3 (128kbps) for web delivery
+- [x] Upload 3 music tracks to CDN (3.1MB + 6.5MB + 1.8MB)
+- [x] Build MusicEngine (musicEngine.ts) with looping, 2s crossfade, independent volume, localStorage persistence
+- [x] Context-aware track switching: Menu music for Home/Lobby, Arena music (main + drone layer) for GameBoard
+- [x] Crossfade transition with ease-in/ease-out curves when switching scenes
+- [x] MusicToggle component — separate from SFX toggle, with hover-reveal volume slider and music note icon
+- [x] MusicToggle on Home page (top-right corner) and GameBoard (top bar next to SFX toggle)
+- [x] Auto-init on first user interaction (browser autoplay policy compliance)
+- [x] Persist music volume and mute state in localStorage
+- [x] Attribution credits footer on Home page for all OpenGameArt assets
 - [x] All 122 tests still passing across 5 files
 - [ ] Push to GitHub for Vercel deployment

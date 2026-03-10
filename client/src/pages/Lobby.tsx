@@ -12,6 +12,7 @@ import { useLocation, useParams } from "wouter";
 import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
 import EmberField from "@/components/EmberField";
 import { soundEngine } from "@/lib/soundEngine";
+import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { chooseSin, startGame, getGameState } from "@/lib/gameEngine";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
@@ -103,6 +104,12 @@ export default function Lobby() {
   useEffect(() => {
     setCurrentPage("lobby");
   }, [setCurrentPage]);
+
+  // Keep menu music playing in lobby
+  useEffect(() => {
+    musicEngine.init();
+    musicEngine.setScene("menu");
+  }, []);
 
   // Random lobby quip on mount
   useEffect(() => {

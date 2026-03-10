@@ -29,6 +29,8 @@ import { PlayerState, getCompoundTickValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST
 import EmberField from "@/components/EmberField";
 import { SoundToggle } from "@/components/SoundToggle";
 import { soundEngine } from "@/lib/soundEngine";
+import { musicEngine } from "@/lib/musicEngine";
+import { MusicToggle } from "@/components/MusicToggle";
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -50,6 +52,16 @@ export default function GameBoard() {
   useEffect(() => {
     setCurrentPage("game");
   }, [setCurrentPage]);
+
+  // Switch to arena music with crossfade
+  useEffect(() => {
+    musicEngine.init();
+    musicEngine.setScene("arena");
+    return () => {
+      // When leaving game, switch back to menu
+      musicEngine.setScene("menu");
+    };
+  }, []);
 
   // Bot controller - auto-plays when it's a bot's turn
   useBotController({
@@ -369,6 +381,7 @@ export default function GameBoard() {
             <ScrollText className="w-4 h-4" />
           </Button>
           <SoundToggle />
+          <MusicToggle />
         </div>
       </div>
 

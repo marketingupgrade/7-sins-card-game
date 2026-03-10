@@ -1,0 +1,59 @@
+Music Search Results from OpenGameArt (dark ambient, music type):
+211 results found. Top candidates:
+
+1. Ove's Essential Game Audio Pack Collection (160+ Files) - large collection, likely has ambient tracks
+2. Dark ambiance - exactly what we need for menu/lobby
+3. Dark Fallout - post-apocalyptic dark vibe, good for arena
+4. Dark Forest Theme - dark atmosphere
+5. Dungeon Ambience - dark dungeon atmosphere
+6. Horror Atmosphere - dark horror ambient
+7. Endgame: Singularity - could be good for intense game moments
+8. A Darkness Opus - dark themed music
+9. Desolate - dark desolate atmosphere
+10. Bleeding out - dramatic dark track
+11. Factory Ambiance - industrial/cyberpunk vibe
+12. EmptyCity: Background Music - urban dark ambient
+
+TRACK DETAILS:
+
+1. Dark ambiance by tarfmagougou/Philippe Groarke
+   - License: CC-BY-SA 3.0 (requires attribution + share-alike)
+   - Files: MP3 (10.9MB), WAV, OGG, FLAC, also Mastered versions
+   - Tags: dark, horror, suspense, tension, atmospheric
+   - Good for: Menu/Lobby ambient
+   - NOTE: CC-BY-SA requires share-alike, tricky for commercial
+
+2. Dark Fallout by remaxim
+   - License: CC-BY-SA 3.0 (same share-alike issue)
+   - Files: OGG (2.6MB)
+   - Tags: space, atmospheric, ambient, sci-fi, strategy
+   - Good for: Arena/battle ambient
+   - NOTE: CC-BY-SA, author is strict about license compliance
+
+CC0/CC-BY SELECTIONS (no share-alike issues):
+
+3. Dark City by Muncheybobo
+   - License: CC-BY 3.0 (attribution only - perfect!)
+   - File: Dark City.Wav (35.4MB)
+   - Tags: city, dark, ambient, background
+   - Collections: Cyberpunk Music, Dark Sci-Fi
+   - Perfect for: Menu/Lobby - cyberpunk city vibe
+   - In "Cyberpunk Music" collection - ideal match!
+
+4. Dark Ambient by Alexandr Zhelanov
+   - License: CC-BY 3.0 (attribution only - perfect!)
+   - File: Dark-Amb.mp3 (6.7MB)
+   - Tags: dark, ambient, mystery
+   - Description: "dark ambient with light rhythm"
+   - Perfect for: Arena/Battle - has rhythm for tension
+
+5. Dark Ambient Loop 13 by MundoSound/Lucas Calvo
+   - License: CC-BY 3.0 / OGA-BY 3.0
+   - File: Dark_Atmosphere13_Looped_24bit.wav (33.2MB)
+   - Tags: dark, loop, atmosphere, seamless, drone, industrial, horror, suspense
+   - Duration: 1:54 seamless loop
+   - Perfect for: Arena ambient layer - seamless looping!
+
+FINAL PLAN:
+- Menu/Lobby: Dark City (cyberpunk city ambient)
+- Arena/Battle: Dark Ambient (rhythmic tension) + Dark Ambient Loop 13 (seamless drone layer)
