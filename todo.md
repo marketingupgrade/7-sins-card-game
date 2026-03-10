@@ -58,6 +58,6 @@
 - [x] Victory/defeat screens
 
 ## Deployment
-- [ ] Push to GitHub repository
-- [ ] Deploy to Vercel
-- [ ] Configure environment variables on Vercel
+- [x] Push to GitHub repository
+- [x] Deploy to Vercel
+- [x] Configure environment variables on Vercel
