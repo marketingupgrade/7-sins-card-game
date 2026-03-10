@@ -589,11 +589,11 @@ interface PlayerPanelProps {
 }
 
 // Sin visual config for PlayerPanel
-const panelSinConfig: Record<string, { color: string; Icon: typeof Flame }> = {
-  wrath: { color: "wrath", Icon: Flame },
-  sloth: { color: "sloth", Icon: Moon },
-  greed: { color: "greed", Icon: Coins },
-  envy: { color: "envy", Icon: Eye },
+const panelSinConfig: Record<string, { color: string; cssColor: string; Icon: typeof Flame }> = {
+  wrath: { color: "wrath", cssColor: "var(--color-wrath)", Icon: Flame },
+  sloth: { color: "sloth", cssColor: "var(--color-sloth)", Icon: Moon },
+  greed: { color: "greed", cssColor: "var(--color-greed)", Icon: Coins },
+  envy: { color: "envy", cssColor: "var(--color-envy)", Icon: Eye },
 };
 
 function PlayerPanel({
@@ -608,6 +608,7 @@ function PlayerPanel({
 }: PlayerPanelProps) {
   const cfg = panelSinConfig[player.chosenSin || "wrath"] || panelSinConfig.wrath;
   const sinColor = cfg.color;
+  const sinCssColor = cfg.cssColor;
   const SinIcon = cfg.Icon;
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
@@ -630,7 +631,8 @@ function PlayerPanel({
       {/* Sin color accent */}
       {player.isAlive && (
         <div
-          className={`absolute inset-0 opacity-[0.03] bg-${sinColor}`}
+          className="absolute inset-0 opacity-[0.03]"
+          style={{ backgroundColor: sinCssColor }}
         />
       )}
 
@@ -647,7 +649,7 @@ function PlayerPanel({
       <div className="relative z-10">
         {/* Player Info Row */}
         <div className="flex items-center gap-2 mb-2">
-          <SinIcon className={`w-3.5 h-3.5 text-${sinColor} flex-shrink-0`} />
+          <SinIcon className="w-3.5 h-3.5 flex-shrink-0" style={{ color: sinCssColor }} />
           <span
             className="text-sm font-bold text-foreground truncate flex-1"
             style={{ fontFamily: "var(--font-heading)" }}
@@ -692,7 +694,8 @@ function PlayerPanel({
             <motion.div
               animate={{ width: `${player.maxEnergy > 0 ? (player.currentEnergy / MAX_ENERGY) * 100 : 0}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-${sinColor}/80 to-${sinColor}`}
+              className="absolute inset-y-0 left-0 rounded-full"
+              style={{ background: `linear-gradient(to right, ${sinCssColor}cc, ${sinCssColor})` }}
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-[7px] font-bold text-foreground/70 drop-shadow-sm">

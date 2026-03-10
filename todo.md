@@ -158,3 +158,6 @@
 - [x] Implement catch-up bonus resolution in game engines (client, server, bot)
 - [x] Update bot AI for catch-up card awareness
 - [x] Run tests and verify (87 tests passing)
+
+## Bug Fixes (Round 5)
+- [x] Fix corruption/energy bar visual - switched from dynamic Tailwind classes to inline CSS custom properties
