@@ -248,3 +248,10 @@
 - [x] Attribution credits footer on Home page for all OpenGameArt assets
 - [x] All 122 tests still passing across 5 files
 - [ ] Push to GitHub for Vercel deployment
+## Bug Fix: Tutorial Keeps Popping Up
+- [x] Fix tutorial auto-trigger — removed cross-page resume logic that kept re-triggering
+- [x] Fix nextStep end-of-page bug — was writing TUTORIAL_ACTIVE_KEY back to localStorage after deactivating
+- [x] Auto-trigger now uses ref guard so it fires at most once per session
+- [x] Ensure "Skip All" and X button persist dismissal to localStorage (STORAGE_DISMISSED_KEY)
+- [x] Simplified TutorialContext — removed fragile resume-on-page-change logic
+- [x] All 122 tests still passing

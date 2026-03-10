@@ -47,13 +47,15 @@ export default function Home() {
     musicEngine.setScene("menu");
   }, []);
 
-  // Auto-start tutorial for first-time visitors
+  // Auto-start tutorial for first-time visitors (only once, ever)
+  const autoTriggeredRef = useState(() => ({ current: false }))[0];
   useEffect(() => {
-    if (!tutorialCompleted && !tutorialActive) {
+    if (!tutorialCompleted && !tutorialActive && !autoTriggeredRef.current) {
+      autoTriggeredRef.current = true;
       const timer = setTimeout(() => startTutorial("home"), 1500);
       return () => clearTimeout(timer);
     }
-  }, [tutorialCompleted, tutorialActive, startTutorial]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState(() => localStorage.getItem("7sins_username") || "");
   const [roomCode, setRoomCode] = useState("");
