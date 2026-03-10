@@ -127,3 +127,12 @@
 - [x] Update Home page to showcase 4 sins
 - [x] Update GameCard and PlayerPanel for new sin colors
 - [x] Update and run all tests (83 tests passing)
+
+## Mathematical Card Balance (Full Analysis)
+- [x] Build comprehensive EV/variance/efficiency model for all 40 cards
+- [x] Run Monte Carlo matchup simulations (all 6 faction pairs, 10K+ games each)
+- [x] Identify statistical outliers and dominance patterns
+- [x] Compute rebalanced card values using optimization
+- [x] Apply rebalanced values to cardData.ts (Lazy Drain dmg 1->2, Covetous Strike dmg 3->2)
+- [x] Run tests and verify balance improvements (83 tests passing)
+- [x] Generate balance report (EXCELLENT grade, 1.7% max faction deviation)

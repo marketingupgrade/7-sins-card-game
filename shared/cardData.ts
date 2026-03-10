@@ -2,7 +2,7 @@
  * Card Data Definitions for 7 Deadly Sins Card Game
  *
  * Four sins, each with 10 cards forming a complete deck.
- * Balanced using EV/Corruption analysis (all within 10% of mean 2.42 EV/C).
+ * Balanced using EV/Corruption analysis (all within 1.7% of mean 5.48 EV/C).
  *
  * Design Philosophy:
  * - Wrath: High damage, self-harm, aggressive tempo. Wants to end games fast.
@@ -165,7 +165,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
     sin: "sloth",
     cost: 2,
     effects: [
-      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Why generate your own energy when you can borrow theirs?",
@@ -408,7 +408,7 @@ export const ENVY_CARDS: CardDefinition[] = [
     name: "Covetous Strike",
     sin: "envy",
     cost: 1,
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "I want what you have. Starting with your HP.",
     narratorQuip: "Pure jealousy, concentrated into a fist. Efficient.",
     tier: "common",
