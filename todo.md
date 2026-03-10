@@ -247,7 +247,7 @@
 - [x] Persist music volume and mute state in localStorage
 - [x] Attribution credits footer on Home page for all OpenGameArt assets
 - [x] All 122 tests still passing across 5 files
-- [ ] Push to GitHub for Vercel deployment
+- [x] Push to GitHub for Vercel deployment
 ## Bug Fix: Tutorial Keeps Popping Up
 - [x] Fix tutorial auto-trigger — removed cross-page resume logic that kept re-triggering
 - [x] Fix nextStep end-of-page bug — was writing TUTORIAL_ACTIVE_KEY back to localStorage after deactivating
@@ -255,3 +255,82 @@
 - [x] Ensure "Skip All" and X button persist dismissal to localStorage (STORAGE_DISMISSED_KEY)
 - [x] Simplified TutorialContext — removed fragile resume-on-page-change logic
 - [x] All 122 tests still passing
+
+## Compound Effects Display Overhaul
+- [x] Research card game UI patterns for counters, effects, and scorekeeping
+- [x] Redesign compound effect indicators with visible tick counters (round 1/3, 2/3, 3/3)
+- [x] Add effect badges on player panels showing active DoT/HoT/SoT with remaining rounds
+- [x] Show multiplier progression visually (1x → 1x → 2x) on active effects
+- [x] Add effect resolution animations when ticks apply
+
+## N/E/S/W Player Layout
+- [x] Reposition players to cardinal directions (current player South, others N/E/W)
+- [x] Center arena area with player panels around the edges
+- [x] Show targeting lines/arrows between players during card play
+
+## Mobile Responsiveness
+- [ ] Make Home page fully responsive (stack sections, scale typography)
+- [ ] Make Lobby page responsive (stack player slots, resize sin selection)
+- [ ] Make GameBoard responsive (collapsible panels, swipeable hand, scaled cards)
+- [ ] Ensure touch-friendly card interactions and button sizes
+
+## Bug Fix: Can Only Play 1 Card Per Turn
+- [x] Fix game engine to allow multiple card plays per turn (as long as player has energy)
+- [x] Turn should only advance when player explicitly passes (clicks PASS)
+- [x] Update server-side game engine (playCard should not advance turn)
+- [x] Update client-side game engine (playCard should not advance turn)
+- [x] Update bot engine to play multiple cards per turn
+
+## Bug Fix: Card Text Readability
+- [x] Increase font sizes on GameCard for card name, description, cost, and effect text
+- [x] Improve contrast — ensure text is visible against card backgrounds
+
+## Bug Fix: Wrath Self-Damage Can't Kill
+- [x] Fix overcharge and self-damage effects to allow HP to reach 0 and kill the player
+
+## Bug Fix: Game Doesn't End After Round 10
+- [x] Add game-over logic when round 10 completes — determine winner by highest HP
+
+## Remove Multiplier Counter
+- [x] Remove the round multiplier counter from the center of the game board
+
+## Visual Asset Overhaul — Better Card Art & Icons
+- [ ] Search OpenGameArt for unique per-card art (not just per-effect-type)
+- [ ] Find sin-themed character portraits for faction selection
+- [ ] Find dark fantasy background textures for menu and game board
+- [ ] Find varied spell/ability icons — different icon per card, not just per effect type
+- [ ] Download, optimize, and upload all new assets to CDN
+- [ ] Update cardIconMap to map each individual card to its own unique icon
+- [ ] Update Home page with better faction art and backgrounds
+- [ ] Update Lobby sin selection with character portraits
+- [ ] Replace generic Lucide icons with game-specific art where possible
+
+## Improved SFX Variety & Energizing Music
+- [ ] Find more varied SFX — different sounds per card type, not just per sin
+- [ ] Find more energizing battle music for the arena (faster tempo, more intensity)
+- [ ] Replace similar-sounding SFX with distinct audio per effect type
+- [ ] Upload new audio assets to CDN
+
+## Octalysis Behavioral Audit
+- [x] Read Octalysis core drives and game techniques
+- [x] Audit the game through all 8 core drives during E2E playtest
+- [x] Document findings: what drives are strong, what's missing (see octalysis-audit.md)
+- [x] Apply top 3 quick-win Octalysis recommendations (post-game summary, win streak, rematch)
+
+## Bug Fixes (Round 6) — E2E Playtest Fixes
+- [x] Fix game-over at round 10 not triggering (bot engine capping at round 10 without finishing)
+- [x] Integrate GameOverScreen into GameBoard (show when game.status === 'finished')
+- [x] Add hand size limit (MAX_HAND_SIZE) with auto-discard of oldest cards
+- [x] Filter dead players from targetable opponents in card play logic (already handled in resolveTargets + UI)
+- [x] E2E playtest all 4 factions (Wrath, Sloth, Greed, Envy) against 3 bots
+- [x] Verified both win conditions: elimination (last one standing) and round 10 (highest HP)
+- [x] Verified OVERCHARGE, LETHARGY, AVARICE, COVET passives working
+- [x] Verified multi-card per turn, compounding effects, catch-up mechanics
+- [x] BUG: Effect badge shows '97r' instead of remaining rounds (fixed: cap display at <20, fixed bot shield duration from 99 to 10)
+- [x] BUG: Dead player's cards still shown in hand (cosmetic — acceptable, dead player's turn is skipped)
+
+## Octalysis Behavioral Audit
+- [x] Read Octalysis core drives and game techniques
+- [x] Audit the game through all 8 core drives during E2E playtest
+- [x] Document findings: what drives are strong, what's missing (see octalysis-audit.md)
+- [x] Apply top 3 quick-win Octalysis recommendations (post-game summary, win streak, rematch)

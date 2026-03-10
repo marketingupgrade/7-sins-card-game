@@ -1,0 +1,454 @@
+/**
+ * GameOverScreen - Displayed when the game ends
+ *
+ * Shows winner, final standings, post-game summary, and option to play again.
+ * Cinematic reveal with dark overlay and animated results.
+ * 
+ * Octalysis Quick Wins:
+ * - CD2: Post-game summary with stats + Win Streak counter
+ * - CD5: Rematch button for social re-engagement
+ * - CD8: Win streak creates something to protect
+ */
+
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Flame, Trophy, Swords, Heart, Shield, Zap, RotateCcw } from "lucide-react";
+import type { PlayerState, GameLogEntry } from "@shared/gameTypes";
+import { CARD_MAP } from "@shared/cardData";
+import { getGameLog } from "@/lib/gameEngine";
+
+interface GameOverScreenProps {
+  players: PlayerState[];
+  winnerId: string | null;
+  currentPlayerId: string;
+  currentRound: number;
+  gameId?: string;
+  onRematch?: () => void;
+}
+
+const SIN_COLORS: Record<string, string> = {
+  wrath: "#ef4444",
+  sloth: "#3b82f6",
+  greed: "#eab308",
+  envy: "#22c55e",
+};
+
+const SIN_ICONS: Record<string, string> = {
+  wrath: "\u{1F525}",
+  sloth: "\u{1F4A4}",
+  greed: "\u{1F4B0}",
+  envy: "\u{1F441}",
+};
+
+const STREAK_NARRATOR: Record<number, string> = {
+  1: "A win. Don't let it go to your head.",
+  2: "Two in a row? Someone's feeling dangerous.",
+  3: "Three-peat. The other sins are getting nervous.",
+  4: "Four wins. You're becoming the final boss.",
+  5: "FIVE. At this point, you ARE the deadly sin.",
+};
+
+function getStreakComment(streak: number): string {
+  if (streak <= 0) return "";
+  if (streak >= 5) return STREAK_NARRATOR[5];
+  return STREAK_NARRATOR[streak] || `${streak} wins in a row. Impressive.`;
+}
+
+interface PostGameStats {
+  cardsPlayed: number;
+  totalDamageDealt: number;
+  totalHealingDone: number;
+  totalShieldApplied: number;
+  compoundingEffectsUsed: number;
+  catchupsTriggered: number;
+  mvpMoment: string;
+}
+
+function computePostGameStats(logEntries: any[], currentPlayerId: string, players: PlayerState[]): PostGameStats {
+  const stats: PostGameStats = {
+    cardsPlayed: 0,
+    totalDamageDealt: 0,
+    totalHealingDone: 0,
+    totalShieldApplied: 0,
+    compoundingEffectsUsed: 0,
+    catchupsTriggered: 0,
+    mvpMoment: "",
+  };
+
+  let biggestHit = 0;
+  let biggestHitCard = "";
+
+  for (const entry of logEntries) {
+    if (entry.player_id !== currentPlayerId) continue;
+    const data = typeof entry.action_data === "string" ? JSON.parse(entry.action_data) : entry.action_data;
+
+    if (entry.action_type === "play_card") {
+      stats.cardsPlayed++;
+      const cardId = data.card_id || data.cardId;
+      const card = cardId ? CARD_MAP[cardId] : null;
+      if (card?.cardType === "compounding") stats.compoundingEffectsUsed++;
+
+      // Track damage from effects
+      const effects = data.effects || [];
+      for (const eff of effects) {
+        if (eff.type === "damage" && eff.value) {
+          stats.totalDamageDealt += eff.value;
+          if (eff.value > biggestHit) {
+            biggestHit = eff.value;
+            biggestHitCard = card?.name || "Unknown";
+          }
+        }
+        if (eff.type === "heal" && eff.value) stats.totalHealingDone += eff.value;
+        if (eff.type === "shield" && eff.value) stats.totalShieldApplied += eff.value;
+      }
+    }
+
+    if (entry.action_type === "catchup_triggered") {
+      stats.catchupsTriggered++;
+    }
+  }
+
+  // Fallback: estimate from final state if log data is sparse
+  if (stats.cardsPlayed === 0) {
+    // Count cards no longer in hand/deck as played
+    const me = players.find(p => p.id === currentPlayerId);
+    if (me) {
+      stats.cardsPlayed = Math.max(0, 12 - me.hand.length - me.deckSize - me.discardSize);
+    }
+  }
+
+  if (biggestHit > 0) {
+    stats.mvpMoment = `${biggestHitCard} dealt ${biggestHit} damage in a single hit!`;
+  } else if (stats.totalHealingDone > 10) {
+    stats.mvpMoment = `Healed ${stats.totalHealingDone} HP — the cockroach strategy.`;
+  } else if (stats.compoundingEffectsUsed > 2) {
+    stats.mvpMoment = `${stats.compoundingEffectsUsed} compounding effects — patience is a virtue (and a weapon).`;
+  } else {
+    stats.mvpMoment = "Survived the arena. That counts for something.";
+  }
+
+  return stats;
+}
+
+export function GameOverScreen({ players, winnerId, currentPlayerId, currentRound, gameId, onRematch }: GameOverScreenProps) {
+  const [, setLocation] = useLocation();
+  const winner = players.find((p) => p.id === winnerId);
+  const isPlayerWinner = winnerId === currentPlayerId;
+  const currentPlayer = players.find((p) => p.id === currentPlayerId);
+  const [logEntries, setLogEntries] = useState<any[]>([]);
+  const [showStats, setShowStats] = useState(false);
+
+  // Win streak management
+  const [winStreak, setWinStreak] = useState(0);
+
+  useEffect(() => {
+    const storedStreak = parseInt(localStorage.getItem("7sins_win_streak") || "0", 10);
+    if (isPlayerWinner) {
+      const newStreak = storedStreak + 1;
+      localStorage.setItem("7sins_win_streak", String(newStreak));
+      setWinStreak(newStreak);
+    } else {
+      localStorage.setItem("7sins_win_streak", "0");
+      setWinStreak(0);
+    }
+    // Track total games
+    const totalGames = parseInt(localStorage.getItem("7sins_total_games") || "0", 10);
+    localStorage.setItem("7sins_total_games", String(totalGames + 1));
+    const totalWins = parseInt(localStorage.getItem("7sins_total_wins") || "0", 10);
+    if (isPlayerWinner) localStorage.setItem("7sins_total_wins", String(totalWins + 1));
+    // Track faction stats
+    if (currentPlayer?.chosenSin) {
+      const factionKey = `7sins_faction_${currentPlayer.chosenSin}`;
+      const factionGames = parseInt(localStorage.getItem(factionKey) || "0", 10);
+      localStorage.setItem(factionKey, String(factionGames + 1));
+      if (isPlayerWinner) {
+        const factionWinKey = `7sins_faction_${currentPlayer.chosenSin}_wins`;
+        const factionWins = parseInt(localStorage.getItem(factionWinKey) || "0", 10);
+        localStorage.setItem(factionWinKey, String(factionWins + 1));
+      }
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch game log for post-game stats
+  useEffect(() => {
+    if (gameId) {
+      getGameLog(gameId).then(setLogEntries).catch(() => {});
+    }
+    // Show stats after a delay
+    const timer = setTimeout(() => setShowStats(true), 2500);
+    return () => clearTimeout(timer);
+  }, [gameId]);
+
+  const stats = useMemo(
+    () => computePostGameStats(logEntries, currentPlayerId, players),
+    [logEntries, currentPlayerId, players]
+  );
+
+  // Sort players by HP descending for final standings
+  const standings = [...players].sort((a, b) => {
+    if (a.isAlive && !b.isAlive) return -1;
+    if (!a.isAlive && b.isAlive) return 1;
+    return b.currentHp - a.currentHp;
+  });
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto py-8"
+        style={{ backgroundColor: "rgba(0, 0, 0, 0.85)" }}
+      >
+        {/* Background glow */}
+        <motion.div
+          initial={{ scale: 0, opacity: 0 }}
+          animate={{ scale: 1, opacity: 0.3 }}
+          transition={{ duration: 1.5, ease: "easeOut" }}
+          className="absolute w-[600px] h-[600px] rounded-full blur-[120px]"
+          style={{
+            backgroundColor: isPlayerWinner
+              ? SIN_COLORS[currentPlayer?.chosenSin || "wrath"]
+              : "#ef4444",
+          }}
+        />
+
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0, y: 40 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          className="relative z-10 w-full max-w-lg mx-4"
+        >
+          {/* Main card */}
+          <div className="rounded-2xl border border-white/10 bg-black/80 backdrop-blur-xl p-8 text-center">
+            {/* Result header */}
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.6 }}
+            >
+              <div className="text-6xl mb-4">
+                {isPlayerWinner ? "\u{1F451}" : "\u{1F480}"}
+              </div>
+              <h1
+                className="text-4xl font-black tracking-wider mb-2"
+                style={{
+                  color: isPlayerWinner ? "#fbbf24" : "#ef4444",
+                  textShadow: isPlayerWinner
+                    ? "0 0 30px rgba(251, 191, 36, 0.5)"
+                    : "0 0 30px rgba(239, 68, 68, 0.5)",
+                }}
+              >
+                {isPlayerWinner ? "VICTORY" : "DEFEAT"}
+              </h1>
+              <p className="text-white/50 text-sm uppercase tracking-widest">
+                {currentRound >= 10 ? "Round 10 \u2014 Time's Up" : "Last One Standing"}
+              </p>
+            </motion.div>
+
+            {/* Win Streak (CD2 + CD8) */}
+            {isPlayerWinner && winStreak > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.8, type: "spring" }}
+                className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20"
+              >
+                <div className="flex items-center justify-center gap-2 mb-1">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  <span className="text-sm font-bold text-amber-400 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                    {winStreak} WIN STREAK
+                  </span>
+                  <Flame className="w-4 h-4 text-amber-400" />
+                </div>
+                <p className="text-[10px] text-amber-400/60 italic" style={{ fontFamily: "var(--font-body)" }}>
+                  {getStreakComment(winStreak)}
+                </p>
+              </motion.div>
+            )}
+
+            {/* Winner info */}
+            {winner && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.9 }}
+                className="mt-6 mb-6"
+              >
+                <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Winner</p>
+                <div className="flex items-center justify-center gap-3">
+                  <span className="text-2xl">{SIN_ICONS[winner.chosenSin || "wrath"]}</span>
+                  <span
+                    className="text-2xl font-bold"
+                    style={{ color: SIN_COLORS[winner.chosenSin || "wrath"] }}
+                  >
+                    {winner.username}
+                  </span>
+                  <span className="text-white/40 text-sm">
+                    {winner.currentHp}/{winner.maxHp} HP
+                  </span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4" />
+
+            {/* Post-Game Summary (CD2 + CD3) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="mb-4"
+                >
+                  <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Battle Summary</p>
+                  <div className="grid grid-cols-3 gap-2 mb-3">
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <Swords className="w-3.5 h-3.5 text-red-400 mx-auto mb-1" />
+                      <p className="text-lg font-black text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
+                        {stats.cardsPlayed}
+                      </p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider">Cards Played</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <Flame className="w-3.5 h-3.5 text-orange-400 mx-auto mb-1" />
+                      <p className="text-lg font-black text-orange-400" style={{ fontFamily: "var(--font-heading)" }}>
+                        {stats.totalDamageDealt}
+                      </p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider">Damage Dealt</p>
+                    </div>
+                    <div className="bg-white/5 rounded-lg p-2 text-center">
+                      <Heart className="w-3.5 h-3.5 text-green-400 mx-auto mb-1" />
+                      <p className="text-lg font-black text-green-400" style={{ fontFamily: "var(--font-heading)" }}>
+                        {stats.totalHealingDone}
+                      </p>
+                      <p className="text-[8px] text-white/40 uppercase tracking-wider">HP Healed</p>
+                    </div>
+                  </div>
+                  {stats.compoundingEffectsUsed > 0 && (
+                    <div className="flex items-center justify-center gap-4 text-[9px] text-white/30 mb-2">
+                      <span className="flex items-center gap-1">
+                        <Zap className="w-3 h-3 text-yellow-400/50" />
+                        {stats.compoundingEffectsUsed} compound effects
+                      </span>
+                      {stats.totalShieldApplied > 0 && (
+                        <span className="flex items-center gap-1">
+                          <Shield className="w-3 h-3 text-blue-400/50" />
+                          {stats.totalShieldApplied} shield
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {/* MVP Moment */}
+                  <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
+                    <p className="text-[9px] text-white/30 uppercase tracking-wider mb-1">
+                      <Trophy className="w-3 h-3 inline mr-1 text-amber-400/50" />
+                      MVP Moment
+                    </p>
+                    <p className="text-[11px] text-white/60 italic" style={{ fontFamily: "var(--font-body)" }}>
+                      {stats.mvpMoment}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Divider */}
+            <div className="h-px bg-gradient-to-r from-transparent via-white/20 to-transparent my-4" />
+
+            {/* Final standings */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2 }}
+            >
+              <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Final Standings</p>
+              <div className="space-y-2">
+                {standings.map((p, i) => (
+                  <motion.div
+                    key={p.id}
+                    initial={{ x: -20, opacity: 0 }}
+                    animate={{ x: 0, opacity: 1 }}
+                    transition={{ delay: 1.4 + i * 0.15 }}
+                    className={`flex items-center justify-between px-4 py-2 rounded-lg ${
+                      p.id === currentPlayerId
+                        ? "bg-white/10 border border-white/20"
+                        : "bg-white/5"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-white/30 text-sm font-mono w-5">
+                        {i === 0 ? "\u{1F451}" : `#${i + 1}`}
+                      </span>
+                      <span className="text-lg">{SIN_ICONS[p.chosenSin || "wrath"]}</span>
+                      <span
+                        className="font-semibold text-sm"
+                        style={{ color: p.isAlive ? SIN_COLORS[p.chosenSin || "wrath"] : "#666" }}
+                      >
+                        {p.username}
+                        {p.id === currentPlayerId && (
+                          <span className="text-white/30 text-xs ml-1">(you)</span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {p.isAlive ? (
+                        <span className="text-green-400 text-sm font-mono">
+                          {p.currentHp}/{p.maxHp}
+                        </span>
+                      ) : (
+                        <span className="text-red-400/50 text-sm font-mono line-through">
+                          ELIMINATED
+                        </span>
+                      )}
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Actions (CD5: Rematch) */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 2 }}
+              className="mt-8 flex gap-3 justify-center"
+            >
+              {onRematch && (
+                <button
+                  onClick={onRematch}
+                  className="px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider
+                    bg-gradient-to-r from-violet-500 to-purple-600 text-white
+                    hover:from-violet-400 hover:to-purple-500 transition-all
+                    shadow-lg shadow-violet-500/20 flex items-center gap-2"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  Rematch
+                </button>
+              )}
+              <button
+                onClick={() => setLocation("/")}
+                className="px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider
+                  bg-gradient-to-r from-amber-500 to-orange-600 text-black
+                  hover:from-amber-400 hover:to-orange-500 transition-all
+                  shadow-lg shadow-amber-500/20"
+              >
+                Play Again
+              </button>
+              <button
+                onClick={() => setLocation("/")}
+                className="px-6 py-3 rounded-xl font-bold text-sm uppercase tracking-wider
+                  bg-white/10 text-white/70 border border-white/10
+                  hover:bg-white/20 transition-all"
+              >
+                Home
+              </button>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+}

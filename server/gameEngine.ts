@@ -437,7 +437,8 @@ export async function playCard(
     round_number: game.current_round,
   });
 
-  await advanceTurn(gameId);
+  // Turn does NOT advance after playing a card — player can play multiple cards per turn
+  // Turn only advances when player explicitly passes (passTurn)
 
   return { narratorQuip: card.narratorQuip, effects: effectDescriptions };
 }
@@ -754,13 +755,50 @@ async function advanceTurn(gameId: string): Promise<void> {
 
   // If we've wrapped around, new round
   if (nextIndex === 0) {
-    newRound = Math.min(game.current_round + 1, MAX_ROUNDS);
+    newRound = game.current_round + 1;
+
+    // ─── Round 10 Game Over: highest HP wins ─────────────────
+    if (newRound > MAX_ROUNDS) {
+      const sortedByHp = [...alivePlayers].sort((a, b) => b.current_hp - a.current_hp);
+      const winner = sortedByHp[0];
+      await sb
+        .from("games")
+        .update({
+          status: "finished",
+          winner_id: winner?.player_id || null,
+          finished_at: new Date().toISOString(),
+          current_round: MAX_ROUNDS,
+        })
+        .eq("id", gameId);
+      return;
+    }
 
     // Resolve compounding effects at round start
     await resolveActiveEffects(gameId, newRound);
 
+    // Re-check alive players after effect resolution (effects can kill)
+    const { data: postEffectPlayers } = await sb
+      .from("game_players")
+      .select("*")
+      .eq("game_id", gameId)
+      .order("seat_index");
+    const stillAlive = (postEffectPlayers || []).filter((p: any) => p.is_alive);
+
+    if (stillAlive.length <= 1) {
+      const winner = stillAlive[0];
+      await sb
+        .from("games")
+        .update({
+          status: "finished",
+          winner_id: winner?.player_id || null,
+          finished_at: new Date().toISOString(),
+        })
+        .eq("id", gameId);
+      return;
+    }
+
     // Refresh energy and draw a card for each alive player
-    for (const p of alivePlayers) {
+    for (const p of stillAlive) {
       const { data: freshPlayer } = await sb
         .from("game_players")
         .select("*")
@@ -771,6 +809,9 @@ async function advanceTurn(gameId: string): Promise<void> {
         await drawCard(freshPlayer);
       }
     }
+
+    // Recalculate nextIndex based on updated alive list
+    nextIndex = 0;
   }
 
   await sb

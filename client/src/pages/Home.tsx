@@ -230,6 +230,50 @@ export default function Home() {
           </div>
         </motion.div>
 
+        {/* Win Streak Banner (CD2 + CD8) */}
+        {(() => {
+          const streak = parseInt(localStorage.getItem("7sins_win_streak") || "0", 10);
+          const totalGames = parseInt(localStorage.getItem("7sins_total_games") || "0", 10);
+          const totalWins = parseInt(localStorage.getItem("7sins_total_wins") || "0", 10);
+          if (totalGames === 0) return null;
+          return (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: "spring" }}
+              className="w-full max-w-md mb-4"
+            >
+              <div className={`rounded-xl px-4 py-3 text-center border ${
+                streak >= 3
+                  ? "bg-gradient-to-r from-amber-500/10 to-orange-500/10 border-amber-500/20"
+                  : streak > 0
+                  ? "bg-white/5 border-white/10"
+                  : "bg-white/5 border-white/10"
+              }`}>
+                <div className="flex items-center justify-center gap-4 text-[10px] tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  {streak > 0 && (
+                    <span className="flex items-center gap-1 text-amber-400">
+                      <Flame className="w-3 h-3" />
+                      {streak} STREAK
+                    </span>
+                  )}
+                  <span className="text-white/40">
+                    {totalWins}W / {totalGames - totalWins}L
+                  </span>
+                  <span className="text-white/30">
+                    {totalGames > 0 ? Math.round((totalWins / totalGames) * 100) : 0}% WIN RATE
+                  </span>
+                </div>
+                {streak >= 3 && (
+                  <p className="text-[9px] text-amber-400/50 italic mt-1" style={{ fontFamily: "var(--font-body)" }}>
+                    Don't let the streak die. The narrator is watching.
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          );
+        })()}
+
         {/* Game Panel */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

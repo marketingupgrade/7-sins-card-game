@@ -24,6 +24,7 @@ import {
   COMPOUND_DURATION,
   getCompoundTickValue,
   getBaseEnergyForRound,
+  MAX_ROUNDS,
 } from "../../../shared/gameTypes";
 
 // ─── Bot Names (sassy and cynical) ──────────────────────────
@@ -124,11 +125,13 @@ export async function botChooseSin(gameId: string, botId: string): Promise<SinTy
   return sin;
 }
 
-// ─── Bot Play Turn ──────────────────────────────────────────
+// ─── Bot Play Turn (Multi-Card) ─────────────────────────────
+// Bot plays multiple cards per turn until out of energy, then passes.
 export async function botPlayTurn(gameId: string, botId: string): Promise<{
   action: "play" | "pass";
   cardName?: string;
   narratorQuip?: string;
+  cardsPlayed?: number;
 }> {
   const sb = getClientSupabase();
 
@@ -156,26 +159,10 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
   const currentTurnPlayer = alivePlayers[game.current_player_index % alivePlayers.length];
   if (currentTurnPlayer.player_id !== botId) return { action: "pass" };
 
-  const hand: string[] = botPlayer.hand || [];
-  const botEnergy = botPlayer.current_energy ?? 0;
-
-  if (hand.length === 0) {
-    await drawCardForBot(botPlayer);
-    await sb.from("game_log").insert({
-      game_id: gameId,
-      player_id: botPlayer.id,
-      action_type: "pass",
-      action_data: { unspentEnergy: botEnergy },
-      round_number: game.current_round,
-    });
-    await advanceBotTurn(gameId);
-    return { action: "pass" };
-  }
-
   // Wrath bot: consider Overcharge if low on energy and has HP to spare
-  if (botPlayer.chosen_sin === "wrath" && botEnergy < 2 && botPlayer.current_hp > WRATH_OVERCHARGE_HP_COST + 3) {
+  if (botPlayer.chosen_sin === "wrath" && (botPlayer.current_energy ?? 0) < 2 && botPlayer.current_hp > WRATH_OVERCHARGE_HP_COST + 3) {
     const newHp = botPlayer.current_hp - WRATH_OVERCHARGE_HP_COST;
-    const newEnergy = Math.min(botEnergy + WRATH_OVERCHARGE_ENERGY_GAIN, MAX_ENERGY);
+    const newEnergy = Math.min((botPlayer.current_energy ?? 0) + WRATH_OVERCHARGE_ENERGY_GAIN, MAX_ENERGY);
     await sb.from("game_players").update({
       current_hp: newHp,
       is_alive: newHp > 0,
@@ -193,160 +180,184 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
     botPlayer.current_hp = newHp;
   }
 
-  // Smart card selection (energy-aware)
-  const cardToPlay = selectBestCard(hand, botPlayer, allPlayers, game.current_round);
+  // ─── Multi-Card Loop ─────────────────────────────────────────
+  let currentHand: string[] = [...(botPlayer.hand || [])];
+  let currentEnergy = botPlayer.current_energy ?? 0;
+  let currentDiscard: string[] = [...(botPlayer.discard_pile || [])];
+  let cardsPlayed = 0;
+  let lastCardName: string | undefined;
+  let lastNarratorQuip: string | undefined;
+  const MAX_CARDS_PER_TURN = 5; // safety cap
 
-  if (!cardToPlay) {
-    await drawCardForBot(botPlayer);
+  while (cardsPlayed < MAX_CARDS_PER_TURN) {
+    if (currentHand.length === 0) break;
+
+    // Re-fetch players for fresh HP data between card plays
+    const { data: freshPlayers } = await sb
+      .from("game_players")
+      .select("*")
+      .eq("game_id", gameId)
+      .order("seat_index");
+    const currentAllPlayers = freshPlayers || allPlayers;
+
+    // Build updated bot state for card selection
+    const botState = { ...botPlayer, current_energy: currentEnergy, hand: currentHand };
+    const cardToPlay = selectBestCard(currentHand, botState, currentAllPlayers, game.current_round);
+    if (!cardToPlay) break;
+
+    const card = getCardById(cardToPlay.cardId);
+    if (!card) break;
+
+    const enemies = currentAllPlayers.filter((p) => p.is_alive && p.player_id !== botId);
+    const targetId = cardToPlay.targetId || (enemies.length > 0 ? selectBestTarget(enemies) : undefined);
+
+    // Spend energy and update hand
+    const energyAfterPlay = currentEnergy - card.cost;
+    const newHand = currentHand.filter((id) => id !== cardToPlay.cardId);
+    currentDiscard.push(cardToPlay.cardId);
+
+    await sb
+      .from("game_players")
+      .update({ hand: newHand, discard_pile: currentDiscard, current_energy: energyAfterPlay })
+      .eq("id", botPlayer.id);
+
+    // Greed AVARICE
+    if (botPlayer.chosen_sin === "greed" && card.cost >= GREED_AVARICE_COST_THRESHOLD) {
+      const currentBonus = botPlayer.bonus_energy ?? 0;
+      await sb
+        .from("game_players")
+        .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
+        .eq("id", botPlayer.id);
+    }
+
+    // Resolve Effects: FLAT vs COMPOUNDING
+    for (const effect of card.effects) {
+      const targets = resolveTargets(effect, botPlayer, currentAllPlayers, targetId);
+      for (const target of targets) {
+        if (card.cardType === "compounding") {
+          const firstTickValue = getCompoundTickValue(effect.baseValue, 0);
+          await applyInstantEffect(effect.type, firstTickValue, target, gameId);
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: target.id,
+            source_player_id: botPlayer.id,
+            effect_type: effect.type,
+            base_value: effect.baseValue,
+            applied_at_round: game.current_round,
+            duration_rounds: COMPOUND_DURATION,
+            card_id: cardToPlay.cardId,
+            is_compounding: true,
+            current_tick: 1,
+          });
+        } else {
+          await applyInstantEffect(effect.type, effect.baseValue, target, gameId);
+        }
+      }
+    }
+
+    // Catch-Up Bonus Resolution
+    if (card.catchup) {
+      const { data: freshBot } = await sb
+        .from("game_players")
+        .select("current_hp, is_alive")
+        .eq("game_id", gameId)
+        .eq("player_id", botId)
+        .single();
+
+      const botHp = freshBot?.current_hp ?? botPlayer.current_hp;
+      const catchupMet = evaluateCatchupCondition(
+        card.catchup.condition,
+        botHp,
+        currentAllPlayers,
+        botId,
+        targetId
+      );
+
+      if (catchupMet) {
+        const bonusValue = card.catchup.bonusValue;
+        switch (card.catchup.type) {
+          case "bonus_damage": {
+            const dmgTargets = currentAllPlayers.filter((p) => p.is_alive && p.player_id !== botId);
+            const primaryTarget = targetId
+              ? dmgTargets.find((p) => p.player_id === targetId) || dmgTargets[0]
+              : dmgTargets[0];
+            if (primaryTarget) {
+              await applyInstantEffect("damage", bonusValue, primaryTarget, gameId);
+            }
+            break;
+          }
+          case "bonus_heal": {
+            const selfTarget = currentAllPlayers.find((p) => p.player_id === botId);
+            if (selfTarget) {
+              await applyInstantEffect("heal", bonusValue, selfTarget, gameId);
+            }
+            break;
+          }
+          case "bonus_debuff_all": {
+            const enemies2 = currentAllPlayers.filter((p) => p.is_alive && p.player_id !== botId);
+            for (const enemy of enemies2) {
+              await sb.from("active_effects").insert({
+                game_id: gameId,
+                target_player_id: enemy.id,
+                source_player_id: botPlayer.id,
+                effect_type: "debuff",
+                base_value: card.catchup.bonusValue,
+                applied_at_round: game.current_round,
+                duration_rounds: card.catchup.bonusDuration ?? 2,
+                card_id: cardToPlay.cardId,
+                is_compounding: false,
+                current_tick: 0,
+              });
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Log the card play
     await sb.from("game_log").insert({
       game_id: gameId,
       player_id: botPlayer.id,
-      action_type: "pass",
-      action_data: { unspentEnergy: botPlayer.current_energy ?? 0 },
+      action_type: "play_card",
+      action_data: {
+        cardId: cardToPlay.cardId,
+        targetPlayerId: targetId,
+        energySpent: card.cost,
+        energyRemaining: energyAfterPlay,
+        cardType: card.cardType,
+      },
       round_number: game.current_round,
     });
-    await advanceBotTurn(gameId);
-    return { action: "pass" };
+
+    // Update loop state
+    currentHand = newHand;
+    currentEnergy = energyAfterPlay;
+    cardsPlayed++;
+    lastCardName = card.name;
+    lastNarratorQuip = card.narratorQuip;
   }
 
-  const card = getCardById(cardToPlay.cardId);
-  if (!card) return { action: "pass" };
-
-  // Find target
-  const enemies = alivePlayers.filter((p) => p.player_id !== botId);
-  const targetId = cardToPlay.targetId || (enemies.length > 0 ? selectBestTarget(enemies) : undefined);
-
-  // Spend energy and update hand
-  const energyAfterPlay = (botPlayer.current_energy ?? 0) - card.cost;
-  const newHand = hand.filter((id) => id !== cardToPlay.cardId);
-  const discard: string[] = botPlayer.discard_pile || [];
-  discard.push(cardToPlay.cardId);
-  await sb
-    .from("game_players")
-    .update({ hand: newHand, discard_pile: discard, current_energy: energyAfterPlay })
-    .eq("id", botPlayer.id);
-
-  // Greed AVARICE: playing a card that costs 3+ grants +1 bonus energy next turn
-  if (botPlayer.chosen_sin === "greed" && card.cost >= GREED_AVARICE_COST_THRESHOLD) {
-    const currentBonus = botPlayer.bonus_energy ?? 0;
-    await sb
-      .from("game_players")
-      .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
-      .eq("id", botPlayer.id);
+  // ─── After playing all cards, draw if none played, then pass ──
+  if (cardsPlayed === 0) {
+    await drawCardForBot(botPlayer);
   }
 
-  // ─── Resolve Effects: FLAT vs COMPOUNDING ─────────────────
-  for (const effect of card.effects) {
-    const targets = resolveTargets(effect, botPlayer, allPlayers, targetId);
-
-    for (const target of targets) {
-      if (card.cardType === "compounding") {
-        // COMPOUNDING: Insert as active effect with tick tracking
-        // First tick (tick 0) applies immediately
-        const firstTickValue = getCompoundTickValue(effect.baseValue, 0);
-        await applyInstantEffect(effect.type, firstTickValue, target, gameId);
-
-        // Insert remaining ticks (tick 1 and tick 2) as active effects
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: botPlayer.id,
-          effect_type: effect.type,
-          base_value: effect.baseValue,
-          applied_at_round: game.current_round,
-          duration_rounds: COMPOUND_DURATION,
-          card_id: cardToPlay.cardId,
-          is_compounding: true,
-          current_tick: 1, // Next tick to resolve is tick 1
-        });
-      } else {
-        // FLAT: Apply instantly with base value (no multiplier)
-        await applyInstantEffect(effect.type, effect.baseValue, target, gameId);
-      }
-    }
-  }
-
-  // ─── Catch-Up Bonus Resolution ─────────────────────────────
-  if (card.catchup) {
-    const { data: freshBot } = await sb
-      .from("game_players")
-      .select("current_hp, is_alive")
-      .eq("game_id", gameId)
-      .eq("player_id", botId)
-      .single();
-
-    const botHp = freshBot?.current_hp ?? botPlayer.current_hp;
-    const catchupMet = evaluateCatchupCondition(
-      card.catchup.condition,
-      botHp,
-      allPlayers,
-      botId,
-      targetId
-    );
-
-    if (catchupMet) {
-      const bonusValue = card.catchup.bonusValue;
-      switch (card.catchup.type) {
-        case "bonus_damage": {
-          const dmgTargets = allPlayers.filter((p) => p.is_alive && p.player_id !== botId);
-          const primaryTarget = targetId
-            ? dmgTargets.find((p) => p.player_id === targetId) || dmgTargets[0]
-            : dmgTargets[0];
-          if (primaryTarget) {
-            await applyInstantEffect("damage", bonusValue, primaryTarget, gameId);
-          }
-          break;
-        }
-        case "bonus_heal": {
-          const selfTarget = allPlayers.find((p) => p.player_id === botId);
-          if (selfTarget) {
-            await applyInstantEffect("heal", bonusValue, selfTarget, gameId);
-          }
-          break;
-        }
-        case "bonus_debuff_all": {
-          const enemies2 = allPlayers.filter((p) => p.is_alive && p.player_id !== botId);
-          for (const enemy of enemies2) {
-            await sb.from("active_effects").insert({
-              game_id: gameId,
-              target_player_id: enemy.id,
-              source_player_id: botPlayer.id,
-              effect_type: "debuff",
-              base_value: card.catchup.bonusValue,
-              applied_at_round: game.current_round,
-              duration_rounds: card.catchup.bonusDuration ?? 2,
-              card_id: cardToPlay.cardId,
-              is_compounding: false,
-              current_tick: 0,
-            });
-          }
-          break;
-        }
-      }
-    }
-  }
-
-  // Log
   await sb.from("game_log").insert({
     game_id: gameId,
     player_id: botPlayer.id,
-    action_type: "play_card",
-    action_data: {
-      cardId: cardToPlay.cardId,
-      targetPlayerId: targetId,
-      energySpent: card.cost,
-      energyRemaining: energyAfterPlay,
-      cardType: card.cardType,
-    },
+    action_type: "pass",
+    action_data: { unspentEnergy: currentEnergy, cardsPlayedThisTurn: cardsPlayed },
     round_number: game.current_round,
   });
 
   await advanceBotTurn(gameId);
 
   return {
-    action: "play",
-    cardName: card.name,
-    narratorQuip: card.narratorQuip,
+    action: cardsPlayed > 0 ? "play" : "pass",
+    cardName: lastCardName,
+    narratorQuip: lastNarratorQuip,
+    cardsPlayed,
   };
 }
 
@@ -517,7 +528,7 @@ async function applyInstantEffect(type: string, value: number, target: any, game
           effect_type: "shield",
           base_value: value,
           applied_at_round: 0,
-          duration_rounds: 99, // Shields persist until consumed
+          duration_rounds: 10, // Shields persist until consumed (capped at game length)
           card_id: "instant_shield",
           is_compounding: false,
           current_tick: 0,
@@ -542,6 +553,9 @@ async function drawCardForBot(player: any): Promise<void> {
   const hand: string[] = player.hand || [];
   let discard: string[] = player.discard_pile || [];
 
+  // Don't draw if hand is already at max
+  if (hand.length >= HAND_SIZE + 2) return;
+
   if (deck.length === 0 && discard.length > 0) {
     deck = shuffleDeck(discard);
     discard = [];
@@ -550,6 +564,13 @@ async function drawCardForBot(player: any): Promise<void> {
   if (deck.length > 0) {
     const drawn = deck.shift()!;
     hand.push(drawn);
+
+    // If hand exceeds hard limit, discard oldest cards
+    while (hand.length > HAND_SIZE + 2) {
+      const discarded = hand.shift()!;
+      discard.push(discarded);
+    }
+
     await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
   }
 }
@@ -581,19 +602,54 @@ async function advanceBotTurn(gameId: string): Promise<void> {
 
   let nextIndex = (game.current_player_index + 1) % alivePlayers.length;
   let newRound = game.current_round;
-
   if (nextIndex === 0) {
-    newRound = Math.min(game.current_round + 1, 10);
+    newRound = game.current_round + 1;
+
+    // ─── Round 10 Game Over: highest HP wins ─────────────────
+    if (newRound > MAX_ROUNDS) {
+      const sortedByHp = [...alivePlayers].sort((a, b) => b.current_hp - a.current_hp);
+      const winner = sortedByHp[0];
+      await sb.from("games").update({
+        status: "finished",
+        winner_id: winner?.player_id || null,
+        finished_at: new Date().toISOString(),
+        current_round: MAX_ROUNDS,
+      }).eq("id", gameId);
+      return;
+    }
+
     // Resolve compounding effects (tick them forward)
     await resolveActiveEffects(gameId, newRound);
+
+    // Re-check alive players after effect resolution (effects can kill)
+    const { data: postEffectPlayers } = await sb
+      .from("game_players")
+      .select("*")
+      .eq("game_id", gameId)
+      .order("seat_index");
+    const stillAlive = (postEffectPlayers || []).filter((p: any) => p.is_alive);
+
+    if (stillAlive.length <= 1) {
+      const winner = stillAlive[0];
+      await sb.from("games").update({
+        status: "finished",
+        winner_id: winner?.player_id || null,
+        finished_at: new Date().toISOString(),
+      }).eq("id", gameId);
+      return;
+    }
+
     // Refresh energy and draw for each alive player
-    for (const p of alivePlayers) {
+    for (const p of stillAlive) {
       const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
       if (freshPlayer && freshPlayer.is_alive) {
         await refreshBotEnergy(freshPlayer, newRound);
         await drawCardForBot(freshPlayer);
       }
     }
+
+    // Recalculate nextIndex based on updated alive list
+    nextIndex = 0;
   }
 
   await sb.from("games").update({ current_player_index: nextIndex, current_round: newRound }).eq("id", gameId);
