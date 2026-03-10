@@ -4,12 +4,14 @@
  * Landing page with cyberpunk aesthetic. Players can:
  * - Create a new game (generates room code)
  * - Join an existing game (enter room code)
+ *
+ * Uses direct Supabase calls via client-side game engine.
  */
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { trpc } from "@/lib/trpc";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { createGame, joinGame } from "@/lib/gameEngine";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { useLocation } from "wouter";
@@ -22,30 +24,36 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [showJoin, setShowJoin] = useState(false);
   const [error, setError] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
 
-  const createGame = trpc.game.create.useMutation({
-    onSuccess: (data) => {
-      setLocation(`/lobby/${data.gameId}`);
-    },
-    onError: (err) => setError(err.message),
-  });
-
-  const joinGame = trpc.game.join.useMutation({
-    onSuccess: (data) => {
-      setLocation(`/lobby/${data.gameId}`);
-    },
-    onError: (err) => setError(err.message),
-  });
-
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!username.trim()) { setError("Enter a username, sinner."); return; }
-    createGame.mutate({ username: username.trim(), playerId });
+    setIsCreating(true);
+    setError("");
+    try {
+      const data = await createGame(playerId, username.trim());
+      setLocation(`/lobby/${data.gameId}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsCreating(false);
+    }
   };
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!username.trim()) { setError("Enter a username, sinner."); return; }
     if (!roomCode.trim()) { setError("Enter a room code."); return; }
-    joinGame.mutate({ roomCode: roomCode.trim().toUpperCase(), username: username.trim(), playerId });
+    setIsJoining(true);
+    setError("");
+    try {
+      const data = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
+      setLocation(`/lobby/${data.gameId}`);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsJoining(false);
+    }
   };
 
   return (
@@ -107,8 +115,8 @@ export default function Home() {
 
           {/* Action buttons */}
           <div className="grid grid-cols-2 gap-4">
-            <Button size="lg" className="bg-wrath hover:bg-wrath-glow text-white h-14 glow-wrath" style={{ fontFamily: "var(--font-heading)" }} onClick={handleCreate} disabled={createGame.isPending}>
-              <Swords className="w-5 h-5 mr-2" /> {createGame.isPending ? "CREATING..." : "CREATE GAME"}
+            <Button size="lg" className="bg-wrath hover:bg-wrath-glow text-white h-14 glow-wrath" style={{ fontFamily: "var(--font-heading)" }} onClick={handleCreate} disabled={isCreating}>
+              <Swords className="w-5 h-5 mr-2" /> {isCreating ? "CREATING..." : "CREATE GAME"}
             </Button>
             <Button size="lg" variant="outline" className="border-sloth text-sloth hover:bg-sloth/10 h-14 glow-sloth" style={{ fontFamily: "var(--font-heading)" }} onClick={() => setShowJoin(!showJoin)}>
               <Users className="w-5 h-5 mr-2" /> JOIN GAME
@@ -120,8 +128,8 @@ export default function Home() {
             {showJoin && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3">
                 <Input value={roomCode} onChange={(e) => setRoomCode(e.target.value.toUpperCase())} placeholder="ROOM CODE" maxLength={8} className="bg-card border-sloth/50 text-foreground text-center text-2xl tracking-[0.3em] h-14 uppercase" style={{ fontFamily: "var(--font-heading)" }} />
-                <Button className="w-full bg-sloth hover:bg-sloth-glow text-white h-12 glow-sloth" style={{ fontFamily: "var(--font-heading)" }} onClick={handleJoin} disabled={joinGame.isPending}>
-                  {joinGame.isPending ? "JOINING..." : "ENTER ROOM"}
+                <Button className="w-full bg-sloth hover:bg-sloth-glow text-white h-12 glow-sloth" style={{ fontFamily: "var(--font-heading)" }} onClick={handleJoin} disabled={isJoining}>
+                  {isJoining ? "JOINING..." : "ENTER ROOM"}
                 </Button>
               </motion.div>
             )}

@@ -2,18 +2,19 @@
  * Lobby Page - Pre-game setup
  *
  * Shows room code, player list, sin selection, and start button.
- * Uses real-time updates to show when players join and select sins.
+ * Uses direct Supabase calls via client-side game engine.
+ * Subscribes to real-time updates for player joins.
  */
 
 import { Button } from "@/components/ui/button";
-import { trpc } from "@/lib/trpc";
 import { useGameState } from "@/hooks/useGameState";
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { motion, AnimatePresence } from "framer-motion";
+import { chooseSin, startGame } from "@/lib/gameEngine";
+import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import { Flame, Moon, Copy, Check, Play, Users } from "lucide-react";
-import { SinType } from "../../../shared/gameTypes";
+import type { SinType } from "../../../shared/gameTypes";
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -21,13 +22,9 @@ export default function Lobby() {
   const [, setLocation] = useLocation();
   const { gameState, isLoading } = useGameState(gameId || null);
   const [copied, setCopied] = useState(false);
-
-  const chooseSin = trpc.game.chooseSin.useMutation();
-  const startGame = trpc.game.start.useMutation({
-    onSuccess: () => {
-      setLocation(`/game/${gameId}`);
-    },
-  });
+  const [isChoosing, setIsChoosing] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
+  const [startError, setStartError] = useState("");
 
   // Redirect to game if already active
   useEffect(() => {
@@ -44,14 +41,29 @@ export default function Lobby() {
     }
   };
 
-  const handleChooseSin = (sin: SinType) => {
+  const handleChooseSin = async (sin: SinType) => {
     if (!gameId) return;
-    chooseSin.mutate({ gameId, sin, playerId });
+    setIsChoosing(true);
+    try {
+      await chooseSin(gameId, playerId, sin);
+    } catch (err: any) {
+      console.error("Failed to choose sin:", err);
+    } finally {
+      setIsChoosing(false);
+    }
   };
 
-  const handleStart = () => {
+  const handleStart = async () => {
     if (!gameId) return;
-    startGame.mutate({ gameId });
+    setIsStarting(true);
+    setStartError("");
+    try {
+      await startGame(gameId);
+    } catch (err: any) {
+      setStartError(err.message);
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   const myPlayer = gameState?.players.find((p) => p.id === playerId);
@@ -179,7 +191,7 @@ export default function Lobby() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleChooseSin("wrath")}
-                disabled={chooseSin.isPending}
+                disabled={isChoosing}
                 className="border-2 border-wrath/50 rounded-xl p-6 text-center bg-wrath/5 hover:bg-wrath/10 transition-colors glow-wrath"
               >
                 <Flame className="w-10 h-10 text-wrath mx-auto mb-3" />
@@ -194,7 +206,7 @@ export default function Lobby() {
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => handleChooseSin("sloth")}
-                disabled={chooseSin.isPending}
+                disabled={isChoosing}
                 className="border-2 border-sloth/50 rounded-xl p-6 text-center bg-sloth/5 hover:bg-sloth/10 transition-colors glow-sloth"
               >
                 <Moon className="w-10 h-10 text-sloth mx-auto mb-3" />
@@ -215,13 +227,13 @@ export default function Lobby() {
               className="bg-neon-cyan text-background hover:bg-neon-cyan/80 h-14 px-12 glow-cyan text-lg"
               style={{ fontFamily: "var(--font-heading)" }}
               onClick={handleStart}
-              disabled={startGame.isPending}
+              disabled={isStarting}
             >
               <Play className="w-5 h-5 mr-2" />
-              {startGame.isPending ? "STARTING..." : "BEGIN THE RECKONING"}
+              {isStarting ? "STARTING..." : "BEGIN THE RECKONING"}
             </Button>
-            {startGame.error && (
-              <p className="text-destructive text-sm text-center mt-2">{startGame.error.message}</p>
+            {startError && (
+              <p className="text-destructive text-sm text-center mt-2">{startError}</p>
             )}
           </motion.div>
         )}

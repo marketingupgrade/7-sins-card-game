@@ -3,21 +3,22 @@
  *
  * Displays: player positions, HP bars, hand of cards, active effects,
  * round counter, turn indicator, narrator text, and game log.
- * Uses Supabase Realtime for live updates and Motion for animations.
+ * Uses direct Supabase calls via client-side game engine.
+ * Supabase Realtime for live updates and Motion for animations.
  */
 
 import { Button } from "@/components/ui/button";
 import GameCard from "@/components/GameCard";
-import { trpc } from "@/lib/trpc";
 import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { playCard, passTurn, getGameLog } from "@/lib/gameEngine";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import {
-  Flame, Moon, Shield, Heart, Swords, SkipForward, Trophy,
-  Skull, Zap, Clock, ScrollText
+  Flame, Moon, Heart, Swords, SkipForward, Trophy,
+  Skull, Clock, ScrollText
 } from "lucide-react";
 import { CARD_MAP } from "../../../shared/cardData";
 import { PlayerState, calculateEffectiveValue } from "../../../shared/gameTypes";
@@ -26,33 +27,14 @@ export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
   const playerId = usePlayerId();
   const [, setLocation] = useLocation();
-  const { gameState, isLoading } = useGameState(gameId || null);
+  const { gameState, isLoading, refetch } = useGameState(gameId || null);
   const { displayedText, addMessage, addRandomLine } = useNarrator();
   const [selectedCard, setSelectedCard] = useState<string | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
-
-  const playCardMutation = trpc.game.playCard.useMutation({
-    onSuccess: (data) => {
-      addMessage(data.narratorQuip, "action");
-      setSelectedCard(null);
-      setSelectedTarget(null);
-    },
-    onError: (err) => addMessage(err.message, "info"),
-  });
-
-  const passTurn = trpc.game.pass.useMutation({
-    onSuccess: () => {
-      addRandomLine("pass", { player: myPlayer?.username || "Someone" });
-      setSelectedCard(null);
-    },
-    onError: (err) => addMessage(err.message, "info"),
-  });
-
-  const logQuery = trpc.game.getLog.useQuery(
-    { gameId: gameId! },
-    { enabled: !!gameId && showLog, refetchInterval: showLog ? 3000 : false }
-  );
+  const [logEntries, setLogEntries] = useState<any[]>([]);
+  const [isPlayingCard, setIsPlayingCard] = useState(false);
+  const [isPassing, setIsPassing] = useState(false);
 
   const myPlayer = gameState?.players.find((p) => p.id === playerId);
   const alivePlayers = useMemo(
@@ -69,6 +51,20 @@ export default function GameBoard() {
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
     [myPlayer?.hand]
   );
+
+  // Fetch log when sidebar is open
+  useEffect(() => {
+    if (!showLog || !gameId) return;
+    const fetchLog = async () => {
+      try {
+        const log = await getGameLog(gameId);
+        setLogEntries(log);
+      } catch {}
+    };
+    fetchLog();
+    const interval = setInterval(fetchLog, 3000);
+    return () => clearInterval(interval);
+  }, [showLog, gameId]);
 
   // Narrator for round changes
   const [lastRound, setLastRound] = useState(0);
@@ -88,34 +84,48 @@ export default function GameBoard() {
     }
   }, [gameState?.status]);
 
-  const handlePlayCard = useCallback(() => {
+  const handlePlayCard = useCallback(async () => {
     if (!gameId || !selectedCard) return;
     const card = CARD_MAP[selectedCard];
     if (!card) return;
 
-    const needsTarget = card.effects.some(
-      (e) => e.target === "single_enemy"
-    );
+    const needsTarget = card.effects.some((e) => e.target === "single_enemy");
 
     if (needsTarget && !selectedTarget) {
       addMessage("Pick a target, sinner.", "info");
       return;
     }
 
-    playCardMutation.mutate({
-      gameId,
-      cardId: selectedCard,
-      playerId,
-      targetPlayerId: selectedTarget || undefined,
-    });
-  }, [gameId, selectedCard, selectedTarget, playCardMutation, addMessage, playerId]);
+    setIsPlayingCard(true);
+    try {
+      const result = await playCard(gameId, playerId, selectedCard, selectedTarget || undefined);
+      addMessage(result.narratorQuip, "action");
+      setSelectedCard(null);
+      setSelectedTarget(null);
+      refetch();
+    } catch (err: any) {
+      addMessage(err.message, "info");
+    } finally {
+      setIsPlayingCard(false);
+    }
+  }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch]);
 
-  const handlePass = () => {
+  const handlePass = async () => {
     if (!gameId) return;
-    passTurn.mutate({ gameId, playerId });
+    setIsPassing(true);
+    try {
+      await passTurn(gameId, playerId);
+      addRandomLine("pass", { player: myPlayer?.username || "Someone" });
+      setSelectedCard(null);
+      refetch();
+    } catch (err: any) {
+      addMessage(err.message, "info");
+    } finally {
+      setIsPassing(false);
+    }
   };
 
-  // Redirect if game finished
+  // Victory screen
   if (gameState?.status === "finished") {
     const winner = gameState.players.find((p) => p.id === gameState.winnerId);
     return (
@@ -284,10 +294,10 @@ export default function GameBoard() {
                   className="bg-wrath hover:bg-wrath-glow text-white glow-wrath"
                   style={{ fontFamily: "var(--font-heading)" }}
                   onClick={handlePlayCard}
-                  disabled={playCardMutation.isPending}
+                  disabled={isPlayingCard}
                 >
                   <Swords className="w-4 h-4 mr-2" />
-                  {playCardMutation.isPending ? "PLAYING..." : "PLAY CARD"}
+                  {isPlayingCard ? "PLAYING..." : "PLAY CARD"}
                 </Button>
               )}
               <Button
@@ -295,7 +305,7 @@ export default function GameBoard() {
                 className="border-muted-foreground/30 text-muted-foreground"
                 style={{ fontFamily: "var(--font-heading)" }}
                 onClick={handlePass}
-                disabled={passTurn.isPending}
+                disabled={isPassing}
               >
                 <SkipForward className="w-4 h-4 mr-2" />
                 PASS
@@ -318,7 +328,7 @@ export default function GameBoard() {
               COMBAT LOG
             </h3>
             <div className="space-y-2">
-              {(logQuery.data || []).slice(-20).reverse().map((entry: any, i: number) => (
+              {logEntries.slice(-20).reverse().map((entry: any, i: number) => (
                 <div key={i} className="text-xs text-muted-foreground border-b border-border/20 pb-1">
                   <span className="text-neon-cyan">R{entry.round_number}</span>{" "}
                   <span className="capitalize">{entry.action_type.replace("_", " ")}</span>
