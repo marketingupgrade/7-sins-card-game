@@ -141,3 +141,20 @@
 - [x] New factions (Greed & Envy) not showing in live game (user viewing old Vercel deploy, needs republish)
 - [x] Improve text contrast on sin cards - descriptions and labels too dark/hard to read
 - [x] Improve overall text contrast across Home, Lobby, GameBoard, GameCard, CompoundBalanceSheet
+
+## Bug Fixes (Round 4)
+- [x] Fix shield absorption bug — shields now absorb incoming damage before HP is reduced
+- [x] Improve compound effect clarity in UI (show MULTIPLIER ×N, base×round=value formula, shield/catchup notes)
+
+## Catch-Up Mechanism Cards
+- [x] Design catch-up cards for Wrath (Desperate Fury, Last Stand)
+- [x] Design catch-up cards for Sloth (Survival Instinct, Feign Death)
+- [x] Design catch-up cards for Greed (Desperate Gambit, Bankruptcy Protection)
+- [x] Design catch-up cards for Envy (Resentful Strike, Equalizer)
+- [x] Balance new cards using /math EV analysis
+- [x] Implement new cards in cardData.ts (48 total cards, 12 per faction)
+- [x] Add CatchupEffect type and catchup property to CardDefinition
+- [x] Implement shield absorption in game engines (client, server, bot)
+- [x] Implement catch-up bonus resolution in game engines (client, server, bot)
+- [x] Update bot AI for catch-up card awareness
+- [x] Run tests and verify (87 tests passing)

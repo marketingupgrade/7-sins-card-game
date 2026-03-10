@@ -172,7 +172,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
             <div key={i} className="flex items-center gap-1 text-[8px]">
               <EffectIcon className={`w-2.5 h-2.5 ${color} flex-shrink-0`} />
               <span className="text-muted-foreground/70 capitalize">{effect.type}</span>
-              <span className={`font-bold ${color}`}>{effective}</span>
+              <span className={`font-bold ${color}`} title={`Base ${effect.baseValue} × Round ${currentRound}`}>{effective}</span>
               {effect.target === "self" && (
                 <span className="text-muted-foreground/60">(self)</span>
               )}
@@ -186,6 +186,21 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           );
         })}
       </div>
+
+      {/* Catch-up indicator */}
+      {card.catchup && (
+        <div className="px-2.5 mt-0.5">
+          <div className="flex items-center gap-1 text-[7px] px-1.5 py-0.5 rounded bg-neon-yellow/10 border border-neon-yellow/20">
+            <Zap className="w-2 h-2 text-neon-yellow flex-shrink-0" />
+            <span className="text-neon-yellow/80 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+              Catch-up
+            </span>
+            <span className="text-muted-foreground/60">
+              {card.catchup.type === "bonus_damage" ? "+DMG" : card.catchup.type === "bonus_heal" ? "+HEAL" : "+DEBUFF"}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Flavor Text */}
       <div className="absolute bottom-1.5 left-2.5 right-2.5">

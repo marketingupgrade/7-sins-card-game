@@ -30,6 +30,8 @@ import {
   GREED_AVARICE_BONUS,
   ENVY_COVET_BONUS,
   getBaseEnergyForRound,
+  CATCHUP_HP_THRESHOLD,
+  CatchupCondition,
 } from "../../../shared/gameTypes";
 
 // ─── Room Code Generation ────────────────────────────────────
@@ -331,10 +333,77 @@ export async function playCard(
         );
       } else {
         // Instant effect
-        await applyInstantEffect(effect.type, effectiveValue, target);
+        await applyInstantEffect(effect.type, effectiveValue, target, gameId);
         effectDescriptions.push(
           `${effect.type} ${effectiveValue} on ${target.player_id === playerId ? "self" : "enemy"}`
         );
+      }
+    }
+  }
+
+  // ─── Catch-Up Bonus Resolution ─────────────────────────────
+  if (card.catchup) {
+    // Re-fetch player HP (may have changed from self-damage effects)
+    const { data: freshPlayer } = await sb
+      .from("game_players")
+      .select("current_hp, is_alive")
+      .eq("game_id", gameId)
+      .eq("player_id", playerId)
+      .single();
+
+    const playerHp = freshPlayer?.current_hp ?? player.current_hp;
+    const catchupMet = evaluateCatchupCondition(
+      card.catchup.condition,
+      playerHp,
+      allPlayers,
+      playerId,
+      targetPlayerId
+    );
+
+    if (catchupMet) {
+      const bonusValue = calculateEffectiveValue(card.catchup.bonusValue, game.current_round);
+      switch (card.catchup.type) {
+        case "bonus_damage": {
+          // Apply bonus damage to the original target(s)
+          const dmgTargets = allPlayers.filter(
+            (p) => p.is_alive && p.player_id !== playerId
+          );
+          const primaryTarget = targetPlayerId
+            ? dmgTargets.find((p) => p.player_id === targetPlayerId) || dmgTargets[0]
+            : dmgTargets[0];
+          if (primaryTarget) {
+            await applyInstantEffect("damage", bonusValue, primaryTarget, gameId);
+            effectDescriptions.push(`CATCH-UP bonus damage ${bonusValue}`);
+          }
+          break;
+        }
+        case "bonus_heal": {
+          const selfTarget = allPlayers.find((p) => p.player_id === playerId);
+          if (selfTarget) {
+            await applyInstantEffect("heal", bonusValue, selfTarget, gameId);
+            effectDescriptions.push(`CATCH-UP bonus heal ${bonusValue}`);
+          }
+          break;
+        }
+        case "bonus_debuff_all": {
+          const enemies = allPlayers.filter(
+            (p) => p.is_alive && p.player_id !== playerId
+          );
+          for (const enemy of enemies) {
+            await sb.from("active_effects").insert({
+              game_id: gameId,
+              target_player_id: enemy.id,
+              source_player_id: player.id,
+              effect_type: "debuff",
+              base_value: card.catchup.bonusValue,
+              applied_at_round: game.current_round,
+              duration_rounds: card.catchup.bonusDuration ?? 2,
+              card_id: cardId,
+            });
+          }
+          effectDescriptions.push(`CATCH-UP bonus debuff all enemies`);
+          break;
+        }
       }
     }
   }
@@ -498,22 +567,62 @@ function resolveTargets(
 }
 
 // ─── Helper: Apply Instant Effect ────────────────────────────
-async function applyInstantEffect(type: string, value: number, target: any): Promise<void> {
+async function applyInstantEffect(
+  type: string,
+  value: number,
+  target: any,
+  gameId?: string
+): Promise<void> {
   const sb = getClientSupabase();
 
   switch (type) {
     case "damage": {
-      const newHp = Math.max(0, Math.round(target.current_hp - value));
-      const isAlive = newHp > 0;
-      await sb
-        .from("game_players")
-        .update({ current_hp: newHp, is_alive: isAlive })
-        .eq("id", target.id);
+      let remainingDamage = value;
+
+      // Shield absorption: check for active shield effects on target
+      if (gameId) {
+        const { data: shields } = await sb
+          .from("active_effects")
+          .select("*")
+          .eq("game_id", gameId)
+          .eq("target_player_id", target.id)
+          .eq("effect_type", "shield");
+
+        if (shields && shields.length > 0) {
+          for (const shield of shields) {
+            if (remainingDamage <= 0) break;
+            const shieldValue = calculateEffectiveValue(shield.base_value, shield.applied_at_round);
+            if (shieldValue <= remainingDamage) {
+              // Shield fully consumed
+              remainingDamage -= shieldValue;
+              await sb.from("active_effects").delete().eq("id", shield.id);
+            } else {
+              // Shield partially consumed — reduce base_value proportionally
+              const newBase = Math.max(1, Math.round(shield.base_value * (1 - remainingDamage / shieldValue)));
+              remainingDamage = 0;
+              await sb.from("active_effects").update({ base_value: newBase }).eq("id", shield.id);
+            }
+          }
+        }
+      }
+
+      if (remainingDamage > 0) {
+        const newHp = Math.max(0, Math.round(target.current_hp - remainingDamage));
+        const isAlive = newHp > 0;
+        await sb
+          .from("game_players")
+          .update({ current_hp: newHp, is_alive: isAlive })
+          .eq("id", target.id);
+        // Update local target reference for subsequent operations
+        target.current_hp = newHp;
+        target.is_alive = isAlive;
+      }
       break;
     }
     case "heal": {
       const newHp = Math.min(target.max_hp, Math.round(target.current_hp + value));
       await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
+      target.current_hp = newHp;
       break;
     }
     case "shield":
@@ -749,14 +858,42 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
 
     switch (effect.effect_type) {
       case "damage":
-        await applyInstantEffect("damage", effectiveValue, target);
+        await applyInstantEffect("damage", effectiveValue, target, gameId);
         break;
       case "heal":
-        await applyInstantEffect("heal", effectiveValue, target);
+        await applyInstantEffect("heal", effectiveValue, target, gameId);
         break;
       case "debuff":
-        await applyInstantEffect("damage", Math.round(effectiveValue / 2), target);
+        await applyInstantEffect("damage", Math.round(effectiveValue / 2), target, gameId);
         break;
     }
+  }
+}
+
+// ─── Helper: Evaluate Catch-Up Condition ────────────────────
+function evaluateCatchupCondition(
+  condition: CatchupCondition,
+  playerHp: number,
+  allPlayers: any[],
+  playerId: string,
+  targetPlayerId?: string
+): boolean {
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+  const opponents = alivePlayers.filter((p) => p.player_id !== playerId);
+
+  switch (condition) {
+    case "hp_less_than_target": {
+      if (!targetPlayerId) return false;
+      const target = alivePlayers.find((p) => p.player_id === targetPlayerId);
+      return target ? playerHp < target.current_hp : false;
+    }
+    case "hp_less_than_any_opponent":
+      return opponents.some((p) => playerHp < p.current_hp);
+    case "hp_below_threshold":
+      return playerHp <= CATCHUP_HP_THRESHOLD;
+    case "hp_lowest":
+      return alivePlayers.every((p) => p.player_id === playerId || playerHp <= p.current_hp);
+    default:
+      return false;
   }
 }

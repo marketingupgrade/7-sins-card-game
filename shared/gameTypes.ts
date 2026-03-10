@@ -23,6 +23,21 @@ export interface CardEffect {
   narratorText?: string;
 }
 
+// ─── Catch-Up Mechanic ───────────────────────────────────────
+export type CatchupCondition = 
+  | "hp_less_than_target"      // Player HP < target's HP
+  | "hp_less_than_any_opponent" // Player HP < any living opponent's HP
+  | "hp_below_threshold"       // Player HP <= CATCHUP_HP_THRESHOLD
+  | "hp_lowest";               // Player has the lowest HP among all living players
+
+export interface CatchupEffect {
+  type: "bonus_damage" | "bonus_heal" | "bonus_debuff_all";
+  bonusValue: number;
+  /** Duration for bonus_debuff_all */
+  bonusDuration?: number;
+  condition: CatchupCondition;
+}
+
 // ─── Card Definition ─────────────────────────────────────────
 export interface CardDefinition {
   id: string;
@@ -37,6 +52,8 @@ export interface CardDefinition {
   narratorQuip: string;
   /** Visual tier for card border styling */
   tier: "common" | "rare" | "epic";
+  /** Optional catch-up mechanic — bonus when player is behind */
+  catchup?: CatchupEffect;
 }
 
 // ─── Energy / Corruption System ─────────────────────────────
@@ -140,7 +157,8 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 10;
 export const STARTING_HP = 25;
 export const HAND_SIZE = 5;
-export const CARDS_PER_DECK = 10;
+export const CARDS_PER_DECK = 12;
+export const CATCHUP_HP_THRESHOLD = 10; // 40% of 25 HP
 
 export function calculateEffectiveValue(baseValue: number, currentRound: number): number {
   const cappedRound = Math.min(currentRound, MAX_ROUNDS);

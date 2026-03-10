@@ -135,6 +135,34 @@ export const WRATH_CARDS: CardDefinition[] = [
     narratorQuip: "Nuclear option deployed. Mutually assured destruction never looked so fun.",
     tier: "epic",
   },
+  // ─── WRATH CATCH-UP CARDS ───
+  {
+    id: "wrath_11",
+    name: "Desperate Fury",
+    sin: "wrath",
+    cost: 2,
+    effects: [
+      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "The cornered beast strikes hardest.",
+    narratorQuip: "Nothing like impending doom to sharpen your aim. Extra damage when desperate.",
+    tier: "rare",
+    catchup: { type: "bonus_damage", bonusValue: 2, condition: "hp_less_than_target" },
+  },
+  {
+    id: "wrath_12",
+    name: "Last Stand",
+    sin: "wrath",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+    ],
+    flavorText: "When there's nothing left to lose, everything becomes a weapon.",
+    narratorQuip: "Below 10 HP and still fighting? Here's some HP. Don't say I never gave you anything.",
+    tier: "rare",
+    catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_below_threshold" },
+  },
 ];
 
 // ─── SLOTH CARDS (10) ────────────────────────────────────────
@@ -250,6 +278,33 @@ export const SLOTH_CARDS: CardDefinition[] = [
     flavorText: "The deepest sleep grants the strongest armor.",
     narratorQuip: "Full heal AND a shield? That's disgustingly defensive. I love it.",
     tier: "epic",
+  },
+  // ─── SLOTH CATCH-UP CARDS ───
+  {
+    id: "sloth_11",
+    name: "Survival Instinct",
+    sin: "sloth",
+    cost: 1,
+    effects: [
+      { type: "shield", baseValue: 2, duration: 1, target: "self" },
+    ],
+    flavorText: "Even the laziest creature fights when cornered.",
+    narratorQuip: "Sloth actually trying? Things must be dire. Bonus heal when you're the underdog.",
+    tier: "rare",
+    catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_less_than_any_opponent" },
+  },
+  {
+    id: "sloth_12",
+    name: "Feign Death",
+    sin: "sloth",
+    cost: 2,
+    effects: [
+      { type: "shield", baseValue: 3, duration: 2, target: "self" },
+    ],
+    flavorText: "Playing dead is an art form. And an effective strategy.",
+    narratorQuip: "Playing possum AND spreading debuffs? Devious laziness at its finest.",
+    tier: "epic",
+    catchup: { type: "bonus_debuff_all", bonusValue: 1, bonusDuration: 2, condition: "hp_below_threshold" },
   },
 ];
 
@@ -372,6 +427,35 @@ export const GREED_CARDS: CardDefinition[] = [
     flavorText: "Everything you touch turns to gold. Everything they touch turns to pain.",
     narratorQuip: "The ultimate power move. Heal yourself while destroying everyone else. Peak greed.",
     tier: "epic",
+  },
+  // ─── GREED CATCH-UP CARDS ───
+  {
+    id: "greed_11",
+    name: "Desperate Gambit",
+    sin: "greed",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "When the chips are down, bet everything.",
+    narratorQuip: "Doubling down when you're losing. Classic gambler's fallacy. But it works here.",
+    tier: "rare",
+    catchup: { type: "bonus_heal", bonusValue: 2, condition: "hp_less_than_target" },
+  },
+  {
+    id: "greed_12",
+    name: "Bankruptcy Protection",
+    sin: "greed",
+    cost: 2,
+    effects: [
+      { type: "shield", baseValue: 2, duration: 1, target: "self" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Chapter 11: The shield that keeps on giving.",
+    narratorQuip: "Filing for bankruptcy protection. In a card game. The greed is meta.",
+    tier: "epic",
+    catchup: { type: "bonus_heal", bonusValue: 3, condition: "hp_below_threshold" },
   },
 ];
 
@@ -498,6 +582,34 @@ export const ENVY_CARDS: CardDefinition[] = [
     flavorText: "Why be yourself when you can be a better version of everyone else?",
     narratorQuip: "The ultimate identity theft. Damage, shield, AND heal. Greedy for an Envy card.",
     tier: "epic",
+  },
+  // ─── ENVY CATCH-UP CARDS ───
+  {
+    id: "envy_11",
+    name: "Resentful Strike",
+    sin: "envy",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "debuff", baseValue: 1, duration: 1, target: "self" },
+    ],
+    flavorText: "The deeper the envy, the sharper the blade.",
+    narratorQuip: "Jealousy fuels this strike. More damage when they have more HP. Poetic justice.",
+    tier: "rare",
+    catchup: { type: "bonus_damage", bonusValue: 2, condition: "hp_less_than_target" },
+  },
+  {
+    id: "envy_12",
+    name: "Equalizer",
+    sin: "envy",
+    cost: 3,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "all_enemies" },
+    ],
+    flavorText: "If I can't have what they have, nobody can.",
+    narratorQuip: "The great equalizer. Damage everyone, heal yourself if you're the weakest. Fair? No. Fun? Absolutely.",
+    tier: "epic",
+    catchup: { type: "bonus_heal", bonusValue: 3, condition: "hp_lowest" },
   },
 ];
 
@@ -627,5 +739,18 @@ export const NARRATOR_LINES = {
     "Not enough corruption to play that. Even sin has a budget.",
     "Insufficient corruption. Your ambitions exceed your resources. Story of your life.",
     "Can't afford that card. Corruption doesn't grow on trees. Well, actually...",
+  ],
+  catchupTriggered: [
+    "Catch-up bonus activated! Being behind has its perks. Who knew?",
+    "The underdog bonus kicks in. Desperation is a hell of a motivator.",
+    "Losing? Here's a consolation prize. Don't get used to it.",
+    "Catch-up mechanic engaged. The game refuses to let you die quietly.",
+    "Bonus activated! Even the universe pities you right now.",
+  ],
+  shieldAbsorbed: [
+    "Shield absorbed the hit! That's what shields DO, people.",
+    "Damage blocked by shield. Defense actually working? Shocking.",
+    "The shield takes the blow. Your HP thanks you for the foresight.",
+    "Absorbed! That shield earned its keep today.",
   ],
 };

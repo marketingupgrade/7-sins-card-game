@@ -286,10 +286,11 @@ export default function CompoundBalanceSheet({
                         </div>
                         <div className="flex-1 h-px bg-border/10" />
                         <span
-                          className="text-[9px] text-muted-foreground/60"
+                          className="text-[9px] text-neon-yellow/70 font-bold"
                           style={{ fontFamily: "var(--font-heading)" }}
+                          title={`Multiplier: base values × ${round}`}
                         >
-                          ×{round}
+                          MULTIPLIER ×{round}
                         </span>
                       </div>
 
@@ -329,7 +330,7 @@ export default function CompoundBalanceSheet({
                                 </div>
                               </div>
 
-                              {/* Value */}
+                              {/* Value with formula */}
                               <div className="flex-shrink-0 text-right">
                                 <span
                                   className={`text-sm font-black ${config.colorClass}`}
@@ -337,10 +338,13 @@ export default function CompoundBalanceSheet({
                                 >
                                   {isNegative ? "-" : "+"}{pe.projectedValue}
                                 </span>
-                                <div className="text-[7px] text-muted-foreground/60" style={{ fontFamily: "var(--font-heading)" }}>
+                                <div className="text-[7px] text-muted-foreground/70 font-medium" style={{ fontFamily: "var(--font-heading)" }}>
+                                  {pe.baseValue}×{pe.round}={pe.projectedValue}
+                                </div>
+                                <div className="text-[7px] text-muted-foreground/50" style={{ fontFamily: "var(--font-heading)" }}>
                                   {pe.remainingRounds > 0
-                                    ? `${pe.remainingRounds} more`
-                                    : "LAST"}
+                                    ? `${pe.remainingRounds} round${pe.remainingRounds > 1 ? "s" : ""} left`
+                                    : "EXPIRES"}
                                 </div>
                               </div>
                             </motion.div>
@@ -356,12 +360,20 @@ export default function CompoundBalanceSheet({
 
           {/* Footer */}
           <div className="px-4 py-2.5 border-t border-border/10">
-            <p
-              className="text-[8px] text-muted-foreground/60 text-center italic"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Values compound each round. Base × Round = Pain. Simple math, devastating consequences.
-            </p>
+            <div className="space-y-1">
+              <p
+                className="text-[9px] text-neon-cyan/60 text-center font-bold"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                FORMULA: Base Value × Round Number = Actual Effect
+              </p>
+              <p
+                className="text-[8px] text-muted-foreground/60 text-center italic"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                Shields absorb damage before it hits HP. Catch-up bonuses trigger when you're behind.
+              </p>
+            </div>
           </div>
         </motion.div>
       )}
