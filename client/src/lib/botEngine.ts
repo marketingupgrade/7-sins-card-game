@@ -12,7 +12,12 @@ import {
   SinType,
   HAND_SIZE,
   STARTING_HP,
+  MAX_ENERGY,
+  SLOTH_MAX_CARRYOVER,
+  WRATH_OVERCHARGE_HP_COST,
+  WRATH_OVERCHARGE_ENERGY_GAIN,
   calculateEffectiveValue,
+  getBaseEnergyForRound,
 } from "../../../shared/gameTypes";
 
 // ─── Bot Names (sassy and cynical) ──────────────────────────
@@ -159,6 +164,8 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
   if (currentTurnPlayer.player_id !== botId) return { action: "pass" };
 
   const hand: string[] = botPlayer.hand || [];
+  const botEnergy = botPlayer.current_energy ?? 0;
+
   if (hand.length === 0) {
     // Pass and draw
     await drawCardForBot(botPlayer);
@@ -166,14 +173,36 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
       game_id: gameId,
       player_id: botPlayer.id,
       action_type: "pass",
-      action_data: {},
+      action_data: { unspentEnergy: botEnergy },
       round_number: game.current_round,
     });
     await advanceBotTurn(gameId);
     return { action: "pass" };
   }
 
-  // Smart card selection
+  // Wrath bot: consider Overcharge if low on energy and has HP to spare
+  if (botPlayer.chosen_sin === "wrath" && botEnergy < 2 && botPlayer.current_hp > WRATH_OVERCHARGE_HP_COST + 3) {
+    const newHp = botPlayer.current_hp - WRATH_OVERCHARGE_HP_COST;
+    const newEnergy = Math.min(botEnergy + WRATH_OVERCHARGE_ENERGY_GAIN, MAX_ENERGY);
+    await sb.from("game_players").update({
+      current_hp: newHp,
+      is_alive: newHp > 0,
+      current_energy: newEnergy,
+      max_energy: Math.max(botPlayer.max_energy ?? 0, newEnergy),
+    }).eq("id", botPlayer.id);
+    await sb.from("game_log").insert({
+      game_id: gameId,
+      player_id: botPlayer.id,
+      action_type: "overcharge",
+      action_data: { hpCost: WRATH_OVERCHARGE_HP_COST, energyGained: WRATH_OVERCHARGE_ENERGY_GAIN },
+      round_number: game.current_round,
+    });
+    // Update local reference
+    botPlayer.current_energy = newEnergy;
+    botPlayer.current_hp = newHp;
+  }
+
+  // Smart card selection (energy-aware)
   const cardToPlay = selectBestCard(hand, botPlayer, allPlayers, game.current_round);
 
   if (!cardToPlay) {
@@ -182,7 +211,7 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
       game_id: gameId,
       player_id: botPlayer.id,
       action_type: "pass",
-      action_data: {},
+      action_data: { unspentEnergy: botPlayer.current_energy ?? 0 },
       round_number: game.current_round,
     });
     await advanceBotTurn(gameId);
@@ -196,13 +225,14 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
   const enemies = alivePlayers.filter((p) => p.player_id !== botId);
   const targetId = cardToPlay.targetId || (enemies.length > 0 ? selectBestTarget(enemies) : undefined);
 
-  // Remove card from hand, add to discard
+  // Spend energy and update hand
+  const energyAfterPlay = (botPlayer.current_energy ?? 0) - card.cost;
   const newHand = hand.filter((id) => id !== cardToPlay.cardId);
   const discard: string[] = botPlayer.discard_pile || [];
   discard.push(cardToPlay.cardId);
   await sb
     .from("game_players")
-    .update({ hand: newHand, discard_pile: discard })
+    .update({ hand: newHand, discard_pile: discard, current_energy: energyAfterPlay })
     .eq("id", botPlayer.id);
 
   // Resolve effects
@@ -233,7 +263,7 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
     game_id: gameId,
     player_id: botPlayer.id,
     action_type: "play_card",
-    action_data: { cardId: cardToPlay.cardId, targetPlayerId: targetId },
+    action_data: { cardId: cardToPlay.cardId, targetPlayerId: targetId, energySpent: card.cost, energyRemaining: energyAfterPlay },
     round_number: game.current_round,
   });
 
@@ -246,18 +276,20 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
   };
 }
 
-// ─── Smart Card Selection ───────────────────────────────────
+// ─── Smart Card Selection (Energy-Aware) ────────────────────
 function selectBestCard(
   hand: string[],
   bot: any,
   allPlayers: any[],
   currentRound: number
 ): { cardId: string; targetId?: string } | null {
-  const cards = hand.map((id) => getCardById(id)).filter(Boolean);
+  const botEnergy = bot.current_energy ?? 0;
+  // Only consider cards the bot can afford
+  const cards = hand.map((id) => getCardById(id)).filter((c) => c && c.cost <= botEnergy);
   if (cards.length === 0) return null;
 
   const botHpPercent = bot.current_hp / bot.max_hp;
-  const enemies = allPlayers.filter((p) => p.is_alive && p.player_id !== bot.player_id);
+  const enemies = allPlayers.filter((p: any) => p.is_alive && p.player_id !== bot.player_id);
 
   // Priority: heal if low HP
   if (botHpPercent < 0.4) {
@@ -271,21 +303,22 @@ function selectBestCard(
     if (shieldCard) return { cardId: shieldCard.id };
   }
 
-  // Priority: damage the weakest enemy
+  // Priority: damage the weakest enemy (pick best damage-per-cost ratio)
   const damageCards = cards.filter((c) => c!.effects.some((e) => e.type === "damage" && e.target !== "self"));
   if (damageCards.length > 0) {
-    // Pick highest damage card
     const best = damageCards.sort((a, b) => {
       const aDmg = a!.effects.reduce((sum, e) => sum + (e.type === "damage" && e.target !== "self" ? e.baseValue : 0), 0);
       const bDmg = b!.effects.reduce((sum, e) => sum + (e.type === "damage" && e.target !== "self" ? e.baseValue : 0), 0);
-      return bDmg - aDmg;
+      // Prefer higher damage, break ties by lower cost
+      if (bDmg !== aDmg) return bDmg - aDmg;
+      return (a!.cost || 0) - (b!.cost || 0);
     })[0];
     if (best) return { cardId: best.id };
   }
 
-  // Play any card
-  const randomCard = cards[Math.floor(Math.random() * cards.length)];
-  return randomCard ? { cardId: randomCard.id } : null;
+  // Play cheapest affordable card
+  const sorted = [...cards].sort((a, b) => (a!.cost || 0) - (b!.cost || 0));
+  return sorted[0] ? { cardId: sorted[0].id } : null;
 }
 
 // ─── Select Best Target ─────────────────────────────────────
@@ -324,12 +357,12 @@ async function applyInstantEffect(type: string, value: number, target: any): Pro
   const sb = getClientSupabase();
   switch (type) {
     case "damage": {
-      const newHp = Math.max(0, target.current_hp - value);
+      const newHp = Math.max(0, Math.round(target.current_hp - value));
       await sb.from("game_players").update({ current_hp: newHp, is_alive: newHp > 0 }).eq("id", target.id);
       break;
     }
     case "heal": {
-      const newHp = Math.min(target.max_hp, target.current_hp + value);
+      const newHp = Math.min(target.max_hp, Math.round(target.current_hp + value));
       await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
       break;
     }
@@ -387,10 +420,11 @@ async function advanceBotTurn(gameId: string): Promise<void> {
     newRound = Math.min(game.current_round + 1, 10);
     // Resolve persistent effects
     await resolveActiveEffects(gameId, newRound);
-    // Draw for each alive player
+    // Refresh energy and draw for each alive player
     for (const p of alivePlayers) {
       const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
       if (freshPlayer && freshPlayer.is_alive) {
+        await refreshBotEnergy(freshPlayer, newRound);
         await drawCardForBot(freshPlayer);
       }
     }
@@ -425,10 +459,30 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
         await applyInstantEffect("heal", effectiveValue, target);
         break;
       case "debuff":
-        await applyInstantEffect("damage", Math.ceil(effectiveValue / 2), target);
+        await applyInstantEffect("damage", Math.round(effectiveValue / 2), target);
         break;
     }
   }
+}
+
+// ─── Refresh Energy for Bot at Round Start ──────────────────
+async function refreshBotEnergy(player: any, newRound: number): Promise<void> {
+  const sb = getClientSupabase();
+  const baseEnergy = getBaseEnergyForRound(newRound);
+  const currentUnspent = player.current_energy ?? 0;
+  const chosenSin = player.chosen_sin as string;
+
+  let bonusEnergy = 0;
+  if (chosenSin === "sloth" && currentUnspent > 0) {
+    bonusEnergy = Math.min(currentUnspent, SLOTH_MAX_CARRYOVER);
+  }
+
+  const totalEnergy = Math.min(baseEnergy + bonusEnergy, MAX_ENERGY);
+  await sb.from("game_players").update({
+    current_energy: totalEnergy,
+    max_energy: totalEnergy,
+    bonus_energy: bonusEnergy,
+  }).eq("id", player.id);
 }
 
 // ─── Check if Player is a Bot ───────────────────────────────

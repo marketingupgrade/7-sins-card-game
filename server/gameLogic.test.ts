@@ -60,9 +60,9 @@ describe("Card Data Integrity", () => {
     });
   });
 
-  it("all cards have positive cost", () => {
+  it("all cards have non-negative cost", () => {
     ALL_CARDS.forEach((card) => {
-      expect(card.cost).toBeGreaterThan(0);
+      expect(card.cost).toBeGreaterThanOrEqual(0);
     });
   });
 });
@@ -157,9 +157,9 @@ describe("Card Balance Sanity Checks", () => {
     });
   });
 
-  it("no card costs more than 4", () => {
+  it("no card costs more than 5", () => {
     ALL_CARDS.forEach((card) => {
-      expect(card.cost).toBeLessThanOrEqual(4);
+      expect(card.cost).toBeLessThanOrEqual(5);
     });
   });
 

@@ -13,6 +13,13 @@ import {
   STARTING_HP,
   HAND_SIZE,
   CARDS_PER_DECK,
+  STARTING_ENERGY,
+  MAX_ENERGY,
+  ENERGY_PER_ROUND,
+  SLOTH_MAX_CARRYOVER,
+  WRATH_OVERCHARGE_HP_COST,
+  WRATH_OVERCHARGE_ENERGY_GAIN,
+  getBaseEnergyForRound,
 } from "../shared/gameTypes";
 import {
   WRATH_CARDS,
@@ -73,7 +80,7 @@ describe("Card Data Integrity", () => {
       expect(card.id).toBeTruthy();
       expect(card.name).toBeTruthy();
       expect(card.sin).toMatch(/^(wrath|sloth)$/);
-      expect(card.cost).toBeGreaterThanOrEqual(1);
+      expect(card.cost).toBeGreaterThanOrEqual(0);
       expect(card.effects.length).toBeGreaterThanOrEqual(1);
       expect(card.flavorText).toBeTruthy();
       expect(card.narratorQuip).toBeTruthy();
@@ -89,12 +96,26 @@ describe("Card Data Integrity", () => {
   it("card effects have valid targets", () => {
     ALL_CARDS.forEach((card) => {
       card.effects.forEach((effect) => {
-        expect(["damage", "heal", "shield", "buff", "debuff"]).toContain(effect.type);
+        expect(["damage", "heal", "shield", "buff", "debuff", "energy_drain", "energy_gain"]).toContain(effect.type);
         expect(["self", "single_enemy", "all_enemies", "random_enemy"]).toContain(effect.target);
         expect(effect.baseValue).toBeGreaterThanOrEqual(1);
         expect(effect.duration).toBeGreaterThanOrEqual(0);
       });
     });
+  });
+
+  it("all card costs are within valid range (0-5)", () => {
+    ALL_CARDS.forEach((card) => {
+      expect(card.cost).toBeGreaterThanOrEqual(0);
+      expect(card.cost).toBeLessThanOrEqual(5);
+    });
+  });
+
+  it("each sin has at least one 0-cost card", () => {
+    const wrathZeroCost = WRATH_CARDS.filter((c) => c.cost === 0);
+    const slothZeroCost = SLOTH_CARDS.filter((c) => c.cost === 0);
+    expect(wrathZeroCost.length).toBeGreaterThanOrEqual(1);
+    expect(slothZeroCost.length).toBeGreaterThanOrEqual(1);
   });
 });
 
@@ -190,5 +211,93 @@ describe("Game Constants", () => {
 
   it("CARDS_PER_DECK is 10", () => {
     expect(CARDS_PER_DECK).toBe(10);
+  });
+});
+
+// ─── Energy / Corruption System Tests ─────────────────────────
+describe("Corruption Energy System", () => {
+  it("STARTING_ENERGY is 2", () => {
+    expect(STARTING_ENERGY).toBe(2);
+  });
+
+  it("MAX_ENERGY is 7 (7 deadly sins)", () => {
+    expect(MAX_ENERGY).toBe(7);
+  });
+
+  it("ENERGY_PER_ROUND is 1", () => {
+    expect(ENERGY_PER_ROUND).toBe(1);
+  });
+
+  it("SLOTH_MAX_CARRYOVER is 2", () => {
+    expect(SLOTH_MAX_CARRYOVER).toBe(2);
+  });
+
+  it("WRATH_OVERCHARGE costs 2 HP for 1 energy", () => {
+    expect(WRATH_OVERCHARGE_HP_COST).toBe(2);
+    expect(WRATH_OVERCHARGE_ENERGY_GAIN).toBe(1);
+  });
+
+  describe("getBaseEnergyForRound", () => {
+    it("returns 2 for round 1", () => {
+      expect(getBaseEnergyForRound(1)).toBe(2);
+    });
+
+    it("returns 3 for round 2", () => {
+      expect(getBaseEnergyForRound(2)).toBe(3);
+    });
+
+    it("returns 6 for round 5", () => {
+      expect(getBaseEnergyForRound(5)).toBe(6);
+    });
+
+    it("caps at MAX_ENERGY (7) for round 6+", () => {
+      expect(getBaseEnergyForRound(6)).toBe(7);
+      expect(getBaseEnergyForRound(7)).toBe(7);
+      expect(getBaseEnergyForRound(10)).toBe(7);
+    });
+
+    it("energy progression: 2, 3, 4, 5, 6, 7, 7, 7...", () => {
+      const progression = Array.from({ length: 10 }, (_, i) => getBaseEnergyForRound(i + 1));
+      expect(progression).toEqual([2, 3, 4, 5, 6, 7, 7, 7, 7, 7]);
+    });
+  });
+
+  describe("Card cost balance", () => {
+    it("average wrath card cost is between 1 and 3", () => {
+      const avgCost = WRATH_CARDS.reduce((sum, c) => sum + c.cost, 0) / WRATH_CARDS.length;
+      expect(avgCost).toBeGreaterThanOrEqual(1);
+      expect(avgCost).toBeLessThanOrEqual(3);
+    });
+
+    it("average sloth card cost is between 1 and 3", () => {
+      const avgCost = SLOTH_CARDS.reduce((sum, c) => sum + c.cost, 0) / SLOTH_CARDS.length;
+      expect(avgCost).toBeGreaterThanOrEqual(1);
+      expect(avgCost).toBeLessThanOrEqual(3);
+    });
+
+    it("no card costs more than MAX_ENERGY", () => {
+      ALL_CARDS.forEach((card) => {
+        expect(card.cost).toBeLessThanOrEqual(MAX_ENERGY);
+      });
+    });
+
+    it("all cards are playable on round 1 if they cost <= STARTING_ENERGY", () => {
+      const round1Playable = ALL_CARDS.filter((c) => c.cost <= STARTING_ENERGY);
+      // At least some cards should be playable on round 1
+      expect(round1Playable.length).toBeGreaterThanOrEqual(4);
+    });
+  });
+
+  describe("calculateEffectiveValue returns whole numbers", () => {
+    it("all base values produce integers when multiplied by round", () => {
+      ALL_CARDS.forEach((card) => {
+        card.effects.forEach((effect) => {
+          for (let round = 1; round <= 10; round++) {
+            const val = calculateEffectiveValue(effect.baseValue, round);
+            expect(Number.isInteger(val)).toBe(true);
+          }
+        });
+      });
+    });
   });
 });

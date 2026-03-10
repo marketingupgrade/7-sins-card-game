@@ -13,7 +13,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
-import { playCard, passTurn, getGameLog } from "@/lib/gameEngine";
+import { playCard, passTurn, getGameLog, clientOvercharge } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -23,7 +23,7 @@ import {
   Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp
 } from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, calculateEffectiveValue } from "@shared/gameTypes";
+import { PlayerState, calculateEffectiveValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -38,6 +38,7 @@ export default function GameBoard() {
   const [isPlayingCard, setIsPlayingCard] = useState(false);
   const [isPassing, setIsPassing] = useState(false);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
+  const [isOvercharging, setIsOvercharging] = useState(false);
 
   // Bot controller - auto-plays when it's a bot's turn
   useBotController({
@@ -145,6 +146,22 @@ export default function GameBoard() {
       setIsPassing(false);
     }
   };
+
+  const handleOvercharge = async () => {
+    if (!gameId) return;
+    setIsOvercharging(true);
+    try {
+      const result = await clientOvercharge(gameId, playerId);
+      addMessage(`Overcharged! Burned ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption. The rage feeds itself.`, "action");
+      refetch();
+    } catch (err: any) {
+      addMessage(err.message, "info");
+    } finally {
+      setIsOvercharging(false);
+    }
+  };
+
+  const canOvercharge = isMyTurn && myPlayer?.chosenSin === "wrath" && (myPlayer?.currentEnergy ?? 0) < MAX_ENERGY && (myPlayer?.currentHp ?? 0) > WRATH_OVERCHARGE_HP_COST;
 
   // ─── Victory Screen ───────────────────────────────────────────
   if (gameState?.status === "finished") {
@@ -424,6 +441,7 @@ export default function GameBoard() {
                     isPlayable={isMyTurn}
                     isSelected={selectedCard === card.id}
                     onClick={() => setSelectedCard(selectedCard === card.id ? null : card.id)}
+                    playerEnergy={myPlayer?.currentEnergy}
                   />
                 </motion.div>
               ))}
@@ -447,6 +465,22 @@ export default function GameBoard() {
                 >
                   <Swords className="w-4 h-4" />
                   {isPlayingCard ? "UNLEASHING..." : "PLAY CARD"}
+                </motion.button>
+              )}
+              {canOvercharge && (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 py-2.5 rounded-lg bg-wrath/20 border border-wrath/40 text-wrath text-sm hover:bg-wrath/30 transition-colors disabled:opacity-50"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                  onClick={handleOvercharge}
+                  disabled={isOvercharging}
+                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Flame className="w-4 h-4" />
+                    {isOvercharging ? "BURNING..." : "OVERCHARGE"}
+                  </span>
                 </motion.button>
               )}
               <motion.button
@@ -643,12 +677,35 @@ function PlayerPanel({
           </div>
         </div>
 
+        {/* Energy / Corruption Bar */}
+        {player.isAlive && (
+          <div className="relative h-2 bg-muted/30 rounded-full overflow-hidden mb-1">
+            <motion.div
+              animate={{ width: `${player.maxEnergy > 0 ? (player.currentEnergy / MAX_ENERGY) * 100 : 0}%` }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className={`absolute inset-y-0 left-0 rounded-full ${
+                isWrath ? "bg-gradient-to-r from-wrath/80 to-wrath" : "bg-gradient-to-r from-sloth/80 to-sloth"
+              }`}
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[7px] font-bold text-foreground/70 drop-shadow-sm">
+                {player.currentEnergy}/{player.maxEnergy}
+                {player.bonusEnergy > 0 && (
+                  <span className="text-neon-green"> +{player.bonusEnergy}</span>
+                )}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Stats Row */}
         <div className="flex items-center justify-between text-[9px] text-muted-foreground/60">
           <span className="flex items-center gap-0.5">
             <Heart className="w-2.5 h-2.5" /> HP
           </span>
-          <span>{player.deckSize} deck &middot; {player.discardSize} discard</span>
+          <span className="flex items-center gap-1">
+            <Zap className="w-2.5 h-2.5" /> {player.currentEnergy} · {player.deckSize}d · {player.discardSize}x
+          </span>
         </div>
 
         {/* Active Effects */}

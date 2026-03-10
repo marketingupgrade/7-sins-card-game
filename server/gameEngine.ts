@@ -16,9 +16,16 @@ import {
   GameState,
   HAND_SIZE,
   MAX_ROUNDS,
+  MAX_ENERGY,
   PlayerState,
   SinType,
   STARTING_HP,
+  STARTING_ENERGY,
+  ENERGY_PER_ROUND,
+  SLOTH_MAX_CARRYOVER,
+  WRATH_OVERCHARGE_HP_COST,
+  WRATH_OVERCHARGE_ENERGY_GAIN,
+  getBaseEnergyForRound,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
 
@@ -165,7 +172,9 @@ export async function startGame(gameId: string): Promise<void> {
   const allReady = players.every((p) => p.chosen_sin);
   if (!allReady) throw new Error("All players must choose a sin");
 
-  // Initialize each player's deck and hand
+  // Initialize each player's deck, hand, and energy
+  const startingEnergy = getBaseEnergyForRound(1);
+
   for (const player of players) {
     const deckCards = getDeckForSin(player.chosen_sin as SinType);
     const shuffled = shuffleDeck(deckCards);
@@ -181,6 +190,9 @@ export async function startGame(gameId: string): Promise<void> {
         current_hp: STARTING_HP,
         max_hp: STARTING_HP,
         is_alive: true,
+        current_energy: startingEnergy,
+        max_energy: startingEnergy,
+        bonus_energy: 0,
       })
       .eq("id", player.id);
   }
@@ -249,6 +261,15 @@ export async function playCard(
   const card = getCardById(cardId);
   if (!card) throw new Error("Invalid card");
 
+  // ─── Energy Check ─────────────────────────────────────────
+  const currentEnergy = player.current_energy ?? 0;
+  if (card.cost > currentEnergy) {
+    throw new Error("Not enough corruption to play this card");
+  }
+
+  // Spend energy
+  const newEnergy = currentEnergy - card.cost;
+
   // Remove card from hand, add to discard
   const newHand = hand.filter((id) => id !== cardId);
   const discard: string[] = player.discard_pile || [];
@@ -256,7 +277,7 @@ export async function playCard(
 
   await sb
     .from("game_players")
-    .update({ hand: newHand, discard_pile: discard })
+    .update({ hand: newHand, discard_pile: discard, current_energy: newEnergy })
     .eq("id", player.id);
 
   // Resolve effects
@@ -297,7 +318,7 @@ export async function playCard(
     game_id: gameId,
     player_id: player.id,
     action_type: "play_card",
-    action_data: { cardId, targetPlayerId, effects: effectDescriptions },
+    action_data: { cardId, targetPlayerId, effects: effectDescriptions, energySpent: card.cost, energyRemaining: newEnergy },
     round_number: game.current_round,
   });
 
@@ -343,7 +364,7 @@ export async function passTurn(gameId: string, playerId: string): Promise<void> 
     game_id: gameId,
     player_id: currentTurnPlayer.id,
     action_type: "pass",
-    action_data: {},
+    action_data: { unspentEnergy: player?.current_energy ?? 0 },
     round_number: game.current_round,
   });
 
@@ -380,6 +401,9 @@ export async function getGameState(gameId: string): Promise<GameState> {
     hand: gp.hand || [],
     deckSize: (gp.deck || []).length,
     discardSize: (gp.discard_pile || []).length,
+    currentEnergy: gp.current_energy ?? 0,
+    maxEnergy: gp.max_energy ?? 0,
+    bonusEnergy: gp.bonus_energy ?? 0,
   }));
 
   const activeEffects: ActiveEffect[] = (effects || []).map((e: any) => ({
@@ -462,7 +486,7 @@ async function applyInstantEffect(type: string, value: number, target: any): Pro
 
   switch (type) {
     case "damage": {
-      const newHp = Math.max(0, target.current_hp - value);
+      const newHp = Math.max(0, Math.round(target.current_hp - value));
       const isAlive = newHp > 0;
       await sb
         .from("game_players")
@@ -471,7 +495,7 @@ async function applyInstantEffect(type: string, value: number, target: any): Pro
       break;
     }
     case "heal": {
-      const newHp = Math.min(target.max_hp, target.current_hp + value);
+      const newHp = Math.min(target.max_hp, Math.round(target.current_hp + value));
       await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
       break;
     }
@@ -546,15 +570,15 @@ async function advanceTurn(gameId: string): Promise<void> {
     // Resolve persistent effects at round start
     await resolveActiveEffects(gameId, newRound);
 
-    // Draw a card for each alive player at round start
+    // Refresh energy and draw a card for each alive player at round start
     for (const p of alivePlayers) {
-      // Refresh player data after effects
       const { data: freshPlayer } = await sb
         .from("game_players")
         .select("*")
         .eq("id", p.id)
         .single();
       if (freshPlayer && freshPlayer.is_alive) {
+        await refreshPlayerEnergy(freshPlayer, newRound);
         await drawCard(freshPlayer);
       }
     }
@@ -564,6 +588,33 @@ async function advanceTurn(gameId: string): Promise<void> {
     .from("games")
     .update({ current_player_index: nextIndex, current_round: newRound })
     .eq("id", gameId);
+}
+
+// ─── Helper: Refresh Player Energy at Round Start ────────────
+async function refreshPlayerEnergy(player: any, newRound: number): Promise<void> {
+  const sb = getServerSupabase();
+
+  const baseEnergy = getBaseEnergyForRound(newRound);
+  const currentUnspent = player.current_energy ?? 0;
+  const chosenSin = player.chosen_sin as SinType;
+
+  let bonusEnergy = 0;
+
+  if (chosenSin === "sloth" && currentUnspent > 0) {
+    // Sloth LETHARGY: unspent energy carries over as +1 per unspent, max +2
+    bonusEnergy = Math.min(currentUnspent, SLOTH_MAX_CARRYOVER);
+  }
+
+  const totalEnergy = Math.min(baseEnergy + bonusEnergy, MAX_ENERGY);
+
+  await sb
+    .from("game_players")
+    .update({
+      current_energy: totalEnergy,
+      max_energy: totalEnergy,
+      bonus_energy: bonusEnergy,
+    })
+    .eq("id", player.id);
 }
 
 // ─── Helper: Resolve Active Effects ──────────────────────────
@@ -609,9 +660,74 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
         await applyInstantEffect("heal", effectiveValue, target);
         break;
       case "debuff":
-        // Debuffs deal minor damage
-        await applyInstantEffect("damage", Math.ceil(effectiveValue / 2), target);
+        // Debuffs deal minor damage (rounded, no decimals)
+        await applyInstantEffect("damage", Math.round(effectiveValue / 2), target);
         break;
     }
   }
+}
+
+// ─── Overcharge (Wrath Passive) ─────────────────────────────
+export async function overcharge(
+  gameId: string,
+  playerId: string
+): Promise<{ success: boolean; newEnergy: number; newHp: number }> {
+  const sb = getServerSupabase();
+
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active") throw new Error("Game not active");
+
+  const { data: player } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("player_id", playerId)
+    .single();
+
+  if (!player) throw new Error("Player not in game");
+  if (!player.is_alive) throw new Error("Player is eliminated");
+  if (player.chosen_sin !== "wrath") throw new Error("Only Wrath players can Overcharge");
+
+  const currentEnergy = player.current_energy ?? 0;
+  const maxEnergy = player.max_energy ?? 0;
+
+  if (currentEnergy >= MAX_ENERGY) throw new Error("Already at max corruption");
+  if (player.current_hp <= WRATH_OVERCHARGE_HP_COST) throw new Error("Not enough HP to Overcharge");
+
+  // Verify it's their turn
+  const { data: allPlayers } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .order("seat_index");
+
+  if (!allPlayers) throw new Error("Failed to fetch players");
+  const alivePlayers = allPlayers.filter((p: any) => p.is_alive);
+  const currentTurnPlayer = alivePlayers[game.current_player_index % alivePlayers.length];
+  if (currentTurnPlayer.player_id !== playerId) throw new Error("Not your turn");
+
+  // Apply overcharge: spend HP, gain energy
+  const newHp = Math.max(0, player.current_hp - WRATH_OVERCHARGE_HP_COST);
+  const newEnergy = Math.min(currentEnergy + WRATH_OVERCHARGE_ENERGY_GAIN, MAX_ENERGY);
+  const isAlive = newHp > 0;
+
+  await sb
+    .from("game_players")
+    .update({
+      current_hp: newHp,
+      is_alive: isAlive,
+      current_energy: newEnergy,
+      max_energy: Math.max(maxEnergy, newEnergy),
+    })
+    .eq("id", player.id);
+
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    player_id: player.id,
+    action_type: "overcharge",
+    action_data: { hpCost: WRATH_OVERCHARGE_HP_COST, energyGained: WRATH_OVERCHARGE_ENERGY_GAIN },
+    round_number: game.current_round,
+  });
+
+  return { success: true, newEnergy, newHp };
 }

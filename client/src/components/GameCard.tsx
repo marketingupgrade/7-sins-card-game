@@ -16,6 +16,8 @@ interface GameCardProps {
   isPlayable: boolean;
   isSelected: boolean;
   onClick: () => void;
+  /** Player's current energy — cards costing more than this are dimmed */
+  playerEnergy?: number;
 }
 
 const effectIcons: Record<string, typeof Flame> = {
@@ -52,26 +54,28 @@ const tierStyles: Record<string, { border: string; badge: string; glow: string }
   },
 };
 
-export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick }: GameCardProps) {
+export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
   const isWrath = card.sin === "wrath";
   const sinColor = isWrath ? "wrath" : "sloth";
   const SinIcon = isWrath ? Flame : Moon;
   const tier = tierStyles[card.tier] || tierStyles.common;
+  const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
+  const actuallyPlayable = isPlayable && canAfford;
 
   return (
     <motion.div
       layout
-      whileHover={isPlayable ? { y: -24, scale: 1.06 } : {}}
-      whileTap={isPlayable ? { scale: 0.96 } : {}}
+      whileHover={actuallyPlayable ? { y: -24, scale: 1.06 } : {}}
+      whileTap={actuallyPlayable ? { scale: 0.96 } : {}}
       animate={isSelected ? { y: -32, scale: 1.1 } : { y: 0, scale: 1 }}
-      onClick={isPlayable ? onClick : undefined}
+      onClick={actuallyPlayable ? onClick : undefined}
       className={`
         relative w-[140px] h-[210px] rounded-xl overflow-hidden select-none
         ${isWrath ? "card-wrath" : "card-sloth"}
         ${tier.border} ${tier.glow}
         ${isSelected ? (isWrath ? "glow-wrath" : "glow-sloth") : ""}
         border-2
-        ${!isPlayable ? "opacity-40 cursor-not-allowed saturate-50" : "cursor-pointer"}
+        ${!actuallyPlayable ? "opacity-40 cursor-not-allowed saturate-50" : "cursor-pointer"}
         transition-all duration-300
       `}
     >
@@ -97,9 +101,14 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
         </div>
         <div
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border ${
-            isWrath ? "border-wrath/40 text-wrath bg-wrath/10" : "border-sloth/40 text-sloth bg-sloth/10"
+            !canAfford
+              ? "border-destructive/60 text-destructive bg-destructive/10"
+              : isWrath
+              ? "border-wrath/40 text-wrath bg-wrath/10"
+              : "border-sloth/40 text-sloth bg-sloth/10"
           }`}
           style={{ fontFamily: "var(--font-heading)" }}
+          title={`Corruption cost: ${card.cost}`}
         >
           {card.cost}
         </div>

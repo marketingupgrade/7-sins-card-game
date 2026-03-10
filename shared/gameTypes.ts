@@ -9,7 +9,7 @@
 export type SinType = "wrath" | "sloth";
 
 // ─── Card Effect Types ───────────────────────────────────────
-export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff";
+export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff" | "energy_drain" | "energy_gain";
 
 export type TargetType = "self" | "single_enemy" | "all_enemies" | "random_enemy";
 
@@ -28,7 +28,7 @@ export interface CardDefinition {
   id: string;
   name: string;
   sin: SinType;
-  /** Mana/energy cost to play */
+  /** Corruption (energy) cost to play */
   cost: number;
   effects: CardEffect[];
   /** Flavor text shown on card */
@@ -37,6 +37,35 @@ export interface CardDefinition {
   narratorQuip: string;
   /** Visual tier for card border styling */
   tier: "common" | "rare" | "epic";
+}
+
+// ─── Energy / Corruption System ─────────────────────────────
+/**
+ * CORRUPTION SYSTEM
+ *
+ * Energy is themed as "Corruption" — the fuel of sin.
+ *
+ * Core rules:
+ * - Start at 2 Corruption, gain +1 per round, cap at 7 (7 deadly sins)
+ * - Full refresh each turn — "use it or lose it"
+ * - Every card has a Corruption cost (0-5 range)
+ * - Can't play a card if you don't have enough Corruption
+ *
+ * Sin-specific passives:
+ * - Wrath: OVERCHARGE — When playing a card, if you have 0 energy remaining
+ *   after the cost, gain +1 bonus energy next turn (reward for going all-in)
+ * - Sloth: LETHARGY — Unspent energy carries over as +1 bonus next turn
+ *   (max +2 carryover, rewards patience and conservation)
+ */
+export const STARTING_ENERGY = 2;
+export const MAX_ENERGY = 7;
+export const ENERGY_PER_ROUND = 1;
+export const SLOTH_MAX_CARRYOVER = 2;
+export const WRATH_OVERCHARGE_HP_COST = 2;
+export const WRATH_OVERCHARGE_ENERGY_GAIN = 1;
+
+export function getBaseEnergyForRound(round: number): number {
+  return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_ROUND, MAX_ENERGY);
 }
 
 // ─── Game State ──────────────────────────────────────────────
@@ -54,6 +83,12 @@ export interface PlayerState {
   hand: string[]; // card IDs
   deckSize: number;
   discardSize: number;
+  /** Current energy (corruption) available this turn */
+  currentEnergy: number;
+  /** Max energy for this turn (base + bonuses) */
+  maxEnergy: number;
+  /** Bonus energy carried from previous turn (Sloth passive) */
+  bonusEnergy: number;
 }
 
 export interface ActiveEffect {
@@ -106,5 +141,5 @@ export const CARDS_PER_DECK = 10;
 
 export function calculateEffectiveValue(baseValue: number, currentRound: number): number {
   const cappedRound = Math.min(currentRound, MAX_ROUNDS);
-  return baseValue * cappedRound;
+  return Math.round(baseValue * cappedRound);
 }

@@ -19,6 +19,7 @@ import {
   getGameLog,
   getGameState,
   joinGame,
+  overcharge,
   passTurn,
   playCard,
   startGame,
@@ -99,6 +100,13 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await passTurn(input.gameId, input.playerId);
         return { success: true };
+      }),
+
+    /** Overcharge: Wrath players spend HP to gain energy */
+    overcharge: publicProcedure
+      .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        return overcharge(input.gameId, input.playerId);
       }),
 
     /** Get the full game state */

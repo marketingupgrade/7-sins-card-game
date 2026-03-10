@@ -95,3 +95,20 @@
 
 ## Compound Effects UI
 - [x] Add compound effects balance sheet — chronological timeline showing upcoming effects per player
+
+## Energy System
+- [x] Research energy/mana system best practices from top card games
+- [x] Design energy system tailored to 7 Deadly Sins theme (Corruption)
+- [x] Implement energy in game types, engine, and card costs
+- [x] Update UI to display energy bars, card costs, and energy feedback
+- [x] Integrate energy with bot AI decision-making
+- [x] Add Wrath Overcharge ability (burn HP for energy)
+- [x] Add Sloth Lethargy passive (carryover unspent energy)
+- [x] Add 2 new 0-cost risk cards (Corruption Surge, Deep Slumber)
+- [x] Rebalance Apocalypse Fist to cost 5
+- [x] Add energy columns to Supabase game_players table
+- [x] Write energy system tests (75 tests passing)
+
+## Bug Fixes (Round 2)
+- [x] Fix decimal numbers in game — all HP/damage/heal values now use Math.round
+- [x] Fix calculateEffectiveValue to always return integers

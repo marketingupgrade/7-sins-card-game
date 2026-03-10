@@ -6,7 +6,16 @@
  *
  * Design Philosophy:
  * - Wrath: High damage, self-harm, aggressive tempo. Wants to end games fast.
+ *   Risky cards get cost reductions to make risk worthwhile.
  * - Sloth: Shields, heals, DoTs, debuffs. Wants to stall and let compounding do the work.
+ *
+ * Corruption Costs (0-5 range):
+ * - 0: Free but risky/conditional cards
+ * - 1: Basic utility cards
+ * - 2: Standard mid-range cards
+ * - 3: Strong multi-target or sustained effects
+ * - 4: Powerful finisher-tier cards
+ * - 5: Ultimate game-changers
  */
 
 import { CardDefinition } from "./gameTypes";
@@ -27,7 +36,7 @@ export const WRATH_CARDS: CardDefinition[] = [
     id: "wrath_02",
     name: "Blind Rage",
     sin: "wrath",
-    cost: 2,
+    cost: 1,
     effects: [
       { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
@@ -101,23 +110,24 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_09",
-    name: "Reckless Charge",
+    name: "Corruption Surge",
     sin: "wrath",
-    cost: 1,
+    cost: 0,
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "random_enemy" },
+      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 2, duration: 0, target: "self" },
     ],
-    flavorText: "Who needs aim when you have momentum?",
-    narratorQuip: "Closing your eyes and swinging. Classic wrath. No thoughts, just fists.",
-    tier: "common",
+    flavorText: "Free power always comes with a price. Usually your own blood.",
+    narratorQuip: "Zero cost, maximum self-harm. The Wrath special. No refunds on your HP.",
+    tier: "rare",
   },
   {
     id: "wrath_10",
     name: "Apocalypse Fist",
     sin: "wrath",
-    cost: 4,
+    cost: 5,
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 4, duration: 0, target: "all_enemies" },
       { type: "damage", baseValue: 3, duration: 0, target: "self" },
     ],
     flavorText: "The final argument in any debate.",
@@ -216,13 +226,16 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   {
     id: "sloth_09",
-    name: "Time Crawl",
+    name: "Deep Slumber",
     sin: "sloth",
-    cost: 2,
-    effects: [{ type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" }],
-    flavorText: "Time moves slower when you're bored to death.",
-    narratorQuip: "Three rounds of existential ennui. Absolutely devastating.",
-    tier: "common",
+    cost: 0,
+    effects: [
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
+      { type: "debuff", baseValue: 1, duration: 1, target: "self" },
+    ],
+    flavorText: "A nap so deep it makes you vulnerable. Worth it.",
+    narratorQuip: "Free healing with a side of vulnerability. The lazy person's gamble.",
+    tier: "rare",
   },
   {
     id: "sloth_10",
@@ -275,6 +288,7 @@ export const NARRATOR_LINES = {
     "Round {round}. Remember when damage was small? Those were the days.",
     "Round {round}. The escalation continues. Just like your bad decisions.",
     "Round {round}. Compounding interest, but for pain. Capitalism meets combat.",
+    "Round {round}. More corruption flows. Spend it wisely. Or don't. I'm not your accountant.",
   ],
   playerEliminated: [
     "{player} has been eliminated. Don't let the door hit you on the way out.",
@@ -343,5 +357,21 @@ export const NARRATOR_LINES = {
     "Healing? That's just procrastinating death with extra steps.",
     "A heal card. Delaying the inevitable with style.",
     "Patching yourself up. The duct tape of combat strategies.",
+  ],
+  overcharge: [
+    "{player} OVERCHARGES! Spending HP for extra corruption. Peak Wrath behavior.",
+    "{player} burns their own life force for power. Self-destructive? Absolutely. On brand? Also yes.",
+    "OVERCHARGE activated! {player} trades blood for corruption. The math checks out. The therapy doesn't.",
+    "{player} goes all-in with Overcharge. Nothing says 'Wrath' like hurting yourself for advantage.",
+  ],
+  lethargy: [
+    "{player}'s Lethargy kicks in. Unspent corruption carries over. Lazy AND efficient.",
+    "Sloth passive: {player} banks corruption for later. Procrastination as a superpower.",
+    "{player} conserves energy. The Lethargy bonus grows. Patience is a sin too, apparently.",
+  ],
+  noEnergy: [
+    "Not enough corruption to play that. Even sin has a budget.",
+    "Insufficient corruption. Your ambitions exceed your resources. Story of your life.",
+    "Can't afford that card. Corruption doesn't grow on trees. Well, actually...",
   ],
 };
