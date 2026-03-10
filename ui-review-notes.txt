@@ -1,0 +1,14 @@
+UI Enhancement Review Notes (2026-03-10)
+
+Screenshot shows:
+- Home page with enhanced dark arena background
+- "7 DEADLY SINS" title with red/purple neon glow
+- Animated divider visible below title
+- Game panel with glass-panel-epic effect (visible animated border gradient)
+- Tutorial overlay showing Step 1 of 20 with proper styling
+- Ember particles visible in background (subtle floating dots)
+- CREATE GAME button (red/wrath), HOW TO PLAY button (cyan), JOIN GAME button (purple/sloth)
+- Bottom info bar with player count, real-time, bots info
+
+TS errors are pre-existing in Markdown.tsx and ComponentShowcase.tsx (template files, not our code).
+All 122 tests passing.

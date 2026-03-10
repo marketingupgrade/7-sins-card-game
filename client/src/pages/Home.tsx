@@ -11,6 +11,8 @@ import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye, TrendingUp, SquareSlash, GraduationCap } from "lucide-react";
+import EmberField from "@/components/EmberField";
+import { useCard3DTilt } from "@/hooks/useCard3DTilt";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
 
@@ -102,6 +104,9 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-arena relative overflow-hidden noise-overlay">
+      {/* Floating ember particles */}
+      <EmberField count={24} />
+
       {/* Floating ambient icons */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {Array.from({ length: 18 }).map((_, i) => {
@@ -116,7 +121,7 @@ export default function Home() {
               }}
               animate={{
                 y: [0, -80, 0],
-                opacity: [0.02, 0.06, 0.02],
+                opacity: [0.02, 0.08, 0.02],
                 rotate: [0, 180, 360],
               }}
               transition={{
@@ -132,11 +137,11 @@ export default function Home() {
         })}
       </div>
 
-      {/* Decorative corner accents */}
-      <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-greed/5 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-envy/3 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-sloth/3 to-transparent pointer-events-none" />
+      {/* Decorative corner accents — enhanced with larger gradients */}
+      <div className="absolute top-0 left-0 w-48 h-48 bg-gradient-to-br from-wrath/8 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-greed/6 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-envy/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-sloth/5 to-transparent pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
@@ -181,7 +186,7 @@ export default function Home() {
             </motion.span>
           </h1>
 
-          <div className="neon-divider w-56 mx-auto my-4" />
+          <div className="neon-divider-animated w-56 mx-auto my-4" />
 
           <p
             className="text-sm tracking-[0.3em] text-muted-foreground uppercase"
@@ -214,7 +219,7 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="w-full max-w-md"
         >
-          <div className="glass-panel rounded-2xl p-8">
+          <div className="glass-panel-epic rounded-2xl p-8 shimmer-overlay">
             {/* Username Input */}
             <div className="mb-6">
               <label
@@ -375,42 +380,7 @@ export default function Home() {
             { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
             { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },
           ].map((sin) => (
-            <motion.div
-              key={sin.name}
-              whileHover={{ y: -8, scale: 1.04 }}
-              className={`${sin.glass} rounded-xl p-4 text-center group`}
-            >
-              <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all`} />
-              <h3
-                className={`text-sm font-bold text-${sin.color} tracking-wider mb-1`}
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {sin.name}
-              </h3>
-              <p
-                className="text-[10px] text-foreground/70 mt-1 leading-relaxed"
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                {sin.desc}
-              </p>
-              <div className="flex justify-center gap-1 mt-2">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className={`w-1.5 h-1.5 rounded-full bg-${sin.color}`} />
-                ))}
-              </div>
-              <p
-                className="text-[8px] text-muted-foreground/70 mt-1 uppercase tracking-[0.15em]"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {sin.tag}
-              </p>
-              <p
-                className={`text-[8px] text-${sin.color}/60 mt-1 italic`}
-                style={{ fontFamily: "var(--font-body)" }}
-              >
-                {sin.passive}
-              </p>
-            </motion.div>
+            <SinCard key={sin.name} sin={sin} />
           ))}
         </motion.div>
 
@@ -431,7 +401,7 @@ export default function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Flat Cards */}
-            <div className="glass-panel rounded-xl p-5">
+            <div className="glass-panel rounded-xl p-5 shimmer-overlay">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center">
                   <SquareSlash className="w-4 h-4 text-neon-cyan" />
@@ -460,7 +430,7 @@ export default function Home() {
             </div>
 
             {/* Compounding Cards */}
-            <div className="glass-panel rounded-xl p-5">
+            <div className="glass-panel rounded-xl p-5 shimmer-overlay">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-8 h-8 rounded-lg bg-neon-yellow/10 border border-neon-yellow/20 flex items-center justify-center">
                   <TrendingUp className="w-4 h-4 text-neon-yellow" />
@@ -516,10 +486,10 @@ export default function Home() {
           transition={{ duration: 0.6, delay: 1.0 }}
           className="mt-8 max-w-2xl w-full"
         >
-          <div className="glass-panel rounded-xl p-5">
+          <div className="glass-panel-epic rounded-xl p-5">
             <div className="flex items-center gap-2 mb-3">
               <div className="w-8 h-8 rounded-lg bg-wrath/10 border border-wrath/20 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-wrath" />
+                <Zap className="w-4 h-4 text-wrath" style={{ animation: 'glow-breathe 2s ease-in-out infinite' }} />
               </div>
               <div>
                 <h3 className="text-sm font-bold text-wrath tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
@@ -606,6 +576,55 @@ export default function Home() {
           48 cards &middot; 4 factions &middot; 10 rounds &middot; Fibonacci compounding &middot; Zero mercy
         </motion.p>
       </div>
+    </div>
+  );
+}
+
+/* ─── Sin Faction Card with 3D Tilt ─────────────────────── */
+function SinCard({ sin }: { sin: { Icon: any; color: string; glass: string; name: string; desc: string; tag: string; passive: string } }) {
+  const { ref, handlers } = useCard3DTilt({ maxTilt: 12, scale: 1.06 });
+  return (
+    <div
+      ref={ref}
+      {...handlers}
+      className={`${sin.glass} rounded-xl p-4 text-center group cursor-default holo-sheen transition-shadow duration-300 hover:shadow-[0_0_30px_oklch(0.5_0.2_var(--sin-hue)/0.2)]`}
+      style={{ willChange: 'transform' }}
+    >
+      <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all group-hover:drop-shadow-[0_0_8px_currentColor]`} />
+      <h3
+        className={`text-sm font-bold text-${sin.color} tracking-wider mb-1`}
+        style={{ fontFamily: "var(--font-heading)" }}
+      >
+        {sin.name}
+      </h3>
+      <p
+        className="text-[10px] text-foreground/70 mt-1 leading-relaxed"
+        style={{ fontFamily: "var(--font-body)" }}
+      >
+        {sin.desc}
+      </p>
+      <div className="flex justify-center gap-1 mt-2">
+        {[...Array(5)].map((_, i) => (
+          <motion.div
+            key={i}
+            className={`w-1.5 h-1.5 rounded-full bg-${sin.color}`}
+            animate={{ opacity: [0.3, 1, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+          />
+        ))}
+      </div>
+      <p
+        className="text-[8px] text-muted-foreground/70 mt-1 uppercase tracking-[0.15em]"
+        style={{ fontFamily: "var(--font-heading)" }}
+      >
+        {sin.tag}
+      </p>
+      <p
+        className={`text-[8px] text-${sin.color}/60 mt-1 italic`}
+        style={{ fontFamily: "var(--font-body)" }}
+      >
+        {sin.passive}
+      </p>
     </div>
   );
 }

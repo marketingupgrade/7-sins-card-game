@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, getCompoundTickValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
+import EmberField from "@/components/EmberField";
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -259,6 +260,8 @@ export default function GameBoard() {
   // ─── Main Game Board ──────────────────────────────────────────
   return (
     <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
+      {/* Floating ember particles */}
+      <EmberField count={12} />
       {/* Scanlines overlay */}
       <div className="absolute inset-0 scanlines opacity-5 pointer-events-none z-50" />
 
@@ -630,7 +633,7 @@ function PlayerPanel({
       className={`
         rounded-xl border p-3 min-w-[170px] max-w-[200px] relative overflow-hidden
         ${isMe ? "glass-panel" : "bg-card/30 backdrop-blur-sm"}
-        ${isCurrentTurn ? "border-neon-yellow/50" : "border-border/20"}
+        ${isCurrentTurn ? "border-neon-yellow/50 active-turn-glow" : "border-border/20"}
         ${isSelected ? "border-neon-cyan glow-cyan" : ""}
         ${isTargetable ? "cursor-pointer hover:border-neon-cyan/40" : ""}
         ${!player.isAlive ? "opacity-30 grayscale" : ""}
@@ -681,7 +684,7 @@ function PlayerPanel({
           <motion.div
             animate={{ width: `${hpPercent}%` }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className={`absolute inset-y-0 left-0 rounded-full ${
+            className={`absolute inset-y-0 left-0 rounded-full hp-bar-fill ${
               hpPercent > 60
                 ? "hp-bar-high"
                 : hpPercent > 30
@@ -703,7 +706,7 @@ function PlayerPanel({
             <motion.div
               animate={{ width: `${player.maxEnergy > 0 ? (player.currentEnergy / MAX_ENERGY) * 100 : 0}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className="absolute inset-y-0 left-0 rounded-full"
+              className="absolute inset-y-0 left-0 rounded-full energy-bar-fill"
               style={{ background: `linear-gradient(to right, ${sinCssColor}cc, ${sinCssColor})` }}
             />
             <div className="absolute inset-0 flex items-center justify-center">

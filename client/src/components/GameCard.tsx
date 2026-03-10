@@ -9,6 +9,7 @@
  */
 
 import { motion } from "framer-motion";
+import { useRef, useCallback } from "react";
 import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye, Timer, Sparkles } from "lucide-react";
 import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
 
@@ -102,10 +103,32 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
   const actuallyPlayable = isPlayable && canAfford;
   const isCompounding = card.cardType === "compounding";
 
+  // 3D tilt
+  const cardRef = useRef<HTMLDivElement>(null);
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = cardRef.current;
+    if (!el || !actuallyPlayable) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    const tiltX = (10 * (0.5 - y)).toFixed(2);
+    const tiltY = (10 * (x - 0.5)).toFixed(2);
+    el.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-24px) scale(1.06)`;
+  }, [actuallyPlayable]);
+  const handleMouseLeave = useCallback(() => {
+    const el = cardRef.current;
+    if (!el) return;
+    el.style.transform = '';
+    el.style.transition = 'transform 0.3s ease-out';
+    setTimeout(() => { if (el) el.style.transition = ''; }, 300);
+  }, []);
+
   return (
     <motion.div
+      ref={cardRef}
       layout
-      whileHover={actuallyPlayable ? { y: -24, scale: 1.06 } : {}}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
       whileTap={actuallyPlayable ? { scale: 0.96 } : {}}
       animate={isSelected ? { y: -32, scale: 1.1 } : { y: 0, scale: 1 }}
       onClick={actuallyPlayable ? onClick : undefined}
@@ -114,10 +137,12 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
         ${cfg.cardClass}
         ${tier.border} ${tier.glow}
         ${isSelected ? cfg.glowClass : ""}
+        ${actuallyPlayable ? "holo-sheen" : ""}
         border-2
         ${!actuallyPlayable ? "opacity-40 cursor-not-allowed saturate-50" : "cursor-pointer"}
         transition-all duration-300
       `}
+      style={{ willChange: 'transform' }}
     >
       {/* Subtle inner glow */}
       <div
@@ -132,7 +157,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           {/* Card Type Badge */}
           {isCompounding ? (
             <span
-              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/30"
+              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase badge-compound"
               style={{ fontFamily: "var(--font-heading)" }}
               title="Compounding: ticks for 3 rounds [1×, 1×, 2×]"
             >
@@ -141,7 +166,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
             </span>
           ) : (
             <span
-              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30"
+              className="text-[6px] px-1 py-0.5 rounded-sm font-bold uppercase badge-flat"
               style={{ fontFamily: "var(--font-heading)" }}
               title="Flat: instant one-time effect"
             >
@@ -169,6 +194,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
             borderColor: `color-mix(in oklch, var(--color-${cfg.color}) 40%, transparent)`,
             color: `var(--color-${cfg.color})`,
             backgroundColor: `color-mix(in oklch, var(--color-${cfg.color}) 10%, transparent)`,
+            boxShadow: `0 0 8px color-mix(in oklch, var(--color-${cfg.color}) 25%, transparent)`,
           } : { fontFamily: "var(--font-heading)" }}
           title={`Corruption cost: ${card.cost}`}
         >

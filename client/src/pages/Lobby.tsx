@@ -10,6 +10,7 @@ import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
 import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
+import EmberField from "@/components/EmberField";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { chooseSin, startGame, getGameState } from "@/lib/gameEngine";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
@@ -212,6 +213,8 @@ export default function Lobby() {
 
   return (
     <div className="min-h-screen bg-arena relative overflow-hidden noise-overlay">
+      {/* Floating ember particles */}
+      <EmberField count={16} />
       {/* Ambient corner glows */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-sloth/5 to-transparent pointer-events-none" />
@@ -267,7 +270,7 @@ export default function Lobby() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
           data-tutorial="room-code"
-          className="glass-panel rounded-2xl p-6 mb-6 w-full max-w-lg text-center"
+          className="glass-panel-epic rounded-2xl p-6 mb-6 w-full max-w-lg text-center"
         >
           <p
             className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-3"
@@ -280,7 +283,17 @@ export default function Lobby() {
               className="text-4xl font-black tracking-[0.5em] text-neon-cyan text-glow-cyan"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              {state.roomCode}
+              {state.roomCode.split("").map((char, i) => (
+                <motion.span
+                  key={i}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
+                  className="inline-block"
+                >
+                  {char}
+                </motion.span>
+              ))}
             </span>
             <motion.button
               whileHover={{ scale: 1.1 }}
@@ -423,12 +436,12 @@ export default function Lobby() {
                 return (
                   <motion.button
                     key={sin}
-                    whileHover={{ scale: 1.03, y: -4 }}
+                    whileHover={{ scale: 1.05, y: -6 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleChooseSin(sin)}
-                    className={`${cfg.glassClass} rounded-xl p-5 text-center group`}
+                    className={`${cfg.glassClass} rounded-xl p-5 text-center group pulse-ring holo-sheen transition-shadow duration-300`}
                   >
-                    <SinIcon className={`w-9 h-9 text-${cfg.color} mx-auto mb-2 group-hover:${cfg.dropShadow} transition-all`} />
+                    <SinIcon className={`w-9 h-9 text-${cfg.color} mx-auto mb-2 group-hover:${cfg.dropShadow} transition-all`} style={{ animation: 'glow-breathe 3s ease-in-out infinite' }} />
                     <h3
                       className={`text-base font-black text-${cfg.color} tracking-wider mb-1`}
                       style={{ fontFamily: "var(--font-heading)" }}
@@ -439,8 +452,13 @@ export default function Lobby() {
                       {cfg.desc}
                     </p>
                     <div className="flex justify-center gap-1 mt-2">
-                      {[...Array(5)].map((_, i) => (
-                        <div key={i} className={`w-1.5 h-1.5 rounded-full bg-${cfg.color}`} />
+                      {[...Array(5)].map((_, j) => (
+                        <motion.div
+                          key={j}
+                          className={`w-1.5 h-1.5 rounded-full bg-${cfg.color}`}
+                          animate={{ opacity: [0.3, 1, 0.3] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: j * 0.15 }}
+                        />
                       ))}
                     </div>
                     <p className="text-[8px] text-muted-foreground/60 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>

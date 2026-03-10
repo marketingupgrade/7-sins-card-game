@@ -194,4 +194,27 @@
 - [x] Add data-tutorial attributes to Home, Lobby, and GameBoard pages
 - [x] Keyboard navigation (arrow keys, Enter, Escape)
 - [x] Write tests for tutorial state machine (122 tests passing across 5 files)
+- [x] Push to GitHub for Vercel deployment
+
+## UI Enhancement Pass — Make It Epic
+- [x] Global CSS: 15+ new keyframe animations (border-rotate, shimmer, holo-spin, ember-rise, pulse-ring, damage-shake, energy-flow, hp-shimmer, stagger-fade-in, compound-badge-pulse, float-drift, text-reveal, glow-breathe, divider-flow)
+- [x] Global CSS: glass-panel-epic with animated rotating border gradient
+- [x] Global CSS: EmberField particle component for arena atmosphere
+- [x] Global CSS: shimmer-overlay, holo-sheen, badge-flat, badge-compound utility classes
+- [x] Global CSS: active-turn-glow, hp-bar-fill, energy-bar-fill with animated flow
+- [x] Home page: EmberField floating particles + enhanced corner gradient accents
+- [x] Home page: glass-panel-epic with shimmer on game panel
+- [x] Home page: 3D tilt SinCard faction cards with holographic sheen + animated dots
+- [x] Home page: Animated gradient divider (neon-divider-animated)
+- [x] Lobby: EmberField particles + glass-panel-epic room code card
+- [x] Lobby: Animated room code with character-by-character entrance
+- [x] Lobby: Sin selection cards with pulse-ring, holo-sheen, glow-breathe icons, animated dots
+- [x] GameBoard: EmberField particles in arena
+- [x] GameBoard: HP bar with shimmer overlay (hp-bar-fill class)
+- [x] GameBoard: Energy bar with animated flow (energy-bar-fill class)
+- [x] GameBoard: Active turn glow effect on current player panel
+- [x] GameCard: 3D perspective tilt on hover with holographic sheen
+- [x] GameCard: badge-flat / badge-compound animated type badges
+- [x] GameCard: Energy cost orb with sin-colored glow shadow
+- [x] All 122 tests still passing
 - [ ] Push to GitHub for Vercel deployment

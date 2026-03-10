@@ -271,6 +271,192 @@
     box-shadow: inset 0 1px 0 oklch(0.6 0.2 155 / 0.1);
   }
 
+  /* ─── Animated Border Glass Panel ────────────────────────── */
+  .glass-panel-epic {
+    position: relative;
+    background: oklch(0.12 0.025 270 / 0.7);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border: 1px solid oklch(0.3 0.03 270 / 0.2);
+    box-shadow:
+      0 8px 40px oklch(0 0 0 / 0.5),
+      inset 0 1px 0 oklch(1 0 0 / 0.05),
+      inset 0 -1px 0 oklch(0 0 0 / 0.2);
+    overflow: hidden;
+  }
+  .glass-panel-epic::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      var(--border-angle, 0deg),
+      oklch(0.82 0.16 195 / 0.4),
+      transparent 40%,
+      oklch(0.6 0.28 25 / 0.3) 60%,
+      transparent
+    );
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask-composite: xor;
+    animation: border-rotate 6s linear infinite;
+    pointer-events: none;
+  }
+
+  /* ─── Shimmer Overlay ───────────────────────────────────── */
+  .shimmer-overlay {
+    position: relative;
+    overflow: hidden;
+  }
+  .shimmer-overlay::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 40%,
+      oklch(1 0 0 / 0.03) 45%,
+      oklch(1 0 0 / 0.06) 50%,
+      oklch(1 0 0 / 0.03) 55%,
+      transparent 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 4s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ─── Holographic Sheen (for cards) ─────────────────────── */
+  .holo-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .holo-sheen::after {
+    content: '';
+    position: absolute;
+    inset: -50%;
+    background: conic-gradient(
+      from var(--holo-angle, 0deg),
+      oklch(0.82 0.16 195 / 0.06),
+      oklch(0.6 0.28 25 / 0.06),
+      oklch(0.52 0.18 290 / 0.06),
+      oklch(0.75 0.18 85 / 0.06),
+      oklch(0.82 0.16 195 / 0.06)
+    );
+    animation: holo-spin 8s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: screen;
+  }
+
+  /* ─── Floating Ember Particles ──────────────────────────── */
+  .ember-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .ember {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: oklch(0.7 0.25 25 / 0.6);
+    box-shadow: 0 0 6px oklch(0.7 0.25 25 / 0.4);
+    animation: ember-rise linear infinite;
+  }
+  .ember:nth-child(2n) {
+    background: oklch(0.82 0.16 195 / 0.5);
+    box-shadow: 0 0 6px oklch(0.82 0.16 195 / 0.3);
+  }
+  .ember:nth-child(3n) {
+    background: oklch(0.52 0.18 290 / 0.5);
+    box-shadow: 0 0 6px oklch(0.52 0.18 290 / 0.3);
+  }
+
+  /* ─── 3D Card Tilt Container ────────────────────────────── */
+  .card-3d {
+    perspective: 800px;
+    transform-style: preserve-3d;
+  }
+  .card-3d-inner {
+    transition: transform 0.15s ease-out;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+
+  /* ─── Pulse Ring Effect ─────────────────────────────────── */
+  .pulse-ring {
+    position: relative;
+  }
+  .pulse-ring::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    border: 2px solid currentColor;
+    opacity: 0;
+    animation: pulse-ring-anim 2s ease-out infinite;
+  }
+
+  /* ─── Damage Flash ──────────────────────────────────────── */
+  .damage-flash {
+    animation: damage-shake 0.4s ease-out;
+  }
+
+  /* ─── Energy Corruption Bar ─────────────────────────────── */
+  .energy-bar-fill {
+    background: linear-gradient(90deg, oklch(0.52 0.18 290), oklch(0.82 0.16 195));
+    box-shadow: 0 0 8px oklch(0.82 0.16 195 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.15);
+    position: relative;
+    overflow: hidden;
+  }
+  .energy-bar-fill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      oklch(1 0 0 / 0.2) 50%,
+      transparent 100%
+    );
+    background-size: 200% 100%;
+    animation: energy-flow 2s linear infinite;
+  }
+
+  /* ─── HP Bar Enhanced ───────────────────────────────────── */
+  .hp-bar-fill {
+    position: relative;
+    overflow: hidden;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .hp-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      oklch(1 0 0 / 0.15),
+      transparent
+    );
+    animation: hp-shimmer 3s ease-in-out infinite;
+  }
+
+  /* ─── Active Turn Glow ──────────────────────────────────── */
+  .active-turn-glow {
+    box-shadow:
+      0 0 12px oklch(0.88 0.16 90 / 0.4),
+      0 0 30px oklch(0.88 0.16 90 / 0.15),
+      inset 0 0 12px oklch(0.88 0.16 90 / 0.05);
+    border-color: oklch(0.88 0.16 90 / 0.5) !important;
+  }
+
   /* ─── Scanline Overlay ──────────────────────────────────── */
   .scanlines::after {
     content: '';
@@ -407,6 +593,27 @@
     height: 1px;
     background: linear-gradient(90deg, transparent, oklch(0.82 0.16 195 / 0.4), transparent);
   }
+  .neon-divider-animated {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, oklch(0.82 0.16 195 / 0.5), oklch(0.6 0.28 25 / 0.3), transparent);
+    background-size: 200% 100%;
+    animation: divider-flow 4s ease-in-out infinite;
+  }
+
+  /* ─── Stagger Entrance ──────────────────────────────────── */
+  .stagger-enter > * {
+    opacity: 0;
+    transform: translateY(16px);
+    animation: stagger-fade-in 0.5s ease-out forwards;
+  }
+  .stagger-enter > *:nth-child(1) { animation-delay: 0.05s; }
+  .stagger-enter > *:nth-child(2) { animation-delay: 0.1s; }
+  .stagger-enter > *:nth-child(3) { animation-delay: 0.15s; }
+  .stagger-enter > *:nth-child(4) { animation-delay: 0.2s; }
+  .stagger-enter > *:nth-child(5) { animation-delay: 0.25s; }
+  .stagger-enter > *:nth-child(6) { animation-delay: 0.3s; }
+  .stagger-enter > *:nth-child(7) { animation-delay: 0.35s; }
+  .stagger-enter > *:nth-child(8) { animation-delay: 0.4s; }
 
   /* ─── Bot Badge ─────────────────────────────────────────── */
   .bot-badge {
@@ -420,4 +627,137 @@
     border-radius: 9999px;
     color: oklch(0.6 0.02 270);
   }
+
+  /* ─── Compound Type Badge ────────────────────────────────── */
+  .badge-flat {
+    background: linear-gradient(135deg, oklch(0.88 0.16 90 / 0.2), oklch(0.88 0.16 90 / 0.05));
+    border: 1px solid oklch(0.88 0.16 90 / 0.35);
+    color: oklch(0.88 0.16 90);
+    text-shadow: 0 0 8px oklch(0.88 0.16 90 / 0.4);
+  }
+  .badge-compound {
+    background: linear-gradient(135deg, oklch(0.82 0.16 195 / 0.2), oklch(0.52 0.18 290 / 0.1));
+    border: 1px solid oklch(0.82 0.16 195 / 0.35);
+    color: oklch(0.82 0.16 195);
+    text-shadow: 0 0 8px oklch(0.82 0.16 195 / 0.4);
+    animation: compound-badge-pulse 3s ease-in-out infinite;
+  }
+}
+
+/* ─── Keyframe Animations ──────────────────────────────────── */
+@keyframes border-rotate {
+  from { --border-angle: 0deg; }
+  to { --border-angle: 360deg; }
+}
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+@property --holo-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes holo-spin {
+  from { --holo-angle: 0deg; }
+  to { --holo-angle: 360deg; }
+}
+
+@keyframes ember-rise {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(90vh) translateX(10px) scale(1);
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(-20px) scale(0.3);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-ring-anim {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes damage-shake {
+  0%, 100% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-0.5deg); }
+  20% { transform: translateX(4px) rotate(0.5deg); }
+  30% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  50% { transform: translateX(-2px); }
+  60% { transform: translateX(2px); }
+  70% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+}
+
+@keyframes energy-flow {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes hp-shimmer {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
+@keyframes divider-flow {
+  0%, 100% { background-position: 0% 0; }
+  50% { background-position: 100% 0; }
+}
+
+@keyframes stagger-fade-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes compound-badge-pulse {
+  0%, 100% { border-color: oklch(0.82 0.16 195 / 0.35); box-shadow: 0 0 4px oklch(0.82 0.16 195 / 0.1); }
+  50% { border-color: oklch(0.82 0.16 195 / 0.6); box-shadow: 0 0 12px oklch(0.82 0.16 195 / 0.2); }
+}
+
+@keyframes float-drift {
+  0%, 100% { transform: translateY(0) translateX(0); }
+  25% { transform: translateY(-8px) translateX(4px); }
+  50% { transform: translateY(-4px) translateX(-3px); }
+  75% { transform: translateY(-12px) translateX(2px); }
+}
+
+@keyframes text-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+@keyframes glow-breathe {
+  0%, 100% { filter: brightness(1) drop-shadow(0 0 4px currentColor); }
+  50% { filter: brightness(1.2) drop-shadow(0 0 12px currentColor); }
 }
