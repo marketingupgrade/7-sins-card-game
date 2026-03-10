@@ -24,6 +24,8 @@ import {
 import {
   WRATH_CARDS,
   SLOTH_CARDS,
+  GREED_CARDS,
+  ENVY_CARDS,
   ALL_CARDS,
   CARD_MAP,
   getCardById,
@@ -59,8 +61,28 @@ describe("Card Data Integrity", () => {
     expect(SLOTH_CARDS).toHaveLength(CARDS_PER_DECK);
   });
 
-  it("has 20 total cards", () => {
-    expect(ALL_CARDS).toHaveLength(20);
+  it("has 40 total cards (4 sins x 10)", () => {
+    expect(ALL_CARDS).toHaveLength(40);
+  });
+
+  it("has exactly 10 greed cards", () => {
+    expect(GREED_CARDS).toHaveLength(CARDS_PER_DECK);
+  });
+
+  it("has exactly 10 envy cards", () => {
+    expect(ENVY_CARDS).toHaveLength(CARDS_PER_DECK);
+  });
+
+  it("all greed cards have sin=greed", () => {
+    GREED_CARDS.forEach((card) => {
+      expect(card.sin).toBe("greed");
+    });
+  });
+
+  it("all envy cards have sin=envy", () => {
+    ENVY_CARDS.forEach((card) => {
+      expect(card.sin).toBe("envy");
+    });
   });
 
   it("all wrath cards have sin=wrath", () => {
@@ -79,7 +101,7 @@ describe("Card Data Integrity", () => {
     ALL_CARDS.forEach((card) => {
       expect(card.id).toBeTruthy();
       expect(card.name).toBeTruthy();
-      expect(card.sin).toMatch(/^(wrath|sloth)$/);
+      expect(card.sin).toMatch(/^(wrath|sloth|greed|envy)$/);
       expect(card.cost).toBeGreaterThanOrEqual(0);
       expect(card.effects.length).toBeGreaterThanOrEqual(1);
       expect(card.flavorText).toBeTruthy();
@@ -114,14 +136,18 @@ describe("Card Data Integrity", () => {
   it("each sin has at least one 0-cost card", () => {
     const wrathZeroCost = WRATH_CARDS.filter((c) => c.cost === 0);
     const slothZeroCost = SLOTH_CARDS.filter((c) => c.cost === 0);
+    const greedZeroCost = GREED_CARDS.filter((c) => c.cost === 0);
+    const envyZeroCost = ENVY_CARDS.filter((c) => c.cost === 0);
     expect(wrathZeroCost.length).toBeGreaterThanOrEqual(1);
     expect(slothZeroCost.length).toBeGreaterThanOrEqual(1);
+    expect(greedZeroCost.length).toBeGreaterThanOrEqual(1);
+    expect(envyZeroCost.length).toBeGreaterThanOrEqual(1);
   });
 });
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(20);
+    expect(Object.keys(CARD_MAP)).toHaveLength(40);
   });
 
   it("getCardById returns correct card", () => {

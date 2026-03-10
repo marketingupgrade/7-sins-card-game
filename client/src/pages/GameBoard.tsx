@@ -20,7 +20,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import {
   Flame, Moon, Heart, Swords, SkipForward, Trophy,
-  Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp
+  Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp,
+  Coins, Eye
 } from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, calculateEffectiveValue, MAX_ENERGY, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
@@ -587,6 +588,14 @@ interface PlayerPanelProps {
   isMe?: boolean;
 }
 
+// Sin visual config for PlayerPanel
+const panelSinConfig: Record<string, { color: string; Icon: typeof Flame }> = {
+  wrath: { color: "wrath", Icon: Flame },
+  sloth: { color: "sloth", Icon: Moon },
+  greed: { color: "greed", Icon: Coins },
+  envy: { color: "envy", Icon: Eye },
+};
+
 function PlayerPanel({
   player,
   isCurrentTurn,
@@ -597,10 +606,10 @@ function PlayerPanel({
   currentRound,
   isMe,
 }: PlayerPanelProps) {
-  const isWrath = player.chosenSin === "wrath";
-  const sinColor = isWrath ? "wrath" : "sloth";
+  const cfg = panelSinConfig[player.chosenSin || "wrath"] || panelSinConfig.wrath;
+  const sinColor = cfg.color;
+  const SinIcon = cfg.Icon;
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
-  const SinIcon = isWrath ? Flame : Moon;
   const playerIsBot = isBot(player.id);
 
   return (
@@ -621,7 +630,7 @@ function PlayerPanel({
       {/* Sin color accent */}
       {player.isAlive && (
         <div
-          className={`absolute inset-0 opacity-[0.03] ${isWrath ? "bg-wrath" : "bg-sloth"}`}
+          className={`absolute inset-0 opacity-[0.03] bg-${sinColor}`}
         />
       )}
 
@@ -683,9 +692,7 @@ function PlayerPanel({
             <motion.div
               animate={{ width: `${player.maxEnergy > 0 ? (player.currentEnergy / MAX_ENERGY) * 100 : 0}%` }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`absolute inset-y-0 left-0 rounded-full ${
-                isWrath ? "bg-gradient-to-r from-wrath/80 to-wrath" : "bg-gradient-to-r from-sloth/80 to-sloth"
-              }`}
+              className={`absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-${sinColor}/80 to-${sinColor}`}
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-[7px] font-bold text-foreground/70 drop-shadow-sm">

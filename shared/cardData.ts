@@ -1,13 +1,14 @@
 /**
  * Card Data Definitions for 7 Deadly Sins Card Game
  *
- * MVP includes two sins: Wrath (aggressive burst) and Sloth (defensive stall).
- * Each sin has exactly 10 cards forming a complete deck.
+ * Four sins, each with 10 cards forming a complete deck.
+ * Balanced using EV/Corruption analysis (all within 10% of mean 2.42 EV/C).
  *
  * Design Philosophy:
  * - Wrath: High damage, self-harm, aggressive tempo. Wants to end games fast.
- *   Risky cards get cost reductions to make risk worthwhile.
  * - Sloth: Shields, heals, DoTs, debuffs. Wants to stall and let compounding do the work.
+ * - Greed: Steal/drain, value tempo, heal-from-damage. Snowball advantage.
+ * - Envy: Reactive debuffs, mirror shields, punish strong opponents.
  *
  * Corruption Costs (0-5 range):
  * - 0: Free but risky/conditional cards
@@ -252,8 +253,256 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
 ];
 
+// ─── GREED CARDS (10) ────────────────────────────────────────
+export const GREED_CARDS: CardDefinition[] = [
+  {
+    id: "greed_01",
+    name: "Pocket Pick",
+    sin: "greed",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "What's yours is mine. What's mine is also mine.",
+    narratorQuip: "Stealing HP like it's loose change. Classy.",
+    tier: "common",
+  },
+  {
+    id: "greed_02",
+    name: "Tax Collector",
+    sin: "greed",
+    cost: 1,
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    flavorText: "Nothing is certain except death and taxes. This is both.",
+    narratorQuip: "The only thing more inevitable than this damage is the paperwork.",
+    tier: "common",
+  },
+  {
+    id: "greed_03",
+    name: "Compound Interest",
+    sin: "greed",
+    cost: 2,
+    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
+    flavorText: "The eighth wonder of the world, weaponized.",
+    narratorQuip: "Slow, steady, and absolutely merciless. Just like actual compound interest.",
+    tier: "rare",
+  },
+  {
+    id: "greed_04",
+    name: "Hostile Takeover",
+    sin: "greed",
+    cost: 3,
+    effects: [
+      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
+    ],
+    flavorText: "Your assets are being... restructured.",
+    narratorQuip: "Corporate violence at its finest. The board approves.",
+    tier: "epic",
+  },
+  {
+    id: "greed_05",
+    name: "Golden Shield",
+    sin: "greed",
+    cost: 2,
+    effects: [{ type: "shield", baseValue: 2, duration: 2, target: "self" }],
+    flavorText: "Money can't buy happiness, but it makes excellent armor.",
+    narratorQuip: "Hiding behind gold. The rich person's survival strategy since forever.",
+    tier: "rare",
+  },
+  {
+    id: "greed_06",
+    name: "Embezzle",
+    sin: "greed",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
+    ],
+    flavorText: "Skimming off the top. Nobody will notice. Probably.",
+    narratorQuip: "Creative accounting meets creative violence. Beautiful.",
+    tier: "common",
+  },
+  {
+    id: "greed_07",
+    name: "Market Crash",
+    sin: "greed",
+    cost: 3,
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
+    flavorText: "When the market crashes, everyone loses. Except you.",
+    narratorQuip: "Economic devastation as a weapon. Wall Street would be proud.",
+    tier: "rare",
+  },
+  {
+    id: "greed_08",
+    name: "Loan Shark",
+    sin: "greed",
+    cost: 2,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 2, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "The interest rate is your blood. Terms are non-negotiable.",
+    narratorQuip: "Lending pain at predatory rates. The fine print is brutal.",
+    tier: "rare",
+  },
+  {
+    id: "greed_09",
+    name: "Insider Trading",
+    sin: "greed",
+    cost: 0,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Free information always costs someone. Usually you.",
+    narratorQuip: "Zero cost, maximum fraud. The SEC would like a word.",
+    tier: "rare",
+  },
+  {
+    id: "greed_10",
+    name: "Midas Touch",
+    sin: "greed",
+    cost: 4,
+    effects: [
+      { type: "damage", baseValue: 3, duration: 0, target: "all_enemies" },
+      { type: "heal", baseValue: 3, duration: 0, target: "self" },
+    ],
+    flavorText: "Everything you touch turns to gold. Everything they touch turns to pain.",
+    narratorQuip: "The ultimate power move. Heal yourself while destroying everyone else. Peak greed.",
+    tier: "epic",
+  },
+];
+
+// ─── ENVY CARDS (10) ────────────────────────────────────────
+export const ENVY_CARDS: CardDefinition[] = [
+  {
+    id: "envy_01",
+    name: "Jealous Glare",
+    sin: "envy",
+    cost: 1,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "debuff", baseValue: 1, duration: 1, target: "single_enemy" },
+    ],
+    flavorText: "If looks could kill. Well, this one can.",
+    narratorQuip: "Staring daggers, literally. The pettiest form of combat.",
+    tier: "common",
+  },
+  {
+    id: "envy_02",
+    name: "Bitter Reflection",
+    sin: "envy",
+    cost: 2,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "shield", baseValue: 2, duration: 1, target: "self" },
+    ],
+    flavorText: "Your strength becomes my shield. Poetic, isn't it?",
+    narratorQuip: "Mirroring your opponent's power. Flattery through violence.",
+    tier: "rare",
+  },
+  {
+    id: "envy_03",
+    name: "Covetous Strike",
+    sin: "envy",
+    cost: 1,
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    flavorText: "I want what you have. Starting with your HP.",
+    narratorQuip: "Pure jealousy, concentrated into a fist. Efficient.",
+    tier: "common",
+  },
+  {
+    id: "envy_04",
+    name: "Green-Eyed Curse",
+    sin: "envy",
+    cost: 2,
+    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
+    flavorText: "The curse of wanting what others have. Now it's their problem.",
+    narratorQuip: "A long, lingering curse. Because envy never fades quickly.",
+    tier: "rare",
+  },
+  {
+    id: "envy_05",
+    name: "Spite Shield",
+    sin: "envy",
+    cost: 1,
+    effects: [{ type: "shield", baseValue: 2, duration: 1, target: "self" }],
+    flavorText: "Built from pure resentment. Surprisingly durable.",
+    narratorQuip: "Shielding yourself with spite. Whatever works, I suppose.",
+    tier: "common",
+  },
+  {
+    id: "envy_06",
+    name: "Toxic Comparison",
+    sin: "envy",
+    cost: 3,
+    effects: [
+      { type: "damage", baseValue: 2, duration: 2, target: "single_enemy" },
+      { type: "debuff", baseValue: 1, duration: 2, target: "single_enemy" },
+    ],
+    flavorText: "Comparing yourself to others is poison. Now it's their poison too.",
+    narratorQuip: "Social media in card form. Devastating and persistent.",
+    tier: "epic",
+  },
+  {
+    id: "envy_07",
+    name: "Schadenfreude",
+    sin: "envy",
+    cost: 2,
+    effects: [
+      { type: "damage", baseValue: 1, duration: 0, target: "all_enemies" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Their pain is your pleasure. Literally.",
+    narratorQuip: "Healing from other people's suffering. The most honest card in the game.",
+    tier: "common",
+  },
+  {
+    id: "envy_08",
+    name: "Copycat",
+    sin: "envy",
+    cost: 2,
+    effects: [
+      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Imitation is the sincerest form of violence.",
+    narratorQuip: "Copying someone else's moves but worse. The envy special.",
+    tier: "rare",
+  },
+  {
+    id: "envy_09",
+    name: "Stolen Glory",
+    sin: "envy",
+    cost: 0,
+    effects: [
+      { type: "heal", baseValue: 2, duration: 0, target: "self" },
+      { type: "damage", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Borrowed glory, borrowed pain. The exchange rate is terrible.",
+    narratorQuip: "Free healing with a side of self-loathing. Very on-brand for Envy.",
+    tier: "rare",
+  },
+  {
+    id: "envy_10",
+    name: "Doppelganger",
+    sin: "envy",
+    cost: 4,
+    effects: [
+      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "shield", baseValue: 2, duration: 2, target: "self" },
+      { type: "heal", baseValue: 1, duration: 0, target: "self" },
+    ],
+    flavorText: "Why be yourself when you can be a better version of everyone else?",
+    narratorQuip: "The ultimate identity theft. Damage, shield, AND heal. Greedy for an Envy card.",
+    tier: "epic",
+  },
+];
+
 // ─── Card Registry ───────────────────────────────────────────
-export const ALL_CARDS: CardDefinition[] = [...WRATH_CARDS, ...SLOTH_CARDS];
+export const ALL_CARDS: CardDefinition[] = [...WRATH_CARDS, ...SLOTH_CARDS, ...GREED_CARDS, ...ENVY_CARDS];
 
 export const CARD_MAP: Record<string, CardDefinition> = {};
 ALL_CARDS.forEach((card) => {
@@ -264,9 +513,14 @@ export function getCardById(id: string): CardDefinition | undefined {
   return CARD_MAP[id];
 }
 
-export function getDeckForSin(sin: "wrath" | "sloth"): string[] {
-  const cards = sin === "wrath" ? WRATH_CARDS : SLOTH_CARDS;
-  return cards.map((c) => c.id);
+export function getDeckForSin(sin: "wrath" | "sloth" | "greed" | "envy"): string[] {
+  const cardMap: Record<string, CardDefinition[]> = {
+    wrath: WRATH_CARDS,
+    sloth: SLOTH_CARDS,
+    greed: GREED_CARDS,
+    envy: ENVY_CARDS,
+  };
+  return (cardMap[sin] || []).map((c) => c.id);
 }
 
 // ─── Narrator Lines (Maximum Sass & Cynicism) ────────────────

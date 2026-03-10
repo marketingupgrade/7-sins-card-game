@@ -8,13 +8,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Flame, Moon, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
+import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { chooseSin, startGame, getGameState } from "@/lib/gameEngine";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
-import type { GameState, PlayerState } from "@shared/gameTypes";
+import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
 
 const LOBBY_QUIPS = [
   "The arena smells like bad decisions and desperation.",
@@ -23,6 +23,66 @@ const LOBBY_QUIPS = [
   "The bots are judging you. Yes, the bots.",
   "This is the calm before the emotional damage.",
 ];
+
+// Sin visual and copy config
+const SIN_CONFIG: Record<SinType, {
+  Icon: typeof Flame;
+  color: string;
+  glassClass: string;
+  dropShadow: string;
+  label: string;
+  desc: string;
+  tagline: string;
+  quip: string;
+  subtitle: string;
+}> = {
+  wrath: {
+    Icon: Flame,
+    color: "wrath",
+    glassClass: "glass-panel-wrath",
+    dropShadow: "drop-shadow-[0_0_16px_oklch(0.55_0.25_25)]",
+    label: "WRATH",
+    desc: "High damage. Self-harm. Zero impulse control. Basically you on a Monday.",
+    tagline: "Aggression: Yes",
+    quip: "Wrath. Subtlety was never your strong suit, was it?",
+    subtitle: "anger issues",
+  },
+  sloth: {
+    Icon: Moon,
+    color: "sloth",
+    glassClass: "glass-panel-sloth",
+    dropShadow: "drop-shadow-[0_0_16px_oklch(0.45_0.15_290)]",
+    label: "SLOTH",
+    desc: "Shields. Heals. Letting others die first. A lifestyle, honestly.",
+    tagline: "Effort: Minimal",
+    quip: "Sloth. Winning by doing the bare minimum. Relatable.",
+    subtitle: "lazy genius",
+  },
+  greed: {
+    Icon: Coins,
+    color: "greed",
+    glassClass: "glass-panel-greed",
+    dropShadow: "drop-shadow-[0_0_16px_oklch(0.65_0.15_85)]",
+    label: "GREED",
+    desc: "Steal resources. Drain opponents. Everything has a price, and you're collecting.",
+    tagline: "Profit: Always",
+    quip: "Greed. Taking what isn't yours since... well, always.",
+    subtitle: "gold digger",
+  },
+  envy: {
+    Icon: Eye,
+    color: "envy",
+    glassClass: "glass-panel-envy",
+    dropShadow: "drop-shadow-[0_0_16px_oklch(0.5_0.16_155)]",
+    label: "ENVY",
+    desc: "Copy strengths. Punish the strong. If you can't beat them, become them.",
+    tagline: "Jealousy: Weaponized",
+    quip: "Envy. You want what they have. Classic.",
+    subtitle: "green-eyed",
+  },
+};
+
+const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy"];
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -77,16 +137,12 @@ export default function Lobby() {
   const allChosen = players.length >= 2 && players.every((p) => p.chosenSin);
   const emptySeats = 4 - players.length;
 
-  const handleChooseSin = async (sin: "wrath" | "sloth") => {
+  const handleChooseSin = async (sin: SinType) => {
     if (!gameId) return;
     try {
       await chooseSin(gameId, playerId, sin);
-      addMessage(
-        sin === "wrath"
-          ? "Wrath. Subtlety was never your strong suit, was it?"
-          : "Sloth. Winning by doing the bare minimum. Relatable.",
-        "dramatic"
-      );
+      const cfg = SIN_CONFIG[sin];
+      addMessage(cfg.quip, "dramatic");
       await loadState();
     } catch (err: any) {
       setError(err.message);
@@ -152,6 +208,8 @@ export default function Lobby() {
       {/* Ambient corner glows */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-sloth/5 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-greed/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-envy/5 to-transparent pointer-events-none" />
 
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-8">
         {/* Back Button */}
@@ -263,7 +321,8 @@ export default function Lobby() {
           <div className="grid grid-cols-2 gap-3">
             {players.map((player: PlayerState, i: number) => {
               const playerIsBot = checkIsBot(player.id);
-              const sinColor = player.chosenSin === "wrath" ? "wrath" : player.chosenSin === "sloth" ? "sloth" : null;
+              const sinCfg = player.chosenSin ? SIN_CONFIG[player.chosenSin as SinType] : null;
+              const SinIcon = sinCfg?.Icon;
               return (
                 <motion.div
                   key={player.gamePlayerId}
@@ -271,16 +330,12 @@ export default function Lobby() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * i }}
                   className={`rounded-xl p-4 relative overflow-hidden ${
-                    sinColor === "wrath"
-                      ? "glass-panel-wrath"
-                      : sinColor === "sloth"
-                      ? "glass-panel-sloth"
-                      : "glass-panel"
+                    sinCfg ? sinCfg.glassClass : "glass-panel"
                   }`}
                 >
                   {/* Sin color accent */}
-                  {sinColor && (
-                    <div className={`absolute inset-0 opacity-5 ${sinColor === "wrath" ? "bg-wrath" : "bg-sloth"}`} />
+                  {sinCfg && (
+                    <div className={`absolute inset-0 opacity-5 bg-${sinCfg.color}`} />
                   )}
                   <div className="relative z-10">
                     <div className="flex items-center gap-2 mb-2">
@@ -293,23 +348,17 @@ export default function Lobby() {
                         {player.username || `Player ${i + 1}`}
                       </span>
                     </div>
-                    {player.chosenSin ? (
+                    {sinCfg && SinIcon ? (
                       <div className="flex items-center gap-1.5">
-                        {player.chosenSin === "wrath" ? (
-                          <Flame className="w-3.5 h-3.5 text-wrath" />
-                        ) : (
-                          <Moon className="w-3.5 h-3.5 text-sloth" />
-                        )}
+                        <SinIcon className={`w-3.5 h-3.5 text-${sinCfg.color}`} />
                         <span
-                          className={`text-xs uppercase tracking-wider font-bold ${
-                            player.chosenSin === "wrath" ? "text-wrath" : "text-sloth"
-                          }`}
+                          className={`text-xs uppercase tracking-wider font-bold text-${sinCfg.color}`}
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           {player.chosenSin}
                         </span>
                         <span className="text-[8px] text-muted-foreground/30 ml-auto" style={{ fontFamily: "var(--font-body)" }}>
-                          {player.chosenSin === "wrath" ? "anger issues" : "lazy genius"}
+                          {sinCfg.subtitle}
                         </span>
                       </div>
                     ) : (
@@ -340,7 +389,7 @@ export default function Lobby() {
           </div>
         </motion.div>
 
-        {/* Sin Selection */}
+        {/* Sin Selection - 2x2 Grid */}
         {myPlayer && !myPlayer.chosenSin && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -355,60 +404,41 @@ export default function Lobby() {
               Pick Your Poison
             </h2>
             <p className="text-[9px] text-muted-foreground/30 text-center mb-4" style={{ fontFamily: "var(--font-body)" }}>
-              Both options are terrible. That's the point.
+              All four options are terrible. That's the point.
             </p>
             <div className="grid grid-cols-2 gap-4">
-              <motion.button
-                whileHover={{ scale: 1.03, y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleChooseSin("wrath")}
-                className="glass-panel-wrath rounded-xl p-6 text-center group"
-              >
-                <Flame className="w-10 h-10 text-wrath mx-auto mb-3 group-hover:drop-shadow-[0_0_16px_oklch(0.55_0.25_25)] transition-all" />
-                <h3
-                  className="text-lg font-black text-wrath tracking-wider mb-1"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  WRATH
-                </h3>
-                <p className="text-[10px] text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  High damage. Self-harm. Zero impulse control. Basically you on a Monday.
-                </p>
-                <div className="flex justify-center gap-1 mt-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-wrath" : "bg-wrath/20"}`} />
-                  ))}
-                </div>
-                <p className="text-[7px] text-muted-foreground/20 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
-                  Aggression: Yes
-                </p>
-              </motion.button>
-
-              <motion.button
-                whileHover={{ scale: 1.03, y: -4 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() => handleChooseSin("sloth")}
-                className="glass-panel-sloth rounded-xl p-6 text-center group"
-              >
-                <Moon className="w-10 h-10 text-sloth mx-auto mb-3 group-hover:drop-shadow-[0_0_16px_oklch(0.45_0.15_290)] transition-all" />
-                <h3
-                  className="text-lg font-black text-sloth tracking-wider mb-1"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  SLOTH
-                </h3>
-                <p className="text-[10px] text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Shields. Heals. Letting others die first. A lifestyle, honestly.
-                </p>
-                <div className="flex justify-center gap-1 mt-3">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-sloth" : "bg-sloth/20"}`} />
-                  ))}
-                </div>
-                <p className="text-[7px] text-muted-foreground/20 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
-                  Effort: Minimal
-                </p>
-              </motion.button>
+              {ALL_SINS.map((sin) => {
+                const cfg = SIN_CONFIG[sin];
+                const SinIcon = cfg.Icon;
+                return (
+                  <motion.button
+                    key={sin}
+                    whileHover={{ scale: 1.03, y: -4 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => handleChooseSin(sin)}
+                    className={`${cfg.glassClass} rounded-xl p-5 text-center group`}
+                  >
+                    <SinIcon className={`w-9 h-9 text-${cfg.color} mx-auto mb-2 group-hover:${cfg.dropShadow} transition-all`} />
+                    <h3
+                      className={`text-base font-black text-${cfg.color} tracking-wider mb-1`}
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    >
+                      {cfg.label}
+                    </h3>
+                    <p className="text-[9px] text-muted-foreground/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                      {cfg.desc}
+                    </p>
+                    <div className="flex justify-center gap-1 mt-2">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className={`w-1.5 h-1.5 rounded-full bg-${cfg.color}`} />
+                      ))}
+                    </div>
+                    <p className="text-[7px] text-muted-foreground/20 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                      {cfg.tagline}
+                    </p>
+                  </motion.button>
+                );
+              })}
             </div>
           </motion.div>
         )}
@@ -472,7 +502,7 @@ export default function Lobby() {
             className="text-sm text-muted-foreground/40 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            Everyone needs to pick a sin. It's literally two buttons.
+            Everyone needs to pick a sin. It's literally four buttons.
           </motion.p>
         )}
 

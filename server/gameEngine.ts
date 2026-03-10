@@ -25,6 +25,9 @@ import {
   SLOTH_MAX_CARRYOVER,
   WRATH_OVERCHARGE_HP_COST,
   WRATH_OVERCHARGE_ENERGY_GAIN,
+  GREED_AVARICE_COST_THRESHOLD,
+  GREED_AVARICE_BONUS,
+  ENVY_COVET_BONUS,
   getBaseEnergyForRound,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
@@ -269,6 +272,15 @@ export async function playCard(
 
   // Spend energy
   const newEnergy = currentEnergy - card.cost;
+
+  // Greed AVARICE: playing a card that costs 3+ grants +1 bonus energy next turn
+  if (player.chosen_sin === "greed" && card.cost >= GREED_AVARICE_COST_THRESHOLD) {
+    const currentBonus = player.bonus_energy ?? 0;
+    await sb
+      .from("game_players")
+      .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
+      .eq("id", player.id);
+  }
 
   // Remove card from hand, add to discard
   const newHand = hand.filter((id) => id !== cardId);
@@ -603,6 +615,22 @@ async function refreshPlayerEnergy(player: any, newRound: number): Promise<void>
   if (chosenSin === "sloth" && currentUnspent > 0) {
     // Sloth LETHARGY: unspent energy carries over as +1 per unspent, max +2
     bonusEnergy = Math.min(currentUnspent, SLOTH_MAX_CARRYOVER);
+  } else if (chosenSin === "greed") {
+    // Greed AVARICE: bonus accumulated from playing 3+ cost cards
+    bonusEnergy = player.bonus_energy ?? 0;
+  } else if (chosenSin === "envy") {
+    // Envy COVET: if any opponent has more HP, gain +1 bonus energy
+    const sb2 = getServerSupabase();
+    const { data: allPlayers } = await sb2
+      .from("game_players")
+      .select("current_hp, is_alive, player_id")
+      .eq("game_id", player.game_id);
+    const anyOpponentHigherHp = (allPlayers || []).some(
+      (p: any) => p.player_id !== player.player_id && p.is_alive && p.current_hp > player.current_hp
+    );
+    if (anyOpponentHigherHp) {
+      bonusEnergy = ENVY_COVET_BONUS;
+    }
   }
 
   const totalEnergy = Math.min(baseEnergy + bonusEnergy, MAX_ENERGY);

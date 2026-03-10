@@ -9,7 +9,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles } from "lucide-react";
+import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye } from "lucide-react";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { createGame, joinGame } from "@/lib/gameEngine";
 
@@ -119,8 +119,8 @@ export default function Home() {
 
       {/* Decorative corner accents */}
       <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-sloth/5 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-wrath/3 to-transparent pointer-events-none" />
+      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-greed/5 to-transparent pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-envy/3 to-transparent pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-48 h-48 bg-gradient-to-tl from-sloth/3 to-transparent pointer-events-none" />
 
       {/* Main Content */}
@@ -336,69 +336,45 @@ export default function Home() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="flex gap-6 mt-12"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-3xl"
         >
-          {/* Wrath Preview */}
-          <motion.div
-            whileHover={{ y: -8, scale: 1.04 }}
-            className="glass-panel-wrath rounded-xl p-5 w-48 text-center group"
-          >
-            <Flame className="w-8 h-8 text-wrath mx-auto mb-2 group-hover:drop-shadow-[0_0_16px_oklch(0.55_0.25_25)] transition-all" />
-            <h3
-              className="text-sm font-bold text-wrath tracking-wider mb-1"
-              style={{ fontFamily: "var(--font-heading)" }}
+          {[
+            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum" },
+            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", desc: "Outlast everyone. Let the compounding do the work.", tag: "Endurance: Maximum" },
+            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum" },
+            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum" },
+          ].map((sin) => (
+            <motion.div
+              key={sin.name}
+              whileHover={{ y: -8, scale: 1.04 }}
+              className={`${sin.glass} rounded-xl p-4 text-center group`}
             >
-              WRATH
-            </h3>
-            <p
-              className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Burn fast. Hit hard. Ask questions never. Self-harm is just a bonus.
-            </p>
-            <div className="flex justify-center gap-1 mt-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-wrath" : "bg-wrath/20"}`} />
-              ))}
-            </div>
-            <p
-              className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.2em]"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Aggression: Maximum
-            </p>
-          </motion.div>
-
-          {/* Sloth Preview */}
-          <motion.div
-            whileHover={{ y: -8, scale: 1.04 }}
-            className="glass-panel-sloth rounded-xl p-5 w-48 text-center group"
-          >
-            <Moon className="w-8 h-8 text-sloth mx-auto mb-2 group-hover:drop-shadow-[0_0_16px_oklch(0.45_0.15_290)] transition-all" />
-            <h3
-              className="text-sm font-bold text-sloth tracking-wider mb-1"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              SLOTH
-            </h3>
-            <p
-              className="text-[10px] text-muted-foreground/60 mt-1 leading-relaxed"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              Outlast everyone. Effort is overrated. Let the compounding do the work.
-            </p>
-            <div className="flex justify-center gap-1 mt-3">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < 5 ? "bg-sloth" : "bg-sloth/20"}`} />
-              ))}
-            </div>
-            <p
-              className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.2em]"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              Endurance: Maximum
-            </p>
-          </motion.div>
+              <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all`} />
+              <h3
+                className={`text-sm font-bold text-${sin.color} tracking-wider mb-1`}
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {sin.name}
+              </h3>
+              <p
+                className="text-[9px] text-muted-foreground/60 mt-1 leading-relaxed"
+                style={{ fontFamily: "var(--font-body)" }}
+              >
+                {sin.desc}
+              </p>
+              <div className="flex justify-center gap-1 mt-2">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className={`w-1.5 h-1.5 rounded-full bg-${sin.color}`} />
+                ))}
+              </div>
+              <p
+                className="text-[7px] text-muted-foreground/30 mt-1 uppercase tracking-[0.15em]"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {sin.tag}
+              </p>
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* How It Works - Quick Rules */}

@@ -2,13 +2,13 @@
  * GameCard Component - Premium Glassmorphism Card Design
  *
  * Each card is a tiny window into the soul of its sin.
- * Wrath cards bleed crimson. Sloth cards ooze purple.
- * Both look gorgeous while ruining someone's day.
+ * Wrath bleeds crimson. Sloth oozes purple.
+ * Greed gleams gold. Envy seethes emerald.
  */
 
 import { motion } from "framer-motion";
-import { Flame, Moon, Shield, Heart, Swords, Zap } from "lucide-react";
-import { CardDefinition, calculateEffectiveValue } from "@shared/gameTypes";
+import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye } from "lucide-react";
+import { CardDefinition, SinType, calculateEffectiveValue } from "@shared/gameTypes";
 
 interface GameCardProps {
   card: CardDefinition;
@@ -16,7 +16,7 @@ interface GameCardProps {
   isPlayable: boolean;
   isSelected: boolean;
   onClick: () => void;
-  /** Player's current energy — cards costing more than this are dimmed */
+  /** Player's current energy: cards costing more than this are dimmed */
   playerEnergy?: number;
 }
 
@@ -37,11 +37,7 @@ const effectColors: Record<string, string> = {
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
-  common: {
-    border: "border-border/40",
-    badge: "",
-    glow: "",
-  },
+  common: { border: "border-border/40", badge: "", glow: "" },
   rare: {
     border: "border-neon-cyan/40",
     badge: "bg-neon-cyan text-background",
@@ -54,10 +50,47 @@ const tierStyles: Record<string, { border: string; badge: string; glow: string }
   },
 };
 
+// Per-sin visual config
+const sinConfig: Record<SinType, {
+  color: string;
+  Icon: typeof Flame;
+  cardClass: string;
+  glowClass: string;
+  selectedGradient: string;
+}> = {
+  wrath: {
+    color: "wrath",
+    Icon: Flame,
+    cardClass: "card-wrath",
+    glowClass: "glow-wrath",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.28 25 / 0.15), transparent 70%)",
+  },
+  sloth: {
+    color: "sloth",
+    Icon: Moon,
+    cardClass: "card-sloth",
+    glowClass: "glow-sloth",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.52 0.18 290 / 0.15), transparent 70%)",
+  },
+  greed: {
+    color: "greed",
+    Icon: Coins,
+    cardClass: "card-greed",
+    glowClass: "glow-greed",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.75 0.18 85 / 0.15), transparent 70%)",
+  },
+  envy: {
+    color: "envy",
+    Icon: Eye,
+    cardClass: "card-envy",
+    glowClass: "glow-envy",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.2 155 / 0.15), transparent 70%)",
+  },
+};
+
 export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
-  const isWrath = card.sin === "wrath";
-  const sinColor = isWrath ? "wrath" : "sloth";
-  const SinIcon = isWrath ? Flame : Moon;
+  const cfg = sinConfig[card.sin] || sinConfig.wrath;
+  const SinIcon = cfg.Icon;
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
   const actuallyPlayable = isPlayable && canAfford;
@@ -71,9 +104,9 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       onClick={actuallyPlayable ? onClick : undefined}
       className={`
         relative w-[140px] h-[210px] rounded-xl overflow-hidden select-none
-        ${isWrath ? "card-wrath" : "card-sloth"}
+        ${cfg.cardClass}
         ${tier.border} ${tier.glow}
-        ${isSelected ? (isWrath ? "glow-wrath" : "glow-sloth") : ""}
+        ${isSelected ? cfg.glowClass : ""}
         border-2
         ${!actuallyPlayable ? "opacity-40 cursor-not-allowed saturate-50" : "cursor-pointer"}
         transition-all duration-300
@@ -81,15 +114,13 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
     >
       {/* Subtle inner glow */}
       <div
-        className={`absolute inset-0 opacity-20 bg-gradient-to-b ${
-          isWrath ? "from-wrath/30" : "from-sloth/30"
-        } to-transparent pointer-events-none`}
+        className={`absolute inset-0 opacity-20 bg-gradient-to-b from-${cfg.color}/30 to-transparent pointer-events-none`}
       />
 
-      {/* Card Header - Cost & Sin */}
+      {/* Card Header: Cost & Sin */}
       <div className="relative px-2.5 pt-2 pb-1 flex items-center justify-between">
         <div className="flex items-center gap-1">
-          <SinIcon className={`w-3 h-3 text-${sinColor}`} />
+          <SinIcon className={`w-3 h-3 text-${cfg.color}`} />
           {card.tier !== "common" && (
             <span
               className={`text-[7px] px-1 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}
@@ -103,9 +134,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border ${
             !canAfford
               ? "border-destructive/60 text-destructive bg-destructive/10"
-              : isWrath
-              ? "border-wrath/40 text-wrath bg-wrath/10"
-              : "border-sloth/40 text-sloth bg-sloth/10"
+              : `border-${cfg.color}/40 text-${cfg.color} bg-${cfg.color}/10`
           }`}
           style={{ fontFamily: "var(--font-heading)" }}
           title={`Corruption cost: ${card.cost}`}
@@ -115,19 +144,12 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       </div>
 
       {/* Card Art Area */}
-      <div className={`mx-2 h-14 rounded-lg bg-gradient-to-br ${
-        isWrath ? "from-wrath/15 via-wrath/5" : "from-sloth/15 via-sloth/5"
-      } to-transparent flex items-center justify-center relative overflow-hidden`}>
-        {/* Decorative pattern */}
+      <div className={`mx-2 h-14 rounded-lg bg-gradient-to-br from-${cfg.color}/15 via-${cfg.color}/5 to-transparent flex items-center justify-center relative overflow-hidden`}>
         <div className="absolute inset-0 opacity-10">
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border ${
-            isWrath ? "border-wrath/30" : "border-sloth/30"
-          }`} />
-          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border ${
-            isWrath ? "border-wrath/20" : "border-sloth/20"
-          }`} />
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 rounded-full border border-${cfg.color}/30`} />
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full border border-${cfg.color}/20`} />
         </div>
-        <SinIcon className={`w-7 h-7 text-${sinColor}/30 relative z-10`} />
+        <SinIcon className={`w-7 h-7 text-${cfg.color}/30 relative z-10`} />
       </div>
 
       {/* Card Name */}
@@ -158,7 +180,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
                 <span className="text-muted-foreground/40">(all)</span>
               )}
               {effect.duration > 0 && (
-                <span className="text-muted-foreground/40">×{effect.duration}r</span>
+                <span className="text-muted-foreground/40">{"\u00D7"}{effect.duration}r</span>
               )}
             </div>
           );
@@ -181,11 +203,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           className="absolute inset-0 rounded-xl pointer-events-none"
           animate={{ opacity: [0.1, 0.3, 0.1] }}
           transition={{ duration: 1.5, repeat: Infinity }}
-          style={{
-            background: isWrath
-              ? "radial-gradient(circle at center, oklch(0.6 0.28 25 / 0.15), transparent 70%)"
-              : "radial-gradient(circle at center, oklch(0.52 0.18 290 / 0.15), transparent 70%)",
-          }}
+          style={{ background: cfg.selectedGradient }}
         />
       )}
     </motion.div>

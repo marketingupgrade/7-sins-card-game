@@ -8,7 +8,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Flame, Moon, Shield, Heart, Skull, Zap, TrendingUp, X, ChevronRight
+  Flame, Moon, Shield, Heart, Skull, Zap, TrendingUp, X, ChevronRight, Coins, Eye
 } from "lucide-react";
 import { ActiveEffect, calculateEffectiveValue, PlayerState } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
@@ -198,13 +198,15 @@ export default function CompoundBalanceSheet({
                 {Array.from(playerSummary.entries()).map(([playerId, summary]) => {
                   const player = players.find((p) => p.id === playerId || p.gamePlayerId === playerId);
                   const sin = player?.chosenSin;
-                  const SinIcon = sin === "wrath" ? Flame : Moon;
+                  const sinIconMap: Record<string, typeof Flame> = { wrath: Flame, sloth: Moon, greed: Coins, envy: Eye };
+                  const sinColorMap: Record<string, string> = { wrath: "text-wrath", sloth: "text-sloth", greed: "text-greed", envy: "text-envy" };
+                  const SinIcon = sinIconMap[sin || "wrath"] || Flame;
                   return (
                     <div
                       key={playerId}
                       className="flex items-center gap-2 text-[10px]"
                     >
-                      <SinIcon className={`w-3 h-3 flex-shrink-0 ${sin === "wrath" ? "text-red-400" : "text-purple-400"}`} />
+                      <SinIcon className={`w-3 h-3 flex-shrink-0 ${sinColorMap[sin || "wrath"] || "text-red-400"}`} />
                       <span
                         className="text-foreground/80 truncate flex-1 font-medium"
                         style={{ fontFamily: "var(--font-heading)" }}

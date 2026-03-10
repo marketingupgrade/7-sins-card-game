@@ -6,7 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, CARD_MAP, getCardById, getDeckForSin } from "../shared/cardData";
+import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, CARD_MAP, getCardById, getDeckForSin } from "../shared/cardData";
 import { calculateEffectiveValue, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK } from "../shared/gameTypes";
 
 describe("Card Data Integrity", () => {
@@ -18,8 +18,28 @@ describe("Card Data Integrity", () => {
     expect(SLOTH_CARDS).toHaveLength(10);
   });
 
-  it("has 20 total cards", () => {
-    expect(ALL_CARDS).toHaveLength(20);
+  it("has 40 total cards (4 sins x 10)", () => {
+    expect(ALL_CARDS).toHaveLength(40);
+  });
+
+  it("has exactly 10 greed cards", () => {
+    expect(GREED_CARDS).toHaveLength(10);
+  });
+
+  it("has exactly 10 envy cards", () => {
+    expect(ENVY_CARDS).toHaveLength(10);
+  });
+
+  it("all greed cards have sin=greed", () => {
+    GREED_CARDS.forEach((card) => {
+      expect(card.sin).toBe("greed");
+    });
+  });
+
+  it("all envy cards have sin=envy", () => {
+    ENVY_CARDS.forEach((card) => {
+      expect(card.sin).toBe("envy");
+    });
   });
 
   it("all cards have unique IDs", () => {
@@ -69,7 +89,7 @@ describe("Card Data Integrity", () => {
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(20);
+    expect(Object.keys(CARD_MAP)).toHaveLength(40);
   });
 
   it("getCardById returns correct card", () => {

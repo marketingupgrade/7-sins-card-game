@@ -112,3 +112,18 @@
 ## Bug Fixes (Round 2)
 - [x] Fix decimal numbers in game — all HP/damage/heal values now use Math.round
 - [x] Fix calculateEffectiveValue to always return integers
+
+## New Sin Factions: Greed & Envy
+- [x] Mathematical balance analysis of existing Wrath/Sloth card stats
+- [x] Design Greed faction identity, passive, and 10 cards
+- [x] Design Envy faction identity, passive, and 10 cards
+- [x] Implement Greed card data in cardData.ts
+- [x] Implement Envy card data in cardData.ts
+- [x] Update SinType to include greed and envy
+- [x] Add Greed/Envy color themes and icons to UI
+- [x] Update game engines (client + server) for new sin passives
+- [x] Update bot AI for Greed and Envy decision-making
+- [x] Update Lobby sin selection UI for 4 sins
+- [x] Update Home page to showcase 4 sins
+- [x] Update GameCard and PlayerPanel for new sin colors
+- [x] Update and run all tests (83 tests passing)

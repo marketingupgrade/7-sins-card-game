@@ -6,7 +6,7 @@
  */
 
 // ─── Sin Types ───────────────────────────────────────────────
-export type SinType = "wrath" | "sloth";
+export type SinType = "wrath" | "sloth" | "greed" | "envy";
 
 // ─── Card Effect Types ───────────────────────────────────────
 export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff" | "energy_drain" | "energy_gain";
@@ -52,10 +52,10 @@ export interface CardDefinition {
  * - Can't play a card if you don't have enough Corruption
  *
  * Sin-specific passives:
- * - Wrath: OVERCHARGE — When playing a card, if you have 0 energy remaining
- *   after the cost, gain +1 bonus energy next turn (reward for going all-in)
- * - Sloth: LETHARGY — Unspent energy carries over as +1 bonus next turn
- *   (max +2 carryover, rewards patience and conservation)
+ * - Wrath: OVERCHARGE - Burn 2 HP to gain +1 energy (active ability)
+ * - Sloth: LETHARGY - Unspent energy carries over (max +2 bonus)
+ * - Greed: AVARICE - Playing a card that costs 3+ grants +1 bonus energy next turn
+ * - Envy: COVET - At start of turn, if any opponent has more HP, gain +1 bonus energy
  */
 export const STARTING_ENERGY = 2;
 export const MAX_ENERGY = 7;
@@ -63,6 +63,9 @@ export const ENERGY_PER_ROUND = 1;
 export const SLOTH_MAX_CARRYOVER = 2;
 export const WRATH_OVERCHARGE_HP_COST = 2;
 export const WRATH_OVERCHARGE_ENERGY_GAIN = 1;
+export const GREED_AVARICE_COST_THRESHOLD = 3; // Cards costing 3+ trigger Avarice
+export const GREED_AVARICE_BONUS = 1; // +1 bonus energy next turn
+export const ENVY_COVET_BONUS = 1; // +1 energy if any opponent has more HP
 
 export function getBaseEnergyForRound(round: number): number {
   return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_ROUND, MAX_ENERGY);

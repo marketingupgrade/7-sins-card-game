@@ -7,7 +7,7 @@
  */
 
 import { getClientSupabase } from "../../../shared/supabaseClient";
-import { getCardById, getDeckForSin, WRATH_CARDS, SLOTH_CARDS } from "../../../shared/cardData";
+import { getCardById, getDeckForSin, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS } from "../../../shared/cardData";
 import {
   SinType,
   HAND_SIZE,
@@ -16,6 +16,9 @@ import {
   SLOTH_MAX_CARRYOVER,
   WRATH_OVERCHARGE_HP_COST,
   WRATH_OVERCHARGE_ENERGY_GAIN,
+  GREED_AVARICE_COST_THRESHOLD,
+  GREED_AVARICE_BONUS,
+  ENVY_COVET_BONUS,
   calculateEffectiveValue,
   getBaseEnergyForRound,
 } from "../../../shared/gameTypes";
@@ -100,24 +103,22 @@ export async function addBot(gameId: string): Promise<{ botId: string; botName: 
 export async function botChooseSin(gameId: string, botId: string): Promise<SinType> {
   const sb = getClientSupabase();
 
-  // Get existing sin choices to try to balance
+  // Get existing sin choices to try to balance across all 4 sins
   const { data: players } = await sb
     .from("game_players")
     .select("chosen_sin")
     .eq("game_id", gameId);
 
-  const wrathCount = (players || []).filter((p) => p.chosen_sin === "wrath").length;
-  const slothCount = (players || []).filter((p) => p.chosen_sin === "sloth").length;
+  const allSins: SinType[] = ["wrath", "sloth", "greed", "envy"];
+  const sinCounts = allSins.map((s) => ({
+    sin: s,
+    count: (players || []).filter((p) => p.chosen_sin === s).length,
+  }));
 
-  // Slightly prefer the underrepresented sin, with randomness
-  let sin: SinType;
-  if (wrathCount > slothCount) {
-    sin = Math.random() > 0.3 ? "sloth" : "wrath";
-  } else if (slothCount > wrathCount) {
-    sin = Math.random() > 0.3 ? "wrath" : "sloth";
-  } else {
-    sin = Math.random() > 0.5 ? "wrath" : "sloth";
-  }
+  // Pick the least-chosen sin, with randomness among ties
+  const minCount = Math.min(...sinCounts.map((s) => s.count));
+  const leastChosen = sinCounts.filter((s) => s.count === minCount);
+  const sin: SinType = leastChosen[Math.floor(Math.random() * leastChosen.length)].sin;
 
   await sb
     .from("game_players")
@@ -234,6 +235,15 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
     .from("game_players")
     .update({ hand: newHand, discard_pile: discard, current_energy: energyAfterPlay })
     .eq("id", botPlayer.id);
+
+  // Greed AVARICE: playing a card that costs 3+ grants +1 bonus energy next turn
+  if (botPlayer.chosen_sin === "greed" && card.cost >= GREED_AVARICE_COST_THRESHOLD) {
+    const currentBonus = botPlayer.bonus_energy ?? 0;
+    await sb
+      .from("game_players")
+      .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
+      .eq("id", botPlayer.id);
+  }
 
   // Resolve effects
   for (const effect of card.effects) {
@@ -475,6 +485,21 @@ async function refreshBotEnergy(player: any, newRound: number): Promise<void> {
   let bonusEnergy = 0;
   if (chosenSin === "sloth" && currentUnspent > 0) {
     bonusEnergy = Math.min(currentUnspent, SLOTH_MAX_CARRYOVER);
+  } else if (chosenSin === "greed") {
+    // Greed AVARICE: bonus accumulated from playing 3+ cost cards
+    bonusEnergy = player.bonus_energy ?? 0;
+  } else if (chosenSin === "envy") {
+    // Envy COVET: if any opponent has more HP, gain +1 bonus energy
+    const { data: allPlayers } = await sb
+      .from("game_players")
+      .select("current_hp, is_alive, player_id")
+      .eq("game_id", player.game_id);
+    const anyOpponentHigherHp = (allPlayers || []).some(
+      (p: any) => p.player_id !== player.player_id && p.is_alive && p.current_hp > player.current_hp
+    );
+    if (anyOpponentHigherHp) {
+      bonusEnergy = ENVY_COVET_BONUS;
+    }
   }
 
   const totalEnergy = Math.min(baseEnergy + bonusEnergy, MAX_ENERGY);
