@@ -6,12 +6,12 @@
  * Uses Supabase Realtime for live updates and Motion for animations.
  */
 
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import GameCard from "@/components/GameCard";
 import { trpc } from "@/lib/trpc";
 import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
+import { usePlayerId } from "@/hooks/usePlayerId";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
@@ -24,7 +24,7 @@ import { PlayerState, calculateEffectiveValue } from "../../../shared/gameTypes"
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
-  const { user } = useAuth();
+  const playerId = usePlayerId();
   const [, setLocation] = useLocation();
   const { gameState, isLoading } = useGameState(gameId || null);
   const { displayedText, addMessage, addRandomLine } = useNarrator();
@@ -32,7 +32,7 @@ export default function GameBoard() {
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
 
-  const playCard = trpc.game.playCard.useMutation({
+  const playCardMutation = trpc.game.playCard.useMutation({
     onSuccess: (data) => {
       addMessage(data.narratorQuip, "action");
       setSelectedCard(null);
@@ -54,7 +54,7 @@ export default function GameBoard() {
     { enabled: !!gameId && showLog, refetchInterval: showLog ? 3000 : false }
   );
 
-  const myPlayer = gameState?.players.find((p) => p.id === user?.openId);
+  const myPlayer = gameState?.players.find((p) => p.id === playerId);
   const alivePlayers = useMemo(
     () => gameState?.players.filter((p) => p.isAlive) || [],
     [gameState?.players]
@@ -62,8 +62,8 @@ export default function GameBoard() {
   const isMyTurn = useMemo(() => {
     if (!gameState || !myPlayer) return false;
     const currentPlayer = alivePlayers[gameState.currentPlayerIndex % alivePlayers.length];
-    return currentPlayer?.id === user?.openId;
-  }, [gameState, myPlayer, alivePlayers, user?.openId]);
+    return currentPlayer?.id === playerId;
+  }, [gameState, myPlayer, alivePlayers, playerId]);
 
   const myCards = useMemo(
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
@@ -102,16 +102,17 @@ export default function GameBoard() {
       return;
     }
 
-    playCard.mutate({
+    playCardMutation.mutate({
       gameId,
       cardId: selectedCard,
+      playerId,
       targetPlayerId: selectedTarget || undefined,
     });
-  }, [gameId, selectedCard, selectedTarget, playCard, addMessage]);
+  }, [gameId, selectedCard, selectedTarget, playCardMutation, addMessage, playerId]);
 
   const handlePass = () => {
     if (!gameId) return;
-    passTurn.mutate({ gameId });
+    passTurn.mutate({ gameId, playerId });
   };
 
   // Redirect if game finished
@@ -199,7 +200,7 @@ export default function GameBoard() {
         {/* Opponent Area */}
         <div className="flex justify-center gap-4 px-4 py-3">
           {gameState.players
-            .filter((p) => p.id !== user?.openId)
+            .filter((p) => p.id !== playerId)
             .map((player) => (
               <PlayerPanel
                 key={player.id}
@@ -207,7 +208,7 @@ export default function GameBoard() {
                 isCurrentTurn={
                   alivePlayers[gameState.currentPlayerIndex % alivePlayers.length]?.id === player.id
                 }
-                isTargetable={isMyTurn && !!selectedCard && player.isAlive && player.id !== user?.openId}
+                isTargetable={isMyTurn && !!selectedCard && player.isAlive && player.id !== playerId}
                 isSelected={selectedTarget === player.id}
                 onSelect={() => setSelectedTarget(player.id)}
                 activeEffects={gameState.activeEffects.filter((e) => e.targetPlayerId === player.gamePlayerId)}
@@ -283,10 +284,10 @@ export default function GameBoard() {
                   className="bg-wrath hover:bg-wrath-glow text-white glow-wrath"
                   style={{ fontFamily: "var(--font-heading)" }}
                   onClick={handlePlayCard}
-                  disabled={playCard.isPending}
+                  disabled={playCardMutation.isPending}
                 >
                   <Swords className="w-4 h-4 mr-2" />
-                  {playCard.isPending ? "PLAYING..." : "PLAY CARD"}
+                  {playCardMutation.isPending ? "PLAYING..." : "PLAY CARD"}
                 </Button>
               )}
               <Button

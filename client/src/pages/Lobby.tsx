@@ -5,10 +5,10 @@
  * Uses real-time updates to show when players join and select sins.
  */
 
-import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { trpc } from "@/lib/trpc";
 import { useGameState } from "@/hooks/useGameState";
+import { usePlayerId } from "@/hooks/usePlayerId";
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
@@ -17,7 +17,7 @@ import { SinType } from "../../../shared/gameTypes";
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
-  const { user } = useAuth();
+  const playerId = usePlayerId();
   const [, setLocation] = useLocation();
   const { gameState, isLoading } = useGameState(gameId || null);
   const [copied, setCopied] = useState(false);
@@ -46,7 +46,7 @@ export default function Lobby() {
 
   const handleChooseSin = (sin: SinType) => {
     if (!gameId) return;
-    chooseSin.mutate({ gameId, sin });
+    chooseSin.mutate({ gameId, sin, playerId });
   };
 
   const handleStart = () => {
@@ -54,7 +54,7 @@ export default function Lobby() {
     startGame.mutate({ gameId });
   };
 
-  const myPlayer = gameState?.players.find((p) => p.id === user?.openId);
+  const myPlayer = gameState?.players.find((p) => p.id === playerId);
   const allReady = gameState?.players.every((p) => p.chosenSin) && (gameState?.players.length ?? 0) >= 2;
 
   if (isLoading) {
