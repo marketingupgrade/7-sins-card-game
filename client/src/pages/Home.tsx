@@ -660,6 +660,9 @@ export default function Home() {
           </div>
         </motion.div>
 
+        {/* ═══ Feature #14: Sin Leaderboard Heatmap ═══ */}
+        <SinLeaderboard />
+
         {/* ═══ Footer ═══ */}
         <motion.p
           initial={{ opacity: 0 }}
@@ -685,6 +688,79 @@ export default function Home() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+/* ─── Feature #14: Sin Leaderboard Heatmap ─────────────────────── */
+const SIN_HEX_MAP: Record<SinType, string> = {
+  wrath: "#ef4444", sloth: "#a855f7", greed: "#eab308", envy: "#10b981",
+};
+
+function SinLeaderboard() {
+  const sins: SinType[] = ["wrath", "sloth", "greed", "envy"];
+  const data = sins.map(sin => {
+    const games = parseInt(localStorage.getItem(`7sins_faction_${sin}`) || "0", 10);
+    const wins = parseInt(localStorage.getItem(`7sins_faction_${sin}_wins`) || "0", 10);
+    return { sin, games, wins, winRate: games > 0 ? Math.round((wins / games) * 100) : 0 };
+  });
+
+  const totalGames = parseInt(localStorage.getItem("7sins_total_games") || "0", 10);
+  if (totalGames === 0) return null;
+
+  const maxGames = Math.max(...data.map(d => d.games), 1);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 1.3 }}
+      className="mt-10 max-w-lg w-full"
+    >
+      <div className="glass-panel rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-[10px] tracking-[0.25em] text-candle/50 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+            Your Sin Heatmap
+          </p>
+          <p className="text-[9px] text-muted-foreground/40" style={{ fontFamily: "var(--font-heading)" }}>
+            {totalGames} game{totalGames !== 1 ? "s" : ""} played
+          </p>
+        </div>
+        <div className="space-y-3">
+          {data.sort((a, b) => b.games - a.games).map(({ sin, games, wins, winRate }) => (
+            <div key={sin}>
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <img src={SIN_ARCHETYPE_ICONS[sin]} alt={sin} className="w-4 h-4 object-contain"
+                    style={{ filter: `drop-shadow(0 0 4px ${SIN_HEX_MAP[sin]})` }} />
+                  <span className="text-[10px] uppercase tracking-wider font-bold"
+                    style={{ fontFamily: "var(--font-heading)", color: SIN_HEX_MAP[sin] }}>
+                    {sin}
+                  </span>
+                </div>
+                <span className="text-[9px] text-muted-foreground/50" style={{ fontFamily: "var(--font-heading)" }}>
+                  {wins}W / {games - wins}L · {winRate}%
+                </span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(games / maxGames) * 100}%` }}
+                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  className="h-full rounded-full relative"
+                  style={{ background: SIN_HEX_MAP[sin] }}
+                >
+                  {/* Win fill overlay */}
+                  <div
+                    className="absolute left-0 inset-y-0 rounded-full opacity-60"
+                    style={{ width: `${winRate}%`, background: `${SIN_HEX_MAP[sin]}88` }}
+                  />
+                </motion.div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
   );
 }
 

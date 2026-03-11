@@ -129,6 +129,56 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
   return stats;
 }
 
+// ─── Feature #13: Battle Chronicle generator ───────────────────────────────
+const SIN_EPITHETS: Record<string, string[]> = {
+  wrath: ["the Wrathful", "the Burning", "the Unquenched"],
+  sloth: ["the Languid", "the Dreaming", "the Inert"],
+  greed: ["the Acquisitive", "the Insatiable", "the Golden"],
+  envy: ["the Covetous", "the Emerald", "the Jealous"],
+};
+
+function generateBattleChronicle(
+  isWinner: boolean, name: string, sin: string,
+  stats: PostGameStats, rounds: number
+): string {
+  const epithet = SIN_EPITHETS[sin]?.[Math.floor(Math.random() * 3)] || "the Sinful";
+  const dmgDesc = stats.totalDamageDealt > 40 ? "unleashing a torrent of corruption upon" :
+    stats.totalDamageDealt > 20 ? "striking methodically against" : "cautiously engaging";
+  const healDesc = stats.totalHealingDone > 15 ? ", sustaining themselves through dark ritual" : "";
+  const outcome = isWinner
+    ? `stood victorious in the ${rounds}-round crucible, their sin proving supreme.`
+    : `fell in the arena, their sin consumed by a hungrier darkness.`;
+  return `${name} ${epithet} entered the arena and ${dmgDesc} all who dared oppose them${healDesc}. ` +
+    `${stats.cardsPlayed} cards were played, ${stats.totalDamageDealt} damage dealt, and ${name} ultimately ${outcome}`;
+}
+
+// ─── Feature #15: Key Moments generator ────────────────────────────────────
+function generateKeyMoments(stats: PostGameStats, isWinner: boolean, sin: string): string[] {
+  const moments: string[] = [];
+  if (stats.totalDamageDealt > 30) {
+    moments.push(`Dealt a crushing ${stats.totalDamageDealt} total damage — the arena ran red.`);
+  }
+  if (stats.compoundingEffectsUsed > 1) {
+    moments.push(`${stats.compoundingEffectsUsed} compounding effects stacked — a slow, inevitable doom.`);
+  }
+  if (stats.totalHealingDone > 10) {
+    moments.push(`Recovered ${stats.totalHealingDone} HP — refused to go quietly.`);
+  }
+  if (stats.totalShieldApplied > 10) {
+    moments.push(`Raised ${stats.totalShieldApplied} shield — a fortress made of sin.`);
+  }
+  if (stats.mvpMoment && !stats.mvpMoment.includes("Survived")) {
+    moments.push(stats.mvpMoment);
+  }
+  if (isWinner && moments.length < 2) {
+    moments.push("Outlasted every opponent — patience, cunning, and a touch of evil.");
+  }
+  if (!isWinner && moments.length < 2) {
+    moments.push("Fought with honor. Died with style. There is no shame in the arena.");
+  }
+  return moments.slice(0, 3);
+}
+
 export function GameOverScreen({ players, winnerId, currentPlayerId, currentRound, gameId, onRematch }: GameOverScreenProps) {
   const [, setLocation] = useLocation();
   const winner = players.find((p) => p.id === winnerId);
@@ -353,6 +403,38 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                     <p className="text-[11px] text-white/60 italic" style={{ fontFamily: "var(--font-body)" }}>
                       {stats.mvpMoment}
                     </p>
+                  </div>
+
+                  {/* Feature #13: Battle Chronicle (AI-style narrative) */}
+                  <div className="mt-3 bg-white/5 rounded-lg px-3 py-3 border border-white/5">
+                    <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2">
+                      ✦ Battle Chronicle
+                    </p>
+                    <p className="text-[11px] leading-relaxed italic"
+                       style={{ fontFamily: "var(--font-body)", color: SIN_COLORS[currentPlayer?.chosenSin || 'wrath'] + 'cc' }}>
+                      {generateBattleChronicle(isPlayerWinner, currentPlayer?.username || 'Sinner', currentPlayer?.chosenSin || 'wrath', stats, currentRound)}
+                    </p>
+                  </div>
+
+                  {/* Feature #15: Key Moments Replay */}
+                  <div className="mt-3">
+                    <p className="text-[9px] text-white/30 uppercase tracking-wider mb-2">
+                      ⚔ Key Moments
+                    </p>
+                    <div className="space-y-1">
+                      {generateKeyMoments(stats, isPlayerWinner, currentPlayer?.chosenSin || 'wrath').map((moment, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.5 + i * 0.15 }}
+                          className="flex items-start gap-2 text-[10px] text-white/40"
+                        >
+                          <span style={{ color: SIN_COLORS[currentPlayer?.chosenSin || 'wrath'], flexShrink: 0 }}>▸</span>
+                          <span style={{ fontFamily: "var(--font-body)" }}>{moment}</span>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                 </motion.div>
               )}

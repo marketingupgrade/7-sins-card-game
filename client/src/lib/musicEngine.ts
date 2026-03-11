@@ -233,6 +233,19 @@ class MusicEngine {
     }
   }
 
+  /** Set playback tempo multiplier (1.0 = normal, up to 1.5 for end-game tension) */
+  setTempo(rate: number) {
+    const clampedRate = Math.max(0.7, Math.min(1.6, rate));
+    for (const audio of this.tracks.values()) {
+      audio.playbackRate = clampedRate;
+    }
+  }
+
+  getTempo(): number {
+    const first = this.tracks.values().next().value;
+    return first ? first.playbackRate : 1.0;
+  }
+
   /** Stop all music immediately */
   stopAll() {
     Array.from(this.tracks.keys()).forEach((key) => {
