@@ -204,7 +204,7 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 10;
 export const STARTING_HP = 25;
 export const HAND_SIZE = 5;
-export const CARDS_PER_DECK = 12;
+export const CARDS_PER_DECK = 36;
 export const CATCHUP_HP_THRESHOLD = 10; // 40% of 25 HP
 
 /**

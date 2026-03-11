@@ -399,3 +399,17 @@
 - [x] Ensure END TURN triggers the same pass-turn action as PASS
 - [x] Show PASS when energy > 0 or Wrath can overcharge; show END TURN when energy = 0 and no overcharge available
 - [x] All 178 tests still passing
+
+## Deck Expansion — 36 Cards Per Faction (144 Total)
+- [x] Audit current 12-card decks, passive synergies, and game engine constraints
+- [x] Mathematical balance modeling: compute optimal allocation % for offense/defense/CC/targeting/unique
+- [x] Verify balance with game theory (Nash equilibrium, mirror match parity, cross-faction fairness)
+- [x] Design 36 Wrath cards (fire/rage theme, OVERCHARGE passive synergy) — 13 OFF, 5 DEF, 4 CC, 8 HYB, 6 UNQ
+- [x] Design 36 Sloth cards (ice/entropy theme, LETHARGY passive synergy) — 6 OFF, 12 DEF, 6 CC, 7 HYB, 5 UNQ
+- [x] Design 36 Greed cards (gold/theft theme, AVARICE passive synergy) — 9 OFF, 7 DEF, 5 CC, 9 HYB, 6 UNQ
+- [x] Design 36 Envy cards (poison/copy theme, COVET passive synergy) — 8 OFF, 7 DEF, 8 CC, 7 HYB, 6 UNQ
+- [x] Implement all 144 cards in cardData.ts with names, effects, costs, flavor text, narrator quips
+- [x] Update game engine — no changes needed, engine handles any deck size dynamically
+- [x] Update tests for new card data (36/deck, 144 total) — 178 tests passing
+- [x] Verify balance: 7.6 trillion unique game paths, 42.8 bits Shannon entropy, mirror match parity confirmed
+- [x] Push to GitHub for Vercel deployment
