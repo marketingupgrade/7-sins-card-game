@@ -480,3 +480,13 @@
 - [x] Add DeckPile beside card hand at bottom of screen for current player
 - [x] Ensure layout works on both desktop and mobile
 - [x] Maintain design integrity and smooth UI (178 tests passing)
+
+## Unique Card Art — 144 Cards (COMPLETED)
+- [x] Audit all 144 card names and themes for art direction
+- [x] Search open-source game art libraries (game-icons.net, OpenGameArt) — no full card art available, only small icons
+- [x] AI-generate all 144 card art in consistent dark gothic painterly style (parallel batch generation)
+- [x] Process, download, and upload all 144 images to CDN (4 batches of 36)
+- [x] Create cardArtUrls.ts with 144 CDN URL mappings
+- [x] GameCard component already integrated with CARD_ART_URLS lookup and fallback
+- [x] All 178 tests passing
+- [x] Push to GitHub
