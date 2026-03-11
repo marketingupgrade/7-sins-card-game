@@ -514,3 +514,11 @@
 - [ ] Action feed icons: Painterly Spell Icons before card names, horizontal slide-in
 - [ ] Card fan pivot: transformOrigin 'bottom center' for natural card hand rotation
 - [x] HP flash: red radial gradient flash for 300ms on HP loss (integrated into PlayerPanel portrait filter)
+
+## Bug Fixes & Enhancements (Round 6)
+- [x] Fix "souls remain" text — changed to "players alive"
+- [x] Fix mute toggle — music and SFX now immediately stop/pause when muted
+- [x] Add epic dark fantasy soundtrack — 3 orchestral tracks by Zefz (OpenGameArt CC-BY-SA 3.0): DarkWinds, TheLoomingBattle, FoxieEpic
+- [x] Add card-fly-to-target animation — card arcs from hand toward target player panel with trailing particles and impact flash
+- [x] Improve player card readability — larger panels, expand-on-hover, full names, bigger HP bars
+- [x] Improve affliction table readability — expand-on-hover with smooth animation, larger text, clearer layout

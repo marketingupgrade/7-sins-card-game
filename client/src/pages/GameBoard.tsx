@@ -106,6 +106,7 @@ export default function GameBoard() {
   const [cardArcShow, setCardArcShow] = useState(false);
   const [cardArcName, setCardArcName] = useState('');
   const [cardArcColor, setCardArcColor] = useState('');
+  const [cardArcEndPos, setCardArcEndPos] = useState({ x: 0, y: 0 });
   const prevAliveCounts = useRef<number>(4);
   const [soundVolume] = useState(0.3);
   const [narratorText, setNarratorText] = useState<string | null>(null);
@@ -358,9 +359,23 @@ export default function GameBoard() {
         }
       }
       
-      // Trigger card play arc animation
+      // Trigger card play arc animation toward target
       setCardArcName(card.name);
       setCardArcColor(sinColorMap[card.sin] || '#06b6d4');
+      // Calculate target position from the target player's panel element
+      const actualTarget = target || undefined;
+      if (actualTarget) {
+        const targetEl = document.querySelector(`[data-player-id="${actualTarget}"]`);
+        if (targetEl) {
+          const rect = targetEl.getBoundingClientRect();
+          setCardArcEndPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+        } else {
+          setCardArcEndPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        }
+      } else {
+        // Self-target: arc to center arena
+        setCardArcEndPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+      }
       setCardArcShow(true);
 
       const targetName = target 
@@ -685,7 +700,7 @@ export default function GameBoard() {
                 </div>
               </div>
               <p className="text-sm text-candle/50 font-medium" style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>
-                {alivePlayers.length} souls remain
+                {alivePlayers.length} players alive
               </p>
             </div>
           </div>
@@ -996,8 +1011,8 @@ export default function GameBoard() {
       show={cardArcShow}
       cardName={cardArcName}
       sinColor={cardArcColor}
-      startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 100 }}
-      endPosition={{ x: window.innerWidth / 2, y: window.innerHeight / 2 }}
+      startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 160 }}
+      endPosition={cardArcEndPos}
       onComplete={() => setCardArcShow(false)}
     />
 
@@ -1061,6 +1076,7 @@ function PlayerPanel({
   const sinColor = sinColors[player.chosenSin || "wrath"] || sinColors.wrath;
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Feature: HP-reactive avatar (shake + desaturate on damage)
   const prevHpRef = useRef(player.currentHp);
@@ -1089,25 +1105,37 @@ function PlayerPanel({
 
   const shieldPercent = player.maxHp > 0 ? Math.min((shieldValue / player.maxHp) * 100, 100) : 0;
 
-  const visibleEffects = activeEffects.slice(0, 3);
-  const hiddenEffectsCount = Math.max(0, activeEffects.length - 3);
+  // Show all effects, not just 3
+  const allEffects = activeEffects;
+  const collapsedEffects = activeEffects.slice(0, compact ? 2 : 4);
+  const hiddenEffectsCount = Math.max(0, activeEffects.length - (compact ? 2 : 4));
+
+  // Display name: show full name on hover, truncate otherwise
+  const displayName = player.username + (playerIsBot ? " (BOT)" : "");
 
   return (
     <motion.div
-      whileHover={isTargetable ? { scale: 1.04 } : {}}
+      data-player-id={player.id}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      whileHover={isTargetable ? { scale: 1.04 } : { scale: 1.02 }}
       whileTap={isTargetable ? { scale: 0.97 } : {}}
       onClick={isTargetable ? onSelect : undefined}
+      animate={{
+        width: isHovered && !compact ? 280 : compact ? 170 : 220,
+      }}
+      transition={{ duration: 0.25, ease: "easeOut" }}
       className={`
-        rounded-lg relative overflow-hidden
-        ${compact ? "p-3 min-w-[140px] max-w-[180px]" : "p-4 min-w-[190px] max-w-[240px]"}
+        rounded-lg relative overflow-visible
+        ${compact ? "p-3" : "p-4"}
         ${!player.isAlive ? "opacity-30 grayscale" : ""}
         ${isTargetable && player.isAlive ? "cursor-pointer" : ""}
-        transition-all duration-300
+        transition-colors duration-300
       `}
       style={{
         background: isMe 
-          ? 'linear-gradient(135deg, oklch(0.14 0.02 70 / 0.85), oklch(0.10 0.01 70 / 0.75))'
-          : 'linear-gradient(135deg, oklch(0.12 0.01 280 / 0.75), oklch(0.08 0.005 280 / 0.65))',
+          ? 'linear-gradient(135deg, oklch(0.14 0.02 70 / 0.9), oklch(0.10 0.01 70 / 0.8))'
+          : 'linear-gradient(135deg, oklch(0.12 0.01 280 / 0.8), oklch(0.08 0.005 280 / 0.7))',
         border: isTargetable && player.isAlive 
           ? `2px solid ${sinColor}` 
           : isCurrentTurn 
@@ -1115,17 +1143,20 @@ function PlayerPanel({
             : isMe 
               ? '2px solid oklch(0.75 0.12 70 / 0.25)'
               : '1px solid oklch(0.3 0.02 280 / 0.3)',
-        boxShadow: isTargetable && player.isAlive 
-          ? `0 0 20px ${sinColor}40, inset 0 1px 0 oklch(0.4 0.05 70 / 0.1)` 
-          : isMe 
-            ? 'inset 0 1px 0 oklch(0.4 0.05 70 / 0.15), 0 4px 12px oklch(0 0 0 / 0.3)'
-            : 'inset 0 1px 0 oklch(0.3 0.02 280 / 0.1), 0 2px 8px oklch(0 0 0 / 0.2)',
+        boxShadow: isHovered
+          ? `0 8px 24px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(0.4 0.05 70 / 0.15)${isTargetable && player.isAlive ? `, 0 0 20px ${sinColor}40` : ''}`
+          : isTargetable && player.isAlive 
+            ? `0 0 20px ${sinColor}40, inset 0 1px 0 oklch(0.4 0.05 70 / 0.1)` 
+            : isMe 
+              ? 'inset 0 1px 0 oklch(0.4 0.05 70 / 0.15), 0 4px 12px oklch(0 0 0 / 0.3)'
+              : 'inset 0 1px 0 oklch(0.3 0.02 280 / 0.1), 0 2px 8px oklch(0 0 0 / 0.2)',
         backdropFilter: 'blur(8px)',
+        zIndex: isHovered ? 30 : 1,
       }}
     >
       {/* Stone texture overlay */}
       {player.isAlive && (
-        <div className="absolute inset-0 opacity-[0.04]" style={{ 
+        <div className="absolute inset-0 opacity-[0.04] rounded-lg" style={{ 
           backgroundColor: sinColor,
           backgroundImage: 'radial-gradient(circle at 30% 20%, oklch(1 0 0 / 0.03), transparent 60%)'
         }} />
@@ -1142,9 +1173,10 @@ function PlayerPanel({
       )}
 
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-2">
+        {/* Avatar + Name Row */}
+        <div className="flex items-center gap-2.5 mb-2.5">
           <div 
-            className={`${compact ? "w-9 h-9" : "w-11 h-11"} rounded-full overflow-hidden border-2 flex-shrink-0`} 
+            className={`${compact ? "w-10 h-10" : isHovered ? "w-14 h-14" : "w-12 h-12"} rounded-full overflow-hidden border-2 flex-shrink-0 transition-all duration-200`} 
             style={{ borderColor: sinColor }}
           >
             <motion.img
@@ -1159,32 +1191,54 @@ function PlayerPanel({
           </div>
           
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span
-                className={`${compact ? "text-sm" : "text-base"} font-bold text-foreground truncate`}
+                className={`${compact ? "text-sm" : isHovered ? "text-lg" : "text-base"} font-bold text-foreground transition-all duration-200 ${isHovered ? '' : 'truncate'}`}
                 style={{ 
                   fontFamily: "var(--font-heading)",
-                  textDecoration: !player.isAlive ? "line-through" : "none"
+                  textDecoration: !player.isAlive ? "line-through" : "none",
+                  wordBreak: isHovered ? 'break-word' : undefined,
                 }}
+                title={displayName}
               >
-                {player.username}
-                {playerIsBot && " (BOT)"}
+                {displayName}
               </span>
-              {isMe && <span className="text-candle/60 ml-1 text-xs">(YOU)</span>}
+              {isMe && (
+                <span 
+                  className="text-candle/70 ml-1 text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-full"
+                  style={{ background: 'oklch(0.75 0.12 70 / 0.12)', border: '1px solid oklch(0.75 0.12 70 / 0.2)' }}
+                >
+                  YOU
+                </span>
+              )}
             </div>
             
+            {/* Sin name label */}
+            <span
+              className="text-[11px] font-medium uppercase tracking-wider opacity-60"
+              style={{ fontFamily: "var(--font-heading)", color: sinColor }}
+            >
+              {player.chosenSin || "unknown"}
+            </span>
+
             {isCurrentTurn && player.isAlive && (
-              <motion.div
-                animate={{ opacity: [0.4, 1, 0.4] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-full bg-greed-glow mt-1`}
-              />
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <motion.div
+                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                  className="w-2 h-2 rounded-full bg-greed-glow"
+                />
+                <span className="text-[10px] text-greed-glow/80 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                  Active
+                </span>
+              </div>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 mb-2">
-          <div className={`relative flex-1 ${compact ? "h-4" : "h-5"} bg-muted/50 rounded-full overflow-hidden`}>
+        {/* HP Bar — larger and more readable */}
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className={`relative flex-1 ${compact ? "h-5" : "h-6"} bg-muted/50 rounded-full overflow-hidden`}>
             <motion.div
               animate={{ width: `${hpPercent}%` }}
               transition={{ duration: 0.6, ease: "easeOut" }}
@@ -1196,17 +1250,21 @@ function PlayerPanel({
               <motion.div
                 animate={{ width: `${Math.min(shieldPercent, 100 - hpPercent)}%` }}
                 transition={{ duration: 0.6, ease: "easeOut" }}
-                className="absolute inset-y-0 bg-cyan-400 rounded-full"
+                className="absolute inset-y-0 bg-cyan-400/70 rounded-full"
                 style={{ left: `${hpPercent}%` }}
               />
             )}
+            {/* HP text inside the bar */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-[11px] font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>
+                {player.currentHp}/{player.maxHp}
+                {shieldValue > 0 && <span className="text-cyan-300 ml-1">+{shieldValue}</span>}
+              </span>
+            </div>
           </div>
-          <span className={`${compact ? "text-sm" : "text-base"} font-bold text-foreground flex-shrink-0`}>
-            {player.currentHp}/{player.maxHp}
-            {shieldValue > 0 && <span className="text-cyan-400 ml-1">+{shieldValue}</span>}
-          </span>
         </div>
 
+        {/* Energy Orbs */}
         {player.isAlive && (
           <EnergyOrbs
             current={player.currentEnergy}
@@ -1216,9 +1274,10 @@ function PlayerPanel({
           />
         )}
 
-        {visibleEffects.length > 0 && (
-          <div className="flex gap-1 flex-wrap">
-            {visibleEffects.map((effect, i) => (
+        {/* Effect Badges — show more on hover */}
+        {allEffects.length > 0 && (
+          <div className="flex gap-1 flex-wrap mt-1">
+            {(isHovered ? allEffects : collapsedEffects).map((effect, i) => (
               <EffectBadge
                 key={`${effect.cardId}-${effect.effectType}-${i}`}
                 effect={effect}
@@ -1226,7 +1285,7 @@ function PlayerPanel({
                 compact={compact}
               />
             ))}
-            {hiddenEffectsCount > 0 && (
+            {!isHovered && hiddenEffectsCount > 0 && (
               <div className="inline-flex items-center px-1.5 py-0.5 rounded-md border border-border/30 bg-background/20">
                 <span className="text-xs text-muted-foreground font-bold" style={{ fontFamily: "var(--font-heading)" }}>
                   +{hiddenEffectsCount}
@@ -1236,6 +1295,7 @@ function PlayerPanel({
           </div>
         )}
 
+        {/* Target indicator */}
         {isTargetable && (
           <motion.div
             animate={{ opacity: [0.4, 1, 0.4] }}

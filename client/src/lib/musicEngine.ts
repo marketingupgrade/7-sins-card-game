@@ -3,17 +3,17 @@
  * Separate from SoundEngine (SFX). Handles looping tracks,
  * crossfade between scenes, and independent volume control.
  *
- * Music tracks from OpenGameArt.org (CC-BY 3.0):
- * - "Dark City" by Muncheybobo — Menu/Lobby cyberpunk ambient
- * - "Dark Ambient" by Alexandr Zhelanov — Arena battle tension
- * - "Dark Ambient Loop 13" by MundoSound/Lucas Calvo — Arena drone layer
+ * Music tracks from OpenGameArt.org (CC-BY-SA 3.0) by Zefz:
+ * - "DarkWinds" — Menu/Lobby epic dark fantasy orchestral
+ * - "TheLoomingBattle" — Arena battle epic orchestral
+ * - "FoxieEpic" — Arena drone layer epic fantasy
  */
 
-// CDN URLs for music tracks
+// CDN URLs for music tracks (epic dark fantasy orchestral — Witcher-style)
 const MUSIC_TRACKS = {
-  menu: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310419663028555243/iFOwhCbBFjzOipqw.mp3?Expires=1804709851&Signature=rBBQh0MKPTVgJPAehJMhZbXXczdPKSX6HosRa~SgvKzABoYylDAm96lMGyLLgWpNbKAv3XUpolPw2aNWzxKoiGCMa22jn5s6WPUZlOf6Yu2rs8pfdPMyhJYGfXRO-e4I3HT18~8ikDCHgNIQjaYR9cxdf0FiXnlSfStTHGg3vCmFhLblB9oYvV-Wq9oVCj7DtK~7GNuzE5SOAPmvMd89evnoJCzH9LWkpFe1S-vK46z~P0jh74xKQiTwGV5Am0hFXLHdCopcRRlbyegaZnHsrT1unCKe23CaEOLQjhvcAMU4TD2GQNPuPk4f-CIDha4FtdxZg8NR5NVAQM7JlF6REQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  arena: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310419663028555243/yVcHDIacNpbUIsOQ.mp3?Expires=1804709851&Signature=Ue3taOqMt561ddax3sbsTi~uoE90x0iWllv0vE0C0Qx0yRuOykvTJioz8eWPreGbIHb39cD0Zo6w2r1zarYjeA7wyeg3PpNyOJH7~zkgh-z4pEzS25Ep0irWrmHARblcsgZ7YdfzZ8ebMy0MvajF1ZoxyNTch4WMIoNDMF6nvMAg06j2nN11c-gyykJ4I~o0rr7MMdrX9F5ZshXe4Cpcm2sbCDyhPaq8ZOmtjBaIWiR5D3Ym0cxKdnCVlLWPahZpk~59xlmWYKoQ9Q4GskR6VxURbdRtgnPkJ0OMS1iW5BMdCCwuqL7DgU9bTioC~eYsepJRa4YhfVkhEan8bnsraw__&Key-Pair-Id=K2HSFNDJXOU9YS",
-  arenaDrone: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310419663028555243/VYcHJdJoVmVTJcVE.mp3?Expires=1804709851&Signature=bw6TVcsceXaIdvlAbFYi3hUtHXqhd87Nk~DC7bTDw3J5XZ0srcIylOuVNqpPj26-OlaBo15k8NapFrWWnRt3vK0uJTf5xboZBHADfiwZmGtsaa1Z0aR7DLoRmgBprstKTwGNliau2yWG4XlrAAiZMTBMdw5i1tydTekR30OqAhIk90hr-H87Ea2SNMoQjlYaOOVqezhV8RIXCZm8asyxYOh4iyhA9lHmzDfmDitlHO4kCQECLknd4wz1whDurpC1F-flCfvuTjCskhcMeHzbBa4RHZyn-fSL3o0rjg6HwmYrYIV5ktPm4L1HHqsrMpMrRivr95X--uuxGCVAM1w~xQ__&Key-Pair-Id=K2HSFNDJXOU9YS",
+  menu: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/dark-winds-menu_0c68078a.ogg",
+  arena: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/dark-battle-arena_2953e88a.ogg",
+  arenaDrone: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/foxie-epic-lobby_7f20fd83.ogg",
 } as const;
 
 export type MusicScene = "menu" | "arena" | "silent";
@@ -205,9 +205,14 @@ class MusicEngine {
     } catch {}
 
     if (this.muted) {
-      // Fade all active tracks to 0
+      // Immediately stop all tracks — no fade, instant silence
       for (const trackKey of this.getActiveTracksForScene(this.currentScene)) {
-        this.fadeOut(trackKey);
+        this.clearFade(trackKey);
+        const audio = this.tracks.get(trackKey);
+        if (audio) {
+          audio.volume = 0;
+          audio.pause();
+        }
       }
     } else {
       // Fade active tracks back in
