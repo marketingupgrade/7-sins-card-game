@@ -25,6 +25,8 @@ import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
+import { lazy, Suspense } from "react";
+const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
 import { GameOverScreen } from "@/components/GameOverScreen";
 import { SoundToggle } from "@/components/SoundToggle";
 import { soundEngine } from "@/lib/soundEngine";
@@ -372,6 +374,11 @@ export default function GameBoard() {
   return (
     <ScreenShake trigger={shakeTrigger} intensity={shakeIntensity}>
     <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
+      {/* 3D Gothic Arena Background */}
+      <Suspense fallback={null}>
+        <GameBoardBabylonScene activeSin={mySin} />
+      </Suspense>
+
       {/* Tier 2: Sin-Reactive Background */}
       <SinReactiveBackground
         leadingSin={leadingSin}
@@ -412,12 +419,15 @@ export default function GameBoard() {
         isActive={myPlayer?.isAlive ?? true}
       />
 
-      {/* Top Bar */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border/20 bg-background/40 backdrop-blur-sm">
+      {/* Top Bar — Gothic Stone Header */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
         <div className="flex items-center gap-4">
-          <span className="text-lg font-black text-neon-cyan tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-            R{gameState.currentRound}/{MAX_ROUNDS}
-          </span>
+          <div className="flex items-center gap-2">
+            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-5 h-5 opacity-60" />
+            <span className="text-lg font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+              Round {gameState.currentRound} of {MAX_ROUNDS}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center justify-center flex-1">
@@ -427,8 +437,8 @@ export default function GameBoard() {
               transition={{ duration: 1.5, repeat: Infinity }}
               className="flex items-center gap-2"
             >
-              <div className="w-3 h-3 rounded-full bg-neon-yellow" />
-              <span className="text-sm font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>
+              <div className="w-3 h-3 rounded-full bg-greed-glow" />
+              <span className="text-sm font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
                 YOUR TURN
               </span>
             </motion.div>
@@ -448,7 +458,7 @@ export default function GameBoard() {
         </div>
       </div>
 
-      {/* Arena Grid */}
+      {/* Arena Grid — Gothic Cathedral Interior */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
         <div className="hidden md:grid flex-1 grid-cols-[minmax(160px,220px)_1fr_minmax(160px,220px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
           
@@ -484,21 +494,28 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* CENTER */}
+          {/* CENTER — Ritual Circle */}
           <div className="col-start-2 row-start-2 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-24 h-24 mx-auto rounded-full border border-border/20 flex items-center justify-center mb-3 glass-panel">
+              <div className="w-28 h-28 mx-auto rounded-full border-2 border-candle/30 flex items-center justify-center mb-3 relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 30px oklch(0.75 0.12 70 / 0.1), inset 0 0 20px oklch(0.75 0.12 70 / 0.05)' }}>
+                {/* Rotating ritual ring */}
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                  className="absolute inset-0 rounded-full border border-candle/10"
+                  style={{ borderStyle: 'dashed' }}
+                />
                 <div>
-                  <p className="text-2xl font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>
+                  <p className="text-3xl font-black text-candle" style={{ fontFamily: "var(--font-heading)", textShadow: '0 0 10px oklch(0.75 0.12 70 / 0.4)' }}>
                     {gameState.currentRound}
                   </p>
-                  <p className="text-xs text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  <p className="text-xs text-candle/40 uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-heading)" }}>
                     of {MAX_ROUNDS}
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground/70 font-medium">
-                {alivePlayers.length} alive
+              <p className="text-sm text-candle/50 font-medium" style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>
+                {alivePlayers.length} souls remain
               </p>
             </div>
           </div>
@@ -557,7 +574,7 @@ export default function GameBoard() {
 
           <div className="flex items-center justify-center py-2">
             <div className="flex items-center gap-3 px-4 py-2 rounded-full glass-panel">
-              <span className="text-sm font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm font-bold text-candle" style={{ fontFamily: "var(--font-heading)" }}>
                 R{gameState.currentRound}/{MAX_ROUNDS}
               </span>
               <span className="text-sm text-muted-foreground/70">
@@ -583,8 +600,8 @@ export default function GameBoard() {
           )}
         </div>
 
-        {/* Action Feed */}
-        <div className="px-4 py-2 border-t border-border/10 bg-background/20">
+        {/* Action Feed — Gothic Scroll */}
+        <div className="px-4 py-2 border-t border-candle/10 bg-gradient-to-t from-background/60 to-transparent">
           <div className="max-w-4xl mx-auto">
             <AnimatePresence mode="popLayout">
               {actionFeedState.map((entry) => (
@@ -798,29 +815,46 @@ function PlayerPanel({
       whileTap={isTargetable ? { scale: 0.97 } : {}}
       onClick={isTargetable ? onSelect : undefined}
       className={`
-        rounded-xl border-2 relative overflow-hidden
+        rounded-lg relative overflow-hidden
         ${compact ? "p-3 min-w-[140px] max-w-[180px]" : "p-4 min-w-[190px] max-w-[240px]"}
-        ${isMe ? "glass-panel border-neon-cyan/30" : "glass-panel"}
-        ${isCurrentTurn ? "border-neon-yellow/60" : "border-border/30"}
-        ${isTargetable && player.isAlive ? "cursor-pointer border-2" : ""}
         ${!player.isAlive ? "opacity-30 grayscale" : ""}
+        ${isTargetable && player.isAlive ? "cursor-pointer" : ""}
         transition-all duration-300
       `}
       style={{
-        borderColor: isTargetable && player.isAlive ? sinColor : undefined,
-        boxShadow: isTargetable && player.isAlive ? `0 0 20px ${sinColor}40` : undefined,
+        background: isMe 
+          ? 'linear-gradient(135deg, oklch(0.14 0.02 70 / 0.85), oklch(0.10 0.01 70 / 0.75))'
+          : 'linear-gradient(135deg, oklch(0.12 0.01 280 / 0.75), oklch(0.08 0.005 280 / 0.65))',
+        border: isTargetable && player.isAlive 
+          ? `2px solid ${sinColor}` 
+          : isCurrentTurn 
+            ? '2px solid oklch(0.75 0.12 70 / 0.4)'
+            : isMe 
+              ? '2px solid oklch(0.75 0.12 70 / 0.25)'
+              : '1px solid oklch(0.3 0.02 280 / 0.3)',
+        boxShadow: isTargetable && player.isAlive 
+          ? `0 0 20px ${sinColor}40, inset 0 1px 0 oklch(0.4 0.05 70 / 0.1)` 
+          : isMe 
+            ? 'inset 0 1px 0 oklch(0.4 0.05 70 / 0.15), 0 4px 12px oklch(0 0 0 / 0.3)'
+            : 'inset 0 1px 0 oklch(0.3 0.02 280 / 0.1), 0 2px 8px oklch(0 0 0 / 0.2)',
+        backdropFilter: 'blur(8px)',
       }}
     >
+      {/* Stone texture overlay */}
       {player.isAlive && (
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundColor: sinColor }} />
+        <div className="absolute inset-0 opacity-[0.04]" style={{ 
+          backgroundColor: sinColor,
+          backgroundImage: 'radial-gradient(circle at 30% 20%, oklch(1 0 0 / 0.03), transparent 60%)'
+        }} />
       )}
 
+      {/* Active turn glow */}
       {isCurrentTurn && player.isAlive && (
         <motion.div
-          className="absolute inset-0 rounded-xl"
-          animate={{ opacity: [0.05, 0.15, 0.05] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{ boxShadow: "inset 0 0 20px oklch(0.88 0.16 90 / 0.2)" }}
+          className="absolute inset-0 rounded-lg"
+          animate={{ opacity: [0.05, 0.2, 0.05] }}
+          transition={{ duration: 2.5, repeat: Infinity }}
+          style={{ boxShadow: 'inset 0 0 25px oklch(0.75 0.12 70 / 0.2)' }}
         />
       )}
 
@@ -850,14 +884,14 @@ function PlayerPanel({
                 {player.username}
                 {playerIsBot && " (BOT)"}
               </span>
-              {isMe && <span className="text-neon-cyan/60 ml-1 text-xs">(YOU)</span>}
+              {isMe && <span className="text-candle/60 ml-1 text-xs">(YOU)</span>}
             </div>
             
             {isCurrentTurn && player.isAlive && (
               <motion.div
                 animate={{ opacity: [0.4, 1, 0.4] }}
                 transition={{ duration: 1.5, repeat: Infinity }}
-                className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-full bg-neon-yellow mt-1`}
+                className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-full bg-greed-glow mt-1`}
               />
             )}
           </div>

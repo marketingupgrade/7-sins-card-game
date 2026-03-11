@@ -7,9 +7,10 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Flame, Moon, Shield, Heart, Skull, Zap, TrendingUp, X, ChevronRight, Coins, Eye, Timer, Sparkles
-} from "lucide-react";
+import { X, ChevronRight } from "lucide-react";
+import { ICON_URLS } from "@/lib/assetUrls";
+import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import type { SinType } from "@shared/gameTypes";
 import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, PlayerState } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { isBot } from "@/lib/botEngine";
@@ -39,34 +40,34 @@ interface ProjectedTick {
   isCurrentTick: boolean;
 }
 
-const EFFECT_CONFIG: Record<string, { icon: React.ReactNode; label: string; colorClass: string; bgClass: string; borderClass: string }> = {
+const EFFECT_CONFIG: Record<string, { iconUrl: string; label: string; colorClass: string; bgClass: string; borderClass: string }> = {
   damage: {
-    icon: <Flame className="w-3 h-3" />,
+    iconUrl: ICON_URLS.damage_wrath,
     label: "DMG",
-    colorClass: "text-red-400",
-    bgClass: "bg-red-500/10",
-    borderClass: "border-red-500/20",
+    colorClass: "text-wrath",
+    bgClass: "bg-wrath/10",
+    borderClass: "border-wrath/20",
   },
   heal: {
-    icon: <Heart className="w-3 h-3" />,
+    iconUrl: ICON_URLS.heal_generic,
     label: "HEAL",
-    colorClass: "text-emerald-400",
-    bgClass: "bg-emerald-500/10",
-    borderClass: "border-emerald-500/20",
+    colorClass: "text-envy-glow",
+    bgClass: "bg-envy-glow/10",
+    borderClass: "border-envy-glow/20",
   },
   shield: {
-    icon: <Shield className="w-3 h-3" />,
+    iconUrl: ICON_URLS.shield_generic,
     label: "SHIELD",
-    colorClass: "text-cyan-400",
-    bgClass: "bg-cyan-500/10",
-    borderClass: "border-cyan-500/20",
+    colorClass: "text-candle",
+    bgClass: "bg-candle/10",
+    borderClass: "border-candle/20",
   },
   debuff: {
-    icon: <Skull className="w-3 h-3" />,
+    iconUrl: ICON_URLS.debuff_wrath,
     label: "DEBUFF",
-    colorClass: "text-purple-400",
-    bgClass: "bg-purple-500/10",
-    borderClass: "border-purple-500/20",
+    colorClass: "text-sloth",
+    bgClass: "bg-sloth/10",
+    borderClass: "border-sloth/20",
   },
 };
 
@@ -183,7 +184,7 @@ export default function CompoundBalanceSheet({
           <div className="px-4 pt-4 pb-3 border-b border-border/20">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-neon-cyan" />
+                <img src={ICON_URLS.buff_generic} alt="effects" className="w-4 h-4 object-contain" />
                 <h3
                   className="text-xs font-bold text-foreground tracking-[0.2em] uppercase"
                   style={{ fontFamily: "var(--font-heading)" }}
@@ -219,15 +220,14 @@ export default function CompoundBalanceSheet({
                 {Array.from(playerSummary.entries()).map(([playerId, summary]) => {
                   const player = players.find((p) => p.id === playerId || p.gamePlayerId === playerId);
                   const sin = player?.chosenSin;
-                  const sinIconMap: Record<string, typeof Flame> = { wrath: Flame, sloth: Moon, greed: Coins, envy: Eye };
                   const sinColorMap: Record<string, string> = { wrath: "text-wrath", sloth: "text-sloth", greed: "text-greed", envy: "text-envy" };
-                  const SinIcon = sinIconMap[sin || "wrath"] || Flame;
+                  const sinIconUrl = SIN_ARCHETYPE_ICONS[(sin || "wrath") as SinType];
                   return (
                     <div
                       key={playerId}
                       className="flex items-center gap-2 text-[10px]"
                     >
-                      <SinIcon className={`w-3 h-3 flex-shrink-0 ${sinColorMap[sin || "wrath"] || "text-red-400"}`} />
+                      <img src={sinIconUrl} alt={sin || "wrath"} className="w-3 h-3 flex-shrink-0 object-contain" loading="lazy" />
                       <span
                         className="text-foreground/80 truncate flex-1 font-medium"
                         style={{ fontFamily: "var(--font-heading)" }}
@@ -236,18 +236,18 @@ export default function CompoundBalanceSheet({
                       </span>
                       <div className="flex items-center gap-2 flex-shrink-0">
                         {summary.damage > 0 && (
-                          <span className="text-red-400 font-bold flex items-center gap-0.5">
-                            <Flame className="w-2.5 h-2.5" />-{summary.damage}
+                          <span className="text-wrath font-bold flex items-center gap-0.5">
+                            <img src={ICON_URLS.damage_wrath} alt="dmg" className="w-2.5 h-2.5 object-contain" />-{summary.damage}
                           </span>
                         )}
                         {summary.healing > 0 && (
-                          <span className="text-emerald-400 font-bold flex items-center gap-0.5">
-                            <Heart className="w-2.5 h-2.5" />+{summary.healing}
+                          <span className="text-envy-glow font-bold flex items-center gap-0.5">
+                            <img src={ICON_URLS.heal_generic} alt="heal" className="w-2.5 h-2.5 object-contain" />+{summary.healing}
                           </span>
                         )}
                         {summary.shielding > 0 && (
-                          <span className="text-cyan-400 font-bold flex items-center gap-0.5">
-                            <Shield className="w-2.5 h-2.5" />+{summary.shielding}
+                          <span className="text-candle font-bold flex items-center gap-0.5">
+                            <img src={ICON_URLS.shield_generic} alt="shield" className="w-2.5 h-2.5 object-contain" />+{summary.shielding}
                           </span>
                         )}
                       </div>
@@ -262,7 +262,7 @@ export default function CompoundBalanceSheet({
           <div className="flex-1 overflow-y-auto px-4 py-3">
             {sortedRounds.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center py-8">
-                <Zap className="w-8 h-8 text-muted-foreground/50 mb-3" />
+                <img src={ICON_URLS.energy_generic} alt="empty" className="w-8 h-8 object-contain opacity-50 mb-3" />
                 <p
                   className="text-xs text-muted-foreground/70"
                   style={{ fontFamily: "var(--font-body)" }}
@@ -294,7 +294,7 @@ export default function CompoundBalanceSheet({
                         <div
                           className={`flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider ${
                             isCurrentRound
-                              ? "bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/20"
+                              ? "bg-greed-glow/15 text-greed-glow border border-greed-glow/20"
                               : "bg-muted/30 text-muted-foreground/60 border border-border/10"
                           }`}
                           style={{ fontFamily: "var(--font-heading)" }}
@@ -323,7 +323,7 @@ export default function CompoundBalanceSheet({
                             >
                               {/* Effect Icon */}
                               <div className={`flex-shrink-0 ${config.colorClass}`}>
-                                {config.icon}
+                                <img src={config.iconUrl} alt={config.label} className="w-3 h-3 object-contain" loading="lazy" />
                               </div>
 
                               {/* Target & Details */}
@@ -336,14 +336,14 @@ export default function CompoundBalanceSheet({
                                     {pt.targetName}
                                   </span>
                                   {pt.isCompounding && (
-                                    <span className="text-[7px] px-1 py-0 rounded bg-neon-yellow/15 text-neon-yellow border border-neon-yellow/20 font-bold uppercase flex items-center gap-0.5">
-                                      <Timer className="w-2 h-2" />
+                                    <span className="text-[7px] px-1 py-0 rounded bg-greed-glow/15 text-greed-glow border border-greed-glow/20 font-bold uppercase flex items-center gap-0.5">
+                                      <span className="w-2 h-2 inline-block text-[8px]">⏱</span>
                                       Tick {pt.tickIndex + 1}/{pt.totalTicks}
                                     </span>
                                   )}
                                   {!pt.isCompounding && (
-                                    <span className="text-[7px] px-1 py-0 rounded bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/20 font-bold uppercase flex items-center gap-0.5">
-                                      <Sparkles className="w-2 h-2" />
+                                    <span className="text-[7px] px-1 py-0 rounded bg-candle/15 text-candle border border-candle/20 font-bold uppercase flex items-center gap-0.5">
+                                      <span className="w-2 h-2 inline-block text-[8px]">⚡</span>
                                       FLAT
                                     </span>
                                   )}
@@ -369,7 +369,7 @@ export default function CompoundBalanceSheet({
                                   </div>
                                 )}
                                 {pt.isCompounding && pt.tickIndex < pt.totalTicks - 1 && (
-                                  <div className="text-[7px] text-neon-yellow/50" style={{ fontFamily: "var(--font-heading)" }}>
+                                  <div className="text-[7px] text-greed-glow/50" style={{ fontFamily: "var(--font-heading)" }}>
                                     {pt.totalTicks - pt.tickIndex - 1} tick{pt.totalTicks - pt.tickIndex - 1 > 1 ? "s" : ""} left
                                   </div>
                                 )}
@@ -394,7 +394,7 @@ export default function CompoundBalanceSheet({
           <div className="px-4 py-2.5 border-t border-border/10">
             <div className="space-y-1">
               <p
-                className="text-[9px] text-neon-cyan/60 text-center font-bold"
+                className="text-[9px] text-candle/60 text-center font-bold"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 COMPOUNDING: base &times;1 &rarr; base &times;1 &rarr; base &times;2

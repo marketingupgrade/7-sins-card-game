@@ -4,7 +4,8 @@
  */
 
 import { motion } from "framer-motion";
-import { Skull, ArrowLeft } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { ICON_URLS } from "@/lib/assetUrls";
 import { useLocation } from "wouter";
 
 export default function NotFound() {
@@ -40,7 +41,7 @@ export default function NotFound() {
           animate={{ rotate: [0, 10, -10, 0] }}
           transition={{ duration: 4, repeat: Infinity }}
         >
-          <Skull className="w-20 h-20 text-wrath/60 mx-auto mb-6 drop-shadow-[0_0_20px_oklch(0.6_0.28_25/0.3)]" />
+          <img src={ICON_URLS.debuff_wrath} alt="lost" className="w-20 h-20 object-contain mx-auto mb-6 drop-shadow-[0_0_20px_oklch(0.6_0.28_25/0.3)]" />
         </motion.div>
 
         <h1

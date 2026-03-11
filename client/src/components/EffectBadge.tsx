@@ -8,9 +8,7 @@
 
 import { motion } from "framer-motion";
 import { useState } from "react";
-import {
-  Flame, Heart, Shield, Skull, Zap, TrendingDown, TrendingUp, Sparkles
-} from "lucide-react";
+import { ICON_URLS } from "@/lib/assetUrls";
 import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { getEffectIconUrl } from "@/lib/iconUtils";
@@ -22,7 +20,7 @@ interface EffectBadgeProps {
 }
 
 const EFFECT_CONFIG: Record<string, {
-  icon: typeof Flame;
+  iconUrl: string;
   label: string;
   color: string;
   bgColor: string;
@@ -30,67 +28,66 @@ const EFFECT_CONFIG: Record<string, {
   glowColor: string;
 }> = {
   damage: {
-    icon: Flame,
+    iconUrl: ICON_URLS.damage_wrath,
     label: "DMG",
-    color: "text-red-400",
-    bgColor: "bg-red-500/15",
-    borderColor: "border-red-500/30",
-    glowColor: "shadow-red-500/20",
+    color: "text-wrath",
+    bgColor: "bg-wrath/15",
+    borderColor: "border-wrath/30",
+    glowColor: "shadow-wrath/20",
   },
   heal: {
-    icon: Heart,
+    iconUrl: ICON_URLS.heal_generic,
     label: "HEAL",
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/15",
-    borderColor: "border-emerald-500/30",
-    glowColor: "shadow-emerald-500/20",
+    color: "text-envy-glow",
+    bgColor: "bg-envy-glow/15",
+    borderColor: "border-envy-glow/30",
+    glowColor: "shadow-envy-glow/20",
   },
   shield: {
-    icon: Shield,
+    iconUrl: ICON_URLS.shield_generic,
     label: "SHD",
-    color: "text-cyan-400",
-    bgColor: "bg-cyan-500/15",
-    borderColor: "border-cyan-500/30",
-    glowColor: "shadow-cyan-500/20",
+    color: "text-candle",
+    bgColor: "bg-candle/15",
+    borderColor: "border-candle/30",
+    glowColor: "shadow-candle/20",
   },
   buff: {
-    icon: TrendingUp,
+    iconUrl: ICON_URLS.buff_generic,
     label: "BUFF",
-    color: "text-amber-400",
-    bgColor: "bg-amber-500/15",
-    borderColor: "border-amber-500/30",
-    glowColor: "shadow-amber-500/20",
+    color: "text-greed-glow",
+    bgColor: "bg-greed-glow/15",
+    borderColor: "border-greed-glow/30",
+    glowColor: "shadow-greed-glow/20",
   },
   debuff: {
-    icon: TrendingDown,
+    iconUrl: ICON_URLS.debuff_wrath,
     label: "DEBUF",
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/15",
-    borderColor: "border-purple-500/30",
-    glowColor: "shadow-purple-500/20",
+    color: "text-sloth",
+    bgColor: "bg-sloth/15",
+    borderColor: "border-sloth/30",
+    glowColor: "shadow-sloth/20",
   },
   energy_drain: {
-    icon: Zap,
+    iconUrl: ICON_URLS.steal_envy,
     label: "DRAIN",
-    color: "text-orange-400",
-    bgColor: "bg-orange-500/15",
-    borderColor: "border-orange-500/30",
-    glowColor: "shadow-orange-500/20",
+    color: "text-wrath",
+    bgColor: "bg-wrath/15",
+    borderColor: "border-wrath/30",
+    glowColor: "shadow-wrath/20",
   },
   energy_gain: {
-    icon: Sparkles,
+    iconUrl: ICON_URLS.energy_generic,
     label: "GAIN",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/15",
-    borderColor: "border-yellow-500/30",
-    glowColor: "shadow-yellow-500/20",
+    color: "text-candle",
+    bgColor: "bg-candle/15",
+    borderColor: "border-candle/30",
+    glowColor: "shadow-candle/20",
   },
 };
 
 export default function EffectBadge({ effect, currentRound, compact = false }: EffectBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const cfg = EFFECT_CONFIG[effect.effectType] || EFFECT_CONFIG.damage;
-  const Icon = cfg.icon;
 
   const card = CARD_MAP[effect.cardId];
   const cardSin = card?.sin as SinType | undefined;
@@ -130,9 +127,7 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         style={{ fontFamily: "var(--font-heading)" }}
         title={`${cfg.label} ${currentValue} (${ticksRemaining} rounds left)`}
       >
-        {spellIconUrl
-          ? <img src={spellIconUrl} alt={cfg.label} className="w-3.5 h-3.5 object-contain flex-shrink-0" loading="lazy" />
-          : <Icon className="w-2.5 h-2.5" />}
+        <img src={spellIconUrl || cfg.iconUrl} alt={cfg.label} className="w-3.5 h-3.5 object-contain flex-shrink-0" loading="lazy" />
         <span>{currentValue}</span>
         {isCompounding && (
           <span className="opacity-60 text-[7px]">{currentTick + 1}/{totalTicks}</span>
@@ -165,9 +160,7 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         )}
 
         {/* Effect Icon */}
-        {spellIconUrl
-          ? <img src={spellIconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
-          : <Icon className={`w-3.5 h-3.5 ${cfg.color} flex-shrink-0`} />}
+        <img src={spellIconUrl || cfg.iconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
 
         {/* Value */}
         <span
@@ -204,7 +197,7 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
 
         {isCompounding && (
           <span
-            className="text-[7px] font-bold text-neon-yellow/70 ml-0.5"
+            className="text-[7px] font-bold text-greed-glow/70 ml-0.5"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             C
@@ -221,14 +214,12 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         >
           {/* Card name */}
           <div className="flex items-center gap-1.5 mb-1.5">
-            {spellIconUrl
-              ? <img src={spellIconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
-              : <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />}
+            <img src={spellIconUrl || cfg.iconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
             <span className="text-xs font-bold text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
               {card?.name || "Unknown Effect"}
             </span>
             {isCompounding && (
-              <span className="text-[7px] px-1 py-0.5 rounded bg-neon-yellow/15 text-neon-yellow font-bold border border-neon-yellow/20">
+              <span className="text-[7px] px-1 py-0.5 rounded bg-greed-glow/15 text-greed-glow font-bold border border-greed-glow/20">
                 COMPOUND
               </span>
             )}

@@ -13,7 +13,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect, useMemo, useState } from "react";
-import { Flame, Trophy, Swords, Heart, Shield, Zap, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
+import { ICON_URLS } from "@/lib/assetUrls";
 import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { getGameLog } from "@/lib/gameEngine";
@@ -252,11 +253,11 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                 className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20"
               >
                 <div className="flex items-center justify-center gap-2 mb-1">
-                  <Flame className="w-4 h-4 text-amber-400" />
+                  <img src={ICON_URLS.damage_wrath} alt="fire" className="w-4 h-4 object-contain" />
                   <span className="text-sm font-bold text-amber-400 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                     {winStreak} WIN STREAK
                   </span>
-                  <Flame className="w-4 h-4 text-amber-400" />
+                  <img src={ICON_URLS.damage_wrath} alt="fire" className="w-4 h-4 object-contain" />
                 </div>
                 <p className="text-[10px] text-amber-400/60 italic" style={{ fontFamily: "var(--font-body)" }}>
                   {getStreakComment(winStreak)}
@@ -308,21 +309,21 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                   <p className="text-white/40 text-xs uppercase tracking-widest mb-3">Battle Summary</p>
                   <div className="grid grid-cols-3 gap-2 mb-3">
                     <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <Swords className="w-3.5 h-3.5 text-red-400 mx-auto mb-1" />
+                      <img src={ICON_URLS.damage_wrath} alt="damage" className="w-3.5 h-3.5 object-contain mx-auto mb-1" />
                       <p className="text-lg font-black text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
                         {stats.cardsPlayed}
                       </p>
                       <p className="text-[8px] text-white/40 uppercase tracking-wider">Cards Played</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <Flame className="w-3.5 h-3.5 text-orange-400 mx-auto mb-1" />
+                      <img src={ICON_URLS.damage_greed} alt="cards" className="w-3.5 h-3.5 object-contain mx-auto mb-1" />
                       <p className="text-lg font-black text-orange-400" style={{ fontFamily: "var(--font-heading)" }}>
                         {stats.totalDamageDealt}
                       </p>
                       <p className="text-[8px] text-white/40 uppercase tracking-wider">Damage Dealt</p>
                     </div>
                     <div className="bg-white/5 rounded-lg p-2 text-center">
-                      <Heart className="w-3.5 h-3.5 text-green-400 mx-auto mb-1" />
+                      <img src={ICON_URLS.heal_generic} alt="heal" className="w-3.5 h-3.5 object-contain mx-auto mb-1" />
                       <p className="text-lg font-black text-green-400" style={{ fontFamily: "var(--font-heading)" }}>
                         {stats.totalHealingDone}
                       </p>
@@ -332,12 +333,12 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                   {stats.compoundingEffectsUsed > 0 && (
                     <div className="flex items-center justify-center gap-4 text-[9px] text-white/30 mb-2">
                       <span className="flex items-center gap-1">
-                        <Zap className="w-3 h-3 text-yellow-400/50" />
+                        <img src={ICON_URLS.energy_generic} alt="energy" className="w-3 h-3 object-contain opacity-50" />
                         {stats.compoundingEffectsUsed} compound effects
                       </span>
                       {stats.totalShieldApplied > 0 && (
                         <span className="flex items-center gap-1">
-                          <Shield className="w-3 h-3 text-blue-400/50" />
+                          <img src={ICON_URLS.shield_generic} alt="shield" className="w-3 h-3 object-contain opacity-50" />
                           {stats.totalShieldApplied} shield
                         </span>
                       )}
@@ -346,7 +347,7 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                   {/* MVP Moment */}
                   <div className="bg-white/5 rounded-lg px-3 py-2 border border-white/5">
                     <p className="text-[9px] text-white/30 uppercase tracking-wider mb-1">
-                      <Trophy className="w-3 h-3 inline mr-1 text-amber-400/50" />
+                      <img src={ICON_URLS.buff_generic} alt="streak" className="w-3 h-3 inline mr-1 object-contain opacity-50" />
                       MVP Moment
                     </p>
                     <p className="text-[11px] text-white/60 italic" style={{ fontFamily: "var(--font-body)" }}>

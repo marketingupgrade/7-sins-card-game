@@ -4,7 +4,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { Skull, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { Component, ReactNode } from "react";
 
 interface Props {
@@ -31,21 +31,23 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex items-center justify-center min-h-screen p-8 bg-arena noise-overlay">
           <div className="flex flex-col items-center w-full max-w-2xl p-8 text-center">
-            <Skull
-              size={48}
-              className="text-wrath mb-6 flex-shrink-0 drop-shadow-[0_0_12px_oklch(0.6_0.28_25/0.4)]"
+            <img
+              src="https://cdn.jsdelivr.net/gh/game-icons/icons@latest/ffffff/transparent/1x1/lorc/burning-skull.svg"
+              alt="error"
+              className="w-12 h-12 mb-6 flex-shrink-0 drop-shadow-[0_0_12px_oklch(0.6_0.28_25/0.4)] opacity-80"
+              style={{ filter: 'invert(30%) sepia(100%) saturate(500%) hue-rotate(340deg)' }}
             />
 
             <h2
               className="text-xl mb-2 text-foreground font-bold tracking-wider"
-              style={{ fontFamily: "'Orbitron', sans-serif" }}
+              style={{ fontFamily: "'Cinzel', serif" }}
             >
               WELL, THAT BROKE
             </h2>
 
             <p
               className="text-sm text-muted-foreground/60 mb-4"
-              style={{ fontFamily: "'Rajdhani', sans-serif" }}
+              style={{ fontFamily: "'Cormorant Garamond', serif" }}
             >
               The game crashed. Even the code has its limits. Unlike your poor decisions.
             </p>
@@ -53,7 +55,7 @@ class ErrorBoundary extends Component<Props, State> {
             <p
               className="text-base mb-6"
               style={{
-                fontFamily: "'Creepster', cursive",
+                fontFamily: "'Uncial Antiqua', cursive",
                 color: "oklch(0.82 0.16 195)",
                 textShadow: "0 0 10px oklch(0.82 0.16 195 / 0.5)",
               }}
@@ -75,7 +77,7 @@ class ErrorBoundary extends Component<Props, State> {
                 "hover:opacity-90 cursor-pointer transition-all"
               )}
               style={{
-                fontFamily: "'Orbitron', sans-serif",
+                fontFamily: "'Cinzel', serif",
                 background: "linear-gradient(135deg, oklch(0.55 0.25 25), oklch(0.45 0.22 15))",
                 border: "1px solid oklch(0.6 0.28 25 / 0.5)",
               }}

@@ -1,17 +1,19 @@
 /**
- * Lobby Page - Sin Selection & Bot Management
+ * Lobby Page — Gothic Cathedral Interior
  *
- * Players choose their sin, add bots, and wait for the game to start.
- * Every line of text is dripping with contempt for the player's choices.
+ * A dimly lit cathedral nave where sinners gather before battle.
+ * Babylon.js 3D scene behind the UI. Stone-textured panels, ornate
+ * gold borders, faction altar cards with portraits, and ritual circle
+ * aesthetics. Every line of text drips with contempt.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users, Lock } from "lucide-react";
+import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock } from "lucide-react";
+import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
-import EmberField from "@/components/EmberField";
 import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
 import { useFactionUnlocks, UNLOCK_THRESHOLD, LOCKED_FACTIONS } from "@/hooks/useFactionUnlocks";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
@@ -24,68 +26,122 @@ import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
 
+const LobbyBabylonScene = lazy(() => import("@/components/LobbyBabylonScene"));
+
 const LOBBY_QUIPS = [
-  "The arena smells like bad decisions and desperation.",
-  "Another lobby. Another group of overconfident sinners.",
-  "Pick a sin. It's basically a personality test you'll fail.",
-  "The bots are judging you. Yes, the bots.",
-  "This is the calm before the emotional damage.",
+  "The cathedral echoes with the sound of poor life choices.",
+  "Another gathering of sinners. The pews are weeping.",
+  "Choose your sin. The confessional is permanently closed.",
+  "Even the gargoyles are judging you right now.",
+  "The incense smells like regret and overconfidence.",
 ];
 
-// Sin visual and copy config
+// Sin visual config — gothic cathedral style
 const SIN_CONFIG: Record<SinType, {
   color: string;
   glassClass: string;
-  dropShadow: string;
   label: string;
   desc: string;
   tagline: string;
   quip: string;
   subtitle: string;
+  latin: string;
 }> = {
   wrath: {
     color: "wrath",
     glassClass: "glass-panel-wrath",
-    dropShadow: "drop-shadow-[0_0_16px_oklch(0.55_0.25_25)]",
     label: "WRATH",
-    desc: "High damage. Self-harm. Zero impulse control. Basically you on a Monday.",
-    tagline: "Aggression: Yes",
-    quip: "Wrath. Subtlety was never your strong suit, was it?",
-    subtitle: "anger issues",
+    desc: "Burn everything. Self-harm is just collateral. Impulse control is for the weak.",
+    tagline: "IRA",
+    quip: "Wrath. The cathedral trembles at your rage.",
+    subtitle: "The Destroyer",
+    latin: "Ira",
   },
   sloth: {
     color: "sloth",
     glassClass: "glass-panel-sloth",
-    dropShadow: "drop-shadow-[0_0_16px_oklch(0.45_0.15_290)]",
     label: "SLOTH",
-    desc: "Shields. Heals. Letting others die first. A lifestyle, honestly.",
-    tagline: "Effort: Minimal",
-    quip: "Sloth. Winning by doing the bare minimum. Relatable.",
-    subtitle: "lazy genius",
+    desc: "Outlast everyone. Shields and heals that grow over time. Patience is a weapon.",
+    tagline: "ACEDIA",
+    quip: "Sloth. Even the dust settles faster than you.",
+    subtitle: "The Enduring",
+    latin: "Acedia",
   },
   greed: {
     color: "greed",
     glassClass: "glass-panel-greed",
-    dropShadow: "drop-shadow-[0_0_16px_oklch(0.65_0.15_85)]",
     label: "GREED",
     desc: "Steal resources. Drain opponents. Everything has a price, and you're collecting.",
-    tagline: "Profit: Always",
-    quip: "Greed. Taking what isn't yours since... well, always.",
-    subtitle: "gold digger",
+    tagline: "AVARITIA",
+    quip: "Greed. The offering plates are already empty.",
+    subtitle: "The Collector",
+    latin: "Avaritia",
   },
   envy: {
     color: "envy",
     glassClass: "glass-panel-envy",
-    dropShadow: "drop-shadow-[0_0_16px_oklch(0.5_0.16_155)]",
     label: "ENVY",
     desc: "Copy strengths. Punish the strong. If you can't beat them, become them.",
-    tagline: "Jealousy: Weaponized",
-    quip: "Envy. You want what they have. Classic.",
-    subtitle: "green-eyed",
+    tagline: "INVIDIA",
+    quip: "Envy. The stained glass turns green at your gaze.",
+    subtitle: "The Mimic",
+    latin: "Invidia",
   },
 };
 
 const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy"];
+
+/* ── Ornate Divider SVG ── */
+function OrnamentDivider({ className = "" }: { className?: string }) {
+  return (
+    <div className={`flex items-center justify-center gap-3 ${className}`}>
+      <div className="h-px flex-1 max-w-20 bg-gradient-to-r from-transparent to-candle/30" />
+      <svg width="16" height="16" viewBox="0 0 16 16" className="text-candle/40">
+        <path d="M8 0L10 6L16 8L10 10L8 16L6 10L0 8L6 6Z" fill="currentColor" />
+      </svg>
+      <div className="h-px flex-1 max-w-20 bg-gradient-to-l from-transparent to-candle/30" />
+    </div>
+  );
+}
+
+/* ── Stone Panel wrapper ── */
+function StonePanel({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) {
+  return (
+    <div className={`
+      relative rounded-xl overflow-hidden
+      bg-gradient-to-b from-[#1a1520]/90 to-[#0f0c14]/95
+      border border-candle/15
+      backdrop-blur-md
+      ${glow ? "shadow-[0_0_30px_oklch(0.55_0.12_60/0.15)]" : "shadow-lg shadow-black/40"}
+      ${className}
+    `}>
+      {/* Stone texture overlay */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(200,180,140,0.15) 2px,
+            rgba(200,180,140,0.15) 4px
+          ), repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(200,180,140,0.1) 2px,
+            rgba(200,180,140,0.1) 4px
+          )`
+        }}
+      />
+      {/* Gold corner accents */}
+      <div className="absolute top-0 left-0 w-6 h-6 border-t border-l border-candle/25 rounded-tl-xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-6 h-6 border-t border-r border-candle/25 rounded-tr-xl pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-candle/25 rounded-bl-xl pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-candle/25 rounded-br-xl pointer-events-none" />
+      <div className="relative z-10">{children}</div>
+    </div>
+  );
+}
 
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -100,42 +156,24 @@ export default function Lobby() {
   const { setCurrentPage } = useTutorial();
   const factionUnlocks = useFactionUnlocks();
 
-  // Register this page with the tutorial system
-  useEffect(() => {
-    setCurrentPage("lobby");
-  }, [setCurrentPage]);
-
-  // Keep menu music playing in lobby
-  useEffect(() => {
-    musicEngine.init();
-    musicEngine.setScene("menu");
-  }, []);
-
-  // Random lobby quip on mount
+  useEffect(() => { setCurrentPage("lobby"); }, [setCurrentPage]);
+  useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
   useEffect(() => {
     const quip = LOBBY_QUIPS[Math.floor(Math.random() * LOBBY_QUIPS.length)];
     addMessage(quip, "info");
   }, []);
 
-  // Load game state
   const loadState = useCallback(async () => {
     if (!gameId) return;
     try {
       const gs = await getGameState(gameId);
       setState(gs);
-      if (gs.status === "active") {
-        setLocation(`/game/${gameId}`);
-      }
-    } catch (err: any) {
-      setError(err.message);
-    }
+      if (gs.status === "active") setLocation(`/game/${gameId}`);
+    } catch (err: any) { setError(err.message); }
   }, [gameId, setLocation]);
 
-  useEffect(() => {
-    loadState();
-  }, [loadState]);
+  useEffect(() => { loadState(); }, [loadState]);
 
-  // Real-time subscription
   useEffect(() => {
     if (!gameId) return;
     const supabase = getClientSupabase();
@@ -158,12 +196,9 @@ export default function Lobby() {
     soundEngine.play("ui_click");
     try {
       await chooseSin(gameId, playerId, sin);
-      const cfg = SIN_CONFIG[sin];
-      addMessage(cfg.quip, "dramatic");
+      addMessage(SIN_CONFIG[sin].quip, "dramatic");
       await loadState();
-    } catch (err: any) {
-      setError(err.message);
-    }
+    } catch (err: any) { setError(err.message); }
   };
 
   const handleAddBot = async () => {
@@ -173,154 +208,144 @@ export default function Lobby() {
       soundEngine.play("teleport");
       const { botId, botName } = await addBot(gameId);
       const chosenSin = await botChooseSin(gameId, botId);
-      addMessage(
-        `${botName} joins and picks ${chosenSin}. It doesn't have feelings, so it's already winning.`,
-        "info"
-      );
+      addMessage(`${botName} materializes from the shadows and pledges to ${chosenSin}.`, "info");
       await loadState();
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsAddingBot(false);
-    }
+    } catch (err: any) { setError(err.message); }
+    finally { setIsAddingBot(false); }
   };
 
   const handleStart = async () => {
     if (!gameId || isStarting) return;
     setIsStarting(true);
     soundEngine.play("game_start");
-    try {
-      await startGame(gameId);
-      setLocation(`/game/${gameId}`);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsStarting(false);
-    }
+    try { await startGame(gameId); setLocation(`/game/${gameId}`); }
+    catch (err: any) { setError(err.message); }
+    finally { setIsStarting(false); }
   };
 
   const copyRoomCode = () => {
     if (state?.roomCode) {
       navigator.clipboard.writeText(state.roomCode);
       setCopied(true);
-      addMessage("Copied. Now go bother someone with it.", "info");
+      addMessage("Copied. Now go summon someone with it.", "info");
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  // Loading state
+  // Loading
   if (!state) {
     return (
-      <div className="min-h-screen bg-arena flex flex-col items-center justify-center noise-overlay gap-4">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-          <Skull className="w-12 h-12 text-wrath/40" />
+      <div className="min-h-screen bg-arena flex flex-col items-center justify-center gap-4">
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+          <img src={ICON_URLS.debuff_wrath} alt="" className="w-10 h-10 object-contain opacity-30" />
         </motion.div>
-        <p className="text-sm text-muted-foreground/70" style={{ fontFamily: "var(--font-body)" }}>
-          Summoning the lobby from the void...
+        <p className="text-sm text-candle/40" style={{ fontFamily: "var(--font-body)" }}>
+          Opening the cathedral doors...
         </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-arena relative overflow-hidden noise-overlay">
-      {/* Floating ember particles */}
-      <EmberField count={16} />
-      {/* Ambient corner glows */}
-      <div className="absolute top-0 left-0 w-64 h-64 bg-gradient-to-br from-wrath/5 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-64 h-64 bg-gradient-to-tl from-sloth/5 to-transparent pointer-events-none" />
-      <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-greed/5 to-transparent pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-envy/5 to-transparent pointer-events-none" />
+    <div className="min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(180deg, #0a0810 0%, #12101a 50%, #0a0810 100%)" }}>
+      {/* Babylon.js 3D Cathedral Background */}
+      <Suspense fallback={null}>
+        <LobbyBabylonScene className="opacity-60" />
+      </Suspense>
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-8">
+      {/* Dark gradient overlay for readability */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none" style={{ zIndex: 1 }} />
+
+      {/* Main UI */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-6">
+
         {/* Back Button */}
         <motion.button
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ x: -3 }}
           onClick={() => setLocation("/")}
-          className="self-start mb-4 flex items-center gap-1.5 text-xs text-muted-foreground/70 hover:text-muted-foreground transition-colors"
+          className="self-start mb-4 flex items-center gap-1.5 text-xs text-candle/50 hover:text-candle/80 transition-colors"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
-          FLEE (COWARD)
+          FLEE THE CATHEDRAL
         </motion.button>
 
-        {/* Header */}
+        {/* Header — Cathedral Arch Style */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8"
+          className="text-center mb-6"
         >
-          <motion.div
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 4, repeat: Infinity }}
-            className="flex items-center justify-center gap-3 mb-3"
-          >
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-wrath/30" />
-            <Sparkles className="w-3.5 h-3.5 text-neon-cyan/40" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-sloth/30" />
-          </motion.div>
+          <OrnamentDivider className="mb-3" />
           <p
-            className="text-[10px] tracking-[0.3em] text-muted-foreground/70 uppercase mb-2"
+            className="text-[10px] tracking-[0.4em] text-candle/50 uppercase mb-2"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            The Arena Awaits (Impatiently)
+            The Congregation Assembles
           </p>
           <h1
-            className="text-3xl font-black tracking-wider text-foreground"
-            style={{ fontFamily: "var(--font-heading)" }}
+            className="text-4xl font-black tracking-[0.15em] text-candle text-glow-candle"
+            style={{ fontFamily: "var(--font-display)" }}
           >
-            LOBBY
+            SANCTUM
           </h1>
+          <p className="text-[9px] text-candle/30 mt-1 tracking-[0.2em] uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+            Where sinners gather before judgment
+          </p>
+          <OrnamentDivider className="mt-3" />
         </motion.div>
 
-        {/* Room Code Card */}
+        {/* Room Code — Ornate Stone Tablet */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
           data-tutorial="room-code"
-          className="glass-panel-epic rounded-2xl p-6 mb-6 w-full max-w-lg text-center"
+          className="w-full max-w-lg mb-6"
         >
-          <p
-            className="text-[10px] tracking-[0.2em] text-muted-foreground/70 uppercase mb-3"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            Share this code (assuming you have friends)
-          </p>
-          <div className="flex items-center justify-center gap-3">
-            <span
-              className="text-4xl font-black tracking-[0.5em] text-neon-cyan text-glow-cyan"
+          <StonePanel glow className="p-6 text-center">
+            <p
+              className="text-[10px] tracking-[0.3em] text-candle/50 uppercase mb-3"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              {state.roomCode.split("").map((char, i) => (
-                <motion.span
-                  key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + i * 0.08, duration: 0.3 }}
-                  className="inline-block"
-                >
-                  {char}
-                </motion.span>
-              ))}
-            </span>
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={copyRoomCode}
-              className="p-2.5 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 text-neon-cyan hover:bg-neon-cyan/20 transition-colors"
-            >
-              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            </motion.button>
-          </div>
-          <p className="text-[9px] text-muted-foreground/60 mt-2" style={{ fontFamily: "var(--font-body)" }}>
-            {copied ? "Copied to clipboard. Go spam your group chat." : "Click the icon to copy. Technology is amazing."}
-          </p>
+              Ritual Summoning Code
+            </p>
+            <div className="flex items-center justify-center gap-3">
+              <div className="flex gap-2">
+                {state.roomCode.split("").map((char, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ opacity: 0, y: 15, rotateX: -90 }}
+                    animate={{ opacity: 1, y: 0, rotateX: 0 }}
+                    transition={{ delay: 0.15 + i * 0.08, duration: 0.4, type: "spring" }}
+                    className="inline-flex items-center justify-center w-11 h-14 rounded-lg
+                      bg-gradient-to-b from-candle/10 to-candle/5
+                      border border-candle/20
+                      text-3xl font-black text-candle text-glow-candle"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
+              </div>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={copyRoomCode}
+                className="p-3 rounded-lg bg-candle/10 border border-candle/20 text-candle hover:bg-candle/20 transition-all hover:shadow-[0_0_15px_oklch(0.55_0.12_60/0.2)]"
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              </motion.button>
+            </div>
+            <p className="text-[9px] text-candle/40 mt-3" style={{ fontFamily: "var(--font-body)" }}>
+              {copied ? "Inscribed to your clipboard. Go summon the worthy." : "Share this inscription to summon others to the ritual."}
+            </p>
+          </StonePanel>
         </motion.div>
 
-        {/* Players Grid */}
+        {/* Players — Stone Pew Cards */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -329,11 +354,11 @@ export default function Lobby() {
         >
           <div className="flex items-center justify-between mb-3">
             <h2
-              className="text-xs tracking-[0.2em] text-muted-foreground/80 uppercase flex items-center gap-2"
+              className="text-xs tracking-[0.25em] text-candle/60 uppercase flex items-center gap-2"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               <Users className="w-3.5 h-3.5" />
-              Sinners ({players.length}/4)
+              Congregation ({players.length}/4)
             </h2>
             {isHost && emptySeats > 0 && (
               <motion.button
@@ -342,11 +367,13 @@ export default function Lobby() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAddBot}
                 disabled={isAddingBot}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 text-neon-cyan text-xs hover:bg-neon-cyan/20 transition-colors disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                  bg-candle/8 border border-candle/20 text-candle/80 text-xs
+                  hover:bg-candle/15 hover:border-candle/30 transition-all disabled:opacity-50"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 <Bot className="w-3.5 h-3.5" />
-                {isAddingBot ? "SUMMONING..." : "ADD BOT (NO FRIENDS?)"}
+                {isAddingBot ? "SUMMONING..." : "CONJURE PHANTOM"}
               </motion.button>
             )}
           </div>
@@ -363,73 +390,76 @@ export default function Lobby() {
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * i }}
-                  className={`rounded-xl p-3 relative overflow-hidden ${
-                    sinCfg ? sinCfg.glassClass : "glass-panel"
-                  }`}
                 >
-                  {/* Portrait background */}
-                  {portrait && (
-                    <div className="absolute inset-0 opacity-10">
-                      <img src={portrait} alt="" className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  {/* Sin color accent */}
-                  {sinCfg && !portrait && (
-                    <div className={`absolute inset-0 opacity-5 bg-${sinCfg.color}`} />
-                  )}
-                  <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-2">
-                      {i === 0 && <Crown className="w-3.5 h-3.5 text-neon-yellow" />}
-                      {playerIsBot && <Bot className="w-3.5 h-3.5 text-neon-cyan/50" />}
-                      <span
-                        className="text-sm font-bold text-foreground truncate flex-1"
-                        style={{ fontFamily: "var(--font-heading)" }}
-                      >
-                        {player.username || `Player ${i + 1}`}
-                      </span>
-                    </div>
-                    {sinCfg && sinIcon ? (
-                      <div className="flex items-center gap-1.5">
-                        <img src={sinIcon} alt={player.chosenSin || ''} className="w-5 h-5 object-contain" style={{ filter: `drop-shadow(0 0 4px var(--color-${sinCfg.color}))` }} />
+                  <StonePanel className="p-3 h-full">
+                    {/* Portrait background */}
+                    {portrait && (
+                      <div className="absolute inset-0 opacity-15 rounded-xl overflow-hidden">
+                        <img src={portrait} alt="" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c14] via-[#0f0c14]/80 to-transparent" />
+                      </div>
+                    )}
+                    <div className="relative z-10">
+                      <div className="flex items-center gap-2 mb-2">
+                        {i === 0 && <Crown className="w-3.5 h-3.5 text-candle" />}
+                        {playerIsBot && <Bot className="w-3.5 h-3.5 text-candle/40" />}
                         <span
-                          className={`text-xs uppercase tracking-wider font-bold text-${sinCfg.color}`}
+                          className="text-sm font-bold text-foreground/90 truncate flex-1"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
-                          {player.chosenSin}
-                        </span>
-                        <span className="text-[8px] text-muted-foreground/60 ml-auto" style={{ fontFamily: "var(--font-body)" }}>
-                          {sinCfg.subtitle}
+                          {player.username || `Sinner ${i + 1}`}
                         </span>
                       </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground/70 italic" style={{ fontFamily: "var(--font-body)" }}>
-                        {player.id === playerId ? "That's you. Pick already." : "Still deciding... how hard is this?"}
-                      </span>
-                    )}
-                  </div>
+                      {sinCfg && sinIcon ? (
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full flex items-center justify-center"
+                            style={{ background: `radial-gradient(circle, var(--color-${sinCfg.color}) 0%, transparent 70%)`, opacity: 0.3 }}>
+                            <img src={sinIcon} alt={player.chosenSin || ''} className="w-5 h-5 object-contain" />
+                          </div>
+                          <div>
+                            <span
+                              className={`text-xs uppercase tracking-wider font-bold text-${sinCfg.color}`}
+                              style={{ fontFamily: "var(--font-heading)" }}
+                            >
+                              {sinCfg.latin}
+                            </span>
+                            <p className="text-[8px] text-candle/40" style={{ fontFamily: "var(--font-body)" }}>
+                              {sinCfg.subtitle}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-candle/40 italic" style={{ fontFamily: "var(--font-body)" }}>
+                          {player.id === playerId ? "Awaiting your confession..." : "Contemplating their sins..."}
+                        </span>
+                      )}
+                    </div>
+                  </StonePanel>
                 </motion.div>
               );
             })}
 
-            {/* Empty Seats */}
+            {/* Empty Pews */}
             {Array.from({ length: emptySeats }).map((_, i) => (
               <motion.div
                 key={`empty-${i}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 + 0.1 * i }}
-                className="rounded-xl border border-dashed border-border/15 p-4 flex flex-col items-center justify-center gap-1"
+                className="rounded-xl border border-dashed border-candle/10 p-4 flex flex-col items-center justify-center gap-2"
               >
-                <Skull className="w-4 h-4 text-muted-foreground/10" />
-                <span className="text-[10px] text-muted-foreground/50 italic" style={{ fontFamily: "var(--font-body)" }}>
-                  Waiting for a victim...
+                <div className="w-8 h-8 rounded-full border border-candle/10 flex items-center justify-center">
+                  <img src={ICON_URLS.debuff_wrath} alt="" className="w-4 h-4 object-contain opacity-15" />
+                </div>
+                <span className="text-[10px] text-candle/30 italic" style={{ fontFamily: "var(--font-body)" }}>
+                  Empty pew...
                 </span>
               </motion.div>
             ))}
           </div>
         </motion.div>
 
-        {/* Sin Selection - 2x2 Grid with Faction Unlock Gating */}
+        {/* ── SIN SELECTION — Faction Altar Cards ── */}
         {myPlayer && !myPlayer.chosenSin && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -438,17 +468,19 @@ export default function Lobby() {
             data-tutorial="sin-selection"
             className="w-full max-w-lg mb-6"
           >
+            <OrnamentDivider className="mb-4" />
             <h2
-              className="text-xs tracking-[0.2em] text-muted-foreground/80 uppercase mb-1 text-center"
+              className="text-xs tracking-[0.3em] text-candle/60 uppercase mb-1 text-center"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              Pick Your Poison
+              Choose Your Sin
             </h2>
-            <p className="text-[9px] text-muted-foreground/70 text-center mb-4" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-[9px] text-candle/35 text-center mb-5" style={{ fontFamily: "var(--font-body)" }}>
               {factionUnlocks.isUnlocked
-                ? "All four options are terrible. That's the point."
-                : `Play ${factionUnlocks.gamesRemaining} more game${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
+                ? "Kneel before the altar. All four paths lead to damnation."
+                : `Complete ${factionUnlocks.gamesRemaining} more ritual${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
             </p>
+
             <div className="grid grid-cols-2 gap-4">
               {ALL_SINS.map((sin) => {
                 const cfg = SIN_CONFIG[sin];
@@ -458,82 +490,95 @@ export default function Lobby() {
 
                 if (isLocked) {
                   return (
-                    <motion.div
-                      key={sin}
-                      className="rounded-xl p-3 text-center relative overflow-hidden border border-border/20 bg-black/30"
-                    >
-                      {/* Blurred portrait background */}
-                      <div className="absolute inset-0 opacity-10">
+                    <StonePanel key={sin} className="p-3 text-center opacity-50">
+                      <div className="absolute inset-0 opacity-10 rounded-xl overflow-hidden">
                         <img src={portrait} alt="" className="w-full h-full object-cover blur-sm" />
                       </div>
                       <div className="relative z-10">
                         <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
                           <img src={spellIcon} alt={cfg.label} className="w-9 h-9 object-contain opacity-20" />
-                          <Lock className="w-4 h-4 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" />
+                          <Lock className="w-4 h-4 text-candle/40 absolute -bottom-0.5 -right-0.5" />
                         </div>
-                        <h3
-                          className="text-base font-black text-muted-foreground/30 tracking-wider mb-1"
-                          style={{ fontFamily: "var(--font-heading)" }}
-                        >
+                        <h3 className="text-base font-black text-candle/30 tracking-wider mb-1"
+                          style={{ fontFamily: "var(--font-display)" }}>
                           {cfg.label}
                         </h3>
-                        <p className="text-[10px] text-muted-foreground/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                          Locked — play {factionUnlocks.gamesRemaining} more game{factionUnlocks.gamesRemaining !== 1 ? "s" : ""}
+                        <p className="text-[10px] text-candle/30 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                          Sealed — {factionUnlocks.gamesRemaining} rituals remain
                         </p>
-                        <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-border/20 overflow-hidden">
+                        <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-candle/10 overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${factionUnlocks.progress * 100}%` }}
                             transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="h-full rounded-full"
-                            style={{ background: `linear-gradient(90deg, oklch(0.65 0.15 85 / 0.6), oklch(0.5 0.16 155 / 0.6))` }}
+                            className="h-full rounded-full bg-gradient-to-r from-candle/40 to-candle/60"
                           />
                         </div>
-                        <p className="text-[8px] text-muted-foreground/50 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
-                          {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD} GAMES
+                        <p className="text-[8px] text-candle/30 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                          {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD} RITUALS
                         </p>
                       </div>
-                    </motion.div>
+                    </StonePanel>
                   );
                 }
 
                 return (
                   <motion.button
                     key={sin}
-                    whileHover={{ scale: 1.05, y: -6 }}
+                    whileHover={{ scale: 1.03, y: -4 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleChooseSin(sin)}
-                    className={`${cfg.glassClass} rounded-xl p-3 text-center group pulse-ring holo-sheen transition-shadow duration-300 relative overflow-hidden`}
+                    className="text-left group"
                   >
-                    {/* Portrait background */}
-                    <div className="w-full aspect-[3/4] rounded-lg overflow-hidden mb-2 relative">
-                      <img
-                        src={portrait}
-                        alt={`${cfg.label} faction`}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                      {/* Spell icon overlay in corner */}
-                      <img
-                        src={spellIcon}
-                        alt=""
-                        className="absolute bottom-1.5 right-1.5 w-6 h-6 object-contain opacity-80"
-                        style={{ filter: `drop-shadow(0 0 6px var(--color-${cfg.color}))` }}
-                      />
-                    </div>
-                    <h3
-                      className={`text-base font-black text-${cfg.color} tracking-wider mb-1`}
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      {cfg.label}
-                    </h3>
-                    <p className="text-[10px] text-foreground/70 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                      {cfg.desc}
-                    </p>
-                    <p className="text-[8px] text-muted-foreground/60 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
-                      {cfg.tagline}
-                    </p>
+                    <StonePanel className="p-0 overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_25px_var(--color-${cfg.color}/0.2)]">
+                      {/* Portrait */}
+                      <div className="w-full aspect-[3/4] relative overflow-hidden">
+                        <img
+                          src={portrait}
+                          alt={`${cfg.label} faction`}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          loading="lazy"
+                        />
+                        {/* Gradient overlays */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c14] via-[#0f0c14]/50 to-transparent" />
+                        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c14]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                        {/* Sin icon badge */}
+                        <div className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center
+                          bg-black/50 border border-candle/20 backdrop-blur-sm">
+                          <img src={spellIcon} alt="" className="w-5 h-5 object-contain"
+                            style={{ filter: `drop-shadow(0 0 4px var(--color-${cfg.color}))` }} />
+                        </div>
+
+                        {/* Latin name overlay */}
+                        <div className="absolute bottom-0 left-0 right-0 p-3">
+                          <p className="text-[9px] tracking-[0.3em] text-candle/50 uppercase mb-0.5"
+                            style={{ fontFamily: "var(--font-heading)" }}>
+                            {cfg.latin}
+                          </p>
+                          <h3 className={`text-lg font-black text-${cfg.color} tracking-wider`}
+                            style={{ fontFamily: "var(--font-display)" }}>
+                            {cfg.label}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="p-3 pt-2">
+                        <p className="text-[10px] text-foreground/60 leading-relaxed mb-2"
+                          style={{ fontFamily: "var(--font-body)" }}>
+                          {cfg.desc}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[8px] text-candle/40 uppercase tracking-[0.2em]"
+                            style={{ fontFamily: "var(--font-heading)" }}>
+                            {cfg.subtitle}
+                          </span>
+                          <div className="w-1.5 h-1.5 rounded-full animate-pulse"
+                            style={{ background: `var(--color-${cfg.color})`, boxShadow: `0 0 6px var(--color-${cfg.color})` }} />
+                        </div>
+                      </div>
+                    </StonePanel>
                   </motion.button>
                 );
               })}
@@ -541,7 +586,7 @@ export default function Lobby() {
           </motion.div>
         )}
 
-        {/* Narrator */}
+        {/* Narrator — Parchment Scroll */}
         <AnimatePresence>
           {displayedText && (
             <motion.div
@@ -550,14 +595,16 @@ export default function Lobby() {
               exit={{ opacity: 0, y: -10 }}
               className="w-full max-w-lg mb-6"
             >
-              <div className="glass-panel rounded-xl p-4 text-center">
-                <p className="narrator-text text-sm">"{displayedText}"</p>
-              </div>
+              <StonePanel className="p-4 text-center">
+                <p className="text-sm italic text-candle/70" style={{ fontFamily: "var(--font-body)" }}>
+                  "{displayedText}"
+                </p>
+              </StonePanel>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Start Button */}
+        {/* Start Button — Ritual Activation */}
         {isHost && allChosen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -570,14 +617,24 @@ export default function Lobby() {
               whileTap={{ scale: 0.98 }}
               onClick={handleStart}
               disabled={isStarting}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-wrath via-wrath-glow to-sloth text-white font-black text-lg tracking-wider flex items-center justify-center gap-3 disabled:opacity-50 shadow-[0_0_30px_oklch(0.55_0.25_25/0.3)]"
-              style={{ fontFamily: "var(--font-heading)" }}
+              className="w-full py-4 rounded-xl relative overflow-hidden
+                bg-gradient-to-r from-wrath/80 via-candle/60 to-sloth/80
+                text-white font-black text-lg tracking-[0.15em]
+                flex items-center justify-center gap-3
+                disabled:opacity-50
+                shadow-[0_0_40px_oklch(0.55_0.12_60/0.3)]
+                border border-candle/30"
+              style={{ fontFamily: "var(--font-display)" }}
             >
-              <Play className="w-5 h-5" />
-              {isStarting ? "UNLEASHING CHAOS..." : "LET THE SINS BEGIN"}
+              {/* Shimmer overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite]" />
+              <Play className="w-5 h-5 relative z-10" />
+              <span className="relative z-10">
+                {isStarting ? "COMMENCING RITUAL..." : "BEGIN THE JUDGMENT"}
+              </span>
             </motion.button>
-            <p className="text-[9px] text-muted-foreground/60 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
-              No refunds. No mercy. No take-backsies.
+            <p className="text-[9px] text-candle/30 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
+              No absolution. No mercy. No escape.
             </p>
           </motion.div>
         )}
@@ -585,34 +642,34 @@ export default function Lobby() {
         {/* Waiting messages */}
         {!isHost && !allChosen && (
           <motion.p
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/70 mt-4"
+            animate={{ opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-sm text-candle/40 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            Waiting for the host to stop procrastinating...
+            Awaiting the high priest's command...
           </motion.p>
         )}
 
         {isHost && !allChosen && players.length >= 2 && (
           <motion.p
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/70 mt-4"
+            animate={{ opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-sm text-candle/40 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            Everyone needs to pick a sin. It's literally four buttons.
+            All must confess their sin before the ritual begins.
           </motion.p>
         )}
 
         {isHost && players.length < 2 && (
           <motion.p
-            animate={{ opacity: [0.3, 0.6, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-sm text-muted-foreground/70 mt-4"
+            animate={{ opacity: [0.2, 0.5, 0.2] }}
+            transition={{ duration: 3, repeat: Infinity }}
+            className="text-sm text-candle/40 mt-4"
             style={{ fontFamily: "var(--font-body)" }}
           >
-            Need at least 2 sinners. Add a bot if nobody loves you.
+            The ritual requires at least two souls. Conjure a phantom if none answer.
           </motion.p>
         )}
 
@@ -623,15 +680,17 @@ export default function Lobby() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="mt-4 p-3 rounded-xl bg-wrath/10 border border-wrath/20 max-w-lg w-full"
+              className="mt-4 max-w-lg w-full"
             >
-              <p className="text-sm text-wrath text-center" style={{ fontFamily: "var(--font-body)" }}>{error}</p>
+              <StonePanel className="p-3">
+                <p className="text-sm text-wrath text-center" style={{ fontFamily: "var(--font-body)" }}>{error}</p>
+              </StonePanel>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {/* Faction Unlock Celebration Overlay */}
+      {/* Faction Unlock Celebration */}
       <FactionUnlockCelebration
         show={factionUnlocks.showCelebration}
         onDismiss={factionUnlocks.dismissCelebration}

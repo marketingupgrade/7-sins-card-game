@@ -1,23 +1,22 @@
 /**
- * GameCard Component - Premium Glassmorphism Card Design
+ * GameCard Component — Gothic Cathedral Card Design
  *
- * Each card is a tiny window into the soul of its sin.
- * Wrath bleeds crimson. Sloth oozes purple.
- * Greed gleams gold. Envy seethes emerald.
+ * Each card is a stained-glass window into the soul of its sin.
+ * Wrath bleeds crimson. Sloth oozes twilight indigo.
+ * Greed gleams tarnished gold. Envy seethes poison emerald.
  *
  * Cards are either FLAT (instant, one-time) or COMPOUNDING (3-round Fibonacci escalation).
  *
- * v2: Major readability overhaul — larger fonts, stronger contrast, better mobile layout
+ * v3: Gothic theme — spell icons replace Lucide, ornate borders, cathedral aesthetic
  */
 
 import { motion } from "framer-motion";
 import { useRef, useCallback, useState } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
-import { Flame, Moon, Shield, Heart, Swords, Zap, Coins, Eye, Timer, Sparkles } from "lucide-react";
 import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";
-import { getEffectIconUrl } from "@/lib/iconUtils";
+import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 
 interface GameCardProps {
   card: CardDefinition;
@@ -29,72 +28,57 @@ interface GameCardProps {
   playerEnergy?: number;
 }
 
-const effectIcons: Record<string, typeof Flame> = {
-  damage: Swords,
-  heal: Heart,
-  shield: Shield,
-  buff: Zap,
-  debuff: Moon,
-  energy_drain: Zap,
-  energy_gain: Zap,
-};
-
 const effectColors: Record<string, string> = {
   damage: "text-wrath",
-  heal: "text-neon-green",
-  shield: "text-neon-cyan",
-  buff: "text-neon-yellow",
+  heal: "text-envy-glow",
+  shield: "text-candle",
+  buff: "text-greed-glow",
   debuff: "text-sloth",
   energy_drain: "text-wrath",
-  energy_gain: "text-neon-green",
+  energy_gain: "text-envy-glow",
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
   common: { border: "border-border/40", badge: "", glow: "" },
   rare: {
-    border: "border-neon-cyan/40",
-    badge: "bg-neon-cyan text-background",
-    glow: "shadow-[0_0_8px_oklch(0.82_0.16_195/0.2)]",
+    border: "border-candle/40",
+    badge: "bg-candle text-background",
+    glow: "shadow-[0_0_8px_oklch(0.82_0.12_75/0.2)]",
   },
   epic: {
-    border: "border-neon-yellow/50",
-    badge: "bg-neon-yellow text-background",
-    glow: "shadow-[0_0_12px_oklch(0.88_0.16_90/0.25)]",
+    border: "border-greed-glow/50",
+    badge: "bg-greed-glow text-background",
+    glow: "shadow-[0_0_12px_oklch(0.8_0.18_80/0.25)]",
   },
 };
 
-// Per-sin visual config
+// Per-sin visual config — no Lucide icons
 const sinConfig: Record<SinType, {
   color: string;
-  Icon: typeof Flame;
   cardClass: string;
   glowClass: string;
   selectedGradient: string;
 }> = {
   wrath: {
     color: "wrath",
-    Icon: Flame,
     cardClass: "card-wrath",
     glowClass: "glow-wrath",
     selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.28 25 / 0.15), transparent 70%)",
   },
   sloth: {
     color: "sloth",
-    Icon: Moon,
     cardClass: "card-sloth",
     glowClass: "glow-sloth",
     selectedGradient: "radial-gradient(circle at center, oklch(0.52 0.18 290 / 0.15), transparent 70%)",
   },
   greed: {
     color: "greed",
-    Icon: Coins,
     cardClass: "card-greed",
     glowClass: "glow-greed",
     selectedGradient: "radial-gradient(circle at center, oklch(0.75 0.18 85 / 0.15), transparent 70%)",
   },
   envy: {
     color: "envy",
-    Icon: Eye,
     cardClass: "card-envy",
     glowClass: "glow-envy",
     selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.2 155 / 0.15), transparent 70%)",
@@ -103,11 +87,11 @@ const sinConfig: Record<SinType, {
 
 export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
   const cfg = sinConfig[card.sin] || sinConfig.wrath;
-  const SinIcon = cfg.Icon;
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
   const actuallyPlayable = isPlayable && canAfford;
   const isCompounding = card.cardType === "compounding";
+  const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
 
   // 3D tilt
   const cardRef = useRef<HTMLDivElement>(null);
@@ -158,18 +142,18 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
         style={{ background: `linear-gradient(to bottom, var(--color-${cfg.color}) 0%, transparent 50%)`, opacity: 0.1 }}
       />
 
-      {/* Card Header: Cost, Type Badge & Sin */}
+      {/* Card Header: Cost, Type Badge & Sin Icon */}
       <div className="relative px-3 pt-2.5 pb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
-          <SinIcon className="w-4 h-4" style={{ color: `var(--color-${cfg.color})` }} />
+          {/* Sin archetype icon (spell icon, not Lucide) */}
+          <img src={sinIcon} alt={card.sin} className="w-5 h-5 object-contain drop-shadow-sm" loading="lazy" />
           {/* Card Type Badge */}
           {isCompounding ? (
             <span
               className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
               style={{ fontFamily: "var(--font-heading)" }}
-              title="Compounding: ticks for 3 rounds [1×, 1×, 2×]"
+              title="Compounding: ticks for 3 rounds [1x, 1x, 2x]"
             >
-              <Timer className="w-3 h-3 inline mr-0.5" />
               3R
             </span>
           ) : (
@@ -178,7 +162,6 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
               style={{ fontFamily: "var(--font-heading)" }}
               title="Flat: instant one-time effect"
             >
-              <Sparkles className="w-3 h-3 inline mr-0.5" />
               FLAT
             </span>
           )}
@@ -227,7 +210,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <SinIcon className="w-10 h-10" style={{ color: `color-mix(in oklch, var(--color-${cfg.color}) 40%, transparent)` }} />
+            <img src={sinIcon} alt={card.sin} className="w-10 h-10 object-contain opacity-40" loading="lazy" />
           </div>
         )}
         {/* Art overlay gradient for text readability */}
@@ -251,19 +234,18 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
         </h4>
       </div>
 
-      {/* Effects List — bigger, bolder, more readable */}
+      {/* Effects List — spell icons instead of Lucide */}
       <div className="px-3 space-y-1">
         {card.effects.map((effect, i) => {
-          const EffectIcon = effectIcons[effect.type] || Zap;
           const color = effectColors[effect.type] || "text-muted-foreground";
+          const iconUrl = getEffectIconUrl(effect.type, card.sin);
           return (
             <div key={i} className="flex items-center gap-2 text-[12px] sm:text-[13px]">
-              {(() => {
-                const iconUrl = getEffectIconUrl(effect.type, card.sin);
-                return iconUrl
-                  ? <img src={iconUrl} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm" loading="lazy" />
-                  : <EffectIcon className={`w-4 h-4 ${color} flex-shrink-0`} />;
-              })()}
+              {iconUrl ? (
+                <img src={iconUrl} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm" loading="lazy" />
+              ) : (
+                <img src={sinIcon} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm opacity-60" loading="lazy" />
+              )}
               <span
                 className="text-foreground/80 capitalize font-semibold"
                 style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
@@ -273,10 +255,10 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
               {isCompounding ? (
                 <span
                   className={`font-black ${color}`}
-                  title={`Ticks: ${COMPOUND_MULTIPLIERS.map((m) => effect.baseValue * m).join(" → ")}`}
+                  title={`Ticks: ${COMPOUND_MULTIPLIERS.map((m) => effect.baseValue * m).join(" -> ")}`}
                   style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
                 >
-                  {getCompoundTickValue(effect.baseValue, 0)}→{getCompoundTickValue(effect.baseValue, 1)}→{getCompoundTickValue(effect.baseValue, 2)}
+                  {getCompoundTickValue(effect.baseValue, 0)}-&gt;{getCompoundTickValue(effect.baseValue, 1)}-&gt;{getCompoundTickValue(effect.baseValue, 2)}
                 </span>
               ) : (
                 <span
@@ -300,9 +282,9 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       {/* Catch-up indicator */}
       {card.catchup && (
         <div className="px-3 mt-1">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] px-2 py-1 rounded bg-neon-yellow/10 border border-neon-yellow/20">
-            <Zap className="w-3 h-3 text-neon-yellow flex-shrink-0" />
-            <span className="text-neon-yellow/90 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] px-2 py-1 rounded bg-greed-glow/10 border border-greed-glow/20">
+            <img src={SIN_ARCHETYPE_ICONS.greed} alt="catch-up" className="w-3 h-3 object-contain flex-shrink-0" loading="lazy" />
+            <span className="text-greed-glow/90 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
               Catch-up
             </span>
             <span className="text-foreground/50 font-medium">

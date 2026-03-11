@@ -235,12 +235,12 @@ export default function TutorialOverlay() {
           style={tooltipStyle}
           className="z-[10000] pointer-events-auto"
         >
-          <div className="bg-background/95 backdrop-blur-xl border border-neon-cyan/30 rounded-2xl p-5 shadow-[0_0_30px_oklch(0.82_0.16_195/0.15)]">
+          <div className="bg-background/95 backdrop-blur-xl border border-candle/30 rounded-2xl p-5 shadow-[0_0_30px_oklch(0.82_0.16_195/0.15)]">
             {/* Header */}
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-neon-cyan/10 border border-neon-cyan/20 flex items-center justify-center">
-                  <GraduationCap className="w-4 h-4 text-neon-cyan" />
+                <div className="w-7 h-7 rounded-lg bg-candle/10 border border-candle/20 flex items-center justify-center">
+                  <GraduationCap className="w-4 h-4 text-candle" />
                 </div>
                 <div>
                   <h3
@@ -277,9 +277,9 @@ export default function TutorialOverlay() {
             {/* Narrator quip */}
             {currentStep.quip && (
               <div className="flex items-start gap-2 mb-4 bg-background/40 rounded-lg p-2.5 border border-border/10">
-                <Sparkles className="w-3.5 h-3.5 text-neon-yellow/70 mt-0.5 shrink-0" />
+                <Sparkles className="w-3.5 h-3.5 text-greed-glow/70 mt-0.5 shrink-0" />
                 <p
-                  className="text-[11px] text-neon-yellow/70 italic leading-relaxed"
+                  className="text-[11px] text-greed-glow/70 italic leading-relaxed"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   "{currentStep.quip}"
@@ -320,7 +320,7 @@ export default function TutorialOverlay() {
 
               <button
                 onClick={nextStep}
-                className="flex items-center gap-1 text-[11px] text-neon-cyan font-semibold hover:text-neon-cyan/80 transition-colors px-3 py-1.5 rounded-lg bg-neon-cyan/10 hover:bg-neon-cyan/15 border border-neon-cyan/20"
+                className="flex items-center gap-1 text-[11px] text-candle font-semibold hover:text-candle/80 transition-colors px-3 py-1.5 rounded-lg bg-candle/10 hover:bg-candle/15 border border-candle/20"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {isLastStep ? "FINISH" : isLastOnPage ? "GOT IT" : "NEXT"}

@@ -60,7 +60,7 @@ export default function FactionUnlockCelebration({ show, onDismiss }: FactionUnl
               transition={{ delay: 0.5, duration: 0.6 }}
             >
               <p
-                className="text-[10px] tracking-[0.4em] text-neon-cyan/70 uppercase mb-2"
+                className="text-[10px] tracking-[0.4em] text-candle/70 uppercase mb-2"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 New Sins Unlocked

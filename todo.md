@@ -359,3 +359,16 @@
 - [x] Fix all remaining Lucide icon references across entire game with proper gaming assets
 - [x] Restore Babylon homepage (lost during sandbox reset)
 - [x] Audit and fix player panels, GameBoard, and all other pages for missing portraits
+
+## Phase 3A: Gothic Cathedral / Stained Glass Theme
+- [x] Replace cyberpunk color palette with sin-oriented gothic palette (Dante's Inferno inspired)
+- [x] Add gothic serif fonts (Cinzel, Uncial Antiqua) via Google Fonts
+- [x] Replace neon glow effects with stained glass / candlelight warm effects
+- [x] Redesign card frames with gothic arch borders and stained glass insets
+- [x] Update Home page hero with cathedral-themed design
+- [x] Update Home page sin cards with stained glass aesthetic
+- [ ] Update Lobby with gothic UI elements (stone panels, candle accents)
+- [ ] Update GameBoard with cathedral floor / dark stone aesthetic
+- [x] Update GameCard component with gothic frame styling
+- [ ] Replace EmberField with cathedral dust motes / candle particles
+- [x] Update all sin faction colors to Dante's Inferno palette
