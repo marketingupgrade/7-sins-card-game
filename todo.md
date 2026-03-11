@@ -525,3 +525,15 @@
 
 ## Bug Fixes (Round 7)
 - [x] Fix GameOverScreen battle card showing 0 for all stats — fixed ID mismatch (game_players.id vs player_id) and string effect parsing
+
+## Performance Optimization (Round 8)
+- [x] Audit bundle size and identify largest chunks (was 6.7MB single chunk)
+- [x] Lazy-load all page routes (Home, Lobby, GameBoard, NotFound) with Suspense
+- [x] Remove dead code (BabylonScene.tsx static import, ComponentShowcase.tsx)
+- [x] Optimize font loading (async load with media=print trick, reduced weight count)
+- [x] Manual chunk splitting: babylon(6.7MB), framer-motion(118KB), supabase(173KB), react(267KB), radix(4KB), icons(4KB)
+- [x] Memoize heavy components (PlayerPanel, GameCard, EffectBadge) with React.memo
+- [x] Add DNS prefetch/preconnect hints for Supabase, fonts, CDN origins
+- [x] Babylon.js now loads only when needed (lazy route chunks), not on initial page load
+- [x] Initial page load reduced from 6.7MB to ~320KB (index 53KB + react 267KB)
+- [x] All 201 tests passing, dev server running, no regressions

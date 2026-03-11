@@ -29,7 +29,7 @@ import { playCard, passTurn, getGameLog, clientOvercharge } from "@/lib/gameEngi
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, memo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
@@ -1061,7 +1061,7 @@ const sinColors: Record<string, string> = {
   envy: "var(--color-envy)",
 };
 
-function PlayerPanel({
+const PlayerPanel = memo(function PlayerPanel({
   player,
   isCurrentTurn,
   isTargetable,
@@ -1309,11 +1309,11 @@ function PlayerPanel({
                 color: sinColor 
               }}
             >
-              TARGET
-            </span>
+        TARGET
+          </span>
           </motion.div>
         )}
       </div>
     </motion.div>
   );
-}
+});

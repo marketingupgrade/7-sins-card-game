@@ -11,7 +11,7 @@
  */
 
 import { motion } from "framer-motion";
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, memo } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
 import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
@@ -85,7 +85,7 @@ const sinConfig: Record<SinType, {
   },
 };
 
-export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
+const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
   const cfg = sinConfig[card.sin] || sinConfig.wrath;
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
@@ -318,4 +318,6 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       )}
     </motion.div>
   );
-}
+});
+
+export default GameCard;

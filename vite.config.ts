@@ -167,6 +167,24 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // Babylon.js — largest dep, only needed on game/lobby/home pages
+          if (id.includes('@babylonjs')) return 'babylon';
+          // Framer Motion — animation library, used heavily in game components
+          if (id.includes('framer-motion')) return 'framer-motion';
+          // Supabase — backend client
+          if (id.includes('@supabase')) return 'supabase';
+          // React core
+          if (id.includes('react-dom') || (id.includes('/react/') && !id.includes('react-'))) return 'react';
+          // Radix UI — shadcn primitives
+          if (id.includes('@radix-ui')) return 'radix';
+          // Lucide icons
+          if (id.includes('lucide-react')) return 'icons';
+        },
+      },
+    },
   },
   server: {
     host: true,
