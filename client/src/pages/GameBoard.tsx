@@ -67,6 +67,7 @@ import VictoryCinematic from "@/components/VictoryCinematic";
 import MobilePlayerBar from "@/components/MobilePlayerBar";
 import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
+import MobileBattleOverview from "@/components/MobileBattleOverview";
 import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ActionFeedEntry {
@@ -797,34 +798,16 @@ export default function GameBoard() {
             ))}
           </div>
 
-          {/* Center area — round info + action feed */}
-          <div className="flex-1 flex flex-col items-center justify-center px-3 py-1 min-h-0">
-            <div className="flex items-center gap-3 px-4 py-1.5 rounded-full glass-panel mb-1">
-              <span className="text-sm font-bold text-candle" style={{ fontFamily: "var(--font-heading)" }}>
-                R{gameState.currentRound}/{MAX_ROUNDS}
-              </span>
-              <span className="text-xs text-muted-foreground/70">
-                {alivePlayers.length} alive
-              </span>
-            </div>
-            {/* Compact action feed — single line */}
-            <div className="w-full max-w-sm">
-              <AnimatePresence mode="popLayout">
-                {actionFeedState.slice(-1).map((entry) => (
-                  <motion.div
-                    key={entry.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
-                    className="text-xs text-foreground/60 text-center py-0.5 truncate"
-                    style={{ fontFamily: "var(--font-body)" }}
-                  >
-                    {entry.text}
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
-          </div>
+          {/* Center area — battle overview with afflictions + action feed */}
+          <MobileBattleOverview
+            players={gameState.players}
+            currentPlayerId={playerId}
+            activeEffects={gameState.activeEffects}
+            currentRound={gameState.currentRound}
+            maxRounds={MAX_ROUNDS}
+            actionFeed={actionFeedState}
+            alivePlayers={alivePlayers}
+          />
 
           {/* My player bar */}
           {myPlayer && (

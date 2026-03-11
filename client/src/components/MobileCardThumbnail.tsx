@@ -1,13 +1,14 @@
 /**
  * MobileCardThumbnail — Compact card thumbnail for mobile hand
  *
- * Shows just the essential info at a glance:
+ * Shows essential info at a glance:
  * - Card art (small)
  * - Energy cost (prominent corner badge)
  * - Card name (truncated)
+ * - Color-coded effect icons with values (not cryptic letters)
  * - Color-coded border by sin
  *
- * Tap → opens MobileCardZoom overlay for full details
+ * Tap once → select, Tap again → opens MobileCardZoom overlay
  */
 import { motion } from "framer-motion";
 import { memo } from "react";
@@ -31,6 +32,19 @@ const sinColorMap: Record<string, string> = {
   pride: "var(--color-pride)",
   lust: "var(--color-lust)",
   gluttony: "var(--color-gluttony)",
+};
+
+/** Readable effect labels with color and symbol */
+const EFFECT_DISPLAY: Record<string, { symbol: string; color: string; label: string }> = {
+  damage: { symbol: "⚔", color: "oklch(0.70 0.22 25)", label: "DMG" },
+  damage_all: { symbol: "💥", color: "oklch(0.70 0.22 25)", label: "AOE" },
+  self_damage: { symbol: "🩸", color: "oklch(0.55 0.18 25)", label: "SELF" },
+  heal: { symbol: "💚", color: "oklch(0.65 0.18 155)", label: "HEAL" },
+  shield: { symbol: "🛡", color: "oklch(0.70 0.15 200)", label: "SHLD" },
+  debuff: { symbol: "☠", color: "oklch(0.65 0.15 290)", label: "DEBF" },
+  energy_drain: { symbol: "⚡", color: "oklch(0.65 0.18 60)", label: "DRNE" },
+  energy_gain: { symbol: "✦", color: "oklch(0.70 0.15 85)", label: "NRG+" },
+  buff: { symbol: "↑", color: "oklch(0.65 0.12 85)", label: "BUFF" },
 };
 
 export const MobileCardThumbnail = memo(function MobileCardThumbnail({
@@ -57,7 +71,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
       `}
       style={{
         width: 80,
-        height: 110,
+        height: 120,
         border: isSelected
           ? `2px solid ${sinColor}`
           : `1px solid color-mix(in oklch, ${sinColor} 30%, oklch(0.3 0 0))`,
@@ -65,11 +79,10 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         boxShadow: isSelected
           ? `0 0 12px color-mix(in oklch, ${sinColor} 40%, transparent), 0 4px 12px oklch(0 0 0 / 0.4)`
           : "0 2px 8px oklch(0 0 0 / 0.3)",
-        // ring color handled via Tailwind class above
       }}
     >
       {/* Card art — fills top portion */}
-      <div className="h-[60px] relative overflow-hidden">
+      <div className="h-[48px] relative overflow-hidden">
         {artUrl ? (
           <img
             src={artUrl}
@@ -87,11 +100,11 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
           </div>
         )}
         {/* Gradient overlay for readability */}
-        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, oklch(0.08 0.01 70 / 0.8) 100%)" }} />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 20%, oklch(0.08 0.01 70 / 0.85) 100%)" }} />
 
         {/* Energy cost badge — top-right */}
         <div
-          className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black"
+          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
           style={{
             fontFamily: "var(--font-heading)",
             background: canAfford
@@ -108,7 +121,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         </div>
 
         {/* Type badge — top-left */}
-        <div className="absolute top-1 left-1">
+        <div className="absolute top-0.5 left-0.5">
           <span
             className="text-[7px] px-1 py-0.5 rounded font-bold uppercase"
             style={{
@@ -122,10 +135,10 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         </div>
       </div>
 
-      {/* Card name — truncated */}
-      <div className="px-1.5 py-1 flex flex-col justify-center" style={{ height: 50 }}>
+      {/* Card name */}
+      <div className="px-1 pt-0.5" style={{ height: 24 }}>
         <p
-          className="text-[10px] font-bold text-foreground leading-tight line-clamp-2"
+          className="text-[9px] font-bold text-foreground leading-tight line-clamp-2"
           style={{
             fontFamily: "var(--font-heading)",
             textShadow: "0 1px 3px rgba(0,0,0,0.8)",
@@ -133,32 +146,33 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         >
           {card.name}
         </p>
-        {/* Quick effect summary */}
-        <div className="flex items-center gap-0.5 mt-0.5">
-          {card.effects.slice(0, 2).map((eff, i) => (
-            <span
-              key={i}
-              className="text-[8px] font-bold uppercase"
-              style={{
-                color: eff.type === "damage" || eff.type === "damage_all"
-                  ? "oklch(0.65 0.22 25)"
-                  : eff.type === "heal"
-                    ? "oklch(0.60 0.18 155)"
-                    : eff.type === "shield"
-                      ? "oklch(0.65 0.15 200)"
-                      : "oklch(0.6 0.1 70)",
-              }}
-            >
-              {eff.type === "damage" ? `${eff.baseValue}D` :
-               eff.type === "damage_all" ? `${eff.baseValue}A` :
-               eff.type === "heal" ? `${eff.baseValue}H` :
-               eff.type === "shield" ? `${eff.baseValue}S` :
-               eff.type === "debuff" ? `${eff.baseValue}X` :
-               eff.type === "energy_drain" ? `${eff.baseValue}E` :
-               `${eff.baseValue}`}
-            </span>
-          ))}
-        </div>
+      </div>
+
+      {/* Effect summary — color-coded rows with symbols */}
+      <div className="px-1 pb-1 flex flex-col gap-px" style={{ height: 44 }}>
+        {card.effects.slice(0, 3).map((eff, i) => {
+          const display = EFFECT_DISPLAY[eff.type] || { symbol: "•", color: "oklch(0.6 0.1 70)", label: "?" };
+          return (
+            <div key={i} className="flex items-center gap-0.5">
+              <span className="text-[9px]" style={{ lineHeight: 1 }}>{display.symbol}</span>
+              <span
+                className="text-[9px] font-black"
+                style={{ fontFamily: "var(--font-heading)", color: display.color }}
+              >
+                {eff.baseValue}
+              </span>
+              <span
+                className="text-[7px] font-bold uppercase opacity-70"
+                style={{ fontFamily: "var(--font-heading)", color: display.color }}
+              >
+                {display.label}
+              </span>
+            </div>
+          );
+        })}
+        {card.effects.length > 3 && (
+          <span className="text-[7px] text-muted-foreground/50 font-bold">+{card.effects.length - 3} more</span>
+        )}
       </div>
 
       {/* Selected glow */}

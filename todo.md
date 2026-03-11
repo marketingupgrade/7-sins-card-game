@@ -579,3 +579,9 @@
 - [x] Fix hand cards — replaced with MobileCardThumbnail (80x110px) + MobileCardZoom (tap-to-zoom overlay)
 - [x] Fix affliction tables — replaced with MobileAfflictionSheet (tap-to-open bottom sheet)
 - [x] General mobile responsiveness: compact top bar, inline action feed, responsive buttons, lobby grid
+
+## Mobile UI Fixes (Round 13)
+- [x] Add mobile center panel (MobileBattleOverview) showing per-player afflictions with tap-to-expand
+- [x] Improve card thumbnail effect text — color-coded emoji symbols (⚔ DMG, 💚 HEAL, 🛡 SHLD) replace cryptic 6H 5S codes
+- [x] Tap-to-expand on opponent bars already handled by MobileAfflictionSheet + MobileBattleOverview
+- [x] Show action feed (Battle Log) in mobile center area within MobileBattleOverview
