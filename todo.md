@@ -472,3 +472,11 @@
 - [x] Generate comprehensive security audit report — see security-audit-report.md
 - [x] FIXED: Added security headers middleware (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
 - [x] FIXED: Added input sanitization (HTML entity stripping, regex room codes, max lengths)
+
+## Animated Deck + Affliction Table Layout Reconstruction
+- [x] Find commit 94209b9 (claude/upgrade-game-visuals-zZUs4 branch) and extract DeckPile component
+- [x] Place animated deck to the LEFT of each player entity on GameBoard (North, South, West, East)
+- [x] Reconstruct affliction tables to the RIGHT of each player entity on GameBoard
+- [x] Add DeckPile beside card hand at bottom of screen for current player
+- [x] Ensure layout works on both desktop and mobile
+- [x] Maintain design integrity and smooth UI (178 tests passing)

@@ -47,6 +47,7 @@ import SinShaderOverlay from "@/components/WebGLSinShaders";
 import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
 import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
+import DeckPile from "@/components/DeckPile";
 
 interface ActionFeedEntry {
   id: string;
@@ -467,6 +468,13 @@ export default function GameBoard() {
           <div className="col-start-2 row-start-1 flex justify-center items-start gap-2">
             {opponents.north && (
               <>
+                <DeckPile
+                  sin={(opponents.north.chosenSin as SinType) || "wrath"}
+                  deckSize={opponents.north.deckSize}
+                  discardSize={opponents.north.discardSize}
+                  handSize={opponents.north.hand?.length || 0}
+                  isMyTurn={currentTurnPlayer?.id === opponents.north.id}
+                />
                 <PlayerPanel
                   player={opponents.north}
                   isCurrentTurn={currentTurnPlayer?.id === opponents.north.id}
@@ -489,26 +497,35 @@ export default function GameBoard() {
           </div>
 
           {/* WEST */}
-          <div className="col-start-1 row-start-2 flex flex-col items-center justify-center gap-2">
+          <div className="col-start-1 row-start-2 flex items-center justify-center gap-2">
             {opponents.west && (
               <>
-                <PlayerPanel
-                  player={opponents.west}
-                  isCurrentTurn={currentTurnPlayer?.id === opponents.west.id}
-                  isTargetable={isMyTurn && !!selectedCard && opponents.west.isAlive}
-                  isSelected={selectedTarget === opponents.west.id}
-                  onSelect={() => handleSelectTarget(opponents.west.id)}
-                  activeEffects={getPlayerEffects(opponents.west)}
-                  currentRound={gameState.currentRound}
-                  position="west"
+                <DeckPile
+                  sin={(opponents.west.chosenSin as SinType) || "wrath"}
+                  deckSize={opponents.west.deckSize}
+                  discardSize={opponents.west.discardSize}
+                  handSize={opponents.west.hand?.length || 0}
+                  isMyTurn={currentTurnPlayer?.id === opponents.west.id}
                 />
-                <PlayerAfflictionTable
-                  player={opponents.west}
-                  activeEffects={getPlayerEffects(opponents.west)}
-                  currentRound={gameState.currentRound}
-                  maxRound={MAX_ROUNDS}
-                  position="below"
-                />
+                <div className="flex flex-col items-center gap-2">
+                  <PlayerPanel
+                    player={opponents.west}
+                    isCurrentTurn={currentTurnPlayer?.id === opponents.west.id}
+                    isTargetable={isMyTurn && !!selectedCard && opponents.west.isAlive}
+                    isSelected={selectedTarget === opponents.west.id}
+                    onSelect={() => handleSelectTarget(opponents.west.id)}
+                    activeEffects={getPlayerEffects(opponents.west)}
+                    currentRound={gameState.currentRound}
+                    position="west"
+                  />
+                  <PlayerAfflictionTable
+                    player={opponents.west}
+                    activeEffects={getPlayerEffects(opponents.west)}
+                    currentRound={gameState.currentRound}
+                    maxRound={MAX_ROUNDS}
+                    position="below"
+                  />
+                </div>
               </>
             )}
           </div>
@@ -540,25 +557,34 @@ export default function GameBoard() {
           </div>
 
           {/* EAST */}
-          <div className="col-start-3 row-start-2 flex flex-col items-center justify-center gap-2">
+          <div className="col-start-3 row-start-2 flex items-center justify-center gap-2">
             {opponents.east && (
               <>
-                <PlayerPanel
-                  player={opponents.east}
-                  isCurrentTurn={currentTurnPlayer?.id === opponents.east.id}
-                  isTargetable={isMyTurn && !!selectedCard && opponents.east.isAlive}
-                  isSelected={selectedTarget === opponents.east.id}
-                  onSelect={() => handleSelectTarget(opponents.east.id)}
-                  activeEffects={getPlayerEffects(opponents.east)}
-                  currentRound={gameState.currentRound}
-                  position="east"
-                />
-                <PlayerAfflictionTable
-                  player={opponents.east}
-                  activeEffects={getPlayerEffects(opponents.east)}
-                  currentRound={gameState.currentRound}
-                  maxRound={MAX_ROUNDS}
-                  position="below"
+                <div className="flex flex-col items-center gap-2">
+                  <PlayerPanel
+                    player={opponents.east}
+                    isCurrentTurn={currentTurnPlayer?.id === opponents.east.id}
+                    isTargetable={isMyTurn && !!selectedCard && opponents.east.isAlive}
+                    isSelected={selectedTarget === opponents.east.id}
+                    onSelect={() => handleSelectTarget(opponents.east.id)}
+                    activeEffects={getPlayerEffects(opponents.east)}
+                    currentRound={gameState.currentRound}
+                    position="east"
+                  />
+                  <PlayerAfflictionTable
+                    player={opponents.east}
+                    activeEffects={getPlayerEffects(opponents.east)}
+                    currentRound={gameState.currentRound}
+                    maxRound={MAX_ROUNDS}
+                    position="below"
+                  />
+                </div>
+                <DeckPile
+                  sin={(opponents.east.chosenSin as SinType) || "wrath"}
+                  deckSize={opponents.east.deckSize}
+                  discardSize={opponents.east.discardSize}
+                  handSize={opponents.east.hand?.length || 0}
+                  isMyTurn={currentTurnPlayer?.id === opponents.east.id}
                 />
               </>
             )}
@@ -568,6 +594,13 @@ export default function GameBoard() {
           <div data-tutorial="player-panel" className="col-start-2 row-start-3 flex justify-center items-start gap-2">
             {myPlayer && (
               <>
+                <DeckPile
+                  sin={(myPlayer.chosenSin as SinType) || "wrath"}
+                  deckSize={myPlayer.deckSize}
+                  discardSize={myPlayer.discardSize}
+                  handSize={myCards.length}
+                  isMyTurn={isMyTurn}
+                />
                 <PlayerPanel
                   player={myPlayer}
                   isCurrentTurn={isMyTurn}
@@ -682,7 +715,17 @@ export default function GameBoard() {
 
         {/* Card Hand */}
         <div data-tutorial="card-hand" className="px-3 pb-3 shrink-0">
-          <div className="flex items-end justify-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+          <div className="flex items-end justify-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+            {/* Deck & Discard piles beside hand */}
+            {myPlayer && (
+              <DeckPile
+                sin={(myPlayer.chosenSin as SinType) || "wrath"}
+                deckSize={myPlayer.deckSize}
+                discardSize={myPlayer.discardSize}
+                handSize={myCards.length}
+                isMyTurn={isMyTurn}
+              />
+            )}
             <AnimatePresence>
               {myCards.map((card, i) => (
                 <motion.div
