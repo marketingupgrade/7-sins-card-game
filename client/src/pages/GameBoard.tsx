@@ -64,6 +64,7 @@ import ComboChainBanner from "@/components/ComboChainBanner";
 import EpicCardReveal from "@/components/EpicCardReveal";
 import SinCorruptionBorder from "@/components/SinCorruptionBorder";
 import VictoryCinematic from "@/components/VictoryCinematic";
+import CorruptionCascade from "@/components/CorruptionCascade";
 
 interface ActionFeedEntry {
   id: string;
@@ -129,6 +130,14 @@ export default function GameBoard() {
   const [victoryCinematicShow, setVictoryCinematicShow] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const prevGameStatus = useRef<string>('active');
+
+  // Corruption Cascade + Lethal Blow
+  const [cascadeTrigger, setCascadeTrigger] = useState(0);
+  const [cascadeSin, setCascadeSin] = useState<SinType>('wrath');
+  const cardsThisTurnRef = useRef(0);
+  const [deathLethalBlow, setDeathLethalBlow] = useState(false);
+  const [deathKillerCard, setDeathKillerCard] = useState('');
+  const prevPlayerHps = useRef<Record<string, number>>({});
 
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
@@ -218,10 +227,11 @@ export default function GameBoard() {
     return () => clearInterval(interval);
   }, [showLog, gameId]);
 
-  // YOUR TURN banner trigger
+  // YOUR TURN banner trigger + cascade counter reset
   useEffect(() => {
     if (isMyTurn && !prevIsMyTurn.current) {
       setShowYourTurn(true);
+      cardsThisTurnRef.current = 0; // new turn — reset cascade counter
     }
     prevIsMyTurn.current = isMyTurn;
   }, [isMyTurn]);
@@ -235,11 +245,18 @@ export default function GameBoard() {
       if (deadPlayer) {
         setDeathPlayerName(deadPlayer.username);
         setDeathSin((deadPlayer.chosenSin || 'wrath') as SinType);
+        // Lethal blow: when it's our turn and we just played a card
+        const isLethal = isMyTurn && cardsThisTurnRef.current > 0;
+        setDeathLethalBlow(isLethal);
+        if (isLethal && selectedCard) {
+          const killerCard = CARD_MAP[selectedCard];
+          setDeathKillerCard(killerCard?.name || '');
+        }
         setDeathShow(true);
       }
     }
     prevAliveCounts.current = currentAlive;
-  }, [gameState]);
+  }, [gameState, isMyTurn, selectedCard]);
 
   // Leading sin for reactive background
   const leadingSin = useMemo(() => {
@@ -313,10 +330,16 @@ export default function GameBoard() {
       const result = await playCard(gameId, playerId, selectedCard, target || undefined);
       addMessage(result.narratorQuip, "action");
 
-      // Feature: Combo chain tracking
+      // Feature: Combo chain tracking + Corruption Cascade
       const cardSin = card.sin as SinType;
       setLastPlayedSin(cardSin);
       setCardPlayCount(prev => prev + 1);
+      cardsThisTurnRef.current += 1;
+      if (cardsThisTurnRef.current === 3) {
+        // 3rd card this turn — trigger cascade!
+        setCascadeSin(cardSin);
+        setCascadeTrigger(prev => prev + 1);
+      }
       if (lastCardSinRef.current === cardSin) {
         setComboChain(prev => {
           const next = prev + 1;
@@ -999,13 +1022,18 @@ export default function GameBoard() {
         </div>
       </div>
 
-      {/* Tier 2: Death Sequence */}
+      {/* Tier 2: Death Sequence (with optional lethal blow cinematic) */}
     <DeathSequence
       show={deathShow}
       playerName={deathPlayerName}
       sin={deathSin}
       onComplete={() => setDeathShow(false)}
+      lethalBlow={deathLethalBlow}
+      killerCardName={deathKillerCard}
     />
+
+    {/* Sprint 2: Corruption Cascade — fires on 3rd card played in one turn */}
+    <CorruptionCascade trigger={cascadeTrigger} sin={cascadeSin} />
 
     {/* Tier 3: Card Play Arc */}
     <CardPlayArc
