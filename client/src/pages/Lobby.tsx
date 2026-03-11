@@ -408,7 +408,7 @@ export default function Lobby() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 md:gap-3">
             {players.map((player: PlayerState, i: number) => {
               const playerIsBot = checkIsBot(player.id);
               const sinCfg = player.chosenSin ? SIN_CONFIG[player.chosenSin as SinType] : null;
@@ -511,7 +511,7 @@ export default function Lobby() {
                 : `Complete ${factionUnlocks.gamesRemaining} more ritual${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
               {ALL_SINS.map((sin) => {
                 const cfg = SIN_CONFIG[sin];
                 const isLocked = !factionUnlocks.isFactionAvailable(sin);

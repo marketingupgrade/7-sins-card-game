@@ -64,6 +64,10 @@ import ComboChainBanner from "@/components/ComboChainBanner";
 import EpicCardReveal from "@/components/EpicCardReveal";
 import SinCorruptionBorder from "@/components/SinCorruptionBorder";
 import VictoryCinematic from "@/components/VictoryCinematic";
+import MobilePlayerBar from "@/components/MobilePlayerBar";
+import MobileCardThumbnail from "@/components/MobileCardThumbnail";
+import MobileCardZoom from "@/components/MobileCardZoom";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 interface ActionFeedEntry {
   id: string;
@@ -129,6 +133,8 @@ export default function GameBoard() {
   const [victoryCinematicShow, setVictoryCinematicShow] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
   const prevGameStatus = useRef<string>('active');
+  const [mobileZoomCard, setMobileZoomCard] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
@@ -571,12 +577,12 @@ export default function GameBoard() {
       />
 
       {/* Top Bar — Gothic Stone Header */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
+      <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1.5 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-5 h-5 opacity-60" />
-            <span className="text-lg font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              Round {gameState.currentRound} of {MAX_ROUNDS}
+            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-4 md:w-5 h-4 md:h-5 opacity-60" />
+            <span className="text-sm md:text-lg font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="hidden md:inline">Round </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>
           </div>
         </div>
@@ -588,22 +594,22 @@ export default function GameBoard() {
               transition={{ duration: 1.5, repeat: Infinity }}
               className="flex items-center gap-2"
             >
-              <div className="w-3 h-3 rounded-full bg-greed-glow" />
-              <span className="text-sm font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-greed-glow" />
+              <span className="text-xs md:text-sm font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
                 YOUR TURN
               </span>
             </motion.div>
           ) : (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-muted-foreground/40" />
-              <span className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-muted-foreground/40" />
+              <span className="text-xs md:text-sm text-muted-foreground truncate max-w-[100px] md:max-w-none" style={{ fontFamily: "var(--font-heading)" }}>
                 {currentTurnPlayer ? `${currentTurnPlayer.username}${isBot(currentTurnPlayer.id) ? " (BOT)" : ""}` : "..."}
               </span>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
           <SoundToggle />
           <MusicToggle />
         </div>
@@ -773,47 +779,57 @@ export default function GameBoard() {
           </div>
         </div>
 
-        {/* Mobile Layout */}
-        <div className="md:hidden flex-1 flex flex-col gap-2 p-3 overflow-y-auto">
-          <div className="flex gap-2 justify-center flex-wrap">
+        {/* Mobile Layout — Marvel Snap / LoR inspired */}
+        <div className="md:hidden flex-1 flex flex-col overflow-hidden">
+          {/* Opponents — thin horizontal bars */}
+          <div className="flex flex-col gap-1 px-2 pt-2 pb-1">
             {[opponents.west, opponents.north, opponents.east].filter(Boolean).map((opp) => (
-              <div key={opp!.id} className="flex flex-col items-center gap-1">
-                <PlayerPanel
-                  player={opp!}
-                  isCurrentTurn={currentTurnPlayer?.id === opp!.id}
-                  isTargetable={isMyTurn && !!selectedCard && opp!.isAlive}
-                  isSelected={selectedTarget === opp!.id}
-                  onSelect={() => handleSelectTarget(opp!.id)}
-                  activeEffects={getPlayerEffects(opp!)}
-                  currentRound={gameState.currentRound}
-                  compact
-                />
-                <PlayerAfflictionTable
-                  player={opp!}
-                  activeEffects={getPlayerEffects(opp!)}
-                  currentRound={gameState.currentRound}
-                  maxRound={MAX_ROUNDS}
-                  position="below"
-                  compact
-                />
-              </div>
+              <MobilePlayerBar
+                key={opp!.id}
+                player={opp!}
+                isCurrentTurn={currentTurnPlayer?.id === opp!.id}
+                isTargetable={isMyTurn && !!selectedCard && opp!.isAlive}
+                isSelected={selectedTarget === opp!.id}
+                onSelect={() => handleSelectTarget(opp!.id)}
+                activeEffects={getPlayerEffects(opp!)}
+                currentRound={gameState.currentRound}
+              />
             ))}
           </div>
 
-          <div className="flex items-center justify-center py-2">
-            <div className="flex items-center gap-3 px-4 py-2 rounded-full glass-panel">
+          {/* Center area — round info + action feed */}
+          <div className="flex-1 flex flex-col items-center justify-center px-3 py-1 min-h-0">
+            <div className="flex items-center gap-3 px-4 py-1.5 rounded-full glass-panel mb-1">
               <span className="text-sm font-bold text-candle" style={{ fontFamily: "var(--font-heading)" }}>
                 R{gameState.currentRound}/{MAX_ROUNDS}
               </span>
-              <span className="text-sm text-muted-foreground/70">
+              <span className="text-xs text-muted-foreground/70">
                 {alivePlayers.length} alive
               </span>
             </div>
+            {/* Compact action feed — single line */}
+            <div className="w-full max-w-sm">
+              <AnimatePresence mode="popLayout">
+                {actionFeedState.slice(-1).map((entry) => (
+                  <motion.div
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="text-xs text-foreground/60 text-center py-0.5 truncate"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {entry.text}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
           </div>
 
+          {/* My player bar */}
           {myPlayer && (
-            <div data-tutorial="player-panel" className="flex flex-col items-center gap-1">
-              <PlayerPanel
+            <div data-tutorial="player-panel" className="px-2 pb-1">
+              <MobilePlayerBar
                 player={myPlayer}
                 isCurrentTurn={isMyTurn}
                 isTargetable={false}
@@ -822,22 +838,13 @@ export default function GameBoard() {
                 activeEffects={getPlayerEffects(myPlayer)}
                 currentRound={gameState.currentRound}
                 isMe
-                compact
-              />
-              <PlayerAfflictionTable
-                player={myPlayer}
-                activeEffects={getPlayerEffects(myPlayer)}
-                currentRound={gameState.currentRound}
-                maxRound={MAX_ROUNDS}
-                position="below"
-                compact
               />
             </div>
           )}
         </div>
 
-        {/* Action Feed — Gothic Scroll */}
-        <div className="px-4 py-2 border-t border-candle/10 bg-gradient-to-t from-background/60 to-transparent">
+        {/* Action Feed — Desktop only (mobile has inline feed above) */}
+        <div className="hidden md:block px-4 py-2 border-t border-candle/10 bg-gradient-to-t from-background/60 to-transparent">
           <div className="max-w-4xl mx-auto">
             <AnimatePresence mode="popLayout">
               {actionFeedState.map((entry) => (
@@ -862,10 +869,10 @@ export default function GameBoard() {
           </div>
         </div>
 
-        {/* Card Hand */}
-        <div data-tutorial="card-hand" className="px-3 pb-3 shrink-0">
-          <div className="flex items-end justify-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
-            {/* Deck & Discard piles beside hand */}
+        {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
+        <div data-tutorial="card-hand" className="px-2 md:px-3 pb-2 md:pb-3 shrink-0">
+          {/* Desktop hand */}
+          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
             {myPlayer && (
               <DeckPile
                 sin={(myPlayer.chosenSin as SinType) || "wrath"}
@@ -898,18 +905,60 @@ export default function GameBoard() {
             </AnimatePresence>
           </div>
 
-          {/* Action Buttons */}
+          {/* Mobile hand — compact thumbnails */}
+          <div className="md:hidden">
+            <div className="flex items-end justify-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin px-1">
+              {myPlayer && (
+                <DeckPile
+                  sin={(myPlayer.chosenSin as SinType) || "wrath"}
+                  deckSize={myPlayer.deckSize}
+                  discardSize={myPlayer.discardSize}
+                  handSize={myCards.length}
+                  isMyTurn={isMyTurn}
+                />
+              )}
+              <AnimatePresence>
+                {myCards.map((card, i) => (
+                  <motion.div
+                    key={card.id}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 30 }}
+                    transition={{ delay: i * 0.03 }}
+                    className="flex-shrink-0"
+                  >
+                    <MobileCardThumbnail
+                      card={card}
+                      isPlayable={isMyTurn}
+                      isSelected={selectedCard === card.id}
+                      canAfford={(myPlayer?.currentEnergy ?? 0) >= card.cost}
+                      onClick={() => {
+                        if (selectedCard === card.id) {
+                          // Second tap on selected card → open zoom
+                          setMobileZoomCard(card.id);
+                        } else {
+                          setSelectedCard(card.id);
+                        }
+                      }}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Action Buttons — responsive sizing */}
           {isMyTurn && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center gap-3 mt-2"
+              className="flex justify-center gap-2 md:gap-3 mt-1.5 md:mt-2"
             >
               {selectedCard && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className={`px-8 py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+                  className={`px-4 md:px-8 py-2 md:py-3 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wide transition-all ${
                     myPlayer?.chosenSin === "wrath" ? "btn-wrath" :
                     myPlayer?.chosenSin === "sloth" ? "btn-sloth" :
                     myPlayer?.chosenSin === "greed" ? "btn-greed" :
@@ -926,14 +975,14 @@ export default function GameBoard() {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 rounded-lg bg-wrath/20 border-2 border-wrath/40 text-wrath text-sm font-bold uppercase tracking-wide hover:bg-wrath/30 transition-all disabled:opacity-50"
+                  className="px-3 md:px-6 py-2 md:py-3 rounded-lg bg-wrath/20 border-2 border-wrath/40 text-wrath text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-wrath/30 transition-all disabled:opacity-50"
                   style={{ 
                     fontFamily: "var(--font-heading)",
                     animation: isMyTurn ? "pulse 2s infinite" : "none"
                   }}
                   onClick={handleOvercharge}
                   disabled={isOvercharging}
-                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption | Siphon: Heal 10% of compound dmg dealt to others`}
+                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption`}
                 >
                   {isOvercharging ? "BURNING..." : "OVERCHARGE"}
                 </motion.button>
@@ -952,7 +1001,7 @@ export default function GameBoard() {
                     ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="px-8 py-3 rounded-lg text-sm font-black uppercase tracking-wider disabled:opacity-50"
+                  className="px-4 md:px-8 py-2 md:py-3 rounded-lg text-xs md:text-sm font-black uppercase tracking-wider disabled:opacity-50"
                   style={{
                     fontFamily: "var(--font-heading)",
                     background: "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))",
@@ -966,13 +1015,13 @@ export default function GameBoard() {
                   {isPassing ? "ENDING..." : "END TURN"}
                 </motion.button>
               )}
-              {/* PASS — subtle when energy remains, hidden when END TURN is shown on zero energy */}
+              {/* PASS — subtle when energy remains */}
               {((myPlayer?.currentEnergy ?? 0) > 0 || canOvercharge) && (
                 <motion.button
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-6 py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
+                  className="px-3 md:px-6 py-2 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-xs md:text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
                   style={{ fontFamily: "var(--font-heading)" }}
                   onClick={handlePass}
                   disabled={isPassing}
@@ -987,7 +1036,7 @@ export default function GameBoard() {
             <motion.p
               animate={{ opacity: [0.4, 0.8, 0.4] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="text-center text-sm text-muted-foreground/60 mt-2"
+              className="text-center text-xs md:text-sm text-muted-foreground/60 mt-1 md:mt-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {currentTurnPlayer && isBot(currentTurnPlayer.id)
@@ -996,6 +1045,21 @@ export default function GameBoard() {
             </motion.p>
           )}
         </div>
+
+        {/* Mobile Card Zoom Overlay */}
+        {isMobile && mobileZoomCard && (
+          <MobileCardZoom
+            card={CARD_MAP[mobileZoomCard]}
+            isPlayable={isMyTurn}
+            canAfford={(myPlayer?.currentEnergy ?? 0) >= (CARD_MAP[mobileZoomCard]?.cost ?? 0)}
+            onPlay={() => {
+              setSelectedCard(mobileZoomCard);
+              setMobileZoomCard(null);
+              handlePlayCard();
+            }}
+            onClose={() => setMobileZoomCard(null)}
+          />
+        )}
       </div>
 
       {/* Tier 2: Death Sequence */}

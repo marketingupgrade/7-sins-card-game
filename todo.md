@@ -565,3 +565,17 @@
 
 ## Bug Fixes (Round 11)
 - [x] Fix slow-loading faction portraits for Pride, Lust, Gluttony — converted from 6.2MB PNG to 35-52KB WebP (99.3% reduction)
+
+## Card Art Generation (Round 10)
+- [x] Generate 36 unique card art images for Pride faction
+- [x] Generate 36 unique card art images for Lust faction
+- [x] Generate 36 unique card art images for Gluttony faction
+- [x] Optimize all 108 images to WebP and upload to CDN (733MB -> 5.1MB, 99.3% reduction)
+- [x] Update cardArtUrls.ts with new card art URLs
+- [x] Push to GitHub
+
+## Mobile UI Overhaul (Round 12)
+- [x] Fix player/bot card panels — replaced with MobilePlayerBar (44px horizontal status strips)
+- [x] Fix hand cards — replaced with MobileCardThumbnail (80x110px) + MobileCardZoom (tap-to-zoom overlay)
+- [x] Fix affliction tables — replaced with MobileAfflictionSheet (tap-to-open bottom sheet)
+- [x] General mobile responsiveness: compact top bar, inline action feed, responsive buttons, lobby grid
