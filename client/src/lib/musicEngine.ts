@@ -249,6 +249,18 @@ class MusicEngine {
   getCurrentScene(): MusicScene {
     return this.currentScene;
   }
+
+  /** Set playback rate (tempo) for all active tracks. 1.0 = normal, 1.35 = 35% faster */
+  setTempo(rate: number) {
+    const clamped = Math.max(0.5, Math.min(2.0, rate));
+    const activeTracks = this.getActiveTracksForScene(this.currentScene);
+    for (const trackKey of activeTracks) {
+      const audio = this.tracks.get(trackKey);
+      if (audio) {
+        audio.playbackRate = clamped;
+      }
+    }
+  }
 }
 
 // Singleton

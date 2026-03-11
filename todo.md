@@ -490,3 +490,27 @@
 - [x] GameCard component already integrated with CARD_ART_URLS lookup and fallback
 - [x] All 178 tests passing
 - [x] Push to GitHub
+
+## Claude Polish Commit (84bd533) — 5 Visual Upgrades
+- [ ] BabylonScene: Add emerald envy ambient particle stream (80 cap, 15/s emit) — completes all 4 sin-colored streams
+- [ ] WebGLSinShaders: Replace expensive hue-rotate filter with background-position animation for envy; add willChange hints
+- [ ] GameBoard action feed: Add card icons (Painterly Spell Icons) before card names; slide-in from x instead of y
+- [ ] GameBoard card hand: Add transformOrigin 'bottom center' for natural card fan rotation
+- [ ] GameBoard PlayerPanel: HP flash — red radial gradient flash for 300ms on HP loss
+
+## Claude Epic Multimedia Enhancements (commit 3d23d17) — 15 Features
+- [x] CinematicFlash: screen flash + ripple for >=20 damage hits
+- [x] Floor runes: sin-colored glowing torus runes spawn per card played in 3D arena (via BabylonScene props)
+- [x] Arena decay: ambient light dims, fog thickens as rounds increase (via BabylonScene currentRound prop)
+- [x] ComboChainBanner: chain counter x2-5 with escalating "CORRUPTION SURGE"
+- [x] Avatar HP reactions: portrait shakes/desaturates on damage, glow at >70% HP
+- [x] SinCorruptionBorder: growing glowing border cracks tied to round/HP
+- [x] EpicCardReveal: 1.5s cinematic spotlight for 4+ energy cards
+- [x] Dynamic music tempo: 1.0->1.35x playbackRate ramp in rounds 3-10
+- [x] VictoryCinematic: 5-step win cinematic before GameOverScreen
+- [ ] Battle Chronicle: auto-generated dark-fantasy narrative from battle stats
+- [ ] SinLeaderboard: localStorage-based heatmap of sin usage + win rates on Home
+- [ ] Key Moments: 3 contextual highlights from stats on GameOverScreen
+- [ ] Action feed icons: Painterly Spell Icons before card names, horizontal slide-in
+- [ ] Card fan pivot: transformOrigin 'bottom center' for natural card hand rotation
+- [x] HP flash: red radial gradient flash for 300ms on HP loss (integrated into PlayerPanel portrait filter)

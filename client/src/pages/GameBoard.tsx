@@ -4,6 +4,17 @@
  * Clean, icon-free interface focusing on readability and premium card game feel.
  * No Lucide icons - all UI uses text, shapes, and faction portraits.
  * Prominent action feed shows recent plays. Larger text throughout.
+ *
+ * Epic Multimedia Features:
+ * - Floor runes (via BabylonScene props)
+ * - Arena decay (via BabylonScene currentRound prop)
+ * - SinCorruptionBorder (growing glowing border cracks)
+ * - CinematicFlash (screen flash + ripple for big damage)
+ * - ComboChainBanner (chain counter for consecutive same-sin plays)
+ * - EpicCardReveal (cinematic spotlight for high-cost cards)
+ * - VictoryCinematic (5-step win cinematic)
+ * - Dynamic music tempo (speeds up as rounds progress)
+ * - HP reactions (avatar portraits shake/desaturate on damage)
  */
 
 import { Button } from "@/components/ui/button";
@@ -48,6 +59,11 @@ import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
 import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
 import DeckPile from "@/components/DeckPile";
+import CinematicFlash from "@/components/CinematicFlash";
+import ComboChainBanner from "@/components/ComboChainBanner";
+import EpicCardReveal from "@/components/EpicCardReveal";
+import SinCorruptionBorder from "@/components/SinCorruptionBorder";
+import VictoryCinematic from "@/components/VictoryCinematic";
 
 interface ActionFeedEntry {
   id: string;
@@ -93,8 +109,25 @@ export default function GameBoard() {
   const prevAliveCounts = useRef<number>(4);
   const [soundVolume] = useState(0.3);
   const [narratorText, setNarratorText] = useState<string | null>(null);
-  const [narratorEnabled, setNarratorEnabled] = useState(false);
-  const [dynamicMusicEnabled, setDynamicMusicEnabled] = useState(false);
+  const [narratorEnabled, setNarratorEnabled] = useState(true);
+  const [dynamicMusicEnabled, setDynamicMusicEnabled] = useState(true);
+
+  // Epic visual features state
+  const [cinematicFlashTrigger, setCinematicFlashTrigger] = useState(0);
+  const [cinematicFlashColor, setCinematicFlashColor] = useState('#ffffff');
+  const [comboChain, setComboChain] = useState(0);
+  const [comboSin, setComboSin] = useState<SinType>('wrath');
+  const lastCardSinRef = useRef<SinType | null>(null);
+  const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [epicRevealShow, setEpicRevealShow] = useState(false);
+  const [epicRevealCard, setEpicRevealCard] = useState('');
+  const [epicRevealSin, setEpicRevealSin] = useState<SinType>('wrath');
+  const [epicRevealEnergy, setEpicRevealEnergy] = useState(4);
+  const [cardPlayCount, setCardPlayCount] = useState(0);
+  const [lastPlayedSin, setLastPlayedSin] = useState<SinType>('wrath');
+  const [victoryCinematicShow, setVictoryCinematicShow] = useState(false);
+  const [showGameOver, setShowGameOver] = useState(false);
+  const prevGameStatus = useRef<string>('active');
 
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
@@ -103,6 +136,24 @@ export default function GameBoard() {
     musicEngine.setScene("arena");
     return () => { musicEngine.setScene("menu"); };
   }, []);
+
+  // Feature: Dynamic tempo — speeds up as game enters late rounds
+  useEffect(() => {
+    if (!gameState) return;
+    const round = gameState.currentRound;
+    // 1.0 at round 1, ramp to 1.35 at round 8+
+    const tempo = Math.min(1.35, 1.0 + Math.max(0, round - 3) * 0.05);
+    musicEngine.setTempo(tempo);
+  }, [gameState?.currentRound]);
+
+  // Feature: Victory cinematic trigger
+  useEffect(() => {
+    if (!gameState) return;
+    if (gameState.status === 'finished' && prevGameStatus.current === 'active') {
+      setVictoryCinematicShow(true);
+    }
+    prevGameStatus.current = gameState.status;
+  }, [gameState?.status]);
 
   const addToActionFeed = useCallback((text: string) => {
     const entry: ActionFeedEntry = {
@@ -248,10 +299,42 @@ export default function GameBoard() {
       } else {
         soundEngine.play("card_play");
       }
+
+      // Feature: Epic card reveal for high-energy cards (4+)
+      const energyCost = card.cost || 0;
+      if (energyCost >= 4) {
+        setEpicRevealCard(card.name);
+        setEpicRevealSin(card.sin as SinType);
+        setEpicRevealEnergy(energyCost);
+        setEpicRevealShow(true);
+      }
+
       const result = await playCard(gameId, playerId, selectedCard, target || undefined);
       addMessage(result.narratorQuip, "action");
 
-      // Floating numbers + screen shake
+      // Feature: Combo chain tracking
+      const cardSin = card.sin as SinType;
+      setLastPlayedSin(cardSin);
+      setCardPlayCount(prev => prev + 1);
+      if (lastCardSinRef.current === cardSin) {
+        setComboChain(prev => {
+          const next = prev + 1;
+          setComboSin(cardSin);
+          return next;
+        });
+      } else {
+        setComboChain(1);
+        setComboSin(cardSin);
+      }
+      lastCardSinRef.current = cardSin;
+      if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
+      comboTimerRef.current = setTimeout(() => {
+        setComboChain(0);
+        lastCardSinRef.current = null;
+      }, 4000);
+
+      // Floating numbers + screen shake + cinematic flash
+      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981' };
       for (const eff of card.effects) {
         const val = eff.baseValue || 0;
         if (val > 0) {
@@ -261,15 +344,21 @@ export default function GameBoard() {
             const yBase = eff.target === 'self' ? 70 : 30;
             setFloatingNumbers(prev => [...prev, { id: `${Date.now()}-${eff.type}`, value: val, type: numType, x: xBase, y: yBase }]);
           }
-          if (eff.type === 'damage' && val >= 8) {
-            setShakeIntensity(val >= 15 ? 'heavy' : 'light');
-            setShakeTrigger(prev => prev + 1);
+          if (eff.type === 'damage') {
+            if (val >= 8) {
+              setShakeIntensity(val >= 15 ? 'heavy' : 'light');
+              setShakeTrigger(prev => prev + 1);
+            }
+            // Feature: Cinematic flash for big damage (20+)
+            if (val >= 20) {
+              setCinematicFlashColor(sinColorMap[card.sin] || '#ffffff');
+              setCinematicFlashTrigger(prev => prev + 1);
+            }
           }
         }
       }
       
       // Trigger card play arc animation
-      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981' };
       setCardArcName(card.name);
       setCardArcColor(sinColorMap[card.sin] || '#06b6d4');
       setCardArcShow(true);
@@ -343,7 +432,8 @@ export default function GameBoard() {
   const getPlayerEffects = (player: PlayerState) =>
     gameState?.activeEffects.filter((e) => e.targetPlayerId === player.gamePlayerId) || [];
 
-  if (gameState?.status === "finished") {
+  // Victory cinematic → then game over screen
+  if (gameState?.status === "finished" && !victoryCinematicShow && showGameOver) {
     return (
       <GameOverScreen
         players={gameState.players}
@@ -354,6 +444,19 @@ export default function GameBoard() {
         onRematch={() => {
           setLocation("/");
         }}
+      />
+    );
+  }
+
+  if (gameState?.status === "finished" && victoryCinematicShow) {
+    const winner = gameState.players.find(p => p.id === gameState.winnerId);
+    return (
+      <VictoryCinematic
+        show={victoryCinematicShow}
+        isWinner={gameState.winnerId === playerId}
+        winnerName={winner?.username || "Unknown"}
+        winnerSin={(winner?.chosenSin as SinType) || 'wrath'}
+        onComplete={() => { setVictoryCinematicShow(false); setShowGameOver(true); }}
       />
     );
   }
@@ -376,9 +479,14 @@ export default function GameBoard() {
   return (
     <ScreenShake trigger={shakeTrigger} intensity={shakeIntensity}>
     <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
-      {/* 3D Gothic Arena Background */}
+      {/* 3D Gothic Arena Background — with floor runes + arena decay */}
       <Suspense fallback={null}>
-        <GameBoardBabylonScene activeSin={mySin} />
+        <GameBoardBabylonScene
+          activeSin={mySin}
+          currentRound={gameState.currentRound}
+          cardPlayCount={cardPlayCount}
+          lastCardSin={lastPlayedSin}
+        />
       </Suspense>
 
       {/* Tier 2: Sin-Reactive Background */}
@@ -395,6 +503,32 @@ export default function GameBoard() {
       <SinCursor sin={mySin} isActive={true} />
 
       <EmberField count={12} />
+
+      {/* Feature: Sin Corruption Border — glowing cracks spread from edges */}
+      <SinCorruptionBorder
+        sin={mySin}
+        intensity={Math.min(1, (gameState.currentRound - 1) / 9)}
+        hpRatio={(myPlayer?.currentHp ?? 25) / (myPlayer?.maxHp ?? 25)}
+      />
+
+      {/* Feature: Cinematic Flash on heavy damage (20+) */}
+      <CinematicFlash
+        trigger={cinematicFlashTrigger}
+        color={cinematicFlashColor}
+        intensity="epic"
+      />
+
+      {/* Feature: Combo Chain Banner */}
+      <ComboChainBanner combo={comboChain} sin={comboSin} />
+
+      {/* Feature: Epic Card Reveal for high-cost cards */}
+      <EpicCardReveal
+        show={epicRevealShow}
+        cardName={epicRevealCard}
+        sin={epicRevealSin}
+        energyCost={epicRevealEnergy}
+        onComplete={() => setEpicRevealShow(false)}
+      />
 
       {/* Tier 1: Floating Numbers */}
       <FloatingNumbers
@@ -928,6 +1062,27 @@ function PlayerPanel({
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
 
+  // Feature: HP-reactive avatar (shake + desaturate on damage)
+  const prevHpRef = useRef(player.currentHp);
+  const [hpFlash, setHpFlash] = useState(false);
+  useEffect(() => {
+    if (player.currentHp < prevHpRef.current && player.isAlive) {
+      setHpFlash(true);
+      setTimeout(() => setHpFlash(false), 400);
+    }
+    prevHpRef.current = player.currentHp;
+  }, [player.currentHp, player.isAlive]);
+
+  // Portrait filter: dims + reddens at low HP, glows at high HP
+  const portraitFilter = (() => {
+    if (!player.isAlive) return "grayscale(1) brightness(0.3)";
+    if (hpFlash) return "brightness(2) saturate(3)";
+    if (hpPercent < 20) return "sepia(0.5) saturate(0.6) brightness(0.7) hue-rotate(330deg)";
+    if (hpPercent < 40) return "sepia(0.2) brightness(0.85)";
+    if (hpPercent > 70) return `drop-shadow(0 0 6px ${sinColor})`;
+    return "none";
+  })();
+
   const shieldValue = activeEffects
     .filter((e) => e.effectType === "shield")
     .reduce((sum, e) => sum + (e.isCompounding ? getCompoundTickValue(e.baseValue, e.currentTick || 0) : e.baseValue), 0);
@@ -992,11 +1147,14 @@ function PlayerPanel({
             className={`${compact ? "w-9 h-9" : "w-11 h-11"} rounded-full overflow-hidden border-2 flex-shrink-0`} 
             style={{ borderColor: sinColor }}
           >
-            <img 
-              src={FACTION_PORTRAITS[player.chosenSin as SinType]} 
-              alt={player.chosenSin || ""} 
-              className="w-full h-full object-cover" 
-              loading="lazy" 
+            <motion.img
+              src={FACTION_PORTRAITS[player.chosenSin as SinType]}
+              alt={player.chosenSin || ""}
+              className="w-full h-full object-cover"
+              loading="lazy"
+              animate={hpFlash ? { x: [-2, 2, -2, 0], scale: [1, 1.05, 1] } : {}}
+              transition={{ duration: 0.3 }}
+              style={{ filter: portraitFilter, transition: "filter 0.4s ease" }}
             />
           </div>
           

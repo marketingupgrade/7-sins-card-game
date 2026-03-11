@@ -252,6 +252,24 @@ function createAmbientParticles(scene: BABYLON.Scene) {
   greedParticles.minEmitPower = 0.06;
   greedParticles.maxEmitPower = 0.25;
   greedParticles.start();
+
+  // Envy stream — emerald/poison wisps
+  const envyParticles = new BABYLON.ParticleSystem("ambient-envy", 80, scene);
+  const envyEmitter = new BABYLON.SphereParticleEmitter(4, 0.5);
+  envyParticles.particleEmitterType = envyEmitter;
+  envyParticles.emitter = BABYLON.Vector3.Zero();
+  envyParticles.color1 = new BABYLON.Color4(0.1, 0.85, 0.3, 0.4);
+  envyParticles.color2 = new BABYLON.Color4(0.05, 0.55, 0.2, 0.22);
+  envyParticles.colorDead = new BABYLON.Color4(0, 0, 0, 0);
+  envyParticles.minSize = 0.04;
+  envyParticles.maxSize = 0.12;
+  envyParticles.minLifeTime = 3;
+  envyParticles.maxLifeTime = 7;
+  envyParticles.emitRate = 15;
+  envyParticles.gravity = new BABYLON.Vector3(0, 0.07, 0);
+  envyParticles.minEmitPower = 0.05;
+  envyParticles.maxEmitPower = 0.18;
+  envyParticles.start();
 }
 
 // ─── Helper: Seat Positions ──────────────────────────────────

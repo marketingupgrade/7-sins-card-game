@@ -9,6 +9,8 @@
  * - Ember particles rising from braziers
  * - Fog and volumetric atmosphere
  * - Camera locked (no user interaction) with subtle breathing motion
+ * - Arena decay: ambient light dims, fog thickens as rounds increase
+ * - Floor runes: sin-colored glowing torus runes spawn per card played
  *
  * Accepts activeSin prop to shift the dominant light color.
  */
@@ -19,6 +21,9 @@ import type { SinType } from "@shared/gameTypes";
 interface GameBoardBabylonSceneProps {
   className?: string;
   activeSin?: SinType | null;
+  currentRound?: number;
+  cardPlayCount?: number;    // increment to spawn a floor rune
+  lastCardSin?: SinType;     // sin of last played card (for rune color)
 }
 
 const SIN_RGB: Record<string, [number, number, number]> = {
@@ -28,14 +33,24 @@ const SIN_RGB: Record<string, [number, number, number]> = {
   envy: [0.1, 0.75, 0.4],
 };
 
-export default function GameBoardBabylonScene({ className = "", activeSin }: GameBoardBabylonSceneProps) {
+export default function GameBoardBabylonScene({ className = "", activeSin, currentRound = 1, cardPlayCount = 0, lastCardSin }: GameBoardBabylonSceneProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<any>(null);
   const activeSinRef = useRef(activeSin);
+  const currentRoundRef = useRef(currentRound);
+  const sceneRef = useRef<any>(null);
   const disposed = useRef(false);
 
-  // Keep activeSin ref in sync
+  // Keep refs in sync
   useEffect(() => { activeSinRef.current = activeSin; }, [activeSin]);
+  useEffect(() => { currentRoundRef.current = currentRound; }, [currentRound]);
+
+  // Floor rune on card play
+  useEffect(() => {
+    if (cardPlayCount <= 0 || !sceneRef.current) return;
+    const sin = lastCardSin || activeSin || "wrath";
+    triggerFloorRune(sceneRef.current, sin as string, cardPlayCount);
+  }, [cardPlayCount, lastCardSin, activeSin]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -61,6 +76,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin }: Gam
       if (isMobile) engine.setHardwareScalingLevel(2.5);
 
       scene = new BABYLON.Scene(engine);
+      sceneRef.current = scene;
       scene.clearColor = new BABYLON.Color4(0.015, 0.01, 0.025, 1);
       scene.ambientColor = new BABYLON.Color3(0.02, 0.015, 0.03);
       scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
@@ -301,6 +317,16 @@ export default function GameBoardBabylonScene({ className = "", activeSin }: Gam
         innerRing.rotation.z = -time * 0.05;
         ritualMat.alpha = 0.2 + Math.sin(time * 0.4) * 0.08;
         innerMat.alpha = 0.15 + Math.sin(time * 0.6 + 1) * 0.06;
+
+        // Arena decay — progressively dim as rounds increase
+        const round = currentRoundRef.current;
+        const decayFactor = Math.min(1, (round - 1) / 9); // 0 at round 1, 1 at round 10
+        hemi.intensity = 0.04 - decayFactor * 0.025;
+        scene.fogDensity = 0.035 + decayFactor * 0.04;
+        // Ritual ring pulses faster at high rounds
+        const speedMult = 1 + decayFactor * 2;
+        ritualRing.rotation.z = time * 0.03 * speedMult;
+        innerRing.rotation.z = -time * 0.05 * speedMult;
       });
 
       engine.runRenderLoop(() => scene.render());
@@ -310,6 +336,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin }: Gam
 
     return () => {
       disposed.current = true;
+      sceneRef.current = null;
       if (engine) {
         engine.stopRenderLoop();
         engine.dispose();
@@ -325,4 +352,49 @@ export default function GameBoardBabylonScene({ className = "", activeSin }: Gam
       style={{ zIndex: 0 }}
     />
   );
+}
+
+// ─── Floor Rune: glowing sin-colored disc spawned on card play ─────────────
+function triggerFloorRune(scene: any, sin: string, index: number) {
+  const [r, g, b] = SIN_RGB[sin] || SIN_RGB.wrath;
+
+  // Spread runes in a golden ratio spiral pattern around the center
+  const angle = (index * 1.618) * Math.PI * 2;
+  const dist = Math.min(2.5, 0.5 + (index % 6) * 0.4);
+  const x = Math.cos(angle) * dist;
+  const z = Math.sin(angle) * dist;
+
+  // Dynamic import approach for creating rune meshes
+  import("@babylonjs/core").then(({ MeshBuilder, StandardMaterial, Color3, Vector3 }) => {
+    const runeDisc = MeshBuilder.CreateTorus(`rune_${index}_${Date.now()}`, {
+      diameter: 0.5 + Math.random() * 0.3,
+      thickness: 0.025,
+      tessellation: 20,
+    }, scene);
+    runeDisc.position = new Vector3(x, 0.02, z);
+    runeDisc.rotation.x = Math.PI / 2;
+
+    const mat = new StandardMaterial(`runeMat_${index}_${Date.now()}`, scene);
+    mat.emissiveColor = new Color3(r, g, b);
+    mat.disableLighting = true;
+    mat.alpha = 0;
+    runeDisc.material = mat;
+
+    // Fade in, linger, then fade out and dispose
+    let frame = 0;
+    const observer = scene.onBeforeRenderObservable.add(() => {
+      frame++;
+      if (frame < 30) {
+        mat.alpha = frame / 30 * 0.6;
+      } else if (frame < 300) {
+        mat.alpha = 0.6 - (frame - 30) / 300 * 0.4; // slowly fade to 0.2
+      } else if (frame < 400) {
+        mat.alpha = Math.max(0, 0.2 - (frame - 300) / 100 * 0.2);
+      } else {
+        runeDisc.dispose();
+        mat.dispose();
+        scene.onBeforeRenderObservable.remove(observer);
+      }
+    });
+  });
 }

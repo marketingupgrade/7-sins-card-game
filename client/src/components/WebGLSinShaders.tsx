@@ -18,6 +18,7 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
       transition: 'opacity 300ms ease-in-out',
       mixBlendMode: 'overlay' as const,
       pointerEvents: 'none' as const,
+      willChange: 'opacity' as const,
     };
 
     switch (sin) {
@@ -26,12 +27,14 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
           ...baseStyles,
           background: 'linear-gradient(0deg, #ff4500 0%, #ff6b35 25%, #ff8c42 50%, #ff4500 75%, #ff6b35 100%)',
           backgroundSize: '100% 200%',
+          willChange: 'opacity, background-position' as any,
           animation: isHovered ? 'wrathFire 2s ease-in-out infinite' : 'none',
         };
       case 'sloth':
         return {
           ...baseStyles,
           background: 'radial-gradient(circle, transparent 30%, #6a0dad 70%, #4b0082 100%)',
+          willChange: 'opacity, transform' as any,
           animation: isHovered ? 'slothVoid 8s linear infinite' : 'none',
         };
       case 'greed':
@@ -39,14 +42,17 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
           ...baseStyles,
           background: 'linear-gradient(90deg, transparent 0%, #ffd700 20%, #ffed4e 50%, #ffd700 80%, transparent 100%)',
           backgroundSize: '200% 100%',
+          willChange: 'opacity, background-position' as any,
           animation: isHovered ? 'greedShimmer 3s ease-in-out infinite' : 'none',
         };
       case 'envy':
         return {
           ...baseStyles,
           opacity: isHovered ? 0.12 : 0,
-          background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7)',
-          animation: isHovered ? 'envyShift 4s ease-in-out infinite' : 'none',
+          background: 'linear-gradient(135deg, oklch(0.35 0.18 155 / 0.7) 0%, oklch(0.2 0.12 155 / 0.4) 50%, oklch(0.35 0.18 155 / 0.7) 100%)',
+          backgroundSize: '200% 200%',
+          willChange: 'opacity, background-position' as any,
+          animation: isHovered ? 'envyPulse 3s ease-in-out infinite' : 'none',
         };
       default:
         return baseStyles;
@@ -85,18 +91,12 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
           }
         }
 
-        @keyframes envyShift {
+        @keyframes envyPulse {
           0%, 100% {
-            filter: hue-rotate(0deg);
-          }
-          25% {
-            filter: hue-rotate(90deg);
+            background-position: 0% 0%;
           }
           50% {
-            filter: hue-rotate(180deg);
-          }
-          75% {
-            filter: hue-rotate(270deg);
+            background-position: 100% 100%;
           }
         }
       `}</style>
