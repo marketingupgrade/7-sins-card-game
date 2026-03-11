@@ -14,7 +14,8 @@ import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, E
 import EmberField from "@/components/EmberField";
 import { useCard3DTilt } from "@/hooks/useCard3DTilt";
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { useFactionUnlocks, UNLOCK_THRESHOLD } from "@/hooks/useFactionUnlocks";
+import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
+import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { createGame, joinGame } from "@/lib/gameEngine";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
@@ -439,12 +440,12 @@ export default function Home() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-3xl"
         >
           {[
-            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy", locked: false },
-            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy", locked: false },
-            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy", locked: !factionUnlocks.isUnlocked },
-            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched", locked: !factionUnlocks.isUnlocked },
+            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", key: "wrath" as const, desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy" },
+            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", key: "sloth" as const, desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy" },
+            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", key: "greed" as const, desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
+            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", key: "envy" as const, desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },
           ].map((sin) => (
-            <SinCard key={sin.name} sin={sin} locked={sin.locked} unlockProgress={factionUnlocks.progress} gamesRemaining={factionUnlocks.gamesRemaining} />
+            <SinCard key={sin.name} sin={sin} portrait={FACTION_PORTRAITS[sin.key]} />
           ))}
         </motion.div>
 
@@ -658,58 +659,31 @@ export default function Home() {
 }
 
 /* ─── Sin Faction Card with 3D Tilt ─────────────────────── */
-function SinCard({ sin, locked = false, unlockProgress = 0, gamesRemaining = 0 }: { sin: { Icon: any; color: string; glass: string; name: string; desc: string; tag: string; passive: string }; locked?: boolean; unlockProgress?: number; gamesRemaining?: number }) {
-  const { ref, handlers } = useCard3DTilt({ maxTilt: locked ? 0 : 12, scale: locked ? 1 : 1.06 });
-
-  if (locked) {
-    return (
-      <div
-        className="rounded-xl p-4 text-center relative overflow-hidden border border-border/15 bg-black/20"
-      >
-        <div className="relative mx-auto mb-2 w-7 h-7 flex items-center justify-center">
-          <sin.Icon className="w-7 h-7 text-muted-foreground/15" />
-          <Lock className="w-3.5 h-3.5 text-muted-foreground/50 absolute -bottom-0.5 -right-0.5" />
-        </div>
-        <h3
-          className="text-sm font-bold text-muted-foreground/25 tracking-wider mb-1"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          {sin.name}
-        </h3>
-        <p
-          className="text-[10px] text-muted-foreground/35 mt-1 leading-relaxed"
-          style={{ fontFamily: "var(--font-body)" }}
-        >
-          Play {gamesRemaining} more game{gamesRemaining !== 1 ? "s" : ""} to unlock
-        </p>
-        {/* Mini progress bar */}
-        <div className="mt-2 mx-auto w-3/4 h-1 rounded-full bg-border/15 overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${unlockProgress * 100}%` }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            className="h-full rounded-full"
-            style={{ background: `linear-gradient(90deg, oklch(0.65 0.15 85 / 0.5), oklch(0.5 0.16 155 / 0.5))` }}
-          />
-        </div>
-        <p
-          className="text-[8px] text-muted-foreground/40 mt-1 uppercase tracking-[0.15em]"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          LOCKED
-        </p>
-      </div>
-    );
-  }
+function SinCard({ sin, portrait }: { sin: { Icon: any; color: string; glass: string; name: string; desc: string; tag: string; passive: string }; portrait?: string }) {
+  const { ref, handlers } = useCard3DTilt({ maxTilt: 12, scale: 1.06 });
 
   return (
     <div
       ref={ref}
       {...handlers}
-      className={`${sin.glass} rounded-xl p-4 text-center group cursor-default holo-sheen transition-shadow duration-300 hover:shadow-[0_0_30px_oklch(0.5_0.2_var(--sin-hue)/0.2)]`}
+      className={`${sin.glass} rounded-xl p-3 text-center group cursor-default holo-sheen transition-shadow duration-300 hover:shadow-[0_0_30px_oklch(0.5_0.2_var(--sin-hue)/0.2)] relative overflow-hidden`}
       style={{ willChange: 'transform' }}
     >
-      <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all group-hover:drop-shadow-[0_0_8px_currentColor]`} />
+      {/* Portrait image */}
+      {portrait && (
+        <div className="w-full aspect-[3/4] rounded-lg overflow-hidden mb-2 relative">
+          <img
+            src={portrait}
+            alt={`${sin.name} faction`}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            loading="lazy"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        </div>
+      )}
+      {!portrait && (
+        <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all group-hover:drop-shadow-[0_0_8px_currentColor]`} />
+      )}
       <h3
         className={`text-sm font-bold text-${sin.color} tracking-wider mb-1`}
         style={{ fontFamily: "var(--font-heading)" }}
@@ -722,24 +696,14 @@ function SinCard({ sin, locked = false, unlockProgress = 0, gamesRemaining = 0 }
       >
         {sin.desc}
       </p>
-      <div className="flex justify-center gap-1 mt-2">
-        {[...Array(5)].map((_, i) => (
-          <motion.div
-            key={i}
-            className={`w-1.5 h-1.5 rounded-full bg-${sin.color}`}
-            animate={{ opacity: [0.3, 1, 0.3] }}
-            transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
-          />
-        ))}
-      </div>
       <p
-        className="text-[8px] text-muted-foreground/70 mt-1 uppercase tracking-[0.15em]"
+        className="text-[8px] text-muted-foreground/70 mt-1.5 uppercase tracking-[0.15em]"
         style={{ fontFamily: "var(--font-heading)" }}
       >
         {sin.tag}
       </p>
       <p
-        className={`text-[8px] text-${sin.color}/60 mt-1 italic`}
+        className={`text-[8px] text-${sin.color}/60 mt-0.5 italic`}
         style={{ fontFamily: "var(--font-body)" }}
       >
         {sin.passive}

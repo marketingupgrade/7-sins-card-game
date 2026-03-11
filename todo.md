@@ -354,3 +354,4 @@
 - [x] Restore all 4 factions as playable (remove lock gating)
 - [x] Floating text/numbers too large and intrusive on mobile
 - [x] Round/status text overlaps player panels on mobile
+- [x] Fix missing faction portraits on homepage sin selection cards
