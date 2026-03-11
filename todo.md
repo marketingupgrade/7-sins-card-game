@@ -585,3 +585,29 @@
 - [x] Improve card thumbnail effect text — color-coded emoji symbols (⚔ DMG, 💚 HEAL, 🛡 SHLD) replace cryptic 6H 5S codes
 - [x] Tap-to-expand on opponent bars already handled by MobileAfflictionSheet + MobileBattleOverview
 - [x] Show action feed (Battle Log) in mobile center area within MobileBattleOverview
+
+## Homepage AAA Redesign (Round 14)
+- [ ] Research HeyGen API for photo-to-video animation
+- [ ] Generate animated portrait videos for all 7 sin factions via HeyGen
+- [ ] Upload animated videos to CDN
+- [ ] Build rotating sin portrait hero component with animated videos
+- [ ] Redesign homepage with AAA premium game look and feel (cinematic hero, parallax, particle effects, premium typography)
+- [ ] Mobile-responsive premium homepage
+- [ ] Push to GitHub
+
+## Faction Icon Fixes (Round 15)
+- [x] Replace Pride icon with radiant crown (pride_crown)
+- [x] Replace Gluttony icon with devouring maw (gluttony_maw)
+- [x] Replace Lust icon with flaming heart charm (lust_charm)
+- [x] Generated 10 unique faction-specific icons (damage, shield, heal, buff variants)
+- [x] Updated assetUrls.ts (11 new entries) and iconUtils.ts (all effect maps + archetype icons)
+
+## Bug Fixes (Round 16)
+- [x] Fix defeat cinematic gets stuck in endless loop — onComplete callback created new ref each render, causing useEffect infinite re-trigger. Fixed with useRef pattern in VictoryCinematic + DeathSequence
+
+## Homepage AAA Redesign (Round 17)
+- [ ] Generate animated portrait variations for all 7 sins (action poses, energy effects)
+- [ ] Optimize and upload portrait variations to CDN
+- [ ] Redesign homepage with AAA premium game look — rotating sin showcase hero section
+- [ ] Add cinematic parallax effects, particle systems, premium typography
+- [ ] Push to GitHub

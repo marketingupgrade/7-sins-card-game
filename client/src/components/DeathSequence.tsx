@@ -5,7 +5,7 @@ import type { SinType } from "@shared/gameTypes";
  * without fully blocking the game board.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface DeathSequenceProps {
@@ -26,12 +26,16 @@ const sinColors: Record<string, string> = {
 };
 
 const DeathSequence: React.FC<DeathSequenceProps> = ({ show, playerName, sin, onComplete }) => {
+  // Stabilize onComplete to prevent infinite re-render loop
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   useEffect(() => {
     if (show) {
-      const timer = setTimeout(onComplete, 1500);
+      const timer = setTimeout(() => onCompleteRef.current(), 1500);
       return () => clearTimeout(timer);
     }
-  }, [show, onComplete]);
+  }, [show]);
 
   const color = sinColors[sin] || '#888';
 

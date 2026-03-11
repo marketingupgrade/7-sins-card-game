@@ -10,7 +10,7 @@
  * Total: ~2.5s cinematic before yielding to GameOverScreen.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SinType } from "@shared/gameTypes";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
@@ -39,6 +39,10 @@ export default function VictoryCinematic({ show, isWinner, winnerName, winnerSin
   const [step, setStep] = useState<CinematicStep>("blackout");
   const hex = SIN_HEX[winnerSin];
 
+  // Stabilize onComplete to prevent infinite re-render loop
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   useEffect(() => {
     if (!show) { setStep("blackout"); return; }
 
@@ -58,13 +62,13 @@ export default function VictoryCinematic({ show, isWinner, winnerName, winnerSin
       totalDelay += delay;
       const t = setTimeout(() => {
         setStep(nextStep);
-        if (nextStep === "done") onComplete();
+        if (nextStep === "done") onCompleteRef.current();
       }, totalDelay);
       timers.push(t);
     }
 
     return () => timers.forEach(clearTimeout);
-  }, [show, onComplete]);
+  }, [show]); // Only depend on `show`, not onComplete (stabilized via ref)
 
   if (!show) return null;
 
