@@ -703,6 +703,7 @@ export default function Home() {
 /* ─── Feature #14: Sin Leaderboard Heatmap ─────────────────────── */
 const SIN_HEX_MAP: Record<SinType, string> = {
   wrath: "#ef4444", sloth: "#a855f7", greed: "#eab308", envy: "#10b981",
+  pride: "#f0f0f0", lust: "#ee48a0", gluttony: "#c07020",
 };
 
 function SinLeaderboard() {

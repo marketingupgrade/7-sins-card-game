@@ -172,12 +172,12 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         cap.material = pillarMat;
       }
 
-      // --- FOUR FIRE BRAZIERS (one per sin) ---
+      // --- SEVEN FIRE BRAZIERS (one per sin, evenly spaced) ---
       const sinKeys = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
       const brazierLights: any[] = [];
 
       sinKeys.forEach((sin, i) => {
-        const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+        const angle = (i / sinKeys.length) * Math.PI * 2 + Math.PI / 4;
         const radius = 4.5;
         const x = Math.cos(angle) * radius;
         const z = Math.sin(angle) * radius;
@@ -275,6 +275,26 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       dust.maxEmitPower = 0.03;
       dust.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
       dust.start();
+
+      // --- ENVY AMBIENT EMERALD STREAM (floor-level tendrils) ---
+      const envyPs = new BABYLON.ParticleSystem("envy-ambient", isMobile ? 40 : 80, scene);
+      envyPs.createPointEmitter(
+        new BABYLON.Vector3(-4, 0, -4),
+        new BABYLON.Vector3(4, 0, 4)
+      );
+      envyPs.color1 = new BABYLON.Color4(0.08, 0.92, 0.28, 0.55);
+      envyPs.color2 = new BABYLON.Color4(0.04, 0.60, 0.18, 0.30);
+      envyPs.colorDead = new BABYLON.Color4(0.02, 0.25, 0.08, 0);
+      envyPs.minSize = 0.03;
+      envyPs.maxSize = 0.09;
+      envyPs.minLifeTime = 2.5;
+      envyPs.maxLifeTime = 5.5;
+      envyPs.emitRate = isMobile ? 8 : 15;
+      envyPs.gravity = new BABYLON.Vector3(0, 0.12, 0);
+      envyPs.minEmitPower = 0.05;
+      envyPs.maxEmitPower = 0.2;
+      envyPs.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+      envyPs.start();
 
       // --- ANIMATION LOOP ---
       let time = 0;

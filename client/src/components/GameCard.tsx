@@ -108,11 +108,15 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
   const actuallyPlayable = isPlayable && canAfford;
+  const isLegendary = card.cost >= 6;
+  const isEpicTier = card.cost >= 4 && card.cost < 6;
   const isCompounding = card.cardType === "compounding";
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
 
-  // 3D tilt
+  // 3D tilt + live holographic foil
   const cardRef = useRef<HTMLDivElement>(null);
+  const tiltRef = useRef({ x: 0, y: 0 });
+  const [holoPos, setHoloPos] = useState<{ x: number; y: number } | null>(null);
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el || !actuallyPlayable) return;
@@ -121,16 +125,19 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
     const y = (e.clientY - rect.top) / rect.height;
     const tiltX = (10 * (0.5 - y)).toFixed(2);
     const tiltY = (10 * (x - 0.5)).toFixed(2);
+    tiltRef.current = { x: parseFloat(tiltX), y: parseFloat(tiltY) };
     el.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-24px) scale(1.06)`;
+    setHoloPos({ x: x * 100, y: y * 100 });
   }, [actuallyPlayable]);
   const [isHovered, setIsHovered] = useState(false);
   const handleMouseLeave = useCallback(() => {
     const el = cardRef.current;
     if (!el) return;
+    el.style.transition = 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
     el.style.transform = '';
-    el.style.transition = 'transform 0.3s ease-out';
-    setTimeout(() => { if (el) el.style.transition = ''; }, 300);
+    setTimeout(() => { if (el) el.style.transition = ''; }, 400);
     setIsHovered(false);
+    setHoloPos(null);
   }, []);
 
   return (
@@ -145,7 +152,8 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       className={`
         relative w-[180px] sm:w-[200px] h-[270px] sm:h-[300px] rounded-xl overflow-hidden select-none
         ${cfg.cardClass}
-        ${tier.border} ${tier.glow}
+        ${isLegendary ? "card-legendary-border" : tier.border}
+        ${isLegendary ? "card-legendary-glow" : tier.glow}
         ${isSelected ? cfg.glowClass : ""}
         ${actuallyPlayable ? "holo-sheen" : ""}
         border-2
@@ -159,6 +167,17 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         className="absolute inset-0 opacity-20 pointer-events-none"
         style={{ background: `linear-gradient(to bottom, var(--color-${cfg.color}) 0%, transparent 50%)`, opacity: 0.1 }}
       />
+
+      {/* Live holographic foil — follows cursor */}
+      {holoPos && actuallyPlayable && (
+        <div
+          className="absolute inset-0 pointer-events-none rounded-xl z-10"
+          style={{
+            background: `radial-gradient(circle at ${holoPos.x}% ${holoPos.y}%, oklch(0.9 0.06 ${(holoPos.x * 3.6 + holoPos.y * 1.8) % 360}deg / 0.38), oklch(0.7 0.04 ${(holoPos.x * 2 + 120) % 360}deg / 0.12) 45%, transparent 65%)`,
+            mixBlendMode: 'screen',
+          }}
+        />
+      )}
 
       {/* Card Header: Cost, Type Badge & Sin Icon */}
       <div className="relative px-3 pt-2.5 pb-1.5 flex items-center justify-between">

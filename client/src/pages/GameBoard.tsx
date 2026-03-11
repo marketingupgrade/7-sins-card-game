@@ -884,6 +884,7 @@ export default function GameBoard() {
                   exit={{ opacity: 0, y: 50 }}
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0"
+                  style={{ transformOrigin: 'bottom center' }}
                 >
                   <GameCard
                     card={card}
@@ -1059,6 +1060,9 @@ const sinColors: Record<string, string> = {
   sloth: "var(--color-sloth)",
   greed: "var(--color-greed)",
   envy: "var(--color-envy)",
+  pride: "var(--color-pride)",
+  lust: "var(--color-lust)",
+  gluttony: "var(--color-gluttony)",
 };
 
 const PlayerPanel = memo(function PlayerPanel({
@@ -1254,6 +1258,19 @@ const PlayerPanel = memo(function PlayerPanel({
                 style={{ left: `${hpPercent}%` }}
               />
             )}
+            {/* HP damage flash overlay */}
+            <AnimatePresence>
+              {hpFlash && (
+                <motion.div
+                  className="absolute inset-0 rounded-full pointer-events-none"
+                  initial={{ opacity: 0.75 }}
+                  animate={{ opacity: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                  style={{ background: 'radial-gradient(ellipse at center, oklch(0.6 0.25 20 / 0.9), oklch(0.45 0.2 15 / 0.5) 60%, transparent 100%)' }}
+                />
+              )}
+            </AnimatePresence>
             {/* HP text inside the bar */}
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="text-[11px] font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>

@@ -411,6 +411,31 @@
     pointer-events: none;
   }
 
+  /* ─── Legendary / Epic Animated Card Borders ───────────── */
+  @keyframes legendary-border {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .card-legendary-border {
+    background: linear-gradient(270deg,
+      oklch(0.55 0.22 25),
+      oklch(0.82 0.18 75),
+      oklch(0.88 0.05 60),
+      oklch(0.82 0.18 75),
+      oklch(0.55 0.22 25)
+    ) border-box;
+    background-size: 400% 400%;
+    animation: legendary-border 3s ease infinite;
+    border-color: transparent !important;
+  }
+  .card-legendary-glow {
+    box-shadow:
+      0 0 12px oklch(0.82 0.18 75 / 0.45),
+      0 0 28px oklch(0.82 0.18 75 / 0.18),
+      inset 0 0 8px oklch(0.82 0.18 75 / 0.08);
+  }
+
   /* ─── Stained Glass Sheen (for cards) ──────────────────── */
   .holo-sheen {
     position: relative;
