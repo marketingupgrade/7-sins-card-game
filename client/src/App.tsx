@@ -15,6 +15,7 @@ import { TutorialProvider } from "./contexts/TutorialContext";
 import Home from "./pages/Home";
 import Lobby from "./pages/Lobby";
 import GameBoard from "./pages/GameBoard";
+import PromoVideo from "./pages/PromoVideo";
 
 function Router() {
   return (
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/lobby/:gameId" component={Lobby} />
       <Route path="/game/:gameId" component={GameBoard} />
+      <Route path="/promo" component={PromoVideo} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

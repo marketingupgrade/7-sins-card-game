@@ -457,6 +457,15 @@ export default function Home() {
               <span className="text-candle/20">&middot;</span>
               <span className="flex items-center gap-1"><Bot className="w-3 h-3" /> Bots for the Friendless</span>
             </div>
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setLocation("/promo")}
+              className="mt-4 mx-auto flex items-center gap-2 text-[10px] tracking-[0.2em] text-candle/40 hover:text-candle/70 transition-colors uppercase"
+              style={{ fontFamily: "var(--font-heading)", background: "none", border: "none", cursor: "pointer" }}
+            >
+              <span style={{ fontSize: "0.9em" }}>▶</span> Watch Cinematic Promo
+            </motion.button>
           </motion.div>
         </motion.div>
 
