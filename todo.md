@@ -381,3 +381,13 @@
 - [x] Add compact mode for mobile layout
 - [x] Add hover tooltips with per-effect breakdown per round
 - [x] Write 24 vitest tests for affliction projection logic (174 total tests passing)
+
+## Affliction Matrix Redesign — Detailed Per-Effect-Type Columns
+- [x] Redesign PlayerAfflictionTable from Pain/Gain/Net to individual effect-type columns (DMG, Heal, Shield, Debuff, E.Drain, E.Gain, Buff)
+- [x] Show each effect type as its own column with per-round projected values and Painterly Spell Icons
+- [x] Only show columns for effect types that are actually active on the player
+- [x] Keep round rows (NOW, R2, R3, etc.) and TOTAL summary row
+- [x] Maintain gothic cathedral styling with appropriate color per effect type
+- [x] Update compact mobile layout for the wider matrix
+- [x] Update tests for new matrix format (28 tests, 178 total passing)
+- [ ] Push to GitHub for Vercel deployment

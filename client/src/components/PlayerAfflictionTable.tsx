@@ -1,18 +1,18 @@
 /**
- * Player Affliction Table
+ * Player Affliction Table — Detailed Matrix
  *
- * A compact "balance sheet" that sits adjacent to each player panel,
- * showing active afflictions with Pain/Gain columns per upcoming round
- * and a total row. Styled as a gothic parchment ledger.
+ * A compact balance sheet that sits adjacent to each player panel,
+ * showing active afflictions with individual columns per effect type
+ * (DMG, Heal, Shield, Buff, Debuff, E.Drain, E.Gain) and rows per
+ * upcoming round with a TOTAL summary row.
  *
- * Pain column: damage + debuff (red)
- * Gain column: heal + shield (green/gold)
- * Net column: gain - pain (positive = green, negative = red)
+ * Only columns with active effects are shown to save space.
+ * Styled as a gothic parchment ledger with Painterly Spell Icons.
  */
 
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { ICON_URLS } from "@/lib/assetUrls";
-import type { SinType } from "@shared/gameTypes";
+import type { EffectType } from "@shared/gameTypes";
 import {
   ActiveEffect,
   getCompoundTickValue,
@@ -32,20 +32,186 @@ interface PlayerAfflictionTableProps {
   compact?: boolean;
 }
 
-interface RoundRow {
-  round: number;
-  pain: number; // damage + debuff
-  gain: number; // heal + shield
-  painDetails: { name: string; value: number; type: string; tick?: string }[];
-  gainDetails: { name: string; value: number; type: string; tick?: string }[];
+// ─── Column definitions for each effect type ────────────────
+interface EffectColumn {
+  type: EffectType;
+  label: string;
+  shortLabel: string;
+  color: string;
+  textClass: string;
+  icon: string;
+  sign: "+" | "-";
 }
 
-const SIN_COLORS: Record<string, string> = {
-  wrath: "oklch(0.65 0.22 25)",
-  sloth: "oklch(0.55 0.18 290)",
-  greed: "oklch(0.75 0.15 85)",
-  envy: "oklch(0.60 0.18 155)",
-};
+const EFFECT_COLUMNS: EffectColumn[] = [
+  {
+    type: "damage",
+    label: "DMG",
+    shortLabel: "DMG",
+    color: "oklch(0.65 0.22 25)",
+    textClass: "text-wrath",
+    icon: ICON_URLS.damage_wrath,
+    sign: "-",
+  },
+  {
+    type: "debuff",
+    label: "DEBUFF",
+    shortLabel: "DBF",
+    color: "oklch(0.55 0.18 290)",
+    textClass: "text-violet-400",
+    icon: ICON_URLS.debuff_wrath,
+    sign: "-",
+  },
+  {
+    type: "energy_drain",
+    label: "E.DRAIN",
+    shortLabel: "EDR",
+    color: "oklch(0.50 0.15 310)",
+    textClass: "text-purple-400",
+    icon: ICON_URLS.energy_generic,
+    sign: "-",
+  },
+  {
+    type: "heal",
+    label: "HEAL",
+    shortLabel: "HEL",
+    color: "oklch(0.60 0.18 155)",
+    textClass: "text-envy-glow",
+    icon: ICON_URLS.heal_generic,
+    sign: "+",
+  },
+  {
+    type: "shield",
+    label: "SHIELD",
+    shortLabel: "SHD",
+    color: "oklch(0.70 0.12 220)",
+    textClass: "text-sky-400",
+    icon: ICON_URLS.shield_generic,
+    sign: "+",
+  },
+  {
+    type: "buff",
+    label: "BUFF",
+    shortLabel: "BUF",
+    color: "oklch(0.75 0.15 85)",
+    textClass: "text-candle",
+    icon: ICON_URLS.buff_generic,
+    sign: "+",
+  },
+  {
+    type: "energy_gain",
+    label: "E.GAIN",
+    shortLabel: "EGN",
+    color: "oklch(0.65 0.15 130)",
+    textClass: "text-emerald-400",
+    icon: ICON_URLS.energy_generic,
+    sign: "+",
+  },
+];
+
+// ─── Projection logic ───────────────────────────────────────
+interface RoundRow {
+  round: number;
+  /** Value per effect type */
+  values: Record<EffectType, number>;
+  /** Detail breakdown per effect type */
+  details: Record<EffectType, { name: string; value: number; tick?: string }[]>;
+}
+
+function projectEffectsMatrix(
+  playerEffects: ActiveEffect[],
+  currentRound: number,
+  maxRound: number
+): { rows: RoundRow[]; activeTypes: Set<EffectType> } {
+  const roundMap = new Map<number, RoundRow>();
+  const activeTypes = new Set<EffectType>();
+  const maxProjection = Math.min(currentRound + 3, maxRound);
+
+  const makeRow = (round: number): RoundRow => ({
+    round,
+    values: {
+      damage: 0,
+      heal: 0,
+      shield: 0,
+      buff: 0,
+      debuff: 0,
+      energy_drain: 0,
+      energy_gain: 0,
+    },
+    details: {
+      damage: [],
+      heal: [],
+      shield: [],
+      buff: [],
+      debuff: [],
+      energy_drain: [],
+      energy_gain: [],
+    },
+  });
+
+  for (let r = currentRound; r <= maxProjection; r++) {
+    roundMap.set(r, makeRow(r));
+  }
+
+  for (const effect of playerEffects) {
+    const card = CARD_MAP[effect.cardId];
+    const cardName = card?.name || "???";
+    const et = effect.effectType;
+
+    if (effect.isCompounding) {
+      const totalTicks = COMPOUND_MULTIPLIERS.length;
+      const currentTick = effect.currentTick || 0;
+
+      for (let tick = currentTick; tick < totalTicks; tick++) {
+        const tickValue = getCompoundTickValue(effect.baseValue, tick);
+        const roundForTick = currentRound + (tick - currentTick);
+        if (roundForTick > maxProjection) break;
+
+        if (!roundMap.has(roundForTick)) {
+          roundMap.set(roundForTick, makeRow(roundForTick));
+        }
+
+        const row = roundMap.get(roundForTick)!;
+        row.values[et] += tickValue;
+        row.details[et].push({
+          name: cardName,
+          value: tickValue,
+          tick: `${tick + 1}/${totalTicks}`,
+        });
+        activeTypes.add(et);
+      }
+    } else {
+      const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
+      for (
+        let round = currentRound;
+        round <= Math.min(expiresAtRound, maxProjection);
+        round++
+      ) {
+        if (!roundMap.has(round)) {
+          roundMap.set(round, makeRow(round));
+        }
+
+        const row = roundMap.get(round)!;
+        row.values[et] += effect.baseValue;
+        row.details[et].push({
+          name: cardName,
+          value: effect.baseValue,
+        });
+        activeTypes.add(et);
+      }
+    }
+  }
+
+  const rows = Array.from(roundMap.values())
+    .filter((r) => {
+      return Object.values(r.values).some((v) => v > 0);
+    })
+    .sort((a, b) => a.round - b.round);
+
+  return { rows, activeTypes };
+}
+
+// ─── Component ──────────────────────────────────────────────
 
 export default function PlayerAfflictionTable({
   player,
@@ -64,115 +230,36 @@ export default function PlayerAfflictionTable({
 
   if (playerEffects.length === 0) return null;
 
-  // Project effects into round rows
-  const roundMap = new Map<number, RoundRow>();
-
-  // Initialize rounds from current to current+3 (or maxRound)
-  const maxProjection = Math.min(currentRound + 3, maxRound);
-  for (let r = currentRound; r <= maxProjection; r++) {
-    roundMap.set(r, {
-      round: r,
-      pain: 0,
-      gain: 0,
-      painDetails: [],
-      gainDetails: [],
-    });
-  }
-
-  for (const effect of playerEffects) {
-    const card = CARD_MAP[effect.cardId];
-    const cardName = card?.name || "???";
-    const isPain =
-      effect.effectType === "damage" ||
-      effect.effectType === "debuff" ||
-      effect.effectType === "energy_drain";
-    const isGain =
-      effect.effectType === "heal" ||
-      effect.effectType === "shield" ||
-      effect.effectType === "buff" ||
-      effect.effectType === "energy_gain";
-
-    if (effect.isCompounding) {
-      const totalTicks = COMPOUND_MULTIPLIERS.length;
-      const currentTick = effect.currentTick || 0;
-
-      for (let tick = currentTick; tick < totalTicks; tick++) {
-        const tickValue = getCompoundTickValue(effect.baseValue, tick);
-        const roundForTick = currentRound + (tick - currentTick);
-
-        if (roundForTick > maxProjection) break;
-
-        if (!roundMap.has(roundForTick)) {
-          roundMap.set(roundForTick, {
-            round: roundForTick,
-            pain: 0,
-            gain: 0,
-            painDetails: [],
-            gainDetails: [],
-          });
-        }
-
-        const row = roundMap.get(roundForTick)!;
-        const detail = {
-          name: cardName,
-          value: tickValue,
-          type: effect.effectType,
-          tick: `${tick + 1}/${totalTicks}`,
-        };
-
-        if (isPain) {
-          row.pain += tickValue;
-          row.painDetails.push(detail);
-        } else if (isGain) {
-          row.gain += tickValue;
-          row.gainDetails.push(detail);
-        }
-      }
-    } else {
-      // Flat/duration effects
-      const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
-      for (let round = currentRound; round <= Math.min(expiresAtRound, maxProjection); round++) {
-        if (!roundMap.has(round)) {
-          roundMap.set(round, {
-            round,
-            pain: 0,
-            gain: 0,
-            painDetails: [],
-            gainDetails: [],
-          });
-        }
-
-        const row = roundMap.get(round)!;
-        const detail = {
-          name: cardName,
-          value: effect.baseValue,
-          type: effect.effectType,
-        };
-
-        if (isPain) {
-          row.pain += effect.baseValue;
-          row.painDetails.push(detail);
-        } else if (isGain) {
-          row.gain += effect.baseValue;
-          row.gainDetails.push(detail);
-        }
-      }
-    }
-  }
-
-  // Convert to sorted array, filter out empty rounds
-  const rows = Array.from(roundMap.values())
-    .filter((r) => r.pain > 0 || r.gain > 0)
-    .sort((a, b) => a.round - b.round);
+  const { rows, activeTypes } = projectEffectsMatrix(
+    playerEffects,
+    currentRound,
+    maxRound
+  );
 
   if (rows.length === 0) return null;
 
-  // Calculate totals
-  const totalPain = rows.reduce((sum, r) => sum + r.pain, 0);
-  const totalGain = rows.reduce((sum, r) => sum + r.gain, 0);
-  const totalNet = totalGain - totalPain;
+  // Only show columns that have active effects
+  const visibleColumns = EFFECT_COLUMNS.filter((col) =>
+    activeTypes.has(col.type)
+  );
 
-  const sinColor = SIN_COLORS[player.chosenSin || "wrath"] || SIN_COLORS.wrath;
+  if (visibleColumns.length === 0) return null;
+
+  // Calculate totals per column
+  const totals: Record<EffectType, number> = {
+    damage: 0,
+    heal: 0,
+    shield: 0,
+    buff: 0,
+    debuff: 0,
+    energy_drain: 0,
+    energy_gain: 0,
+  };
+  for (const row of rows) {
+    for (const col of visibleColumns) {
+      totals[col.type] += row.values[col.type];
+    }
+  }
 
   // Position classes
   const positionClass =
@@ -182,19 +269,27 @@ export default function PlayerAfflictionTable({
       ? "ml-2"
       : "mt-2";
 
+  const fontSize = compact ? "text-[7px]" : "text-[8px]";
+  const valueFontSize = compact ? "text-[8px]" : "text-[9px]";
+  const totalFontSize = compact ? "text-[9px]" : "text-[10px]";
+  const iconSize = compact ? "w-2.5 h-2.5" : "w-3 h-3";
+
+  // Dynamic grid: RND column + one column per active effect type
+  const gridCols = `auto ${visibleColumns.map(() => "1fr").join(" ")}`;
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.3 }}
-      className={`${positionClass} ${compact ? "max-w-[160px]" : "max-w-[200px]"}`}
+      className={`${positionClass} ${compact ? "max-w-[200px]" : "max-w-[260px]"}`}
     >
       <div
         className="rounded-lg overflow-hidden"
         style={{
           background:
-            "linear-gradient(180deg, oklch(0.10 0.01 70 / 0.85), oklch(0.07 0.005 70 / 0.9))",
+            "linear-gradient(180deg, oklch(0.10 0.01 70 / 0.88), oklch(0.07 0.005 70 / 0.92))",
           border: `1px solid oklch(0.75 0.12 70 / 0.15)`,
           boxShadow: `0 2px 12px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(0.75 0.12 70 / 0.08)`,
           backdropFilter: "blur(8px)",
@@ -216,7 +311,7 @@ export default function PlayerAfflictionTable({
               className="w-3 h-3 object-contain opacity-60"
             />
             <span
-              className={`${compact ? "text-[8px]" : "text-[9px]"} font-bold text-candle/80 uppercase tracking-[0.15em]`}
+              className={`${compact ? "text-[7px]" : "text-[8px]"} font-bold text-candle/80 uppercase tracking-[0.15em]`}
               style={{ fontFamily: "var(--font-heading)" }}
             >
               Afflictions
@@ -226,42 +321,51 @@ export default function PlayerAfflictionTable({
 
         {/* Table */}
         <div className="px-1.5 py-1">
-          {/* Column Headers */}
+          {/* Column Headers — icons + labels */}
           <div
-            className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-1 px-1 py-0.5 mb-0.5"
+            className="gap-x-1 px-1 py-0.5 mb-0.5 items-center"
             style={{
+              display: "grid",
+              gridTemplateColumns: gridCols,
               borderBottom: "1px solid oklch(0.75 0.12 70 / 0.08)",
             }}
           >
+            {/* RND header */}
             <span
-              className={`${compact ? "text-[6px]" : "text-[7px]"} text-candle/40 font-bold uppercase`}
+              className={`${fontSize} text-candle/40 font-bold uppercase`}
               style={{ fontFamily: "var(--font-heading)" }}
             >
               RND
             </span>
-            <span
-              className={`${compact ? "text-[6px]" : "text-[7px]"} text-wrath/60 font-bold uppercase text-center`}
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              PAIN
-            </span>
-            <span
-              className={`${compact ? "text-[6px]" : "text-[7px]"} text-envy-glow/60 font-bold uppercase text-center`}
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              GAIN
-            </span>
-            <span
-              className={`${compact ? "text-[6px]" : "text-[7px]"} text-candle/40 font-bold uppercase text-center`}
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              NET
-            </span>
+
+            {/* Effect type headers */}
+            {visibleColumns.map((col) => (
+              <div
+                key={col.type}
+                className="flex flex-col items-center gap-0.5"
+                title={col.label}
+              >
+                <img
+                  src={col.icon}
+                  alt={col.label}
+                  className={`${iconSize} object-contain`}
+                  style={{ opacity: 0.7 }}
+                />
+                <span
+                  className={`${fontSize} font-bold uppercase text-center leading-none`}
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    color: col.color,
+                  }}
+                >
+                  {compact ? col.shortLabel : col.label}
+                </span>
+              </div>
+            ))}
           </div>
 
           {/* Round Rows */}
           {rows.map((row, idx) => {
-            const net = row.gain - row.pain;
             const isNow = row.round === currentRound;
 
             return (
@@ -270,13 +374,15 @@ export default function PlayerAfflictionTable({
                 initial={{ opacity: 0, x: -5 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="group relative"
               >
                 <div
-                  className={`grid grid-cols-[auto_1fr_1fr_1fr] gap-x-1 px-1 py-1 rounded ${
+                  className={`gap-x-1 px-1 py-1 rounded ${
                     isNow ? "bg-candle/5" : ""
                   }`}
                   style={{
+                    display: "grid",
+                    gridTemplateColumns: gridCols,
+                    alignItems: "center",
                     borderBottom:
                       idx < rows.length - 1
                         ? "1px solid oklch(0.75 0.12 70 / 0.04)"
@@ -285,110 +391,78 @@ export default function PlayerAfflictionTable({
                 >
                   {/* Round number */}
                   <span
-                    className={`${compact ? "text-[8px]" : "text-[9px]"} font-bold ${
+                    className={`${valueFontSize} font-bold ${
                       isNow ? "text-candle" : "text-candle/30"
-                    } min-w-[18px]`}
+                    } min-w-[20px]`}
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {isNow ? "NOW" : `R${row.round}`}
                   </span>
 
-                  {/* Pain */}
-                  <div className="text-center">
-                    {row.pain > 0 ? (
-                      <span
-                        className={`${compact ? "text-[9px]" : "text-[10px]"} font-black text-wrath`}
-                        style={{ fontFamily: "var(--font-heading)" }}
-                      >
-                        -{row.pain}
-                      </span>
-                    ) : (
-                      <span
-                        className={`${compact ? "text-[8px]" : "text-[9px]"} text-muted-foreground/20`}
-                      >
-                        —
-                      </span>
-                    )}
-                  </div>
+                  {/* Value per effect type */}
+                  {visibleColumns.map((col) => {
+                    const val = row.values[col.type];
+                    const details = row.details[col.type];
 
-                  {/* Gain */}
-                  <div className="text-center">
-                    {row.gain > 0 ? (
-                      <span
-                        className={`${compact ? "text-[9px]" : "text-[10px]"} font-black text-envy-glow`}
-                        style={{ fontFamily: "var(--font-heading)" }}
+                    return (
+                      <div
+                        key={col.type}
+                        className="text-center relative group"
                       >
-                        +{row.gain}
-                      </span>
-                    ) : (
-                      <span
-                        className={`${compact ? "text-[8px]" : "text-[9px]"} text-muted-foreground/20`}
-                      >
-                        —
-                      </span>
-                    )}
-                  </div>
+                        {val > 0 ? (
+                          <span
+                            className={`${valueFontSize} font-black`}
+                            style={{
+                              fontFamily: "var(--font-heading)",
+                              color: col.color,
+                            }}
+                          >
+                            {col.sign}
+                            {val}
+                          </span>
+                        ) : (
+                          <span className={`${fontSize} text-muted-foreground/20`}>
+                            —
+                          </span>
+                        )}
 
-                  {/* Net */}
-                  <div className="text-center">
-                    <span
-                      className={`${compact ? "text-[9px]" : "text-[10px]"} font-black ${
-                        net > 0
-                          ? "text-envy-glow"
-                          : net < 0
-                          ? "text-wrath"
-                          : "text-candle/30"
-                      }`}
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      {net > 0 ? `+${net}` : net === 0 ? "0" : `${net}`}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Hover tooltip with details */}
-                <div className="hidden group-hover:block absolute left-full top-0 ml-2 z-50 min-w-[140px]">
-                  <div
-                    className="rounded-md p-2 text-[8px] space-y-0.5"
-                    style={{
-                      background: "oklch(0.08 0.01 70 / 0.95)",
-                      border: "1px solid oklch(0.75 0.12 70 / 0.2)",
-                      boxShadow: "0 4px 16px oklch(0 0 0 / 0.5)",
-                    }}
-                  >
-                    <div
-                      className="font-bold text-candle/70 mb-1"
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      Round {row.round} Breakdown
-                    </div>
-                    {row.painDetails.map((d, i) => (
-                      <div key={`p-${i}`} className="flex justify-between text-wrath/80">
-                        <span className="truncate mr-2">
-                          {d.name}
-                          {d.tick && (
-                            <span className="text-candle/30 ml-0.5">
-                              [{d.tick}]
-                            </span>
-                          )}
-                        </span>
-                        <span className="font-bold">-{d.value}</span>
+                        {/* Hover tooltip with details */}
+                        {details.length > 0 && (
+                          <div className="hidden group-hover:block absolute left-1/2 -translate-x-1/2 top-full mt-1 z-50 min-w-[110px]">
+                            <div
+                              className="rounded-md p-1.5 text-[7px] space-y-0.5"
+                              style={{
+                                background: "oklch(0.08 0.01 70 / 0.95)",
+                                border: "1px solid oklch(0.75 0.12 70 / 0.2)",
+                                boxShadow: "0 4px 16px oklch(0 0 0 / 0.5)",
+                              }}
+                            >
+                              {details.map((d, i) => (
+                                <div
+                                  key={i}
+                                  className="flex justify-between gap-2"
+                                  style={{ color: col.color }}
+                                >
+                                  <span className="truncate opacity-80">
+                                    {d.name}
+                                    {d.tick && (
+                                      <span className="text-candle/30 ml-0.5">
+                                        [{d.tick}]
+                                      </span>
+                                    )}
+                                  </span>
+                                  <span className="font-bold whitespace-nowrap">
+                                    {col.sign}
+                                    {d.value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    ))}
-                    {row.gainDetails.map((d, i) => (
-                      <div key={`g-${i}`} className="flex justify-between text-envy-glow/80">
-                        <span className="truncate mr-2">
-                          {d.name}
-                          {d.tick && (
-                            <span className="text-candle/30 ml-0.5">
-                              [{d.tick}]
-                            </span>
-                          )}
-                        </span>
-                        <span className="font-bold">+{d.value}</span>
-                      </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               </motion.div>
             );
@@ -396,72 +470,54 @@ export default function PlayerAfflictionTable({
 
           {/* Total Row */}
           <div
-            className="grid grid-cols-[auto_1fr_1fr_1fr] gap-x-1 px-1 py-1.5 mt-0.5"
+            className="gap-x-1 px-1 py-1.5 mt-0.5"
             style={{
+              display: "grid",
+              gridTemplateColumns: gridCols,
+              alignItems: "center",
               borderTop: "1px solid oklch(0.75 0.12 70 / 0.15)",
               background:
                 "linear-gradient(90deg, oklch(0.12 0.02 70 / 0.3), transparent)",
             }}
           >
             <span
-              className={`${compact ? "text-[7px]" : "text-[8px]"} font-black text-candle/60 uppercase`}
+              className={`${compact ? "text-[6px]" : "text-[7px]"} font-black text-candle/60 uppercase`}
               style={{ fontFamily: "var(--font-heading)" }}
             >
               TOTAL
             </span>
-            <div className="text-center">
-              {totalPain > 0 && (
-                <span
-                  className={`${compact ? "text-[10px]" : "text-[11px]"} font-black text-wrath`}
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    textShadow: "0 0 6px oklch(0.65 0.22 25 / 0.3)",
-                  }}
-                >
-                  -{totalPain}
-                </span>
-              )}
-            </div>
-            <div className="text-center">
-              {totalGain > 0 && (
-                <span
-                  className={`${compact ? "text-[10px]" : "text-[11px]"} font-black text-envy-glow`}
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    textShadow: "0 0 6px oklch(0.60 0.18 155 / 0.3)",
-                  }}
-                >
-                  +{totalGain}
-                </span>
-              )}
-            </div>
-            <div className="text-center">
-              <span
-                className={`${compact ? "text-[10px]" : "text-[11px]"} font-black ${
-                  totalNet > 0
-                    ? "text-envy-glow"
-                    : totalNet < 0
-                    ? "text-wrath"
-                    : "text-candle/40"
-                }`}
-                style={{
-                  fontFamily: "var(--font-heading)",
-                  textShadow:
-                    totalNet !== 0
-                      ? `0 0 6px ${
-                          totalNet > 0
-                            ? "oklch(0.60 0.18 155 / 0.3)"
-                            : "oklch(0.65 0.22 25 / 0.3)"
-                        }`
-                      : "none",
-                }}
-              >
-                {totalNet > 0 ? `+${totalNet}` : totalNet === 0 ? "0" : `${totalNet}`}
-              </span>
-            </div>
+
+            {visibleColumns.map((col) => {
+              const total = totals[col.type];
+              return (
+                <div key={col.type} className="text-center">
+                  {total > 0 ? (
+                    <span
+                      className={`${totalFontSize} font-black`}
+                      style={{
+                        fontFamily: "var(--font-heading)",
+                        color: col.color,
+                        textShadow: `0 0 6px ${col.color.replace(")", " / 0.3)")}`,
+                      }}
+                    >
+                      {col.sign}
+                      {total}
+                    </span>
+                  ) : (
+                    <span className={`${fontSize} text-muted-foreground/20`}>
+                      —
+                    </span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
     </motion.div>
   );
 }
+
+// Export projection logic for testing
+export { projectEffectsMatrix, EFFECT_COLUMNS };
+export type { RoundRow, EffectColumn };

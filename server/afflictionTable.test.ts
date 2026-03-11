@@ -1,9 +1,10 @@
 /**
- * Affliction Table Tests
+ * Affliction Table Tests — Matrix Format
  *
- * Tests for the balance sheet projection logic used by
- * PlayerAfflictionTable component. Validates Pain/Gain
- * calculations, compound tick projections, and net totals.
+ * Tests for the detailed balance sheet projection logic used by
+ * PlayerAfflictionTable component. Validates per-effect-type columns
+ * (DMG, Heal, Shield, Buff, Debuff, E.Drain, E.Gain), compound tick
+ * projections, and total calculations.
  */
 
 import { describe, expect, it } from "vitest";
@@ -12,8 +13,9 @@ import {
   COMPOUND_MULTIPLIERS,
   ActiveEffect,
   PlayerState,
+  EffectType,
 } from "../shared/gameTypes";
-import { CARD_MAP, ALL_CARDS } from "../shared/cardData";
+import { ALL_CARDS, CARD_MAP } from "../shared/cardData";
 
 // ─── Helper: Create mock player ─────────────────────────────
 function mockPlayer(overrides: Partial<PlayerState> = {}): PlayerState {
@@ -48,45 +50,44 @@ function mockEffect(overrides: Partial<ActiveEffect> = {}): ActiveEffect {
   };
 }
 
-// ─── Helper: Project rounds (mirrors component logic) ───────
+// ─── Projection logic (mirrors component) ───────────────────
 interface RoundRow {
   round: number;
-  pain: number;
-  gain: number;
-  painDetails: { name: string; value: number; type: string; tick?: string }[];
-  gainDetails: { name: string; value: number; type: string; tick?: string }[];
+  values: Record<EffectType, number>;
+  details: Record<EffectType, { name: string; value: number; tick?: string }[]>;
 }
 
-function projectEffects(
+function makeRow(round: number): RoundRow {
+  return {
+    round,
+    values: {
+      damage: 0, heal: 0, shield: 0, buff: 0,
+      debuff: 0, energy_drain: 0, energy_gain: 0,
+    },
+    details: {
+      damage: [], heal: [], shield: [], buff: [],
+      debuff: [], energy_drain: [], energy_gain: [],
+    },
+  };
+}
+
+function projectEffectsMatrix(
   playerEffects: ActiveEffect[],
   currentRound: number,
   maxRound: number
-): RoundRow[] {
+): { rows: RoundRow[]; activeTypes: Set<EffectType> } {
   const roundMap = new Map<number, RoundRow>();
+  const activeTypes = new Set<EffectType>();
   const maxProjection = Math.min(currentRound + 3, maxRound);
 
   for (let r = currentRound; r <= maxProjection; r++) {
-    roundMap.set(r, {
-      round: r,
-      pain: 0,
-      gain: 0,
-      painDetails: [],
-      gainDetails: [],
-    });
+    roundMap.set(r, makeRow(r));
   }
 
   for (const effect of playerEffects) {
     const card = CARD_MAP[effect.cardId];
     const cardName = card?.name || "???";
-    const isPain =
-      effect.effectType === "damage" ||
-      effect.effectType === "debuff" ||
-      effect.effectType === "energy_drain";
-    const isGain =
-      effect.effectType === "heal" ||
-      effect.effectType === "shield" ||
-      effect.effectType === "buff" ||
-      effect.effectType === "energy_gain";
+    const et = effect.effectType;
 
     if (effect.isCompounding) {
       const totalTicks = COMPOUND_MULTIPLIERS.length;
@@ -95,34 +96,20 @@ function projectEffects(
       for (let tick = currentTick; tick < totalTicks; tick++) {
         const tickValue = getCompoundTickValue(effect.baseValue, tick);
         const roundForTick = currentRound + (tick - currentTick);
-
         if (roundForTick > maxProjection) break;
 
         if (!roundMap.has(roundForTick)) {
-          roundMap.set(roundForTick, {
-            round: roundForTick,
-            pain: 0,
-            gain: 0,
-            painDetails: [],
-            gainDetails: [],
-          });
+          roundMap.set(roundForTick, makeRow(roundForTick));
         }
 
         const row = roundMap.get(roundForTick)!;
-        const detail = {
+        row.values[et] += tickValue;
+        row.details[et].push({
           name: cardName,
           value: tickValue,
-          type: effect.effectType,
           tick: `${tick + 1}/${totalTicks}`,
-        };
-
-        if (isPain) {
-          row.pain += tickValue;
-          row.painDetails.push(detail);
-        } else if (isGain) {
-          row.gain += tickValue;
-          row.gainDetails.push(detail);
-        }
+        });
+        activeTypes.add(et);
       }
     } else {
       const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
@@ -132,43 +119,29 @@ function projectEffects(
         round++
       ) {
         if (!roundMap.has(round)) {
-          roundMap.set(round, {
-            round,
-            pain: 0,
-            gain: 0,
-            painDetails: [],
-            gainDetails: [],
-          });
+          roundMap.set(round, makeRow(round));
         }
 
         const row = roundMap.get(round)!;
-        const detail = {
-          name: cardName,
-          value: effect.baseValue,
-          type: effect.effectType,
-        };
-
-        if (isPain) {
-          row.pain += effect.baseValue;
-          row.painDetails.push(detail);
-        } else if (isGain) {
-          row.gain += effect.baseValue;
-          row.gainDetails.push(detail);
-        }
+        row.values[et] += effect.baseValue;
+        row.details[et].push({ name: cardName, value: effect.baseValue });
+        activeTypes.add(et);
       }
     }
   }
 
-  return Array.from(roundMap.values())
-    .filter((r) => r.pain > 0 || r.gain > 0)
+  const rows = Array.from(roundMap.values())
+    .filter((r) => Object.values(r.values).some((v) => v > 0))
     .sort((a, b) => a.round - b.round);
+
+  return { rows, activeTypes };
 }
 
 // ─── Tests ──────────────────────────────────────────────────
 
-describe("Affliction Balance Sheet Projections", () => {
+describe("Affliction Matrix — Per-Effect-Type Columns", () => {
   describe("Compound Effect Projections", () => {
-    it("projects 3 ticks of a compounding damage effect", () => {
+    it("projects 3 ticks of compounding damage into the damage column", () => {
       const effects: ActiveEffect[] = [
         mockEffect({
           isCompounding: true,
@@ -178,15 +151,18 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 1, 10);
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+      expect(activeTypes.has("damage")).toBe(true);
+      expect(activeTypes.size).toBe(1);
       expect(rows.length).toBeGreaterThanOrEqual(3);
 
       // Tick 0: 4 * 1 = 4
-      expect(rows[0].pain).toBe(4);
+      expect(rows[0].values.damage).toBe(4);
+      expect(rows[0].values.heal).toBe(0);
       // Tick 1: 4 * 1 = 4
-      expect(rows[1].pain).toBe(4);
+      expect(rows[1].values.damage).toBe(4);
       // Tick 2: 4 * 2 = 8
-      expect(rows[2].pain).toBe(8);
+      expect(rows[2].values.damage).toBe(8);
     });
 
     it("projects remaining ticks when currentTick > 0", () => {
@@ -199,16 +175,13 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 3, 10);
-      // Only 2 remaining ticks (tick 1 and tick 2)
+      const { rows } = projectEffectsMatrix(effects, 3, 10);
       expect(rows.length).toBe(2);
-      // Tick 1: 4 * 1 = 4
-      expect(rows[0].pain).toBe(4);
-      // Tick 2: 4 * 2 = 8
-      expect(rows[1].pain).toBe(8);
+      expect(rows[0].values.damage).toBe(4);
+      expect(rows[1].values.damage).toBe(8);
     });
 
-    it("projects compounding heal as gain", () => {
+    it("projects compounding heal into the heal column only", () => {
       const effects: ActiveEffect[] = [
         mockEffect({
           isCompounding: true,
@@ -218,16 +191,34 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].gain).toBe(3);
-      expect(rows[0].pain).toBe(0);
-      expect(rows[1].gain).toBe(3);
-      expect(rows[2].gain).toBe(6);
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+      expect(activeTypes.has("heal")).toBe(true);
+      expect(activeTypes.has("damage")).toBe(false);
+      expect(rows[0].values.heal).toBe(3);
+      expect(rows[0].values.damage).toBe(0);
+      expect(rows[1].values.heal).toBe(3);
+      expect(rows[2].values.heal).toBe(6);
+    });
+
+    it("projects compounding shield into the shield column", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          isCompounding: true,
+          currentTick: 0,
+          baseValue: 2,
+          effectType: "shield",
+        }),
+      ];
+
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+      expect(activeTypes.has("shield")).toBe(true);
+      expect(rows[0].values.shield).toBe(2);
+      expect(rows[2].values.shield).toBe(4);
     });
   });
 
   describe("Flat Effect Projections", () => {
-    it("projects flat damage across remaining duration", () => {
+    it("projects flat damage across remaining duration into damage column", () => {
       const effects: ActiveEffect[] = [
         mockEffect({
           isCompounding: false,
@@ -238,15 +229,16 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 1, 10);
-      // Should show in rounds 1, 2, 3, 4 (applied at 1, duration 3, expires at 4)
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
       expect(rows.length).toBeGreaterThanOrEqual(3);
       rows.forEach((row) => {
-        expect(row.pain).toBe(5);
+        expect(row.values.damage).toBe(5);
+        expect(row.values.heal).toBe(0);
+        expect(row.values.shield).toBe(0);
       });
     });
 
-    it("projects flat shield as gain", () => {
+    it("projects flat shield into the shield column only", () => {
       const effects: ActiveEffect[] = [
         mockEffect({
           isCompounding: false,
@@ -257,123 +249,41 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 2, 10);
-      expect(rows.length).toBeGreaterThanOrEqual(2);
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 2, 10);
+      expect(activeTypes.has("shield")).toBe(true);
+      expect(activeTypes.has("damage")).toBe(false);
       rows.forEach((row) => {
-        expect(row.gain).toBe(8);
-        expect(row.pain).toBe(0);
+        expect(row.values.shield).toBe(8);
+        expect(row.values.damage).toBe(0);
       });
     });
   });
 
-  describe("Pain/Gain Classification", () => {
-    it("classifies damage as pain", () => {
-      const effects = [mockEffect({ effectType: "damage", baseValue: 5 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(5);
-      expect(rows[0].gain).toBe(0);
-    });
+  describe("All 7 Effect Types Map to Correct Columns", () => {
+    const effectTypes: EffectType[] = [
+      "damage", "heal", "shield", "buff", "debuff", "energy_drain", "energy_gain",
+    ];
 
-    it("classifies debuff as pain", () => {
-      const effects = [mockEffect({ effectType: "debuff", baseValue: 3 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(3);
-    });
+    effectTypes.forEach((et) => {
+      it(`${et} maps to its own column`, () => {
+        const effects = [mockEffect({ effectType: et, baseValue: 5 })];
+        const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+        expect(activeTypes.has(et)).toBe(true);
+        expect(activeTypes.size).toBe(1);
+        expect(rows[0].values[et]).toBe(5);
 
-    it("classifies energy_drain as pain", () => {
-      const effects = [mockEffect({ effectType: "energy_drain", baseValue: 2 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(2);
-    });
-
-    it("classifies heal as gain", () => {
-      const effects = [mockEffect({ effectType: "heal", baseValue: 6 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].gain).toBe(6);
-    });
-
-    it("classifies shield as gain", () => {
-      const effects = [mockEffect({ effectType: "shield", baseValue: 4 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].gain).toBe(4);
-    });
-
-    it("classifies buff as gain", () => {
-      const effects = [mockEffect({ effectType: "buff", baseValue: 2 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].gain).toBe(2);
-    });
-
-    it("classifies energy_gain as gain", () => {
-      const effects = [mockEffect({ effectType: "energy_gain", baseValue: 1 })];
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].gain).toBe(1);
+        // All other columns should be 0
+        for (const other of effectTypes) {
+          if (other !== et) {
+            expect(rows[0].values[other]).toBe(0);
+          }
+        }
+      });
     });
   });
 
-  describe("Net Calculations", () => {
-    it("calculates net as gain minus pain", () => {
-      const effects: ActiveEffect[] = [
-        mockEffect({ effectType: "damage", baseValue: 5, appliedAtRound: 1, durationRounds: 2 }),
-        mockEffect({
-          id: "eff-2",
-          effectType: "heal",
-          baseValue: 3,
-          appliedAtRound: 1,
-          durationRounds: 2,
-        }),
-      ];
-
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(5);
-      expect(rows[0].gain).toBe(3);
-      // Net = 3 - 5 = -2
-      const net = rows[0].gain - rows[0].pain;
-      expect(net).toBe(-2);
-    });
-
-    it("calculates total pain and gain across all rounds", () => {
-      const effects: ActiveEffect[] = [
-        mockEffect({
-          isCompounding: true,
-          currentTick: 0,
-          baseValue: 4,
-          effectType: "damage",
-        }),
-      ];
-
-      const rows = projectEffects(effects, 1, 10);
-      const totalPain = rows.reduce((sum, r) => sum + r.pain, 0);
-      // 4 + 4 + 8 = 16
-      expect(totalPain).toBe(16);
-    });
-  });
-
-  describe("Multiple Overlapping Effects", () => {
-    it("stacks multiple effects in the same round", () => {
-      const effects: ActiveEffect[] = [
-        mockEffect({
-          id: "eff-1",
-          effectType: "damage",
-          baseValue: 3,
-          appliedAtRound: 1,
-          durationRounds: 2,
-        }),
-        mockEffect({
-          id: "eff-2",
-          effectType: "damage",
-          baseValue: 4,
-          appliedAtRound: 1,
-          durationRounds: 2,
-        }),
-      ];
-
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(7); // 3 + 4
-      expect(rows[0].painDetails).toHaveLength(2);
-    });
-
-    it("handles mixed pain and gain in the same round", () => {
+  describe("Multiple Effect Types in Same Round", () => {
+    it("shows damage and heal in separate columns for the same round", () => {
       const effects: ActiveEffect[] = [
         mockEffect({
           id: "eff-1",
@@ -384,23 +294,150 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
         mockEffect({
           id: "eff-2",
-          effectType: "shield",
+          effectType: "heal",
           baseValue: 3,
           appliedAtRound: 1,
           durationRounds: 2,
         }),
       ];
 
-      const rows = projectEffects(effects, 1, 10);
-      expect(rows[0].pain).toBe(5);
-      expect(rows[0].gain).toBe(3);
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+      expect(activeTypes.has("damage")).toBe(true);
+      expect(activeTypes.has("heal")).toBe(true);
+      expect(rows[0].values.damage).toBe(5);
+      expect(rows[0].values.heal).toBe(3);
+    });
+
+    it("stacks multiple effects of the same type in one column", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          id: "eff-1",
+          effectType: "damage",
+          baseValue: 3,
+          appliedAtRound: 1,
+          durationRounds: 2,
+        }),
+        mockEffect({
+          id: "eff-2",
+          effectType: "damage",
+          baseValue: 4,
+          appliedAtRound: 1,
+          durationRounds: 2,
+        }),
+      ];
+
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
+      expect(rows[0].values.damage).toBe(7); // 3 + 4
+      expect(rows[0].details.damage).toHaveLength(2);
+    });
+
+    it("handles all 7 effect types simultaneously", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({ id: "e1", effectType: "damage", baseValue: 1 }),
+        mockEffect({ id: "e2", effectType: "heal", baseValue: 2 }),
+        mockEffect({ id: "e3", effectType: "shield", baseValue: 3 }),
+        mockEffect({ id: "e4", effectType: "buff", baseValue: 4 }),
+        mockEffect({ id: "e5", effectType: "debuff", baseValue: 5 }),
+        mockEffect({ id: "e6", effectType: "energy_drain", baseValue: 6 }),
+        mockEffect({ id: "e7", effectType: "energy_gain", baseValue: 7 }),
+      ];
+
+      const { rows, activeTypes } = projectEffectsMatrix(effects, 1, 10);
+      expect(activeTypes.size).toBe(7);
+      expect(rows[0].values.damage).toBe(1);
+      expect(rows[0].values.heal).toBe(2);
+      expect(rows[0].values.shield).toBe(3);
+      expect(rows[0].values.buff).toBe(4);
+      expect(rows[0].values.debuff).toBe(5);
+      expect(rows[0].values.energy_drain).toBe(6);
+      expect(rows[0].values.energy_gain).toBe(7);
+    });
+  });
+
+  describe("Total Calculations", () => {
+    it("calculates total damage across all rounds", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          isCompounding: true,
+          currentTick: 0,
+          baseValue: 4,
+          effectType: "damage",
+        }),
+      ];
+
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
+      const totalDmg = rows.reduce((sum, r) => sum + r.values.damage, 0);
+      // 4 + 4 + 8 = 16
+      expect(totalDmg).toBe(16);
+    });
+
+    it("calculates totals per column independently", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          id: "e1",
+          effectType: "damage",
+          baseValue: 5,
+          appliedAtRound: 1,
+          durationRounds: 2,
+        }),
+        mockEffect({
+          id: "e2",
+          effectType: "heal",
+          baseValue: 3,
+          appliedAtRound: 1,
+          durationRounds: 2,
+        }),
+      ];
+
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
+      const totalDmg = rows.reduce((sum, r) => sum + r.values.damage, 0);
+      const totalHeal = rows.reduce((sum, r) => sum + r.values.heal, 0);
+      // 3 rounds of 5 damage = 15
+      expect(totalDmg).toBe(15);
+      // 3 rounds of 3 heal = 9
+      expect(totalHeal).toBe(9);
+    });
+  });
+
+  describe("Detail Breakdown", () => {
+    it("tracks card names in details per effect type", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          effectType: "damage",
+          baseValue: 5,
+          appliedAtRound: 1,
+          durationRounds: 2,
+        }),
+      ];
+
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
+      expect(rows[0].details.damage.length).toBeGreaterThan(0);
+      expect(rows[0].details.damage[0].value).toBe(5);
+      expect(rows[0].details.heal).toHaveLength(0);
+    });
+
+    it("includes tick info for compounding effects", () => {
+      const effects: ActiveEffect[] = [
+        mockEffect({
+          isCompounding: true,
+          currentTick: 0,
+          baseValue: 4,
+          effectType: "damage",
+        }),
+      ];
+
+      const { rows } = projectEffectsMatrix(effects, 1, 10);
+      expect(rows[0].details.damage[0].tick).toBe("1/3");
+      expect(rows[1].details.damage[0].tick).toBe("2/3");
+      expect(rows[2].details.damage[0].tick).toBe("3/3");
     });
   });
 
   describe("Edge Cases", () => {
-    it("returns empty array when no effects", () => {
-      const rows = projectEffects([], 1, 10);
+    it("returns empty rows and no active types when no effects", () => {
+      const { rows, activeTypes } = projectEffectsMatrix([], 1, 10);
       expect(rows).toHaveLength(0);
+      expect(activeTypes.size).toBe(0);
     });
 
     it("caps projection at maxRound", () => {
@@ -413,8 +450,7 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      // If maxRound is 2, only 2 ticks should show
-      const rows = projectEffects(effects, 1, 2);
+      const { rows } = projectEffectsMatrix(effects, 1, 2);
       expect(rows.length).toBeLessThanOrEqual(2);
     });
 
@@ -428,8 +464,7 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      const rows = projectEffects(effects, 1, 20);
-      // Should only project 4 rounds (current + 3)
+      const { rows } = projectEffectsMatrix(effects, 1, 20);
       expect(rows.length).toBeLessThanOrEqual(4);
     });
 
@@ -443,8 +478,7 @@ describe("Affliction Balance Sheet Projections", () => {
         }),
       ];
 
-      // Current round is 5, effect expired at round 2
-      const rows = projectEffects(effects, 5, 10);
+      const { rows } = projectEffectsMatrix(effects, 5, 10);
       expect(rows).toHaveLength(0);
     });
   });
