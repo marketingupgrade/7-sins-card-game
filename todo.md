@@ -537,3 +537,6 @@
 - [x] Babylon.js now loads only when needed (lazy route chunks), not on initial page load
 - [x] Initial page load reduced from 6.7MB to ~320KB (index 53KB + react 267KB)
 - [x] All 201 tests passing, dev server running, no regressions
+
+## CRITICAL Bug Fix (Round 9)
+- [x] Fix Vercel deployment completely broken — manual chunk splitting put React and Radix in separate chunks, causing 'useLayoutEffect' undefined error. Fixed by merging React+ReactDOM+Radix+Lucide into single 'vendor' chunk
