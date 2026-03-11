@@ -129,11 +129,11 @@ function projectEffectsMatrix(
     round,
     values: {
       damage: 0, heal: 0, shield: 0, buff: 0, debuff: 0,
-      energy_drain: 0, energy_gain: 0,
+      energy_drain: 0, energy_gain: 0, damage_all: 0, self_damage: 0,
     },
     details: {
       damage: [], heal: [], shield: [], buff: [], debuff: [],
-      energy_drain: [], energy_gain: [],
+      energy_drain: [], energy_gain: [], damage_all: [], self_damage: [],
     },
   });
 
@@ -234,7 +234,7 @@ export default function PlayerAfflictionTable({
   // Calculate totals per column
   const totals: Record<EffectType, number> = {
     damage: 0, heal: 0, shield: 0, buff: 0, debuff: 0,
-    energy_drain: 0, energy_gain: 0,
+    energy_drain: 0, energy_gain: 0, damage_all: 0, self_damage: 0,
   };
   for (const row of rows) {
     for (const col of visibleColumns) {

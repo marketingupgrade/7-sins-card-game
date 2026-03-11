@@ -1,7 +1,8 @@
+import type { SinType } from "@shared/gameTypes";
 import React from 'react';
 
 interface SinShaderOverlayProps {
-  sin: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sin: SinType;
   isHovered: boolean;
   children: React.ReactNode;
 }
@@ -53,6 +54,29 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
           backgroundSize: '200% 200%',
           willChange: 'opacity, background-position' as any,
           animation: isHovered ? 'envyPulse 3s ease-in-out infinite' : 'none',
+        };
+      case 'pride':
+        return {
+          ...baseStyles,
+          background: 'radial-gradient(circle, #ffffff 0%, #e0e0e0 30%, transparent 70%)',
+          willChange: 'opacity' as any,
+          animation: isHovered ? 'greedShimmer 3s ease-in-out infinite' : 'none',
+        };
+      case 'lust':
+        return {
+          ...baseStyles,
+          background: 'linear-gradient(135deg, #ec4899 0%, #f472b6 25%, #ec4899 50%, #db2777 75%, #ec4899 100%)',
+          backgroundSize: '200% 200%',
+          willChange: 'opacity, background-position' as any,
+          animation: isHovered ? 'envyPulse 3s ease-in-out infinite' : 'none',
+        };
+      case 'gluttony':
+        return {
+          ...baseStyles,
+          background: 'linear-gradient(0deg, #b45309 0%, #d97706 25%, #b45309 50%, #92400e 75%, #b45309 100%)',
+          backgroundSize: '100% 200%',
+          willChange: 'opacity, background-position' as any,
+          animation: isHovered ? 'wrathFire 2s ease-in-out infinite' : 'none',
         };
       default:
         return baseStyles;

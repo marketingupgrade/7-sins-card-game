@@ -540,3 +540,25 @@
 
 ## CRITICAL Bug Fix (Round 9)
 - [x] Fix Vercel deployment completely broken — manual chunk splitting put React and Radix in separate chunks, causing 'useLayoutEffect' undefined error. Fixed by merging React+ReactDOM+Radix+Lucide into single 'vendor' chunk
+
+## New Factions (Round 10) — Pride, Lust, Gluttony
+- [x] Design Pride faction: 36 cards, unique passive, unique mechanics
+- [x] Design Lust faction: 36 cards, unique passive, unique mechanics
+- [x] Design Gluttony faction: 36 cards, unique passive, unique mechanics
+- [x] Run 10k Monte Carlo tournament simulation for balance
+- [x] Iterate on card stats until all 7 factions are balanced (45-55% win rate range)
+- [x] Generate unique artwork for Pride cards and avatar
+- [x] Generate unique artwork for Lust cards and avatar
+- [x] Generate unique artwork for Gluttony cards and avatar
+- [x] Update SinType in gameTypes.ts to include pride, lust, gluttony
+- [x] Add new faction passives to gameEngine.ts
+- [x] Add new faction constants to gameTypes.ts
+- [x] Update ALL color/icon maps across 14+ component files
+- [x] Add CSS classes for new factions in index.css
+- [x] Update lobby/home faction selection UI
+- [x] Update assetUrls.ts with new faction icons
+- [x] Run all tests and verify build (201 tests passing)
+- [x] Push to GitHub
+- [x] Generate matching single-color glow portraits: Pride=white, Lust=pink, Gluttony=brown (same style as existing 4 sins)
+- [x] Fix balancer: Wrath stuck at 10% — allow ALL 7 factions to be tuned, not just new ones
+- [x] Achieve 1.5% max deviation across all 7 factions (23.5%-26.5% each)

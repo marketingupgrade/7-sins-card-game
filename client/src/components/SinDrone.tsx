@@ -1,7 +1,8 @@
+import type { SinType } from "@shared/gameTypes";
 import React, { useEffect, useRef } from 'react';
 
 interface SinDroneProps {
-  sin: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sin: SinType;
   volume: number;
   isActive: boolean;
 }
@@ -328,6 +329,15 @@ const SinDrone: React.FC<SinDroneProps> = ({ sin, volume, isActive }) => {
         break;
       case 'envy':
         createEnvyDrone(audioContext);
+        break;
+      case 'pride':
+        createWrathDrone(audioContext); // Reuse wrath drone with different character
+        break;
+      case 'lust':
+        createSlothDrone(audioContext); // Reuse sloth drone - similar ethereal feel
+        break;
+      case 'gluttony':
+        createGreedDrone(audioContext); // Reuse greed drone - similar rumbling feel
         break;
     }
     

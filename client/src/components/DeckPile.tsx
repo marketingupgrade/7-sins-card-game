@@ -20,6 +20,9 @@ const SIN_HEX: Record<SinType, string> = {
   sloth: "#a855f7",
   greed: "#eab308",
   envy:  "#10b981",
+  pride: "#f0f0f0",
+  lust:  "#ec4899",
+  gluttony: "#b45309",
 };
 
 const SIN_LABEL: Record<SinType, string> = {
@@ -27,6 +30,9 @@ const SIN_LABEL: Record<SinType, string> = {
   sloth: "Sloth",
   greed: "Greed",
   envy:  "Envy",
+  pride: "Pride",
+  lust:  "Lust",
+  gluttony: "Gluttony",
 };
 
 const SIN_GRADIENT: Record<SinType, string> = {
@@ -34,6 +40,9 @@ const SIN_GRADIENT: Record<SinType, string> = {
   sloth: "linear-gradient(160deg, oklch(0.13 0.07 290 / 0.88) 0%, oklch(0.08 0.05 280 / 0.95) 100%)",
   greed: "linear-gradient(160deg, oklch(0.15 0.07 85 / 0.88) 0%, oklch(0.10 0.05 75 / 0.95) 100%)",
   envy:  "linear-gradient(160deg, oklch(0.13 0.07 155 / 0.88) 0%, oklch(0.08 0.05 145 / 0.95) 100%)",
+  pride: "linear-gradient(160deg, oklch(0.18 0.01 0 / 0.88) 0%, oklch(0.12 0.01 0 / 0.95) 100%)",
+  lust:  "linear-gradient(160deg, oklch(0.14 0.07 350 / 0.88) 0%, oklch(0.09 0.05 340 / 0.95) 100%)",
+  gluttony: "linear-gradient(160deg, oklch(0.14 0.07 60 / 0.88) 0%, oklch(0.09 0.05 50 / 0.95) 100%)",
 };
 
 // ─── Card back (reused for pile and flying anim) ──────────────────────────────

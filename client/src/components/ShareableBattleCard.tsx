@@ -1,3 +1,4 @@
+import type { SinType } from "@shared/gameTypes";
 import React from 'react';
 
 interface Stats {
@@ -9,7 +10,7 @@ interface Stats {
 
 interface ShareableBattleCardProps {
   playerName: string;
-  sin: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sin: SinType;
   isWinner: boolean;
   stats: Stats;
   onGenerate: (dataUrl: string) => void;
@@ -22,11 +23,14 @@ const ShareableBattleCard: React.FC<ShareableBattleCardProps> = ({
   stats,
   onGenerate
 }) => {
-  const sinColors = {
+  const sinColors: Record<SinType, string> = {
     wrath: '#FF3333',
     sloth: '#6B46C1',
     greed: '#F59E0B',
-    envy: '#10B981'
+    envy: '#10B981',
+    pride: '#F0F0F0',
+    lust: '#EC4899',
+    gluttony: '#B45309',
   };
 
   const generateCard = async () => {

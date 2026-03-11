@@ -92,8 +92,8 @@ describe("Card Data Integrity", () => {
     expect(SLOTH_CARDS).toHaveLength(CARDS_PER_DECK);
   });
 
-  it("has 144 total cards (4 sins x 36)", () => {
-    expect(ALL_CARDS).toHaveLength(144);
+  it("has 252 total cards (7 sins x 36)", () => {
+    expect(ALL_CARDS).toHaveLength(252);
   });
 
   it("has exactly 12 greed cards", () => {
@@ -132,7 +132,7 @@ describe("Card Data Integrity", () => {
     ALL_CARDS.forEach((card) => {
       expect(card.id).toBeTruthy();
       expect(card.name).toBeTruthy();
-      expect(card.sin).toMatch(/^(wrath|sloth|greed|envy)$/);
+      expect(card.sin).toMatch(/^(wrath|sloth|greed|envy|pride|lust|gluttony)$/);
       expect(card.cost).toBeGreaterThanOrEqual(0);
       expect(card.effects.length).toBeGreaterThanOrEqual(1);
       expect(card.flavorText).toBeTruthy();
@@ -212,7 +212,7 @@ describe("Card Data Integrity", () => {
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(144);
+    expect(Object.keys(CARD_MAP)).toHaveLength(252);
   });
 
   it("getCardById returns correct card", () => {

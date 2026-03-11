@@ -335,7 +335,7 @@ export default function GameBoard() {
       }, 4000);
 
       // Floating numbers + screen shake + cinematic flash
-      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981' };
+      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981', pride: '#f0f0f0', lust: '#ec4899', gluttony: '#b45309' };
       for (const eff of card.effects) {
         const val = eff.baseValue || 0;
         if (val > 0) {

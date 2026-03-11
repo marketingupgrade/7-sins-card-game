@@ -35,6 +35,9 @@ const SIN_COLORS: Record<string, string> = {
   sloth: "#3b82f6",
   greed: "#eab308",
   envy: "#22c55e",
+  pride: "#f0f0f0",
+  lust: "#ec4899",
+  gluttony: "#b45309",
 };
 
 // Painterly Spell Icons used instead of emoji - see SIN_ARCHETYPE_ICONS from iconUtils
@@ -487,7 +490,7 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
             {/* Shareable Battle Card (CD5: Social) */}
             <ShareableBattleCard
               playerName={currentPlayer?.username || 'Player'}
-              sin={(currentPlayer?.chosenSin || 'wrath') as 'wrath' | 'sloth' | 'greed' | 'envy'}
+              sin={(currentPlayer?.chosenSin || 'wrath') as SinType}
               isWinner={isPlayerWinner}
               stats={{
                 damageDealt: stats.totalDamageDealt,

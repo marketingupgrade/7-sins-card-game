@@ -220,7 +220,7 @@ export default function CompoundBalanceSheet({
                 {Array.from(playerSummary.entries()).map(([playerId, summary]) => {
                   const player = players.find((p) => p.id === playerId || p.gamePlayerId === playerId);
                   const sin = player?.chosenSin;
-                  const sinColorMap: Record<string, string> = { wrath: "text-wrath", sloth: "text-sloth", greed: "text-greed", envy: "text-envy" };
+                  const sinColorMap: Record<string, string> = { wrath: "text-wrath", sloth: "text-sloth", greed: "text-greed", envy: "text-envy", pride: "text-pride", lust: "text-lust", gluttony: "text-gluttony" };
                   const sinIconUrl = SIN_ARCHETYPE_ICONS[(sin || "wrath") as SinType];
                   return (
                     <div

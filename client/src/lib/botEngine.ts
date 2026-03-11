@@ -106,7 +106,7 @@ export async function botChooseSin(gameId: string, botId: string): Promise<SinTy
     .select("chosen_sin")
     .eq("game_id", gameId);
 
-  const allSins: SinType[] = ["wrath", "sloth", "greed", "envy"];
+  const allSins: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
   const sinCounts = allSins.map((s) => ({
     sin: s,
     count: (players || []).filter((p) => p.chosen_sin === s).length,

@@ -18,8 +18,8 @@ describe("Card Data Integrity", () => {
     expect(SLOTH_CARDS).toHaveLength(36);
   });
 
-  it("has 144 total cards (4 sins x 36)", () => {
-    expect(ALL_CARDS).toHaveLength(144);
+  it("has 252 total cards (7 sins x 36)", () => {
+    expect(ALL_CARDS).toHaveLength(252);
   });
 
   it("has exactly 36 greed cards", () => {
@@ -114,7 +114,7 @@ describe("Card Data Integrity", () => {
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(144);
+    expect(Object.keys(CARD_MAP)).toHaveLength(252);
   });
 
   it("getCardById returns correct card", () => {

@@ -87,9 +87,39 @@ const SIN_CONFIG: Record<SinType, {
     subtitle: "The Mimic",
     latin: "Invidia",
   },
+  pride: {
+    color: "pride",
+    glassClass: "glass-panel-pride",
+    label: "PRIDE",
+    desc: "Ascend above all. Free cards build divine shields. Perfection is your birthright.",
+    tagline: "SUPERBIA",
+    quip: "Pride. The cathedral bows before your radiance.",
+    subtitle: "The Exalted",
+    latin: "Superbia",
+  },
+  lust: {
+    color: "lust",
+    glassClass: "glass-panel-lust",
+    label: "LUST",
+    desc: "Seduce and drain. Each strike heals you. Desire is the sweetest poison.",
+    tagline: "LUXURIA",
+    quip: "Lust. The roses bloom with thorns in your wake.",
+    subtitle: "The Temptress",
+    latin: "Luxuria",
+  },
+  gluttony: {
+    color: "gluttony",
+    glassClass: "glass-panel-gluttony",
+    label: "GLUTTONY",
+    desc: "Consume everything. AoE attacks fuel your hunger. More is never enough.",
+    tagline: "GULA",
+    quip: "Gluttony. The feast never ends, only grows.",
+    subtitle: "The Devourer",
+    latin: "Gula",
+  },
 };
 
-const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy"];
+const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 
 /* ── Ornate Divider SVG ── */
 function OrnamentDivider({ className = "" }: { className?: string }) {

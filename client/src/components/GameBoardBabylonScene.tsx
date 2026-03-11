@@ -31,6 +31,9 @@ const SIN_RGB: Record<string, [number, number, number]> = {
   sloth: [0.45, 0.2, 0.75],
   greed: [0.85, 0.7, 0.1],
   envy: [0.1, 0.75, 0.4],
+  pride: [0.95, 0.95, 0.95],
+  lust: [0.93, 0.28, 0.6],
+  gluttony: [0.7, 0.33, 0.04],
 };
 
 export default function GameBoardBabylonScene({ className = "", activeSin, currentRound = 1, cardPlayCount = 0, lastCardSin }: GameBoardBabylonSceneProps) {
@@ -170,7 +173,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       }
 
       // --- FOUR FIRE BRAZIERS (one per sin) ---
-      const sinKeys = ["wrath", "sloth", "greed", "envy"];
+      const sinKeys = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
       const brazierLights: any[] = [];
 
       sinKeys.forEach((sin, i) => {
