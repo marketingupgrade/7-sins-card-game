@@ -355,3 +355,7 @@
 - [x] Floating text/numbers too large and intrusive on mobile
 - [x] Round/status text overlaps player panels on mobile
 - [x] Fix missing faction portraits on homepage sin selection cards
+- [x] Fix Lobby faction cards - replace Lucide icons with portrait images
+- [x] Fix all remaining Lucide icon references across entire game with proper gaming assets
+- [x] Restore Babylon homepage (lost during sandbox reset)
+- [x] Audit and fix player panels, GameBoard, and all other pages for missing portraits

@@ -9,7 +9,8 @@ import { useState, useEffect, useCallback } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users, Lock } from "lucide-react";
+import { Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users, Lock } from "lucide-react";
+import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import EmberField from "@/components/EmberField";
 import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
 import { useFactionUnlocks, UNLOCK_THRESHOLD, LOCKED_FACTIONS } from "@/hooks/useFactionUnlocks";
@@ -33,7 +34,6 @@ const LOBBY_QUIPS = [
 
 // Sin visual and copy config
 const SIN_CONFIG: Record<SinType, {
-  Icon: typeof Flame;
   color: string;
   glassClass: string;
   dropShadow: string;
@@ -44,7 +44,6 @@ const SIN_CONFIG: Record<SinType, {
   subtitle: string;
 }> = {
   wrath: {
-    Icon: Flame,
     color: "wrath",
     glassClass: "glass-panel-wrath",
     dropShadow: "drop-shadow-[0_0_16px_oklch(0.55_0.25_25)]",
@@ -55,7 +54,6 @@ const SIN_CONFIG: Record<SinType, {
     subtitle: "anger issues",
   },
   sloth: {
-    Icon: Moon,
     color: "sloth",
     glassClass: "glass-panel-sloth",
     dropShadow: "drop-shadow-[0_0_16px_oklch(0.45_0.15_290)]",
@@ -66,7 +64,6 @@ const SIN_CONFIG: Record<SinType, {
     subtitle: "lazy genius",
   },
   greed: {
-    Icon: Coins,
     color: "greed",
     glassClass: "glass-panel-greed",
     dropShadow: "drop-shadow-[0_0_16px_oklch(0.65_0.15_85)]",
@@ -77,7 +74,6 @@ const SIN_CONFIG: Record<SinType, {
     subtitle: "gold digger",
   },
   envy: {
-    Icon: Eye,
     color: "envy",
     glassClass: "glass-panel-envy",
     dropShadow: "drop-shadow-[0_0_16px_oklch(0.5_0.16_155)]",
@@ -359,19 +355,26 @@ export default function Lobby() {
             {players.map((player: PlayerState, i: number) => {
               const playerIsBot = checkIsBot(player.id);
               const sinCfg = player.chosenSin ? SIN_CONFIG[player.chosenSin as SinType] : null;
-              const SinIcon = sinCfg?.Icon;
+              const sinIcon = player.chosenSin ? SIN_ARCHETYPE_ICONS[player.chosenSin as SinType] : null;
+              const portrait = player.chosenSin ? FACTION_PORTRAITS[player.chosenSin as SinType] : null;
               return (
                 <motion.div
                   key={player.gamePlayerId}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1 * i }}
-                  className={`rounded-xl p-4 relative overflow-hidden ${
+                  className={`rounded-xl p-3 relative overflow-hidden ${
                     sinCfg ? sinCfg.glassClass : "glass-panel"
                   }`}
                 >
+                  {/* Portrait background */}
+                  {portrait && (
+                    <div className="absolute inset-0 opacity-10">
+                      <img src={portrait} alt="" className="w-full h-full object-cover" />
+                    </div>
+                  )}
                   {/* Sin color accent */}
-                  {sinCfg && (
+                  {sinCfg && !portrait && (
                     <div className={`absolute inset-0 opacity-5 bg-${sinCfg.color}`} />
                   )}
                   <div className="relative z-10">
@@ -385,9 +388,9 @@ export default function Lobby() {
                         {player.username || `Player ${i + 1}`}
                       </span>
                     </div>
-                    {sinCfg && SinIcon ? (
+                    {sinCfg && sinIcon ? (
                       <div className="flex items-center gap-1.5">
-                        <SinIcon className={`w-3.5 h-3.5 text-${sinCfg.color}`} />
+                        <img src={sinIcon} alt={player.chosenSin || ''} className="w-5 h-5 object-contain" style={{ filter: `drop-shadow(0 0 4px var(--color-${sinCfg.color}))` }} />
                         <span
                           className={`text-xs uppercase tracking-wider font-bold text-${sinCfg.color}`}
                           style={{ fontFamily: "var(--font-heading)" }}
@@ -449,15 +452,15 @@ export default function Lobby() {
             <div className="grid grid-cols-2 gap-4">
               {ALL_SINS.map((sin) => {
                 const cfg = SIN_CONFIG[sin];
-                const SinIcon = cfg.Icon;
                 const isLocked = !factionUnlocks.isFactionAvailable(sin);
                 const portrait = FACTION_PORTRAITS[sin];
+                const spellIcon = SIN_ARCHETYPE_ICONS[sin];
 
                 if (isLocked) {
                   return (
                     <motion.div
                       key={sin}
-                      className="rounded-xl p-5 text-center relative overflow-hidden border border-border/20 bg-black/30"
+                      className="rounded-xl p-3 text-center relative overflow-hidden border border-border/20 bg-black/30"
                     >
                       {/* Blurred portrait background */}
                       <div className="absolute inset-0 opacity-10">
@@ -465,7 +468,7 @@ export default function Lobby() {
                       </div>
                       <div className="relative z-10">
                         <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
-                          <SinIcon className="w-9 h-9 text-muted-foreground/20" />
+                          <img src={spellIcon} alt={cfg.label} className="w-9 h-9 object-contain opacity-20" />
                           <Lock className="w-4 h-4 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" />
                         </div>
                         <h3
@@ -477,7 +480,6 @@ export default function Lobby() {
                         <p className="text-[10px] text-muted-foreground/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                           Locked — play {factionUnlocks.gamesRemaining} more game{factionUnlocks.gamesRemaining !== 1 ? "s" : ""}
                         </p>
-                        {/* Progress bar */}
                         <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-border/20 overflow-hidden">
                           <motion.div
                             initial={{ width: 0 }}
@@ -501,9 +503,25 @@ export default function Lobby() {
                     whileHover={{ scale: 1.05, y: -6 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleChooseSin(sin)}
-                    className={`${cfg.glassClass} rounded-xl p-5 text-center group pulse-ring holo-sheen transition-shadow duration-300`}
+                    className={`${cfg.glassClass} rounded-xl p-3 text-center group pulse-ring holo-sheen transition-shadow duration-300 relative overflow-hidden`}
                   >
-                    <SinIcon className={`w-9 h-9 text-${cfg.color} mx-auto mb-2 group-hover:${cfg.dropShadow} transition-all`} style={{ animation: 'glow-breathe 3s ease-in-out infinite' }} />
+                    {/* Portrait background */}
+                    <div className="w-full aspect-[3/4] rounded-lg overflow-hidden mb-2 relative">
+                      <img
+                        src={portrait}
+                        alt={`${cfg.label} faction`}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                      {/* Spell icon overlay in corner */}
+                      <img
+                        src={spellIcon}
+                        alt=""
+                        className="absolute bottom-1.5 right-1.5 w-6 h-6 object-contain opacity-80"
+                        style={{ filter: `drop-shadow(0 0 6px var(--color-${cfg.color}))` }}
+                      />
+                    </div>
                     <h3
                       className={`text-base font-black text-${cfg.color} tracking-wider mb-1`}
                       style={{ fontFamily: "var(--font-heading)" }}
@@ -513,16 +531,6 @@ export default function Lobby() {
                     <p className="text-[10px] text-foreground/70 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                       {cfg.desc}
                     </p>
-                    <div className="flex justify-center gap-1 mt-2">
-                      {[...Array(5)].map((_, j) => (
-                        <motion.div
-                          key={j}
-                          className={`w-1.5 h-1.5 rounded-full bg-${cfg.color}`}
-                          animate={{ opacity: [0.3, 1, 0.3] }}
-                          transition={{ duration: 2, repeat: Infinity, delay: j * 0.15 }}
-                        />
-                      ))}
-                    </div>
                     <p className="text-[8px] text-muted-foreground/60 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
                       {cfg.tagline}
                     </p>

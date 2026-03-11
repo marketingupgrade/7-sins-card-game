@@ -6,11 +6,14 @@
  * Invader Zim × Freaky Fred aesthetic with maximum sass.
  */
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { Flame, Moon, Skull, Swords, Shield, Zap, Users, Bot, Sparkles, Coins, Eye, TrendingUp, SquareSlash, GraduationCap, Lock } from "lucide-react";
+import { Skull, Swords, Shield, Zap, Users, Bot, Sparkles, TrendingUp, SquareSlash, GraduationCap } from "lucide-react";
+import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import type { SinType } from "@shared/gameTypes";
+const HomeBabylonScene = lazy(() => import("@/components/HomeBabylonScene"));
 import EmberField from "@/components/EmberField";
 import { useCard3DTilt } from "@/hooks/useCard3DTilt";
 import { usePlayerId } from "@/hooks/usePlayerId";
@@ -32,7 +35,13 @@ const SASSY_TAGLINES = [
   "Come for the cards. Stay for the emotional damage.",
 ];
 
-const FLOATING_ICONS = [Flame, Moon, Skull, Swords, Shield, Zap];
+// Floating icons now use spell icon URLs instead of Lucide components
+const FLOATING_ICON_URLS = [
+  SIN_ARCHETYPE_ICONS.wrath,
+  SIN_ARCHETYPE_ICONS.sloth,
+  SIN_ARCHETYPE_ICONS.greed,
+  SIN_ARCHETYPE_ICONS.envy,
+];
 
 export default function Home() {
   const playerId = usePlayerId();
@@ -120,13 +129,18 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-arena relative overflow-hidden noise-overlay">
-      {/* Floating ember particles */}
-      <EmberField count={24} />
+      {/* 3D Babylon.js background scene */}
+      <Suspense fallback={<EmberField count={24} />}>
+        <HomeBabylonScene className="opacity-70" />
+      </Suspense>
+
+      {/* Fallback ember particles (layered on top for extra depth) */}
+      <EmberField count={12} />
 
       {/* Floating ambient icons */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {Array.from({ length: 18 }).map((_, i) => {
-          const Icon = FLOATING_ICONS[i % FLOATING_ICONS.length];
+          const iconUrl = FLOATING_ICON_URLS[i % FLOATING_ICON_URLS.length];
           return (
             <motion.div
               key={i}
@@ -147,7 +161,7 @@ export default function Home() {
                 ease: "linear",
               }}
             >
-              <Icon className="w-5 h-5 text-foreground" />
+              <img src={iconUrl} alt="" className="w-5 h-5 opacity-50" />
             </motion.div>
           );
         })}
@@ -256,7 +270,7 @@ export default function Home() {
                 <div className="flex items-center justify-center gap-4 text-[10px] tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                   {streak > 0 && (
                     <span className="flex items-center gap-1 text-amber-400">
-                      <Flame className="w-3 h-3" />
+                      <img src={SIN_ARCHETYPE_ICONS.wrath} alt="" className="w-3 h-3" />
                       {streak} STREAK
                     </span>
                   )}
@@ -314,7 +328,7 @@ export default function Home() {
                 disabled={isCreating}
                 className="w-full btn-wrath rounded-xl py-3.5 px-6 text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                <Flame className="w-4 h-4" />
+                <img src={SIN_ARCHETYPE_ICONS.wrath} alt="" className="w-4 h-4" />
                 {isCreating ? "SUMMONING ARENA..." : "CREATE GAME"}
               </motion.button>
 
@@ -440,10 +454,10 @@ export default function Home() {
           className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 max-w-3xl"
         >
           {[
-            { Icon: Flame, color: "wrath", glass: "glass-panel-wrath", name: "WRATH", key: "wrath" as const, desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy" },
-            { Icon: Moon, color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", key: "sloth" as const, desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy" },
-            { Icon: Coins, color: "greed", glass: "glass-panel-greed", name: "GREED", key: "greed" as const, desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
-            { Icon: Eye, color: "envy", glass: "glass-panel-envy", name: "ENVY", key: "envy" as const, desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },
+            { color: "wrath", glass: "glass-panel-wrath", name: "WRATH", key: "wrath" as const, desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy" },
+            { color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", key: "sloth" as const, desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy" },
+            { color: "greed", glass: "glass-panel-greed", name: "GREED", key: "greed" as const, desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
+            { color: "envy", glass: "glass-panel-envy", name: "ENVY", key: "envy" as const, desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },
           ].map((sin) => (
             <SinCard key={sin.name} sin={sin} portrait={FACTION_PORTRAITS[sin.key]} />
           ))}
@@ -486,7 +500,7 @@ export default function Home() {
               <div className="bg-background/40 rounded-lg p-3 border border-border/10">
                 <p className="text-[10px] text-foreground/60 mb-1" style={{ fontFamily: "var(--font-heading)" }}>EXAMPLE</p>
                 <div className="flex items-center gap-2">
-                  <Flame className="w-3.5 h-3.5 text-wrath/70" />
+                  <img src={SIN_ARCHETYPE_ICONS.wrath} alt="" className="w-3.5 h-3.5" />
                   <p className="text-[11px] text-foreground/80" style={{ fontFamily: "var(--font-body)" }}>
                     <span className="text-wrath font-semibold">Fury Strike</span> — 4 damage, right now, done.
                   </p>
@@ -659,7 +673,7 @@ export default function Home() {
 }
 
 /* ─── Sin Faction Card with 3D Tilt ─────────────────────── */
-function SinCard({ sin, portrait }: { sin: { Icon: any; color: string; glass: string; name: string; desc: string; tag: string; passive: string }; portrait?: string }) {
+function SinCard({ sin, portrait }: { sin: { color: string; glass: string; name: string; key: SinType; desc: string; tag: string; passive: string }; portrait?: string }) {
   const { ref, handlers } = useCard3DTilt({ maxTilt: 12, scale: 1.06 });
 
   return (
@@ -682,7 +696,7 @@ function SinCard({ sin, portrait }: { sin: { Icon: any; color: string; glass: st
         </div>
       )}
       {!portrait && (
-        <sin.Icon className={`w-7 h-7 text-${sin.color} mx-auto mb-2 transition-all group-hover:drop-shadow-[0_0_8px_currentColor]`} />
+        <img src={SIN_ARCHETYPE_ICONS[sin.key]} alt={sin.name} className="w-7 h-7 mx-auto mb-2 object-contain" style={{ filter: `drop-shadow(0 0 6px var(--color-${sin.color}))` }} />
       )}
       <h3
         className={`text-sm font-bold text-${sin.color} tracking-wider mb-1`}
