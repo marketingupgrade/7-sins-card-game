@@ -413,3 +413,14 @@
 - [x] Update tests for new card data (36/deck, 144 total) — 178 tests passing
 - [x] Verify balance: 7.6 trillion unique game paths, 42.8 bits Shannon entropy, mirror match parity confirmed
 - [x] Push to GitHub for Vercel deployment
+
+## Monte Carlo Tournament Simulation — Balance Validation (COMPLETED)
+- [x] Build Python simulation engine replicating full game mechanics (energy, passives, flat/compound, catch-up)
+- [x] Simulate all 6 faction matchups (W-S, W-G, W-E, S-G, S-E, G-E) + 4 mirror matches = 10 pairings
+- [x] Run 10K+ games per matchup (100K total games across 6 iterative rebalancing passes)
+- [x] Compute win rates, average game length, damage/heal economy, card play frequency
+- [x] Identify dominant strategies: Sloth healing too strong (83% WR), Wrath self-harm too punishing (32.5% WR)
+- [x] Apply 79 card value adjustments across 6 rebalancing passes (V0→V6)
+- [x] Final cross-faction win rates: Wrath 49.1%, Sloth 48.4%, Greed 53.9%, Envy 48.6% (all within 45-55%)
+- [x] Generate comprehensive balance report with heatmap, bar chart, and game pace visualizations
+- [x] Push rebalanced cards to GitHub (178 tests passing)

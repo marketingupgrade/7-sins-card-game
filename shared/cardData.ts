@@ -39,14 +39,14 @@ export const WRATH_CARDS: CardDefinition[] = [
   // ── OFFENSIVE FLAT (9 cards) ──
   {
     id: "wrath_01", name: "Fury Strike", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "single_enemy" }],
     flavorText: "A fist clenched so hard it draws its own blood.",
     narratorQuip: "Oh look, violence. How breathtakingly original.",
     tier: "common",
   },
   {
     id: "wrath_02", name: "Crimson Slash", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
     flavorText: "Quick. Clean. Well, not clean exactly.",
     narratorQuip: "Efficient. I'm almost impressed. Almost.",
     tier: "common",
@@ -63,7 +63,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_04", name: "Berserker's Howl", sin: "wrath", cost: 3, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 0, target: "all_enemies" }],
     flavorText: "The scream that silences a battlefield.",
     narratorQuip: "Screaming at everyone equally. True equality in action.",
     tier: "rare",
@@ -71,7 +71,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_05", name: "Apocalypse Fist", sin: "wrath", cost: 5, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 6, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 8, duration: 0, target: "all_enemies" },
       { type: "damage", baseValue: 3, duration: 0, target: "self" },
     ],
     flavorText: "The final argument in any debate.",
@@ -80,14 +80,14 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_06", name: "Impale", sin: "wrath", cost: 2, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "single_enemy" }],
     flavorText: "Precision violence. The kind that leaves a mark.",
     narratorQuip: "Four damage, no drawback. Wrath being efficient for once.",
     tier: "common",
   },
   {
     id: "wrath_07", name: "Inferno Breath", sin: "wrath", cost: 4, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "all_enemies" }],
     flavorText: "The air itself catches fire when wrath exhales.",
     narratorQuip: "AoE 4 to everyone. The room temperature just went up considerably.",
     tier: "epic",
@@ -95,7 +95,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_08", name: "Skull Crack", sin: "wrath", cost: 0, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 8, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Free power always comes with a price. Usually your own skull.",
@@ -104,7 +104,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_09", name: "Execution", sin: "wrath", cost: 3, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 6, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
     flavorText: "No trial. No jury. Just the executioner.",
     narratorQuip: "Six damage, single target. Someone's getting deleted.",
     tier: "epic",
@@ -112,28 +112,28 @@ export const WRATH_CARDS: CardDefinition[] = [
   // ── OFFENSIVE COMPOUNDING (4 cards) ──
   {
     id: "wrath_10", name: "Blood Boil", sin: "wrath", cost: 2, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 3, target: "single_enemy" }],
     flavorText: "Their veins run hot with borrowed fury.",
     narratorQuip: "2 damage... 2 more... then 4. That's the Fibonacci of pain.",
     tier: "rare",
   },
   {
     id: "wrath_11", name: "Burning Hatred", sin: "wrath", cost: 3, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 3, target: "single_enemy" }],
     flavorText: "Hatred that lingers long after the blow.",
     narratorQuip: "3... 3... then 6. Three rounds of suffering. You really know how to hold a grudge.",
     tier: "epic",
   },
   {
     id: "wrath_12", name: "Wildfire", sin: "wrath", cost: 4, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, target: "all_enemies" }],
     flavorText: "Fire doesn't discriminate. It just consumes.",
     narratorQuip: "2... 2... 4 to ALL enemies. Three rounds of spreading flames.",
     tier: "epic",
   },
   {
     id: "wrath_13", name: "Smoldering Grudge", sin: "wrath", cost: 1, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, target: "single_enemy" }],
     flavorText: "A grudge that refuses to die. Sound familiar?",
     narratorQuip: "1... 1... 2. Small but persistent. Like a bad memory.",
     tier: "common",
@@ -148,7 +148,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_15", name: "Battle Scars", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "heal", baseValue: 2, duration: 0, target: "self" }],
+    effects: [{ type: "heal", baseValue: 3, duration: 0, target: "self" }],
     flavorText: "Scars are just proof you survived. Barely.",
     narratorQuip: "Wrath healing? Must be desperate.",
     tier: "common",
@@ -156,14 +156,14 @@ export const WRATH_CARDS: CardDefinition[] = [
   // ── DEFENSIVE COMPOUNDING (2 cards) ──
   {
     id: "wrath_16", name: "Hardened Fury", sin: "wrath", cost: 2, cardType: "compounding",
-    effects: [{ type: "shield", baseValue: 2, duration: 3, target: "self" }],
+    effects: [{ type: "shield", baseValue: 4, duration: 3, target: "self" }],
     flavorText: "Anger crystallized into armor.",
     narratorQuip: "Shield 2... 2... 4. Anger as armor. Surprisingly effective.",
     tier: "rare",
   },
   {
     id: "wrath_17", name: "Adrenaline Rush", sin: "wrath", cost: 1, cardType: "compounding",
-    effects: [{ type: "heal", baseValue: 1, duration: 3, target: "self" }],
+    effects: [{ type: "heal", baseValue: 3, duration: 3, target: "self" }],
     flavorText: "The body heals faster when fueled by rage.",
     narratorQuip: "1... 1... 2 healing. Wrath's version of self-care.",
     tier: "common",
@@ -171,14 +171,14 @@ export const WRATH_CARDS: CardDefinition[] = [
   // ── CROWD CONTROL FLAT (3 cards) ──
   {
     id: "wrath_18", name: "Intimidate", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "debuff", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "debuff", baseValue: 3, duration: 0, target: "single_enemy" }],
     flavorText: "One look is enough to weaken their resolve.",
     narratorQuip: "Debuffing through sheer menace. Classic bully tactics.",
     tier: "common",
   },
   {
     id: "wrath_19", name: "War Cry", sin: "wrath", cost: 3, cardType: "flat",
-    effects: [{ type: "debuff", baseValue: 2, duration: 0, target: "all_enemies" }],
+    effects: [{ type: "debuff", baseValue: 4, duration: 0, target: "all_enemies" }],
     flavorText: "A cry that shakes the foundations of courage.",
     narratorQuip: "Debuff 2 to everyone. Wrath's idea of crowd control.",
     tier: "rare",
@@ -193,9 +193,9 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   // ── HYBRID FLAT (5 cards) ──
   {
-    id: "wrath_21", name: "Blind Rage", sin: "wrath", cost: 1, cardType: "flat",
+    id: "wrath_21", name: "Blind Rage", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 6, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Rage doesn't care who it hurts. Even you.",
@@ -205,7 +205,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_22", name: "Corruption Surge", sin: "wrath", cost: 0, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 5, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Free power always comes with a price. Usually your own blood.",
@@ -215,7 +215,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_23", name: "Bloodlust", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 5, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "The taste of blood only makes you hungrier.",
@@ -225,7 +225,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_24", name: "Scorched Earth", sin: "wrath", cost: 4, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 4, duration: 0, target: "all_enemies" },
       { type: "debuff", baseValue: 1, duration: 0, target: "all_enemies" },
     ],
     flavorText: "Nothing grows where wrath has walked.",
@@ -233,9 +233,9 @@ export const WRATH_CARDS: CardDefinition[] = [
     tier: "epic",
   },
   {
-    id: "wrath_25", name: "Reckless Charge", sin: "wrath", cost: 0, cardType: "flat",
+    id: "wrath_25", name: "Reckless Charge", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 5, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
       { type: "shield", baseValue: 1, duration: 0, target: "self" },
     ],
@@ -247,7 +247,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_26", name: "Festering Wound", sin: "wrath", cost: 2, cardType: "compounding",
     effects: [
-      { type: "damage", baseValue: 1, duration: 3, target: "single_enemy" },
+      { type: "damage", baseValue: 4, duration: 3, target: "single_enemy" },
       { type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" },
     ],
     flavorText: "A wound that refuses to close. And it's getting worse.",
@@ -257,7 +257,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_27", name: "Volcanic Veins", sin: "wrath", cost: 3, cardType: "compounding",
     effects: [
-      { type: "damage", baseValue: 2, duration: 3, target: "single_enemy" },
+      { type: "damage", baseValue: 3, duration: 3, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 3, target: "self" },
     ],
     flavorText: "Magma flows through your veins. Theirs too, but less pleasantly.",
@@ -267,7 +267,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_28", name: "Ember Storm", sin: "wrath", cost: 2, cardType: "compounding",
     effects: [
-      { type: "damage", baseValue: 1, duration: 3, target: "all_enemies" },
+      { type: "damage", baseValue: 3, duration: 3, target: "all_enemies" },
       { type: "shield", baseValue: 1, duration: 3, target: "self" },
     ],
     flavorText: "Embers that grow into an inferno.",
@@ -299,7 +299,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   },
   {
     id: "wrath_31", name: "Last Stand", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "single_enemy" }],
     flavorText: "When there's nothing left to lose, everything becomes a weapon.",
     narratorQuip: "Below 10 HP and still fighting? Here's some HP. Don't say I never gave you anything.",
     tier: "common",
@@ -308,7 +308,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_32", name: "Cornered Animal", sin: "wrath", cost: 1, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 4, duration: 0, target: "single_enemy" },
       { type: "shield", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Backed into a corner, fangs bared.",
@@ -319,7 +319,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_33", name: "Martyr's Flame", sin: "wrath", cost: 3, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "all_enemies" },
+      { type: "damage", baseValue: 6, duration: 0, target: "all_enemies" },
       { type: "damage", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Burn them all. Even if it means burning yourself.",
@@ -330,7 +330,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_34", name: "Phoenix Rage", sin: "wrath", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 5, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "From the ashes of defeat, fury reborn.",
@@ -341,7 +341,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   // ── FILLER OFFENSIVE (2 more to hit 36) ──
   {
     id: "wrath_35", name: "Gut Punch", sin: "wrath", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
     flavorText: "No finesse. Just force.",
     narratorQuip: "Three damage for one energy. Simple, brutal, effective.",
     tier: "common",
@@ -376,7 +376,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   {
     id: "sloth_02", name: "Gravity Well", sin: "sloth", cost: 2, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "The weight of inaction crushes all who resist.",
     narratorQuip: "Sloth dealing 4 damage? Must have accidentally rolled over on someone.",
     tier: "rare",
@@ -385,7 +385,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   {
     id: "sloth_03", name: "Passive Resistance", sin: "sloth", cost: 1, cardType: "compounding",
     effects: [
-      { type: "damage", baseValue: 1, duration: 3, target: "single_enemy" },
+      { type: "damage", baseValue: 3, duration: 3, target: "single_enemy" },
     ],
     flavorText: "Not fighting back IS the strategy.",
     narratorQuip: "1... 1... 2 damage. Lazy multitasking at its finest.",
@@ -393,13 +393,13 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   {
     id: "sloth_04", name: "Decay", sin: "sloth", cost: 2, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, target: "single_enemy" }],
     flavorText: "All things crumble. Some just need a push.",
     narratorQuip: "2... 2... 4 damage over three rounds. Slow destruction.",
     tier: "rare",
   },
   {
-    id: "sloth_05", name: "Erosion", sin: "sloth", cost: 3, cardType: "compounding",
+    id: "sloth_05", name: "Erosion", sin: "sloth", cost: 5, cardType: "compounding",
     effects: [{ type: "damage", baseValue: 1, duration: 3, target: "all_enemies" }],
     flavorText: "Water carves stone. Time carves everything.",
     narratorQuip: "1... 1... 2 to ALL enemies. Slow, inevitable, lazy.",
@@ -407,7 +407,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   // ── DEFENSIVE FLAT (5 cards) ──
   {
-    id: "sloth_06", name: "Deep Slumber", sin: "sloth", cost: 0, cardType: "flat",
+    id: "sloth_06", name: "Deep Slumber", sin: "sloth", cost: 3, cardType: "flat",
     effects: [
       { type: "heal", baseValue: 3, duration: 0, target: "self" },
       { type: "debuff", baseValue: 1, duration: 0, target: "self" },
@@ -419,7 +419,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   {
     id: "sloth_07", name: "Eternal Rest", sin: "sloth", cost: 4, cardType: "flat",
     effects: [
-      { type: "heal", baseValue: 6, duration: 0, target: "self" },
+      { type: "heal", baseValue: 3, duration: 0, target: "self" },
       { type: "shield", baseValue: 4, duration: 0, target: "self" },
     ],
     flavorText: "The deepest sleep grants the strongest armor.",
@@ -427,8 +427,8 @@ export const SLOTH_CARDS: CardDefinition[] = [
     tier: "epic",
   },
   {
-    id: "sloth_08", name: "Cocoon", sin: "sloth", cost: 2, cardType: "flat",
-    effects: [{ type: "shield", baseValue: 5, duration: 0, target: "self" }],
+    id: "sloth_08", name: "Cocoon", sin: "sloth", cost: 5, cardType: "flat",
+    effects: [{ type: "shield", baseValue: 4, duration: 0, target: "self" }],
     flavorText: "Wrapped in layers of apathy. Nothing gets through.",
     narratorQuip: "5 shield for 2 energy. Sloth's version of a panic room.",
     tier: "rare",
@@ -441,8 +441,8 @@ export const SLOTH_CARDS: CardDefinition[] = [
     tier: "common",
   },
   {
-    id: "sloth_10", name: "Thick Skin", sin: "sloth", cost: 1, cardType: "flat",
-    effects: [{ type: "shield", baseValue: 3, duration: 0, target: "self" }],
+    id: "sloth_10", name: "Thick Skin", sin: "sloth", cost: 5, cardType: "flat",
+    effects: [{ type: "shield", baseValue: 4, duration: 0, target: "self" }],
     flavorText: "Years of not caring have made you surprisingly resilient.",
     narratorQuip: "3 shield for 1 energy. Apathy as armor.",
     tier: "common",
@@ -450,14 +450,14 @@ export const SLOTH_CARDS: CardDefinition[] = [
   // ── DEFENSIVE COMPOUNDING (7 cards) ──
   {
     id: "sloth_11", name: "Hibernate", sin: "sloth", cost: 2, cardType: "compounding",
-    effects: [{ type: "heal", baseValue: 2, duration: 3, target: "self" }],
+    effects: [{ type: "heal", baseValue: 3, duration: 3, target: "self" }],
     flavorText: "Three rounds of beauty sleep.",
     narratorQuip: "Heal 2... 2... then 4. Napping their way to victory.",
     tier: "rare",
   },
   {
-    id: "sloth_12", name: "Pillow Fort", sin: "sloth", cost: 2, cardType: "compounding",
-    effects: [{ type: "shield", baseValue: 2, duration: 3, target: "self" }],
+    id: "sloth_12", name: "Pillow Fort", sin: "sloth", cost: 4, cardType: "compounding",
+    effects: [{ type: "shield", baseValue: 3, duration: 3, target: "self" }],
     flavorText: "The ultimate defense: not caring enough to get hit.",
     narratorQuip: "Shield 2... 2... 4. The pillow fort grows stronger each round.",
     tier: "rare",
@@ -478,14 +478,14 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   {
     id: "sloth_15", name: "Fortress of Solitude", sin: "sloth", cost: 3, cardType: "compounding",
-    effects: [{ type: "shield", baseValue: 3, duration: 3, target: "self" }],
+    effects: [{ type: "shield", baseValue: 1, duration: 3, target: "self" }],
     flavorText: "A fortress built from pure indifference.",
     narratorQuip: "Shield 3... 3... 6. That's 12 total shield. Good luck getting through.",
     tier: "epic",
   },
   {
     id: "sloth_16", name: "Deep Meditation", sin: "sloth", cost: 3, cardType: "compounding",
-    effects: [{ type: "heal", baseValue: 3, duration: 3, target: "self" }],
+    effects: [{ type: "heal", baseValue: 1, duration: 3, target: "self" }],
     flavorText: "Inner peace through absolute stillness.",
     narratorQuip: "3... 3... 6 healing. 12 total HP restored. The ultimate stall.",
     tier: "epic",
@@ -500,7 +500,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   // ── CROWD CONTROL FLAT (2 cards) ──
   {
     id: "sloth_18", name: "Yawn", sin: "sloth", cost: 1, cardType: "flat",
-    effects: [{ type: "debuff", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "debuff", baseValue: 1, duration: 0, target: "single_enemy" }],
     flavorText: "The most contagious weapon in existence.",
     narratorQuip: "Weaponized boredom. Two debuff for one energy.",
     tier: "common",
@@ -508,7 +508,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   {
     id: "sloth_19", name: "Mass Apathy", sin: "sloth", cost: 3, cardType: "flat",
     effects: [
-      { type: "debuff", baseValue: 2, duration: 0, target: "all_enemies" },
+      { type: "debuff", baseValue: 1, duration: 0, target: "all_enemies" },
     ],
     flavorText: "Why fight when you could just... not?",
     narratorQuip: "Debuff 2 to everyone. Spreading laziness like a plague.",
@@ -524,7 +524,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   },
   {
     id: "sloth_21", name: "Lethargy Aura", sin: "sloth", cost: 3, cardType: "compounding",
-    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" }],
     flavorText: "Your muscles feel like wet concrete.",
     narratorQuip: "Debuff 2... 2... 4. They've forgotten how to fight.",
     tier: "epic",
@@ -690,21 +690,21 @@ export const GREED_CARDS: CardDefinition[] = [
   // ── OFFENSIVE FLAT (5 cards) ──
   {
     id: "greed_01", name: "Hostile Takeover", sin: "greed", cost: 3, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "Your assets are being... restructured.",
     narratorQuip: "Corporate violence at its finest. The board approves.",
     tier: "rare",
   },
   {
-    id: "greed_02", name: "Market Crash", sin: "greed", cost: 3, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "all_enemies" }],
+    id: "greed_02", name: "Market Crash", sin: "greed", cost: 2, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
     flavorText: "When the market crashes, everyone loses. Except you.",
     narratorQuip: "Economic devastation as a weapon. Wall Street would be proud.",
     tier: "rare",
   },
   {
-    id: "greed_03", name: "Liquidation", sin: "greed", cost: 2, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
+    id: "greed_03", name: "Liquidation", sin: "greed", cost: 3, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "single_enemy" }],
     flavorText: "Everything must go. Including their HP.",
     narratorQuip: "4 damage, clean and efficient. Greed respects ROI.",
     tier: "common",
@@ -717,15 +717,15 @@ export const GREED_CARDS: CardDefinition[] = [
     tier: "epic",
   },
   {
-    id: "greed_05", name: "Cutthroat Deal", sin: "greed", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    id: "greed_05", name: "Cutthroat Deal", sin: "greed", cost: 5, cardType: "flat",
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "single_enemy" }],
     flavorText: "The fine print always favors the dealer.",
     narratorQuip: "3 damage for 1 energy. Greed's efficiency is terrifying.",
     tier: "common",
   },
   // ── OFFENSIVE COMPOUNDING (4 cards) ──
   {
-    id: "greed_06", name: "Compound Interest", sin: "greed", cost: 2, cardType: "compounding",
+    id: "greed_06", name: "Compound Interest", sin: "greed", cost: 3, cardType: "compounding",
     effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
     flavorText: "The eighth wonder of the world, weaponized.",
     narratorQuip: "2... 2... 4 damage. Slow, steady, and absolutely merciless.",
@@ -733,21 +733,21 @@ export const GREED_CARDS: CardDefinition[] = [
   },
   {
     id: "greed_07", name: "Loan Shark", sin: "greed", cost: 3, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
     flavorText: "The interest rate is your blood. Terms are non-negotiable.",
     narratorQuip: "3... 3... 6 damage. Should've read the fine print.",
     tier: "epic",
   },
   {
     id: "greed_08", name: "Inflation", sin: "greed", cost: 2, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "all_enemies" }],
     flavorText: "The value of everything drops. Especially their HP.",
     narratorQuip: "1... 1... 2 to ALL enemies. Economic warfare.",
     tier: "rare",
   },
   {
     id: "greed_09", name: "Debt Collector", sin: "greed", cost: 1, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
     flavorText: "Payment is due. With interest.",
     narratorQuip: "1... 1... 2. Small debts add up. Ask anyone with a credit card.",
     tier: "common",
@@ -755,14 +755,14 @@ export const GREED_CARDS: CardDefinition[] = [
   // ── DEFENSIVE FLAT (3 cards) ──
   {
     id: "greed_10", name: "Golden Shield", sin: "greed", cost: 2, cardType: "flat",
-    effects: [{ type: "shield", baseValue: 4, duration: 0, target: "self" }],
+    effects: [{ type: "shield", baseValue: 3, duration: 0, target: "self" }],
     flavorText: "Money can't buy happiness, but it makes excellent armor.",
     narratorQuip: "4 shield. Gold-plated defense.",
     tier: "common",
   },
   {
     id: "greed_11", name: "Offshore Account", sin: "greed", cost: 1, cardType: "flat",
-    effects: [{ type: "heal", baseValue: 3, duration: 0, target: "self" }],
+    effects: [{ type: "heal", baseValue: 2, duration: 0, target: "self" }],
     flavorText: "Hidden reserves for a rainy day.",
     narratorQuip: "3 healing. Greed always has a backup plan.",
     tier: "common",
@@ -786,7 +786,7 @@ export const GREED_CARDS: CardDefinition[] = [
     tier: "rare",
   },
   {
-    id: "greed_14", name: "Embezzle", sin: "greed", cost: 1, cardType: "compounding",
+    id: "greed_14", name: "Embezzle", sin: "greed", cost: 3, cardType: "compounding",
     effects: [{ type: "heal", baseValue: 1, duration: 3, target: "self" }],
     flavorText: "Skimming off the top. Nobody will notice. Probably.",
     narratorQuip: "Heal 1... 1... 2. Creative accounting meets creative healing.",
@@ -800,7 +800,7 @@ export const GREED_CARDS: CardDefinition[] = [
     tier: "common",
   },
   {
-    id: "greed_16", name: "Hedge Fund", sin: "greed", cost: 3, cardType: "compounding",
+    id: "greed_16", name: "Hedge Fund", sin: "greed", cost: 4, cardType: "compounding",
     effects: [
       { type: "shield", baseValue: 2, duration: 3, target: "self" },
       { type: "heal", baseValue: 1, duration: 3, target: "self" },
@@ -812,14 +812,14 @@ export const GREED_CARDS: CardDefinition[] = [
   // ── CROWD CONTROL FLAT (2 cards) ──
   {
     id: "greed_17", name: "Bribery", sin: "greed", cost: 1, cardType: "flat",
-    effects: [{ type: "debuff", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "debuff", baseValue: 1, duration: 0, target: "single_enemy" }],
     flavorText: "Everyone has a price. Yours is embarrassingly low.",
     narratorQuip: "Debuff 2. Corruption in its purest form.",
     tier: "common",
   },
   {
     id: "greed_18", name: "Economic Sanctions", sin: "greed", cost: 2, cardType: "flat",
-    effects: [{ type: "energy_drain", baseValue: 2, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "energy_drain", baseValue: 1, duration: 0, target: "single_enemy" }],
     flavorText: "Your resources have been frozen. Indefinitely.",
     narratorQuip: "Energy drain 2. Greed takes your corruption AND your dignity.",
     tier: "rare",
@@ -841,7 +841,7 @@ export const GREED_CARDS: CardDefinition[] = [
   },
   {
     id: "greed_21", name: "Ponzi Scheme", sin: "greed", cost: 1, cardType: "compounding",
-    effects: [{ type: "energy_drain", baseValue: 1, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "energy_drain", baseValue: 2, duration: 3, target: "single_enemy" }],
     flavorText: "It all looks great until the third round.",
     narratorQuip: "Energy drain 1... 1... 2. The scheme unravels spectacularly.",
     tier: "rare",
@@ -880,7 +880,7 @@ export const GREED_CARDS: CardDefinition[] = [
   {
     id: "greed_25", name: "Insider Trading", sin: "greed", cost: 0, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 2, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
       { type: "damage", baseValue: 1, duration: 0, target: "self" },
     ],
     flavorText: "Free information always costs someone. Usually you.",
@@ -890,7 +890,7 @@ export const GREED_CARDS: CardDefinition[] = [
   {
     id: "greed_26", name: "Extortion", sin: "greed", cost: 2, cardType: "flat",
     effects: [
-      { type: "damage", baseValue: 3, duration: 0, target: "single_enemy" },
+      { type: "damage", baseValue: 1, duration: 0, target: "single_enemy" },
       { type: "heal", baseValue: 2, duration: 0, target: "self" },
     ],
     flavorText: "Pay up or pay the price. Either way, you pay.",
@@ -1017,14 +1017,14 @@ export const ENVY_CARDS: CardDefinition[] = [
   // ── OFFENSIVE FLAT (4 cards) ──
   {
     id: "envy_01", name: "Covetous Strike", sin: "envy", cost: 1, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "single_enemy" }],
     flavorText: "I want what you have. Starting with your HP.",
     narratorQuip: "Pure jealousy, concentrated into a fist. Efficient.",
     tier: "common",
   },
   {
     id: "envy_02", name: "Schadenfreude", sin: "envy", cost: 2, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 2, duration: 0, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 0, target: "all_enemies" }],
     flavorText: "Their pain is your pleasure. Literally.",
     narratorQuip: "AoE 2. Envy enjoys everyone's suffering equally.",
     tier: "common",
@@ -1038,7 +1038,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   },
   {
     id: "envy_04", name: "Wrath of the Have-Nots", sin: "envy", cost: 4, cardType: "flat",
-    effects: [{ type: "damage", baseValue: 4, duration: 0, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 0, target: "all_enemies" }],
     flavorText: "When the envious rise, everyone falls.",
     narratorQuip: "AoE 4. The revolution will not be gentle.",
     tier: "epic",
@@ -1046,28 +1046,28 @@ export const ENVY_CARDS: CardDefinition[] = [
   // ── OFFENSIVE COMPOUNDING (4 cards) ──
   {
     id: "envy_05", name: "Copycat", sin: "envy", cost: 1, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 3, target: "single_enemy" }],
     flavorText: "Imitation is the sincerest form of violence.",
     narratorQuip: "1... 1... 2 damage. Copying their moves, but worse.",
     tier: "common",
   },
   {
     id: "envy_06", name: "Toxic Envy", sin: "envy", cost: 2, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
     flavorText: "Jealousy that eats away at them from the inside.",
     narratorQuip: "2... 2... 4 damage. Envy is a slow poison.",
     tier: "rare",
   },
   {
     id: "envy_07", name: "Spreading Resentment", sin: "envy", cost: 3, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 1, duration: 3, target: "all_enemies" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, target: "all_enemies" }],
     flavorText: "Resentment is contagious. And it compounds.",
     narratorQuip: "1... 1... 2 to ALL enemies. Resentment spreads.",
     tier: "rare",
   },
   {
     id: "envy_08", name: "Obsession", sin: "envy", cost: 3, cardType: "compounding",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, target: "single_enemy" }],
     flavorText: "Can't stop thinking about them. Can't stop hurting them.",
     narratorQuip: "3... 3... 6 damage. Unhealthy fixation, weaponized.",
     tier: "epic",
@@ -1092,7 +1092,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   },
   {
     id: "envy_11", name: "Self-Pity", sin: "envy", cost: 1, cardType: "flat",
-    effects: [{ type: "heal", baseValue: 3, duration: 0, target: "self" }],
+    effects: [{ type: "heal", baseValue: 4, duration: 0, target: "self" }],
     flavorText: "Wallowing in misery has its perks.",
     narratorQuip: "3 healing from feeling sorry for yourself. Efficient.",
     tier: "common",
@@ -1151,7 +1151,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   // ── CROWD CONTROL COMPOUNDING (5 cards) ──
   {
     id: "envy_19", name: "Green-Eyed Curse", sin: "envy", cost: 2, cardType: "compounding",
-    effects: [{ type: "debuff", baseValue: 2, duration: 3, target: "single_enemy" }],
+    effects: [{ type: "debuff", baseValue: 1, duration: 3, target: "single_enemy" }],
     flavorText: "The curse of wanting what others have. Now it's their problem.",
     narratorQuip: "Debuff 2... 2... 4. The green-eyed monster is hungry.",
     tier: "rare",
