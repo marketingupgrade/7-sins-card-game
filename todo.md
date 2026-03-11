@@ -630,7 +630,7 @@
 - [x] Update game engine for compound-only, doubling mechanic, new HP/rounds
 - [x] Update UI for new game parameters
 - [x] Update all tests (172 passing across 8 files)
-- [ ] Push to GitHub
+- [x] Push to GitHub (cfdd6fd)
 
 ## Design Constraints Update (Round 18b)
 - [x] One passive per faction only (remove Wrath Overcharge)
@@ -641,4 +641,4 @@
 - [x] 20 rounds, 50 HP, affliction doubling after round 16
 - [x] Update homepage to reflect new mechanics (compound-only, 20 rounds, 50 HP, doubling, new target modes)
 - [x] Remove all flat card dead code across entire codebase (CardType "flat", flat badge CSS, flat card logic in engine)
-- [ ] Push to GitHub
+- [x] Push to GitHub (cfdd6fd)
