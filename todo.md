@@ -562,3 +562,6 @@
 - [x] Generate matching single-color glow portraits: Pride=white, Lust=pink, Gluttony=brown (same style as existing 4 sins)
 - [x] Fix balancer: Wrath stuck at 10% — allow ALL 7 factions to be tuned, not just new ones
 - [x] Achieve 1.5% max deviation across all 7 factions (23.5%-26.5% each)
+
+## Bug Fixes (Round 11)
+- [x] Fix slow-loading faction portraits for Pride, Lust, Gluttony — converted from 6.2MB PNG to 35-52KB WebP (99.3% reduction)

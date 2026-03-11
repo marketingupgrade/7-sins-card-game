@@ -11,9 +11,9 @@ export const FACTION_PORTRAITS: Record<SinType, string> = {
   sloth: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-sloth-CQAwa24NWgatVTM9dXsyn4.webp",
   greed: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-greed-mC5SaVDaKPwEMeiezc9J2y.webp",
   envy: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-envy-j56DHX69cHjWm4otQECCqS.webp",
-  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride_3784a564.png",
-  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust_4da11d35.png",
-  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony_c8dc3e3d.png",
+  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride-std_29027d6b.webp",
+  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust-std_c2a5a40c.webp",
+  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony-std_5e587c07.webp",
 };
 
 /** Full-resolution versions for hero/detail views */
@@ -22,7 +22,7 @@ export const FACTION_PORTRAITS_HD: Record<SinType, string> = {
   sloth: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-sloth-NEqdcvpaUczw2L9TYc8C8H.png",
   greed: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-greed-jSFJWxFcaGcVYqaNandndy.png",
   envy: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-envy-YEYyKe3bq2NYsdByx3SdL5.png",
-  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride_3784a564.png",
-  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust_4da11d35.png",
-  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony_c8dc3e3d.png",
+  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride-hd_2ad35edc.webp",
+  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust-hd_abdcf579.webp",
+  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony-hd_65f9ffc0.webp",
 };
