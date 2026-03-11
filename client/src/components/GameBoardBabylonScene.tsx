@@ -9,6 +9,8 @@
  * - Ember particles rising from braziers
  * - Fog and volumetric atmosphere
  * - Camera locked (no user interaction) with subtle breathing motion
+ * - Arena decay: ambient light dims, fog thickens as rounds increase
+ * - Floor runes: sin-colored glowing torus runes spawn per card played
  *
  * Accepts activeSin prop to shift the dominant light color.
  */
@@ -29,6 +31,9 @@ const SIN_RGB: Record<string, [number, number, number]> = {
   sloth: [0.45, 0.2, 0.75],
   greed: [0.85, 0.7, 0.1],
   envy: [0.1, 0.75, 0.4],
+  pride: [0.95, 0.95, 0.95],
+  lust: [0.93, 0.28, 0.6],
+  gluttony: [0.7, 0.33, 0.04],
 };
 
 export default function GameBoardBabylonScene({ className = "", activeSin, currentRound = 1, cardPlayCount = 0, lastCardSin }: GameBoardBabylonSceneProps) {
@@ -168,7 +173,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       }
 
       // --- FOUR FIRE BRAZIERS (one per sin) ---
-      const sinKeys = ["wrath", "sloth", "greed", "envy"];
+      const sinKeys = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
       const brazierLights: any[] = [];
 
       sinKeys.forEach((sin, i) => {
@@ -354,63 +359,45 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
 
 // ─── Floor Rune: glowing sin-colored disc spawned on card play ─────────────
 function triggerFloorRune(scene: any, sin: string, index: number) {
-  const BABYLON_COLORS: Record<string, [number, number, number]> = {
-    wrath: [0.9, 0.15, 0.1],
-    sloth: [0.45, 0.2, 0.75],
-    greed: [0.85, 0.7, 0.1],
-    envy: [0.1, 0.75, 0.4],
-  };
-  const [r, g, b] = BABYLON_COLORS[sin] || BABYLON_COLORS.wrath;
+  const [r, g, b] = SIN_RGB[sin] || SIN_RGB.wrath;
 
-  // Spread runes in a pattern around the center
-  const angle = (index * 1.618) * Math.PI * 2; // golden ratio spiral
+  // Spread runes in a golden ratio spiral pattern around the center
+  const angle = (index * 1.618) * Math.PI * 2;
   const dist = Math.min(2.5, 0.5 + (index % 6) * 0.4);
   const x = Math.cos(angle) * dist;
   const z = Math.sin(angle) * dist;
 
-  const disc = scene.getMeshByName ? scene.getEngine()?.scenes?.[0] : null;
-  // Create a flat torus for the rune glyph
-  const rune = scene.constructor?.MeshBuilder
-    ? scene.constructor.MeshBuilder.CreateTorus(`rune_${index}`, {
-        diameter: 0.5 + Math.random() * 0.3,
-        thickness: 0.02,
-        tessellation: 20,
-      }, scene)
-    : null;
+  // Dynamic import approach for creating rune meshes
+  import("@babylonjs/core").then(({ MeshBuilder, StandardMaterial, Color3, Vector3 }) => {
+    const runeDisc = MeshBuilder.CreateTorus(`rune_${index}_${Date.now()}`, {
+      diameter: 0.5 + Math.random() * 0.3,
+      thickness: 0.025,
+      tessellation: 20,
+    }, scene);
+    runeDisc.position = new Vector3(x, 0.02, z);
+    runeDisc.rotation.x = Math.PI / 2;
 
-  if (!rune) {
-    // Fallback: dynamic import approach
-    import("@babylonjs/core").then(({ MeshBuilder, StandardMaterial, Color3, Vector3 }) => {
-      const runeDisc = MeshBuilder.CreateTorus(`rune_${index}`, {
-        diameter: 0.5 + Math.random() * 0.3,
-        thickness: 0.025,
-        tessellation: 20,
-      }, scene);
-      runeDisc.position = new Vector3(x, 0.02, z);
-      runeDisc.rotation.x = Math.PI / 2;
+    const mat = new StandardMaterial(`runeMat_${index}_${Date.now()}`, scene);
+    mat.emissiveColor = new Color3(r, g, b);
+    mat.disableLighting = true;
+    mat.alpha = 0;
+    runeDisc.material = mat;
 
-      const mat = new StandardMaterial(`runeMat_${index}`, scene);
-      mat.emissiveColor = new Color3(r, g, b);
-      mat.disableLighting = true;
-      mat.alpha = 0;
-      runeDisc.material = mat;
-
-      // Fade in then linger
-      let frame = 0;
-      const observer = scene.onBeforeRenderObservable.add(() => {
-        frame++;
-        if (frame < 30) {
-          mat.alpha = frame / 30 * 0.6;
-        } else if (frame < 300) {
-          mat.alpha = 0.6 - (frame - 30) / 300 * 0.4; // slowly fade to 0.2
-        } else if (frame < 400) {
-          mat.alpha = Math.max(0, 0.2 - (frame - 300) / 100 * 0.2);
-        } else {
-          runeDisc.dispose();
-          mat.dispose();
-          scene.onBeforeRenderObservable.remove(observer);
-        }
-      });
+    // Fade in, linger, then fade out and dispose
+    let frame = 0;
+    const observer = scene.onBeforeRenderObservable.add(() => {
+      frame++;
+      if (frame < 30) {
+        mat.alpha = frame / 30 * 0.6;
+      } else if (frame < 300) {
+        mat.alpha = 0.6 - (frame - 30) / 300 * 0.4; // slowly fade to 0.2
+      } else if (frame < 400) {
+        mat.alpha = Math.max(0, 0.2 - (frame - 300) / 100 * 0.2);
+      } else {
+        runeDisc.dispose();
+        mat.dispose();
+        scene.onBeforeRenderObservable.remove(observer);
+      }
     });
-  }
+  });
 }

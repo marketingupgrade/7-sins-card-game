@@ -22,6 +22,9 @@ const SIN_HEX: Record<SinType, string> = {
   sloth: "#a855f7",
   greed: "#eab308",
   envy: "#10b981",
+  pride: "#f0f0f0",
+  lust: "#ec4899",
+  gluttony: "#b45309",
 };
 
 const SIN_GRADIENT: Record<SinType, string> = {
@@ -29,6 +32,9 @@ const SIN_GRADIENT: Record<SinType, string> = {
   sloth: "radial-gradient(ellipse at center, #a855f722 0%, #4a044e11 50%, transparent 70%)",
   greed: "radial-gradient(ellipse at center, #eab30822 0%, #78350f11 50%, transparent 70%)",
   envy:  "radial-gradient(ellipse at center, #10b98122 0%, #064e3b11 50%, transparent 70%)",
+  pride: "radial-gradient(ellipse at center, #f0f0f022 0%, #94a3b811 50%, transparent 70%)",
+  lust:  "radial-gradient(ellipse at center, #ec489922 0%, #9d174d11 50%, transparent 70%)",
+  gluttony: "radial-gradient(ellipse at center, #b4530922 0%, #78350f11 50%, transparent 70%)",
 };
 
 export default function EpicCardReveal({ show, cardName, sin, energyCost, onComplete }: EpicCardRevealProps) {

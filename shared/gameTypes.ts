@@ -6,10 +6,10 @@
  */
 
 // ─── Sin Types ───────────────────────────────────────────────
-export type SinType = "wrath" | "sloth" | "greed" | "envy";
+export type SinType = "wrath" | "sloth" | "greed" | "envy" | "pride" | "lust" | "gluttony";
 
 // ─── Card Effect Types ───────────────────────────────────────
-export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff" | "energy_drain" | "energy_gain";
+export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff" | "energy_drain" | "energy_gain" | "damage_all" | "self_damage";
 
 export type TargetType = "self" | "single_enemy" | "all_enemies" | "random_enemy";
 
@@ -135,6 +135,13 @@ export const WRATH_SIPHON_RATE = 0.10; // Wrath heals 10% of compound damage dea
 export const GREED_AVARICE_COST_THRESHOLD = 3;
 export const GREED_AVARICE_BONUS = 1;
 export const ENVY_COVET_BONUS = 1;
+
+// Pride: HUBRIS - Playing a card that costs 0 grants +2 shield
+export const PRIDE_HUBRIS_SHIELD = 2;
+// Lust: TEMPTATION - Single-target damage cards also heal self for 1 HP
+export const LUST_TEMPTATION_HEAL = 1;
+// Gluttony: DEVOUR - Playing AoE cards grants +1 energy
+export const GLUTTONY_DEVOUR_ENERGY = 1;
 
 export function getBaseEnergyForRound(round: number): number {
   return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_ROUND, MAX_ENERGY);

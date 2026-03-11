@@ -32,6 +32,9 @@ import {
   GREED_AVARICE_COST_THRESHOLD,
   GREED_AVARICE_BONUS,
   ENVY_COVET_BONUS,
+  PRIDE_HUBRIS_SHIELD,
+  LUST_TEMPTATION_HEAL,
+  GLUTTONY_DEVOUR_ENERGY,
   getBaseEnergyForRound,
   CATCHUP_HP_THRESHOLD,
   CatchupCondition,
@@ -280,6 +283,44 @@ export async function playCard(
       .from("game_players")
       .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
       .eq("id", player.id);
+  }
+
+  // Pride HUBRIS: playing a 0-cost card grants +2 shield
+  if (player.chosen_sin === "pride" && card.cost === 0) {
+    await sb.from("active_effects").insert({
+      game_id: gameId,
+      target_player_id: player.id,
+      source_player_id: player.id,
+      effect_type: "shield",
+      base_value: PRIDE_HUBRIS_SHIELD,
+      applied_at_round: game.current_round,
+      duration_rounds: 1,
+      card_id: cardId,
+    });
+  }
+
+  // Lust TEMPTATION: single-target damage cards heal self for 1 HP
+  if (player.chosen_sin === "lust" && targetPlayerId) {
+    const hasSingleDamage = card.effects.some(
+      (e) => (e.type === "damage") && (e.target === "single_enemy")
+    );
+    if (hasSingleDamage) {
+      await applyInstantEffect("heal", LUST_TEMPTATION_HEAL, player, gameId);
+    }
+  }
+
+  // Gluttony DEVOUR: AoE cards grant +1 energy
+  if (player.chosen_sin === "gluttony") {
+    const hasAoE = card.effects.some(
+      (e) => e.target === "all_enemies"
+    );
+    if (hasAoE) {
+      const boostedEnergy = Math.min((player.current_energy ?? 0) - card.cost + GLUTTONY_DEVOUR_ENERGY, MAX_ENERGY);
+      await sb
+        .from("game_players")
+        .update({ current_energy: boostedEnergy })
+        .eq("id", player.id);
+    }
   }
 
   // Remove card from hand, add to discard

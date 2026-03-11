@@ -1,7 +1,8 @@
+import type { SinType } from "@shared/gameTypes";
 import React from 'react';
 
 interface SinReactiveBackgroundProps {
-  leadingSin: 'wrath' | 'sloth' | 'greed' | 'envy' | null;
+  leadingSin: SinType | null;
   round: number;
   intensity: number;
 }
@@ -14,11 +15,14 @@ const SinReactiveBackground: React.FC<SinReactiveBackgroundProps> = ({
   const getSinColor = (sin: string | null, intensityMultiplier: number) => {
     if (!sin) return 'oklch(0.15 0.05 0)';
     
-    const colors = {
+    const colors: Record<string, { l: number; c: number; h: number }> = {
       wrath: { l: 0.35, c: 0.15, h: 25 },
       sloth: { l: 0.30, c: 0.12, h: 300 },
       greed: { l: 0.35, c: 0.15, h: 85 },
-      envy: { l: 0.30, c: 0.15, h: 155 }
+      envy: { l: 0.30, c: 0.15, h: 155 },
+      pride: { l: 0.40, c: 0.02, h: 0 },
+      lust: { l: 0.32, c: 0.15, h: 350 },
+      gluttony: { l: 0.30, c: 0.12, h: 60 },
     };
     
     const color = colors[sin as keyof typeof colors];

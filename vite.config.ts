@@ -167,6 +167,26 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // Babylon.js — largest dep, only needed on game pages (lazy-loaded)
+          if (id.includes('@babylonjs')) return 'babylon';
+          // Framer Motion — animation library
+          if (id.includes('framer-motion')) return 'framer-motion';
+          // Supabase — backend client
+          if (id.includes('@supabase')) return 'supabase';
+          // React + React DOM + Radix + icons all stay in one vendor chunk
+          // to avoid circular dependency / missing React context issues
+          if (
+            id.includes('react-dom') ||
+            (id.includes('/react/') && !id.includes('react-')) ||
+            id.includes('@radix-ui') ||
+            id.includes('lucide-react')
+          ) return 'vendor';
+        },
+      },
+    },
   },
   server: {
     host: true,

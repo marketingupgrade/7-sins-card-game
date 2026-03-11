@@ -480,3 +480,88 @@
 - [x] Add DeckPile beside card hand at bottom of screen for current player
 - [x] Ensure layout works on both desktop and mobile
 - [x] Maintain design integrity and smooth UI (178 tests passing)
+
+## Unique Card Art — 144 Cards (COMPLETED)
+- [x] Audit all 144 card names and themes for art direction
+- [x] Search open-source game art libraries (game-icons.net, OpenGameArt) — no full card art available, only small icons
+- [x] AI-generate all 144 card art in consistent dark gothic painterly style (parallel batch generation)
+- [x] Process, download, and upload all 144 images to CDN (4 batches of 36)
+- [x] Create cardArtUrls.ts with 144 CDN URL mappings
+- [x] GameCard component already integrated with CARD_ART_URLS lookup and fallback
+- [x] All 178 tests passing
+- [x] Push to GitHub
+
+## Claude Polish Commit (84bd533) — 5 Visual Upgrades
+- [ ] BabylonScene: Add emerald envy ambient particle stream (80 cap, 15/s emit) — completes all 4 sin-colored streams
+- [ ] WebGLSinShaders: Replace expensive hue-rotate filter with background-position animation for envy; add willChange hints
+- [ ] GameBoard action feed: Add card icons (Painterly Spell Icons) before card names; slide-in from x instead of y
+- [ ] GameBoard card hand: Add transformOrigin 'bottom center' for natural card fan rotation
+- [ ] GameBoard PlayerPanel: HP flash — red radial gradient flash for 300ms on HP loss
+
+## Claude Epic Multimedia Enhancements (commit 3d23d17) — 15 Features
+- [x] CinematicFlash: screen flash + ripple for >=20 damage hits
+- [x] Floor runes: sin-colored glowing torus runes spawn per card played in 3D arena (via BabylonScene props)
+- [x] Arena decay: ambient light dims, fog thickens as rounds increase (via BabylonScene currentRound prop)
+- [x] ComboChainBanner: chain counter x2-5 with escalating "CORRUPTION SURGE"
+- [x] Avatar HP reactions: portrait shakes/desaturates on damage, glow at >70% HP
+- [x] SinCorruptionBorder: growing glowing border cracks tied to round/HP
+- [x] EpicCardReveal: 1.5s cinematic spotlight for 4+ energy cards
+- [x] Dynamic music tempo: 1.0->1.35x playbackRate ramp in rounds 3-10
+- [x] VictoryCinematic: 5-step win cinematic before GameOverScreen
+- [ ] Battle Chronicle: auto-generated dark-fantasy narrative from battle stats
+- [ ] SinLeaderboard: localStorage-based heatmap of sin usage + win rates on Home
+- [ ] Key Moments: 3 contextual highlights from stats on GameOverScreen
+- [ ] Action feed icons: Painterly Spell Icons before card names, horizontal slide-in
+- [ ] Card fan pivot: transformOrigin 'bottom center' for natural card hand rotation
+- [x] HP flash: red radial gradient flash for 300ms on HP loss (integrated into PlayerPanel portrait filter)
+
+## Bug Fixes & Enhancements (Round 6)
+- [x] Fix "souls remain" text — changed to "players alive"
+- [x] Fix mute toggle — music and SFX now immediately stop/pause when muted
+- [x] Add epic dark fantasy soundtrack — 3 orchestral tracks by Zefz (OpenGameArt CC-BY-SA 3.0): DarkWinds, TheLoomingBattle, FoxieEpic
+- [x] Add card-fly-to-target animation — card arcs from hand toward target player panel with trailing particles and impact flash
+- [x] Improve player card readability — larger panels, expand-on-hover, full names, bigger HP bars
+- [x] Improve affliction table readability — expand-on-hover with smooth animation, larger text, clearer layout
+
+## Bug Fixes (Round 7)
+- [x] Fix GameOverScreen battle card showing 0 for all stats — fixed ID mismatch (game_players.id vs player_id) and string effect parsing
+
+## Performance Optimization (Round 8)
+- [x] Audit bundle size and identify largest chunks (was 6.7MB single chunk)
+- [x] Lazy-load all page routes (Home, Lobby, GameBoard, NotFound) with Suspense
+- [x] Remove dead code (BabylonScene.tsx static import, ComponentShowcase.tsx)
+- [x] Optimize font loading (async load with media=print trick, reduced weight count)
+- [x] Manual chunk splitting: babylon(6.7MB), framer-motion(118KB), supabase(173KB), react(267KB), radix(4KB), icons(4KB)
+- [x] Memoize heavy components (PlayerPanel, GameCard, EffectBadge) with React.memo
+- [x] Add DNS prefetch/preconnect hints for Supabase, fonts, CDN origins
+- [x] Babylon.js now loads only when needed (lazy route chunks), not on initial page load
+- [x] Initial page load reduced from 6.7MB to ~320KB (index 53KB + react 267KB)
+- [x] All 201 tests passing, dev server running, no regressions
+
+## CRITICAL Bug Fix (Round 9)
+- [x] Fix Vercel deployment completely broken — manual chunk splitting put React and Radix in separate chunks, causing 'useLayoutEffect' undefined error. Fixed by merging React+ReactDOM+Radix+Lucide into single 'vendor' chunk
+
+## New Factions (Round 10) — Pride, Lust, Gluttony
+- [x] Design Pride faction: 36 cards, unique passive, unique mechanics
+- [x] Design Lust faction: 36 cards, unique passive, unique mechanics
+- [x] Design Gluttony faction: 36 cards, unique passive, unique mechanics
+- [x] Run 10k Monte Carlo tournament simulation for balance
+- [x] Iterate on card stats until all 7 factions are balanced (45-55% win rate range)
+- [x] Generate unique artwork for Pride cards and avatar
+- [x] Generate unique artwork for Lust cards and avatar
+- [x] Generate unique artwork for Gluttony cards and avatar
+- [x] Update SinType in gameTypes.ts to include pride, lust, gluttony
+- [x] Add new faction passives to gameEngine.ts
+- [x] Add new faction constants to gameTypes.ts
+- [x] Update ALL color/icon maps across 14+ component files
+- [x] Add CSS classes for new factions in index.css
+- [x] Update lobby/home faction selection UI
+- [x] Update assetUrls.ts with new faction icons
+- [x] Run all tests and verify build (201 tests passing)
+- [x] Push to GitHub
+- [x] Generate matching single-color glow portraits: Pride=white, Lust=pink, Gluttony=brown (same style as existing 4 sins)
+- [x] Fix balancer: Wrath stuck at 10% — allow ALL 7 factions to be tuned, not just new ones
+- [x] Achieve 1.5% max deviation across all 7 factions (23.5%-26.5% each)
+
+## Bug Fixes (Round 11)
+- [x] Fix slow-loading faction portraits for Pride, Lust, Gluttony — converted from 6.2MB PNG to 35-52KB WebP (99.3% reduction)

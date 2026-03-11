@@ -1,3 +1,4 @@
+import type { SinType } from "@shared/gameTypes";
 /**
  * SinCursor.tsx
  * Very subtle mouse trail with tiny sin-colored particles.
@@ -17,7 +18,7 @@ interface Particle {
 }
 
 interface SinCursorProps {
-  sin: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sin: SinType;
   isActive: boolean;
 }
 
@@ -26,6 +27,9 @@ const sinParticleColors: Record<string, string> = {
   sloth: 'oklch(0.52 0.18 290)',
   greed: 'oklch(0.75 0.18 85)',
   envy: 'oklch(0.6 0.2 155)',
+  pride: 'oklch(0.92 0.02 0)',
+  lust: 'oklch(0.65 0.22 350)',
+  gluttony: 'oklch(0.55 0.15 60)',
 };
 
 const SinCursor: React.FC<SinCursorProps> = ({ sin, isActive }) => {

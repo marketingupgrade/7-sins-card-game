@@ -1,3 +1,4 @@
+import type { SinType } from "@shared/gameTypes";
 /**
  * YourTurnBanner.tsx
  * Subtle "YOUR TURN" notification that slides in at the top of the screen
@@ -9,17 +10,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 
 interface YourTurnBannerProps {
   show: boolean;
-  sinType: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sinType: SinType;
 }
 
 const YourTurnBanner: React.FC<YourTurnBannerProps> = ({ show, sinType }) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const sinColors = {
+  const sinColors: Record<SinType, string> = {
     wrath: 'oklch(0.65 0.25 25)',
     sloth: 'oklch(0.65 0.18 300)',
     greed: 'oklch(0.78 0.18 90)',
     envy: 'oklch(0.72 0.19 155)',
+    pride: 'oklch(0.92 0.02 0)',
+    lust: 'oklch(0.65 0.22 350)',
+    gluttony: 'oklch(0.55 0.15 60)',
   };
 
   const sinColor = sinColors[sinType];

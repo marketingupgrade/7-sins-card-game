@@ -1,3 +1,4 @@
+import type { SinType } from "@shared/gameTypes";
 /**
  * DeathSequence.tsx
  * Brief elimination notification — shows a centered overlay for ~1.5s
@@ -10,7 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface DeathSequenceProps {
   show: boolean;
   playerName: string;
-  sin: 'wrath' | 'sloth' | 'greed' | 'envy';
+  sin: SinType;
   onComplete: () => void;
 }
 
@@ -19,6 +20,9 @@ const sinColors: Record<string, string> = {
   sloth: '#7c3aed',
   greed: '#f59e0b',
   envy: '#059669',
+  pride: '#f0f0f0',
+  lust: '#ec4899',
+  gluttony: '#b45309',
 };
 
 const DeathSequence: React.FC<DeathSequenceProps> = ({ show, playerName, sin, onComplete }) => {

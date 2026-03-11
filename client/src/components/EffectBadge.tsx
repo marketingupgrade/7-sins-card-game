@@ -7,7 +7,7 @@
  */
 
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, memo } from "react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
@@ -85,7 +85,7 @@ const EFFECT_CONFIG: Record<string, {
   },
 };
 
-export default function EffectBadge({ effect, currentRound, compact = false }: EffectBadgeProps) {
+const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = false }: EffectBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const cfg = EFFECT_CONFIG[effect.effectType] || EFFECT_CONFIG.damage;
 
@@ -275,4 +275,6 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
       )}
     </div>
   );
-}
+});
+
+export default EffectBadge;

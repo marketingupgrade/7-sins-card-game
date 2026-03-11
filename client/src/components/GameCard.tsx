@@ -11,7 +11,7 @@
  */
 
 import { motion } from "framer-motion";
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useState, memo } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
 import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
@@ -83,9 +83,27 @@ const sinConfig: Record<SinType, {
     glowClass: "glow-envy",
     selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.2 155 / 0.15), transparent 70%)",
   },
+  pride: {
+    color: "pride",
+    cardClass: "card-pride",
+    glowClass: "glow-pride",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.9 0.02 0 / 0.15), transparent 70%)",
+  },
+  lust: {
+    color: "lust",
+    cardClass: "card-lust",
+    glowClass: "glow-lust",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.6 0.22 350 / 0.15), transparent 70%)",
+  },
+  gluttony: {
+    color: "gluttony",
+    cardClass: "card-gluttony",
+    glowClass: "glow-gluttony",
+    selectedGradient: "radial-gradient(circle at center, oklch(0.55 0.15 60 / 0.15), transparent 70%)",
+  },
 };
 
-export default function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
+const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSelected, onClick, playerEnergy }: GameCardProps) {
   const cfg = sinConfig[card.sin] || sinConfig.wrath;
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
@@ -195,7 +213,7 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       </div>
 
       {/* Card Art Area — unique AI-generated art per card */}
-      <SinShaderOverlay sin={card.sin as 'wrath' | 'sloth' | 'greed' | 'envy'} isHovered={isHovered}>
+      <SinShaderOverlay sin={card.sin } isHovered={isHovered}>
       <div
         className="mx-2.5 h-[90px] sm:h-[100px] rounded-lg relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}
@@ -318,4 +336,6 @@ export default function GameCard({ card, currentRound, isPlayable, isSelected, o
       )}
     </motion.div>
   );
-}
+});
+
+export default GameCard;

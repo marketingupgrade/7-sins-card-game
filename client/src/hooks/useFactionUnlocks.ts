@@ -10,7 +10,7 @@ import { useState, useCallback } from "react";
 import type { SinType } from "@shared/gameTypes";
 
 /** All factions are available */
-export const STARTER_FACTIONS: SinType[] = ["wrath", "sloth", "greed", "envy"];
+export const STARTER_FACTIONS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 export const LOCKED_FACTIONS: SinType[] = [];
 export const UNLOCK_THRESHOLD = 0;
 

@@ -189,7 +189,15 @@ class SoundEngine {
   }
 
   toggle() {
-    this.setEnabled(!this.settings.enabled);
+    const newEnabled = !this.settings.enabled;
+    this.setEnabled(newEnabled);
+    // Immediately stop all playing sounds when muting
+    if (!newEnabled) {
+      this.audioCache.forEach((audio) => {
+        audio.pause();
+        audio.currentTime = 0;
+      });
+    }
     return this.settings.enabled;
   }
 }

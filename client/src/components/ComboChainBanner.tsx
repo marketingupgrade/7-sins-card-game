@@ -19,6 +19,9 @@ const SIN_HEX: Record<SinType, string> = {
   sloth: "#a855f7",
   greed: "#eab308",
   envy: "#10b981",
+  pride: "#f0f0f0",
+  lust: "#ec4899",
+  gluttony: "#b45309",
 };
 
 const SIN_LABEL: Record<SinType, string> = {
@@ -26,6 +29,9 @@ const SIN_LABEL: Record<SinType, string> = {
   sloth: "SLOTH",
   greed: "GREED",
   envy: "ENVY",
+  pride: "PRIDE",
+  lust: "LUST",
+  gluttony: "GLUTTONY",
 };
 
 function getBannerText(combo: number): string {

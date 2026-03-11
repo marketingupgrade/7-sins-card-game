@@ -58,6 +58,18 @@
   --color-envy: oklch(0.5 0.16 155);
   --color-envy-glow: oklch(0.6 0.2 155);
   --color-envy-dim: oklch(0.28 0.08 155);
+  /* Pride: Divine silver-white */
+  --color-pride: oklch(0.88 0.02 0);
+  --color-pride-glow: oklch(0.95 0.01 0);
+  --color-pride-dim: oklch(0.5 0.01 0);
+  /* Lust: Rose pink */
+  --color-lust: oklch(0.6 0.2 350);
+  --color-lust-glow: oklch(0.7 0.24 350);
+  --color-lust-dim: oklch(0.32 0.1 350);
+  /* Gluttony: Amber-brown */
+  --color-gluttony: oklch(0.5 0.12 60);
+  --color-gluttony-glow: oklch(0.6 0.15 60);
+  --color-gluttony-dim: oklch(0.28 0.06 60);
   /* Accent tones — warm cathedral light */
   --color-candle: oklch(0.82 0.12 75);
   --color-candle-dim: oklch(0.6 0.08 75);
@@ -205,6 +217,33 @@
       0 4px 20px oklch(0.5 0.16 155 / 0.12),
       inset 0 1px 0 oklch(0.5 0.16 155 / 0.06);
   }
+  .glass-panel-pride {
+    background: oklch(0.14 0.01 0 / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid oklch(0.88 0.02 0 / 0.3);
+    box-shadow:
+      0 4px 20px oklch(0.88 0.02 0 / 0.12),
+      inset 0 1px 0 oklch(0.88 0.02 0 / 0.06);
+  }
+  .glass-panel-lust {
+    background: oklch(0.12 0.04 350 / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid oklch(0.6 0.2 350 / 0.3);
+    box-shadow:
+      0 4px 20px oklch(0.6 0.2 350 / 0.12),
+      inset 0 1px 0 oklch(0.6 0.2 350 / 0.06);
+  }
+  .glass-panel-gluttony {
+    background: oklch(0.12 0.035 60 / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid oklch(0.5 0.12 60 / 0.3);
+    box-shadow:
+      0 4px 20px oklch(0.5 0.12 60 / 0.12),
+      inset 0 1px 0 oklch(0.5 0.12 60 / 0.06);
+  }
 
   /* ─── Warm Candlelight Glow (replaces neon glow) ───────── */
   .glow-wrath {
@@ -226,6 +265,21 @@
     box-shadow:
       0 0 8px oklch(0.5 0.16 155 / 0.2),
       0 0 20px oklch(0.5 0.16 155 / 0.06);
+  }
+  .glow-pride {
+    box-shadow:
+      0 0 8px oklch(0.88 0.02 0 / 0.2),
+      0 0 20px oklch(0.88 0.02 0 / 0.06);
+  }
+  .glow-lust {
+    box-shadow:
+      0 0 8px oklch(0.6 0.2 350 / 0.2),
+      0 0 20px oklch(0.6 0.2 350 / 0.06);
+  }
+  .glow-gluttony {
+    box-shadow:
+      0 0 8px oklch(0.5 0.12 60 / 0.2),
+      0 0 20px oklch(0.5 0.12 60 / 0.06);
   }
   .glow-candle {
     box-shadow:
@@ -251,6 +305,15 @@
   .text-glow-envy {
     text-shadow: 0 0 10px oklch(0.5 0.16 155 / 0.5), 0 0 30px oklch(0.5 0.16 155 / 0.2);
   }
+  .text-glow-pride {
+    text-shadow: 0 0 10px oklch(0.88 0.02 0 / 0.5), 0 0 30px oklch(0.88 0.02 0 / 0.2);
+  }
+  .text-glow-lust {
+    text-shadow: 0 0 10px oklch(0.6 0.2 350 / 0.5), 0 0 30px oklch(0.6 0.2 350 / 0.2);
+  }
+  .text-glow-gluttony {
+    text-shadow: 0 0 10px oklch(0.5 0.12 60 / 0.5), 0 0 30px oklch(0.5 0.12 60 / 0.2);
+  }
   .text-glow-candle {
     text-shadow: 0 0 10px oklch(0.82 0.12 75 / 0.5), 0 0 30px oklch(0.82 0.12 75 / 0.2);
   }
@@ -275,6 +338,21 @@
     border: 1px solid oklch(0.5 0.16 155 / 0.35);
     background: linear-gradient(170deg, oklch(0.14 0.04 155 / 0.9), oklch(0.08 0.015 30 / 0.95));
     box-shadow: inset 0 1px 0 oklch(0.5 0.16 155 / 0.08);
+  }
+  .card-pride {
+    border: 1px solid oklch(0.88 0.02 0 / 0.35);
+    background: linear-gradient(170deg, oklch(0.16 0.01 0 / 0.9), oklch(0.08 0.015 30 / 0.95));
+    box-shadow: inset 0 1px 0 oklch(0.88 0.02 0 / 0.08);
+  }
+  .card-lust {
+    border: 1px solid oklch(0.6 0.2 350 / 0.35);
+    background: linear-gradient(170deg, oklch(0.14 0.04 350 / 0.9), oklch(0.08 0.015 30 / 0.95));
+    box-shadow: inset 0 1px 0 oklch(0.6 0.2 350 / 0.08);
+  }
+  .card-gluttony {
+    border: 1px solid oklch(0.5 0.12 60 / 0.35);
+    background: linear-gradient(170deg, oklch(0.14 0.04 60 / 0.9), oklch(0.08 0.015 30 / 0.95));
+    box-shadow: inset 0 1px 0 oklch(0.5 0.12 60 / 0.08);
   }
 
   /* ─── Ornate Border Panel (replaces glass-panel-epic) ──── */

@@ -28,6 +28,9 @@ const SIN_HEX: Record<SinType, string> = {
   sloth: "#a855f7",
   greed: "#eab308",
   envy: "#10b981",
+  pride: "#f0f0f0",
+  lust: "#ec4899",
+  gluttony: "#b45309",
 };
 
 type CinematicStep = "blackout" | "flood" | "title" | "winner" | "fade" | "done";
