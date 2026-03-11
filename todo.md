@@ -390,4 +390,12 @@
 - [x] Maintain gothic cathedral styling with appropriate color per effect type
 - [x] Update compact mobile layout for the wider matrix
 - [x] Update tests for new matrix format (28 tests, 178 total passing)
-- [ ] Push to GitHub for Vercel deployment
+- [x] Push to GitHub for Vercel deployment
+
+## END TURN Button When Energy Depleted
+- [x] Add prominent END TURN button replacing PASS when player energy is 0
+- [x] Style END TURN in gold/yellow gradient with pulsing glow to contrast with existing controls
+- [x] Make END TURN visually larger/more prominent when energy is depleted (larger padding, bolder font, animated glow)
+- [x] Ensure END TURN triggers the same pass-turn action as PASS
+- [x] Show PASS when energy > 0 or Wrath can overcharge; show END TURN when energy = 0 and no overcharge available
+- [x] All 178 tests still passing

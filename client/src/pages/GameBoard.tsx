@@ -746,17 +746,48 @@ export default function GameBoard() {
                   {isOvercharging ? "BURNING..." : "OVERCHARGE"}
                 </motion.button>
               )}
-              <motion.button
-                data-tutorial="pass-btn"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
-                style={{ fontFamily: "var(--font-heading)" }}
-                onClick={handlePass}
-                disabled={isPassing}
-              >
-                {isPassing ? "PASSING..." : "PASS"}
-              </motion.button>
+              {/* END TURN — prominent gold button when energy is depleted */}
+              {(myPlayer?.currentEnergy ?? 0) === 0 && !canOvercharge && (
+                <motion.button
+                  data-tutorial="pass-btn"
+                  whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: [
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
+                      "0 0 20px oklch(0.75 0.15 85 / 0.4)",
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
+                    ],
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="px-8 py-3 rounded-lg text-sm font-black uppercase tracking-wider disabled:opacity-50"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    background: "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))",
+                    color: "oklch(0.10 0.02 70)",
+                    border: "2px solid oklch(0.80 0.12 85 / 0.6)",
+                    textShadow: "0 1px 0 oklch(0.85 0.10 85 / 0.3)",
+                  }}
+                  onClick={handlePass}
+                  disabled={isPassing}
+                >
+                  {isPassing ? "ENDING..." : "END TURN"}
+                </motion.button>
+              )}
+              {/* PASS — subtle when energy remains, hidden when END TURN is shown on zero energy */}
+              {((myPlayer?.currentEnergy ?? 0) > 0 || canOvercharge) && (
+                <motion.button
+                  data-tutorial="pass-btn"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-6 py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                  onClick={handlePass}
+                  disabled={isPassing}
+                >
+                  {isPassing ? "PASSING..." : "PASS"}
+                </motion.button>
+              )}
             </motion.div>
           )}
 
