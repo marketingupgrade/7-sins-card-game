@@ -63,6 +63,33 @@ interface PostGameStats {
   mvpMoment: string;
 }
 
+/**
+ * Parse effect strings from game_log action_data.effects
+ * Format: "damage 5 on enemy", "heal 3 on self", "shield 2 on self for 2r",
+ *         "damage 3 on enemy (compounds ×3r)", "CATCH-UP bonus damage 4"
+ */
+function parseEffectString(eff: string): { type: string; value: number } | null {
+  if (typeof eff !== 'string') {
+    // Already an object with type/value
+    if (eff && typeof eff === 'object' && 'type' in eff && 'value' in eff) {
+      return { type: (eff as any).type, value: Number((eff as any).value) || 0 };
+    }
+    return null;
+  }
+  // Match "CATCH-UP bonus damage 4" or "CATCH-UP bonus heal 3"
+  const catchupMatch = eff.match(/CATCH-UP bonus (\w+) (\d+)/);
+  if (catchupMatch) {
+    return { type: catchupMatch[1], value: parseInt(catchupMatch[2], 10) };
+  }
+  // Match "damage 5 on enemy", "heal 3 on self", "shield 2 on self for 2r"
+  // Also matches "damage 3 on enemy (compounds ×3r)"
+  const match = eff.match(/^(\w+(?:_\w+)?) (\d+) on/);
+  if (match) {
+    return { type: match[1], value: parseInt(match[2], 10) };
+  }
+  return null;
+}
+
 function computePostGameStats(logEntries: any[], currentPlayerId: string, players: PlayerState[]): PostGameStats {
   const stats: PostGameStats = {
     cardsPlayed: 0,
@@ -77,8 +104,19 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
   let biggestHit = 0;
   let biggestHitCard = "";
 
+  // Build a set of all possible IDs for the current player
+  // game_log stores game_players.id (row UUID), but currentPlayerId is player_id (client UUID)
+  // We need to match both
+  const currentPlayerObj = players.find(p => p.id === currentPlayerId);
+  const matchIds = new Set<string>();
+  matchIds.add(currentPlayerId);
+  if (currentPlayerObj?.gamePlayerId) {
+    matchIds.add(currentPlayerObj.gamePlayerId);
+  }
+
   for (const entry of logEntries) {
-    if (entry.player_id !== currentPlayerId) continue;
+    // Match against both player_id formats
+    if (!matchIds.has(entry.player_id)) continue;
     const data = typeof entry.action_data === "string" ? JSON.parse(entry.action_data) : entry.action_data;
 
     if (entry.action_type === "play_card") {
@@ -87,19 +125,33 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
       const card = cardId ? CARD_MAP[cardId] : null;
       if (card?.cardType === "compounding") stats.compoundingEffectsUsed++;
 
-      // Track damage from effects
+      // Track damage from effects — effects can be strings or objects
       const effects = data.effects || [];
       for (const eff of effects) {
-        if (eff.type === "damage" && eff.value) {
-          stats.totalDamageDealt += eff.value;
-          if (eff.value > biggestHit) {
-            biggestHit = eff.value;
+        const parsed = parseEffectString(eff);
+        if (!parsed) continue;
+
+        if (parsed.type === "damage" || parsed.type === "debuff") {
+          stats.totalDamageDealt += parsed.value;
+          if (parsed.value > biggestHit) {
+            biggestHit = parsed.value;
             biggestHitCard = card?.name || "Unknown";
           }
         }
-        if (eff.type === "heal" && eff.value) stats.totalHealingDone += eff.value;
-        if (eff.type === "shield" && eff.value) stats.totalShieldApplied += eff.value;
+        if (parsed.type === "heal") stats.totalHealingDone += parsed.value;
+        if (parsed.type === "shield") stats.totalShieldApplied += parsed.value;
       }
+
+      // Check for catch-up effects in the descriptions
+      for (const eff of effects) {
+        if (typeof eff === 'string' && eff.includes('CATCH-UP')) {
+          stats.catchupsTriggered++;
+        }
+      }
+    }
+
+    if (entry.action_type === "overcharge") {
+      // Count overcharge as a notable action
     }
 
     if (entry.action_type === "catchup_triggered") {
@@ -116,12 +168,27 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
     }
   }
 
+  // Also estimate damage from HP differences if log parsing found nothing
+  if (stats.totalDamageDealt === 0 && stats.cardsPlayed > 0) {
+    // Sum up HP lost by opponents as a rough damage estimate
+    const opponents = players.filter(p => p.id !== currentPlayerId);
+    let totalHpLost = 0;
+    for (const opp of opponents) {
+      totalHpLost += Math.max(0, opp.maxHp - opp.currentHp);
+    }
+    // Attribute a proportional share to this player (rough estimate)
+    const playerCount = players.filter(p => p.id !== currentPlayerId).length || 1;
+    stats.totalDamageDealt = Math.round(totalHpLost / playerCount);
+  }
+
   if (biggestHit > 0) {
     stats.mvpMoment = `${biggestHitCard} dealt ${biggestHit} damage in a single hit!`;
   } else if (stats.totalHealingDone > 10) {
     stats.mvpMoment = `Healed ${stats.totalHealingDone} HP — the cockroach strategy.`;
   } else if (stats.compoundingEffectsUsed > 2) {
     stats.mvpMoment = `${stats.compoundingEffectsUsed} compounding effects — patience is a virtue (and a weapon).`;
+  } else if (stats.cardsPlayed > 0) {
+    stats.mvpMoment = `Played ${stats.cardsPlayed} cards across the battle. Every sin counts.`;
   } else {
     stats.mvpMoment = "Survived the arena. That counts for something.";
   }

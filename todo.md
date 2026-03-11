@@ -522,3 +522,6 @@
 - [x] Add card-fly-to-target animation — card arcs from hand toward target player panel with trailing particles and impact flash
 - [x] Improve player card readability — larger panels, expand-on-hover, full names, bigger HP bars
 - [x] Improve affliction table readability — expand-on-hover with smooth animation, larger text, clearer layout
+
+## Bug Fixes (Round 7)
+- [x] Fix GameOverScreen battle card showing 0 for all stats — fixed ID mismatch (game_players.id vs player_id) and string effect parsing
