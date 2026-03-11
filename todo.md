@@ -450,3 +450,25 @@
 - [x] Final 10K validation: W-S 52.6%, W-G 48.5%, W-E 47.1%, S-G 53.3%, S-E 52.8%, G-E 51.8%
 - [x] Worst deviation: 3.3% — EXCELLENT grade
 - [x] Apply final values to cardData.ts (31 changes applied, 178 tests passing)
+
+## Security Audit — Comprehensive (COMPLETED — Grade B+)
+- [x] Scan for exposed API keys, secrets, tokens, passwords in source code — PASS (none found)
+- [x] Scan for hardcoded credentials in client-side code — PASS (only VITE_ public vars)
+- [x] Check .env files not committed to git — PASS (.gitignore configured)
+- [x] Audit CORS configuration — PASS (same-origin default, secure)
+- [x] Check for XSS vulnerabilities — PASS (1 safe dangerouslySetInnerHTML in template chart.tsx)
+- [x] Check for SQL injection — PASS (Drizzle ORM parameterized queries only)
+- [x] Audit authentication flow — PASS (JWT HS256, httpOnly+secure+sameSite cookies)
+- [x] Check for CSRF protection — INFO (partial via SameSite cookies + tRPC POST)
+- [x] Audit tRPC procedures — PASS (all game actions validate current turn player)
+- [x] Check for IDOR — PASS (game state isolated by gameId UUID)
+- [x] Scan for path traversal — PASS (no file path handling in user code)
+- [x] Check HTTP security headers — FIXED (added 6 security headers middleware)
+- [x] Audit dependency vulnerabilities — WARN (18 transitive, 1 critical in fast-xml-parser via AWS SDK)
+- [x] Check for sensitive data in localStorage — PASS (only non-sensitive game stats)
+- [x] Verify rate limiting — WARN (no rate limiting, recommended for future)
+- [x] Check for information disclosure — PASS (no stack traces exposed to clients)
+- [x] Audit file upload handling — PASS (S3 storage helper with content-type)
+- [x] Generate comprehensive security audit report — see security-audit-report.md
+- [x] FIXED: Added security headers middleware (X-Content-Type-Options, X-Frame-Options, HSTS, etc.)
+- [x] FIXED: Added input sanitization (HTML entity stripping, regex room codes, max lengths)

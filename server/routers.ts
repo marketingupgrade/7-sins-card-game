@@ -40,7 +40,7 @@ export const appRouter = router({
   game: router({
     /** Create a new game lobby and get the room code */
     create: publicProcedure
-      .input(z.object({ username: z.string().min(1).max(20), playerId: z.string().min(1) }))
+      .input(z.object({ username: z.string().min(1).max(20).transform(s => s.replace(/[<>"'&]/g, '')), playerId: z.string().min(1).max(64) }))
       .mutation(async ({ input }) => {
         return createGame(input.playerId, input.username);
       }),
@@ -49,9 +49,9 @@ export const appRouter = router({
     join: publicProcedure
       .input(
         z.object({
-          roomCode: z.string().min(4).max(8),
-          username: z.string().min(1).max(20),
-          playerId: z.string().min(1),
+          roomCode: z.string().min(4).max(8).regex(/^[A-Z0-9]+$/i),
+          username: z.string().min(1).max(20).transform(s => s.replace(/[<>"'&]/g, '')),
+          playerId: z.string().min(1).max(64),
         })
       )
       .mutation(async ({ input }) => {
@@ -63,8 +63,8 @@ export const appRouter = router({
       .input(
         z.object({
           gameId: z.string().uuid(),
-          sin: z.enum(["wrath", "sloth"]),
-          playerId: z.string().min(1),
+          sin: z.enum(["wrath", "sloth", "greed", "envy"]),
+          playerId: z.string().min(1).max(64),
         })
       )
       .mutation(async ({ input }) => {
@@ -85,9 +85,9 @@ export const appRouter = router({
       .input(
         z.object({
           gameId: z.string().uuid(),
-          cardId: z.string(),
-          playerId: z.string().min(1),
-          targetPlayerId: z.string().optional(),
+          cardId: z.string().max(64),
+          playerId: z.string().min(1).max(64),
+          targetPlayerId: z.string().max(64).optional(),
         })
       )
       .mutation(async ({ input }) => {
@@ -96,7 +96,7 @@ export const appRouter = router({
 
     /** Pass your turn (draws a card) */
     pass: publicProcedure
-      .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1) }))
+      .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1).max(64) }))
       .mutation(async ({ input }) => {
         await passTurn(input.gameId, input.playerId);
         return { success: true };
@@ -104,7 +104,7 @@ export const appRouter = router({
 
     /** Overcharge: Wrath players spend HP to gain energy */
     overcharge: publicProcedure
-      .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1) }))
+      .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1).max(64) }))
       .mutation(async ({ input }) => {
         return overcharge(input.gameId, input.playerId);
       }),
