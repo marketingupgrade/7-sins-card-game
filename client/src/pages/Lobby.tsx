@@ -9,8 +9,11 @@ import { useState, useEffect, useCallback } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users } from "lucide-react";
+import { Flame, Moon, Coins, Eye, Copy, Check, Bot, Play, Crown, Skull, ArrowLeft, Sparkles, Users, Lock } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
+import { useFactionUnlocks, UNLOCK_THRESHOLD, LOCKED_FACTIONS } from "@/hooks/useFactionUnlocks";
+import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
@@ -99,6 +102,7 @@ export default function Lobby() {
   const [error, setError] = useState<string | null>(null);
   const { displayedText, addMessage, addRandomLine } = useNarrator();
   const { setCurrentPage } = useTutorial();
+  const factionUnlocks = useFactionUnlocks();
 
   // Register this page with the tutorial system
   useEffect(() => {
@@ -422,7 +426,7 @@ export default function Lobby() {
           </div>
         </motion.div>
 
-        {/* Sin Selection - 2x2 Grid */}
+        {/* Sin Selection - 2x2 Grid with Faction Unlock Gating */}
         {myPlayer && !myPlayer.chosenSin && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -438,12 +442,59 @@ export default function Lobby() {
               Pick Your Poison
             </h2>
             <p className="text-[9px] text-muted-foreground/70 text-center mb-4" style={{ fontFamily: "var(--font-body)" }}>
-              All four options are terrible. That's the point.
+              {factionUnlocks.isUnlocked
+                ? "All four options are terrible. That's the point."
+                : `Play ${factionUnlocks.gamesRemaining} more game${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
             </p>
             <div className="grid grid-cols-2 gap-4">
               {ALL_SINS.map((sin) => {
                 const cfg = SIN_CONFIG[sin];
                 const SinIcon = cfg.Icon;
+                const isLocked = !factionUnlocks.isFactionAvailable(sin);
+                const portrait = FACTION_PORTRAITS[sin];
+
+                if (isLocked) {
+                  return (
+                    <motion.div
+                      key={sin}
+                      className="rounded-xl p-5 text-center relative overflow-hidden border border-border/20 bg-black/30"
+                    >
+                      {/* Blurred portrait background */}
+                      <div className="absolute inset-0 opacity-10">
+                        <img src={portrait} alt="" className="w-full h-full object-cover blur-sm" />
+                      </div>
+                      <div className="relative z-10">
+                        <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
+                          <SinIcon className="w-9 h-9 text-muted-foreground/20" />
+                          <Lock className="w-4 h-4 text-muted-foreground/60 absolute -bottom-0.5 -right-0.5" />
+                        </div>
+                        <h3
+                          className="text-base font-black text-muted-foreground/30 tracking-wider mb-1"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          {cfg.label}
+                        </h3>
+                        <p className="text-[10px] text-muted-foreground/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                          Locked — play {factionUnlocks.gamesRemaining} more game{factionUnlocks.gamesRemaining !== 1 ? "s" : ""}
+                        </p>
+                        {/* Progress bar */}
+                        <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-border/20 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${factionUnlocks.progress * 100}%` }}
+                            transition={{ duration: 0.8, ease: "easeOut" }}
+                            className="h-full rounded-full"
+                            style={{ background: `linear-gradient(90deg, oklch(0.65 0.15 85 / 0.6), oklch(0.5 0.16 155 / 0.6))` }}
+                          />
+                        </div>
+                        <p className="text-[8px] text-muted-foreground/50 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                          {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD} GAMES
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                }
+
                 return (
                   <motion.button
                     key={sin}
@@ -571,6 +622,12 @@ export default function Lobby() {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Faction Unlock Celebration Overlay */}
+      <FactionUnlockCelebration
+        show={factionUnlocks.showCelebration}
+        onDismiss={factionUnlocks.dismissCelebration}
+      />
     </div>
   );
 }

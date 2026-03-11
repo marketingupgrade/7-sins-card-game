@@ -1,10 +1,9 @@
 /**
- * GameBoard Page - The Arena of Sin
+ * GameBoard Page - The Arena of Sin (Redesigned)
  *
- * N/E/S/W cardinal layout inspired by MTG Arena.
- * EffectBadge system inspired by Slay the Spire.
- * Multi-card-per-turn like Monster Train.
- * Dark atmosphere like Inscryption.
+ * Clean, icon-free interface focusing on readability and premium card game feel.
+ * No Lucide icons - all UI uses text, shapes, and faction portraits.
+ * Prominent action feed shows recent plays. Larger text throughout.
  */
 
 import { Button } from "@/components/ui/button";
@@ -17,23 +16,40 @@ import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
 import { playCard, passTurn, getGameLog, clientOvercharge } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
+import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
-import {
-  Flame, Moon, Heart, Swords, SkipForward, Trophy,
-  Skull, Clock, ScrollText, Shield, Bot, Zap, ArrowLeft, TrendingUp,
-  Coins, Eye
-} from "lucide-react";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
+import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 import { GameOverScreen } from "@/components/GameOverScreen";
 import { SoundToggle } from "@/components/SoundToggle";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { MusicToggle } from "@/components/MusicToggle";
+import FloatingNumbers from "@/components/FloatingNumbers";
+import YourTurnBanner from "@/components/YourTurnBanner";
+import ScreenShake from "@/components/ScreenShake";
+import EnergyOrbs from "@/components/EnergyOrbs";
+import HpCriticalOverlay from "@/components/HpCriticalOverlay";
+import RoundTransitionWipe from "@/components/RoundTransitionWipe";
+import SinDrone from "@/components/SinDrone";
+import SinReactiveBackground from "@/components/SinReactiveBackground";
+import DeathSequence from "@/components/DeathSequence";
+import SinCursor from "@/components/SinCursor";
+import CardPlayArc from "@/components/CardPlayArc";
+import SinShaderOverlay from "@/components/WebGLSinShaders";
+import WebSpeechNarrator from "@/components/WebSpeechNarrator";
+import DynamicMusic from "@/components/DynamicMusic";
+
+interface ActionFeedEntry {
+  id: string;
+  text: string;
+  timestamp: number;
+}
 
 export default function GameBoard() {
   const { gameId } = useParams<{ gameId: string }>();
@@ -51,6 +67,31 @@ export default function GameBoard() {
   const [isOvercharging, setIsOvercharging] = useState(false);
   const { setCurrentPage } = useTutorial();
 
+  const actionFeed = useRef<ActionFeedEntry[]>([]);
+  const [actionFeedState, setActionFeedState] = useState<ActionFeedEntry[]>([]);
+
+  // Tier 1 Multimedia State
+  const [floatingNumbers, setFloatingNumbers] = useState<Array<{id: string, value: number, type: 'damage'|'heal'|'shield', x: number, y: number}>>([]);
+  const [showYourTurn, setShowYourTurn] = useState(false);
+  const [shakeTrigger, setShakeTrigger] = useState(0);
+  const [shakeIntensity, setShakeIntensity] = useState<'light'|'heavy'>('light');
+  const [showRoundWipe, setShowRoundWipe] = useState(false);
+  const [wipeRound, setWipeRound] = useState(1);
+  const prevIsMyTurn = useRef(false);
+
+  // Tier 2+3 Multimedia State
+  const [deathShow, setDeathShow] = useState(false);
+  const [deathPlayerName, setDeathPlayerName] = useState('');
+  const [deathSin, setDeathSin] = useState<SinType>('wrath');
+  const [cardArcShow, setCardArcShow] = useState(false);
+  const [cardArcName, setCardArcName] = useState('');
+  const [cardArcColor, setCardArcColor] = useState('');
+  const prevAliveCounts = useRef<number>(4);
+  const [soundVolume] = useState(0.3);
+  const [narratorText, setNarratorText] = useState<string | null>(null);
+  const [narratorEnabled, setNarratorEnabled] = useState(false);
+  const [dynamicMusicEnabled, setDynamicMusicEnabled] = useState(false);
+
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
   useEffect(() => {
@@ -59,11 +100,25 @@ export default function GameBoard() {
     return () => { musicEngine.setScene("menu"); };
   }, []);
 
+  const addToActionFeed = useCallback((text: string) => {
+    const entry: ActionFeedEntry = {
+      id: Date.now().toString(),
+      text,
+      timestamp: Date.now(),
+    };
+    actionFeed.current = [...actionFeed.current.slice(-2), entry];
+    setActionFeedState([...actionFeed.current]);
+  }, []);
+
   useBotController({
     gameState,
     onBotAction: (result) => {
-      if (result.narratorQuip) addMessage(result.narratorQuip, "action");
-      else if (result.action === "pass") addRandomLine("botThinking");
+      if (result.narratorQuip) {
+        addMessage(result.narratorQuip, "action");
+        addToActionFeed(result.narratorQuip);
+      } else if (result.action === "pass") {
+        addRandomLine("botThinking");
+      }
     },
     onRefetch: refetch,
   });
@@ -89,11 +144,9 @@ export default function GameBoard() {
     [myPlayer?.hand]
   );
 
-  // Assign opponents to N/E/W positions
   const opponents = useMemo(() => {
     if (!gameState) return { north: null, east: null, west: null };
     const others = gameState.players.filter((p) => p.id !== playerId);
-    // 1 opponent = North, 2 = West + East, 3 = West + North + East
     if (others.length === 1) return { north: others[0], east: null, west: null };
     if (others.length === 2) return { north: null, east: others[1], west: others[0] };
     return { north: others[1], east: others[2], west: others[0] };
@@ -109,17 +162,57 @@ export default function GameBoard() {
     return () => clearInterval(interval);
   }, [showLog, gameId]);
 
+  // YOUR TURN banner trigger
+  useEffect(() => {
+    if (isMyTurn && !prevIsMyTurn.current) {
+      setShowYourTurn(true);
+    }
+    prevIsMyTurn.current = isMyTurn;
+  }, [isMyTurn]);
+
+  // Death detection
+  useEffect(() => {
+    if (!gameState) return;
+    const currentAlive = gameState.players.filter(p => p.isAlive).length;
+    if (currentAlive < prevAliveCounts.current) {
+      const deadPlayer = gameState.players.find(p => !p.isAlive && p.currentHp <= 0);
+      if (deadPlayer) {
+        setDeathPlayerName(deadPlayer.username);
+        setDeathSin((deadPlayer.chosenSin || 'wrath') as SinType);
+        setDeathShow(true);
+      }
+    }
+    prevAliveCounts.current = currentAlive;
+  }, [gameState]);
+
+  // Leading sin for reactive background
+  const leadingSin = useMemo(() => {
+    if (!alivePlayers.length) return null;
+    const sorted = [...alivePlayers].sort((a, b) => b.currentHp - a.currentHp);
+    return (sorted[0]?.chosenSin || 'wrath') as SinType;
+  }, [alivePlayers]);
+
   const [lastRound, setLastRound] = useState(0);
   useEffect(() => {
     if (gameState && gameState.currentRound !== lastRound) {
+      if (gameState.currentRound > 1 && lastRound > 0) {
+        // Trigger round wipe
+        setWipeRound(gameState.currentRound);
+        setShowRoundWipe(true);
+        const message = `Round ${gameState.currentRound} begins`;
+        addRandomLine("roundStart", { round: String(gameState.currentRound) });
+        addToActionFeed(message);
+      }
       setLastRound(gameState.currentRound);
-      if (gameState.currentRound > 1) addRandomLine("roundStart", { round: String(gameState.currentRound) });
     }
-  }, [gameState?.currentRound]);
+  }, [gameState?.currentRound, lastRound, addRandomLine, addToActionFeed]);
 
   useEffect(() => {
-    if (gameState?.status === "active" && lastRound === 0) addRandomLine("gameStart");
-  }, [gameState?.status]);
+    if (gameState?.status === "active" && lastRound === 0) {
+      addRandomLine("gameStart");
+      addToActionFeed("The arena awakens...");
+    }
+  }, [gameState?.status, lastRound, addRandomLine, addToActionFeed]);
 
   const handlePlayCard = useCallback(async (overrideTarget?: string) => {
     if (!gameId || !selectedCard) return;
@@ -133,26 +226,58 @@ export default function GameBoard() {
     }
     setIsPlayingCard(true);
     try {
-      const cardEffects = card.effects.map(e => e.type);
-      if (cardEffects.includes("damage")) {
+      const soundTypes = card.effects.map(e => e.type);
+      if (soundTypes.includes("damage")) {
         const sin = card.sin;
         if (sin === "wrath") soundEngine.play("damage_fire");
         else if (sin === "sloth") soundEngine.play("damage_ice");
         else if (sin === "envy") soundEngine.play("damage_electric");
         else soundEngine.play("damage_generic");
-      } else if (cardEffects.includes("heal")) {
+      } else if (soundTypes.includes("heal")) {
         soundEngine.play("heal");
-      } else if (cardEffects.includes("shield")) {
+      } else if (soundTypes.includes("shield")) {
         soundEngine.play("shield");
-      } else if (cardEffects.includes("energy_drain")) {
+      } else if (soundTypes.includes("energy_drain")) {
         soundEngine.play("energy_drain");
-      } else if (cardEffects.includes("debuff")) {
+      } else if (soundTypes.includes("debuff")) {
         soundEngine.play("steal");
       } else {
         soundEngine.play("card_play");
       }
       const result = await playCard(gameId, playerId, selectedCard, target || undefined);
       addMessage(result.narratorQuip, "action");
+
+      // Floating numbers + screen shake
+      for (const eff of card.effects) {
+        const val = eff.baseValue || 0;
+        if (val > 0) {
+          const numType: 'damage'|'heal'|'shield'|null = eff.type === 'damage' ? 'damage' : eff.type === 'heal' ? 'heal' : eff.type === 'shield' ? 'shield' : null;
+          if (numType) {
+            const xBase = 50 + (Math.random() - 0.5) * 30;
+            const yBase = eff.target === 'self' ? 70 : 30;
+            setFloatingNumbers(prev => [...prev, { id: `${Date.now()}-${eff.type}`, value: val, type: numType, x: xBase, y: yBase }]);
+          }
+          if (eff.type === 'damage') {
+            setShakeIntensity(val >= 10 ? 'heavy' : 'light');
+            setShakeTrigger(prev => prev + 1);
+          }
+        }
+      }
+      
+      // Trigger card play arc animation
+      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981' };
+      setCardArcName(card.name);
+      setCardArcColor(sinColorMap[card.sin] || '#06b6d4');
+      setCardArcShow(true);
+
+      const targetName = target 
+        ? gameState?.players.find(p => p.id === target)?.username || "target"
+        : "";
+      const actionText = targetName 
+        ? `${myPlayer?.username} played ${card.name} → ${targetName}`
+        : `${myPlayer?.username} played ${card.name}`;
+      addToActionFeed(actionText);
+      
       setSelectedCard(null);
       setSelectedTarget(null);
       refetch();
@@ -161,20 +286,17 @@ export default function GameBoard() {
     } finally {
       setIsPlayingCard(false);
     }
-  }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch]);
+  }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch, myPlayer, gameState, addToActionFeed]);
 
-  // Auto-play when clicking a target (Hearthstone/MTG pattern: select card → click target → done)
   const handleSelectTarget = useCallback((targetId: string) => {
     if (!selectedCard) return;
     const card = CARD_MAP[selectedCard];
     if (!card) return;
     const needsTarget = card.effects.some((e) => e.target === "single_enemy");
     if (needsTarget) {
-      // Auto-play immediately
       setSelectedTarget(targetId);
       handlePlayCard(targetId);
     } else {
-      // Toggle target selection for non-targeted cards
       setSelectedTarget(selectedTarget === targetId ? null : targetId);
     }
   }, [selectedCard, selectedTarget, handlePlayCard]);
@@ -186,6 +308,7 @@ export default function GameBoard() {
     try {
       await passTurn(gameId, playerId);
       addRandomLine("pass", { player: myPlayer?.username || "Someone" });
+      addToActionFeed(`${myPlayer?.username} passed`);
       setSelectedCard(null);
       refetch();
     } catch (err: any) {
@@ -202,6 +325,7 @@ export default function GameBoard() {
     try {
       await clientOvercharge(gameId, playerId);
       addMessage(`Overcharged! Burned ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption.`, "action");
+      addToActionFeed(`${myPlayer?.username} overcharged (+${WRATH_OVERCHARGE_ENERGY_GAIN} energy)`);
       refetch();
     } catch (err: any) {
       addMessage(err.message, "info");
@@ -215,7 +339,6 @@ export default function GameBoard() {
   const getPlayerEffects = (player: PlayerState) =>
     gameState?.activeEffects.filter((e) => e.targetPlayerId === player.gamePlayerId) || [];
 
-  // ─── Victory Screen ───────────────────────────────────────────
   if (gameState?.status === "finished") {
     return (
       <GameOverScreen
@@ -225,19 +348,17 @@ export default function GameBoard() {
         currentRound={gameState.currentRound}
         gameId={gameId}
         onRematch={() => {
-          // Quick rematch: go back to lobby to start a new game with same setup
           setLocation("/");
         }}
       />
     );
   }
 
-  // ─── Loading State ────────────────────────────────────────────
   if (isLoading || !gameState) {
     return (
       <div className="min-h-screen bg-arena flex items-center justify-center noise-overlay">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-          <Skull className="w-12 h-12 text-wrath/50" />
+          <div className="w-12 h-12 rounded-full border-2 border-wrath/50 border-t-wrath" />
         </motion.div>
         <p className="ml-4 text-sm text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
           Loading the arena of regret...
@@ -246,96 +367,92 @@ export default function GameBoard() {
     );
   }
 
-  // ─── Main Game Board — N/E/S/W Cardinal Layout ────────────────
-  return (
-    <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
-      <EmberField count={12} />
-      <div className="absolute inset-0 scanlines opacity-5 pointer-events-none z-50" />
+  const mySin = (myPlayer?.chosenSin || 'wrath') as SinType;
 
-      {/* ─── Top Bar ─────────────────────────────────────────── */}
-      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 py-2 border-b border-border/20 bg-background/40 backdrop-blur-sm">
-        <div className="flex items-center gap-3 md:gap-5">
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-neon-cyan" />
-            <span className="text-xs md:text-sm text-neon-cyan font-bold tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              R{gameState.currentRound}/{MAX_ROUNDS}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            {isMyTurn ? (
-              <motion.span
-                animate={{ opacity: [0.6, 1, 0.6] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
-                className="text-xs md:text-sm font-bold text-neon-yellow"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                YOUR TURN
-              </motion.span>
-            ) : (
-              <span className="text-xs md:text-sm text-muted-foreground truncate max-w-[120px] md:max-w-none" style={{ fontFamily: "var(--font-heading)" }}>
-                {currentTurnPlayer
-                  ? `${currentTurnPlayer.username}${isBot(currentTurnPlayer.id) ? " 🤖" : ""}`
-                  : "..."}
-              </span>
-            )}
-          </div>
+  return (
+    <ScreenShake trigger={shakeTrigger} intensity={shakeIntensity}>
+    <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
+      {/* Tier 2: Sin-Reactive Background */}
+      <SinReactiveBackground
+        leadingSin={leadingSin}
+        round={gameState.currentRound}
+        intensity={Math.min(1, 0.3 + (gameState.currentRound / MAX_ROUNDS) * 0.7)}
+      />
+
+      {/* Tier 2: Sin Drone (ambient audio) */}
+      <SinDrone sin={mySin} volume={soundVolume * 0.5} isActive={true} />
+
+      {/* Tier 3: Sin Cursor */}
+      <SinCursor sin={mySin} isActive={true} />
+
+      <EmberField count={12} />
+
+      {/* Tier 1: Floating Numbers */}
+      <FloatingNumbers
+        numbers={floatingNumbers}
+        onComplete={(id) => setFloatingNumbers(prev => prev.filter(n => n.id !== id))}
+      />
+
+      {/* Tier 1: YOUR TURN Banner */}
+      <YourTurnBanner
+        show={showYourTurn}
+        sinType={mySin}
+      />
+
+      {/* Tier 1: Round Transition Wipe */}
+      <RoundTransitionWipe
+        round={wipeRound}
+        show={showRoundWipe}
+        onComplete={() => setShowRoundWipe(false)}
+      />
+
+      {/* Tier 1: HP Critical Heartbeat */}
+      <HpCriticalOverlay
+        hpPercent={(myPlayer?.currentHp ?? 25) / (myPlayer?.maxHp ?? 25)}
+        isActive={myPlayer?.isAlive ?? true}
+      />
+
+      {/* Top Bar */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-border/20 bg-background/40 backdrop-blur-sm">
+        <div className="flex items-center gap-4">
+          <span className="text-lg font-black text-neon-cyan tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+            R{gameState.currentRound}/{MAX_ROUNDS}
+          </span>
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-3">
-          <AnimatePresence>
-            {displayedText && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="narrator-text text-[10px] max-w-[200px] truncate hidden lg:block"
-              >
-                "{displayedText}"
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <Button
-            data-tutorial="balance-sheet-btn"
-            variant="ghost" size="sm"
-            onClick={() => { setShowBalanceSheet(!showBalanceSheet); if (showLog) setShowLog(false); }}
-            className={`h-7 w-7 p-0 ${showBalanceSheet ? 'text-neon-cyan' : 'text-muted-foreground hover:text-neon-cyan'}`}
-            title="Effects Ledger"
-          >
-            <TrendingUp className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            variant="ghost" size="sm"
-            onClick={() => { setShowLog(!showLog); if (showBalanceSheet) setShowBalanceSheet(false); }}
-            className={`h-7 w-7 p-0 ${showLog ? 'text-neon-cyan' : 'text-muted-foreground hover:text-neon-cyan'}`}
-            title="Combat Log"
-          >
-            <ScrollText className="w-3.5 h-3.5" />
-          </Button>
+        <div className="flex items-center justify-center flex-1">
+          {isMyTurn ? (
+            <motion.div
+              animate={{ opacity: [0.6, 1, 0.6] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+              className="flex items-center gap-2"
+            >
+              <div className="w-3 h-3 rounded-full bg-neon-yellow" />
+              <span className="text-sm font-bold text-neon-yellow" style={{ fontFamily: "var(--font-heading)" }}>
+                YOUR TURN
+              </span>
+            </motion.div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-muted-foreground/40" />
+              <span className="text-sm text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                {currentTurnPlayer ? `${currentTurnPlayer.username}${isBot(currentTurnPlayer.id) ? " (BOT)" : ""}` : "..."}
+              </span>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-3">
           <SoundToggle />
           <MusicToggle />
         </div>
       </div>
 
-      {/* ─── Narrator Bar (mobile) ───────────────────────────── */}
-      <AnimatePresence>
-        {displayedText && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="relative z-10 px-3 py-1.5 border-b border-border/10 bg-background/20 lg:hidden"
-          >
-            <p className="narrator-text text-[10px] text-center truncate">"{displayedText}"</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Arena: N/E/S/W Grid Layout ──────────────────────── */}
+      {/* Arena Grid */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
-        {/* Desktop: CSS Grid for cardinal positions */}
-        <div className="hidden md:grid flex-1 grid-cols-[minmax(140px,200px)_1fr_minmax(140px,200px)] grid-rows-[auto_1fr_auto] gap-1 p-2">
-
-          {/* NORTH — top center */}
+        <div className="hidden md:grid flex-1 grid-cols-[minmax(160px,220px)_1fr_minmax(160px,220px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
+          
+          {/* NORTH */}
           <div className="col-start-2 row-start-1 flex justify-center">
             {opponents.north && (
               <PlayerPanel
@@ -351,7 +468,7 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* WEST — left center */}
+          {/* WEST */}
           <div className="col-start-1 row-start-2 flex items-center justify-center">
             {opponents.west && (
               <PlayerPanel
@@ -367,26 +484,26 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* CENTER — arena info */}
+          {/* CENTER */}
           <div className="col-start-2 row-start-2 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-20 h-20 mx-auto rounded-full border border-border/20 flex items-center justify-center mb-2 bg-background/20 backdrop-blur-sm">
+              <div className="w-24 h-24 mx-auto rounded-full border border-border/20 flex items-center justify-center mb-3 glass-panel">
                 <div>
                   <p className="text-2xl font-black text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>
                     {gameState.currentRound}
                   </p>
-                  <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  <p className="text-xs text-muted-foreground/60 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                     of {MAX_ROUNDS}
                   </p>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground/50">
+              <p className="text-sm text-muted-foreground/70 font-medium">
                 {alivePlayers.length} alive
               </p>
             </div>
           </div>
 
-          {/* EAST — right center */}
+          {/* EAST */}
           <div className="col-start-3 row-start-2 flex items-center justify-center">
             {opponents.east && (
               <PlayerPanel
@@ -402,7 +519,7 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* SOUTH — bottom center (YOU) */}
+          {/* SOUTH */}
           <div data-tutorial="player-panel" className="col-start-2 row-start-3 flex justify-center">
             {myPlayer && (
               <PlayerPanel
@@ -420,10 +537,9 @@ export default function GameBoard() {
           </div>
         </div>
 
-        {/* Mobile: Stacked vertical layout */}
-        <div className="md:hidden flex-1 flex flex-col gap-1 p-2 overflow-y-auto">
-          {/* Opponents row */}
-          <div className="flex gap-1.5 justify-center flex-wrap">
+        {/* Mobile Layout */}
+        <div className="md:hidden flex-1 flex flex-col gap-2 p-3 overflow-y-auto">
+          <div className="flex gap-2 justify-center flex-wrap">
             {[opponents.west, opponents.north, opponents.east].filter(Boolean).map((opp) => (
               <PlayerPanel
                 key={opp!.id}
@@ -439,20 +555,17 @@ export default function GameBoard() {
             ))}
           </div>
 
-          {/* Center round indicator (mobile) */}
-          <div className="flex items-center justify-center py-1">
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-background/30 border border-border/15">
-              <Clock className="w-3 h-3 text-neon-cyan" />
-              <span className="text-[10px] font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>
+          <div className="flex items-center justify-center py-2">
+            <div className="flex items-center gap-3 px-4 py-2 rounded-full glass-panel">
+              <span className="text-sm font-bold text-neon-cyan" style={{ fontFamily: "var(--font-heading)" }}>
                 R{gameState.currentRound}/{MAX_ROUNDS}
               </span>
-              <span className="text-[10px] text-muted-foreground/50">
+              <span className="text-sm text-muted-foreground/70">
                 {alivePlayers.length} alive
               </span>
             </div>
           </div>
 
-          {/* My player (mobile) */}
           {myPlayer && (
             <div data-tutorial="player-panel">
               <PlayerPanel
@@ -470,9 +583,35 @@ export default function GameBoard() {
           )}
         </div>
 
-        {/* ─── Card Hand ─────────────────────────────────────── */}
-        <div data-tutorial="card-hand" className="px-2 md:px-4 pb-2 md:pb-3 shrink-0">
-          <div className="flex items-end justify-center gap-1.5 md:gap-2 overflow-x-auto pb-1 scrollbar-thin">
+        {/* Action Feed */}
+        <div className="px-4 py-2 border-t border-border/10 bg-background/20">
+          <div className="max-w-4xl mx-auto">
+            <AnimatePresence mode="popLayout">
+              {actionFeedState.map((entry) => (
+                <motion.div
+                  key={entry.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="text-sm text-foreground/80 py-1"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  {entry.text}
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            {actionFeedState.length === 0 && (
+              <div className="text-sm text-muted-foreground/50 py-1" style={{ fontFamily: "var(--font-body)" }}>
+                Awaiting the first move...
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Card Hand */}
+        <div data-tutorial="card-hand" className="px-3 pb-3 shrink-0">
+          <div className="flex items-end justify-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
             <AnimatePresence>
               {myCards.map((card, i) => (
                 <motion.div
@@ -501,58 +640,60 @@ export default function GameBoard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center gap-2 md:gap-3 mt-1.5"
+              className="flex justify-center gap-3 mt-2"
             >
               {selectedCard && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="btn-wrath rounded-lg py-2 md:py-2.5 px-4 md:px-6 text-xs md:text-sm flex items-center gap-1.5 disabled:opacity-50"
+                  className={`px-8 py-3 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+                    myPlayer?.chosenSin === "wrath" ? "btn-wrath" :
+                    myPlayer?.chosenSin === "sloth" ? "btn-sloth" :
+                    myPlayer?.chosenSin === "greed" ? "btn-greed" :
+                    myPlayer?.chosenSin === "envy" ? "btn-envy" : "btn-cyan"
+                  } disabled:opacity-50`}
+                  style={{ fontFamily: "var(--font-heading)" }}
                   onClick={() => handlePlayCard()}
                   disabled={isPlayingCard}
                 >
-                  <Swords className="w-3.5 h-3.5" />
-                  {isPlayingCard ? "..." : "PLAY"}
+                  {isPlayingCard ? "PLAYING..." : "PLAY"}
                 </motion.button>
               )}
               {canOvercharge && (
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-3 md:px-4 py-2 md:py-2.5 rounded-lg bg-wrath/20 border border-wrath/40 text-wrath text-xs md:text-sm hover:bg-wrath/30 transition-colors disabled:opacity-50"
-                  style={{ fontFamily: "var(--font-heading)" }}
+                  className="px-6 py-3 rounded-lg bg-wrath/20 border-2 border-wrath/40 text-wrath text-sm font-bold uppercase tracking-wide hover:bg-wrath/30 transition-all disabled:opacity-50"
+                  style={{ 
+                    fontFamily: "var(--font-heading)",
+                    animation: isMyTurn ? "pulse 2s infinite" : "none"
+                  }}
                   onClick={handleOvercharge}
                   disabled={isOvercharging}
                   title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption`}
                 >
-                  <span className="flex items-center gap-1.5">
-                    <Flame className="w-3.5 h-3.5" />
-                    {isOvercharging ? "..." : "OVERCHARGE"}
-                  </span>
+                  {isOvercharging ? "BURNING..." : "OVERCHARGE"}
                 </motion.button>
               )}
               <motion.button
                 data-tutorial="pass-btn"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-lg border border-border/30 text-muted-foreground text-xs md:text-sm hover:border-border/60 transition-colors"
+                className="px-6 py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
                 style={{ fontFamily: "var(--font-heading)" }}
                 onClick={handlePass}
                 disabled={isPassing}
               >
-                <span className="flex items-center gap-1.5">
-                  <SkipForward className="w-3.5 h-3.5" />
-                  {isPassing ? "..." : "PASS"}
-                </span>
+                {isPassing ? "PASSING..." : "PASS"}
               </motion.button>
             </motion.div>
           )}
 
           {!isMyTurn && myPlayer?.isAlive && (
             <motion.p
-              animate={{ opacity: [0.3, 0.6, 0.3] }}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="text-center text-[10px] text-muted-foreground/50 mt-1"
+              className="text-center text-sm text-muted-foreground/60 mt-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {currentTurnPlayer && isBot(currentTurnPlayer.id)
@@ -563,56 +704,49 @@ export default function GameBoard() {
         </div>
       </div>
 
-      {/* ─── Compound Balance Sheet ──────────────────────────── */}
-      <CompoundBalanceSheet
+      {/* Tier 2: Death Sequence */}
+    <DeathSequence
+      show={deathShow}
+      playerName={deathPlayerName}
+      sin={deathSin}
+      onComplete={() => setDeathShow(false)}
+    />
+
+    {/* Tier 3: Card Play Arc */}
+    <CardPlayArc
+      show={cardArcShow}
+      cardName={cardArcName}
+      sinColor={cardArcColor}
+      startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 100 }}
+      endPosition={{ x: window.innerWidth / 2, y: window.innerHeight / 2 }}
+      onComplete={() => setCardArcShow(false)}
+    />
+
+    {/* Tier 3: Web Speech Narrator */}
+    <WebSpeechNarrator
+      text={narratorText}
+      enabled={narratorEnabled}
+    />
+
+    {/* Tier 3: Dynamic Music Intensity */}
+    <DynamicMusic
+      round={gameState.currentRound}
+      enabled={dynamicMusicEnabled}
+      volume={0.12}
+    />
+
+    <CompoundBalanceSheet
         activeEffects={gameState.activeEffects}
         players={gameState.players}
         currentRound={gameState.currentRound}
         isOpen={showBalanceSheet}
         onClose={() => setShowBalanceSheet(false)}
       />
-
-      {/* ─── Game Log Sidebar ────────────────────────────────── */}
-      <AnimatePresence>
-        {showLog && (
-          <motion.div
-            initial={{ x: 300 }}
-            animate={{ x: 0 }}
-            exit={{ x: 300 }}
-            className="absolute right-0 top-0 bottom-0 w-64 md:w-72 bg-card/95 backdrop-blur-md border-l border-border/30 z-20 overflow-y-auto p-3 md:p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-bold text-foreground tracking-[0.2em] uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                Combat Log
-              </h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowLog(false)} className="text-muted-foreground h-6 w-6 p-0">
-                ×
-              </Button>
-            </div>
-            <div className="space-y-1.5">
-              {logEntries.slice(-30).reverse().map((entry: any, i: number) => (
-                <div key={i} className="text-[10px] text-muted-foreground border-b border-border/10 pb-1">
-                  <span className="text-neon-cyan font-bold">R{entry.round_number}</span>{" "}
-                  <span className="capitalize text-foreground/70">{entry.action_type.replace("_", " ")}</span>
-                  {entry.action_data?.cardId && (
-                    <span className="text-foreground/90 font-medium">
-                      {" "}&mdash; {CARD_MAP[entry.action_data.cardId]?.name || entry.action_data.cardId}
-                    </span>
-                  )}
-                </div>
-              ))}
-              {logEntries.length === 0 && (
-                <p className="text-[10px] text-muted-foreground/60 italic">Nothing happened yet.</p>
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
+    </ScreenShake>
   );
 }
 
-// ─── Player Panel Sub-component ──────────────────────────────
 interface PlayerPanelProps {
   player: PlayerState;
   isCurrentTurn: boolean;
@@ -626,11 +760,11 @@ interface PlayerPanelProps {
   compact?: boolean;
 }
 
-const panelSinConfig: Record<string, { color: string; cssColor: string; Icon: typeof Flame }> = {
-  wrath: { color: "wrath", cssColor: "var(--color-wrath)", Icon: Flame },
-  sloth: { color: "sloth", cssColor: "var(--color-sloth)", Icon: Moon },
-  greed: { color: "greed", cssColor: "var(--color-greed)", Icon: Coins },
-  envy: { color: "envy", cssColor: "var(--color-envy)", Icon: Eye },
+const sinColors: Record<string, string> = {
+  wrath: "var(--color-wrath)",
+  sloth: "var(--color-sloth)",
+  greed: "var(--color-greed)",
+  envy: "var(--color-envy)",
 };
 
 function PlayerPanel({
@@ -645,15 +779,18 @@ function PlayerPanel({
   position,
   compact,
 }: PlayerPanelProps) {
-  const cfg = panelSinConfig[player.chosenSin || "wrath"] || panelSinConfig.wrath;
-  const SinIcon = cfg.Icon;
+  const sinColor = sinColors[player.chosenSin || "wrath"] || sinColors.wrath;
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
 
-  // Shield value from active effects
   const shieldValue = activeEffects
     .filter((e) => e.effectType === "shield")
     .reduce((sum, e) => sum + (e.isCompounding ? getCompoundTickValue(e.baseValue, e.currentTick || 0) : e.baseValue), 0);
+
+  const shieldPercent = player.maxHp > 0 ? Math.min((shieldValue / player.maxHp) * 100, 100) : 0;
+
+  const visibleEffects = activeEffects.slice(0, 3);
+  const hiddenEffectsCount = Math.max(0, activeEffects.length - 3);
 
   return (
     <motion.div
@@ -661,22 +798,23 @@ function PlayerPanel({
       whileTap={isTargetable ? { scale: 0.97 } : {}}
       onClick={isTargetable ? onSelect : undefined}
       className={`
-        rounded-xl border relative overflow-hidden
-        ${compact ? "p-2 min-w-[120px] max-w-[160px]" : "p-3 min-w-[170px] max-w-[220px]"}
-        ${isMe ? "glass-panel border-neon-cyan/20" : "bg-card/30 backdrop-blur-sm"}
-        ${isCurrentTurn ? "border-neon-yellow/50 active-turn-glow" : "border-border/20"}
-        ${isSelected ? "border-neon-cyan ring-1 ring-neon-cyan/30" : ""}
-        ${isTargetable ? "cursor-pointer hover:border-neon-cyan/40" : ""}
-        ${!player.isAlive ? "opacity-25 grayscale" : ""}
+        rounded-xl border-2 relative overflow-hidden
+        ${compact ? "p-3 min-w-[140px] max-w-[180px]" : "p-4 min-w-[190px] max-w-[240px]"}
+        ${isMe ? "glass-panel border-neon-cyan/30" : "glass-panel"}
+        ${isCurrentTurn ? "border-neon-yellow/60" : "border-border/30"}
+        ${isTargetable && player.isAlive ? "cursor-pointer border-2" : ""}
+        ${!player.isAlive ? "opacity-30 grayscale" : ""}
         transition-all duration-300
       `}
+      style={{
+        borderColor: isTargetable && player.isAlive ? sinColor : undefined,
+        boxShadow: isTargetable && player.isAlive ? `0 0 20px ${sinColor}40` : undefined,
+      }}
     >
-      {/* Sin color accent */}
       {player.isAlive && (
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundColor: cfg.cssColor }} />
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundColor: sinColor }} />
       )}
 
-      {/* Current turn pulse */}
       {isCurrentTurn && player.isAlive && (
         <motion.div
           className="absolute inset-0 rounded-xl"
@@ -687,74 +825,80 @@ function PlayerPanel({
       )}
 
       <div className="relative z-10">
-        {/* Player Info Row */}
-        <div className="flex items-center gap-1.5 mb-1.5">
-          <SinIcon className={`${compact ? "w-3 h-3" : "w-3.5 h-3.5"} flex-shrink-0`} style={{ color: cfg.cssColor }} />
-          <span
-            className={`${compact ? "text-[11px]" : "text-sm"} font-bold text-foreground truncate flex-1`}
-            style={{ fontFamily: "var(--font-heading)" }}
+        <div className="flex items-center gap-2 mb-2">
+          <div 
+            className={`${compact ? "w-9 h-9" : "w-11 h-11"} rounded-full overflow-hidden border-2 flex-shrink-0`} 
+            style={{ borderColor: sinColor }}
           >
-            {player.username}
-            {isMe && <span className="text-neon-cyan/60 ml-1 text-[8px]">(YOU)</span>}
-          </span>
-          {playerIsBot && <Bot className={`${compact ? "w-2.5 h-2.5" : "w-3 h-3"} text-neon-cyan/40 flex-shrink-0`} />}
-          {!player.isAlive && <Skull className={`${compact ? "w-2.5 h-2.5" : "w-3 h-3"} text-destructive flex-shrink-0`} />}
-          {isCurrentTurn && player.isAlive && (
-            <motion.div
-              animate={{ opacity: [0.4, 1, 0.4] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className={`${compact ? "w-1.5 h-1.5" : "w-2 h-2"} rounded-full bg-neon-yellow flex-shrink-0`}
+            <img 
+              src={FACTION_PORTRAITS[player.chosenSin as SinType]} 
+              alt={player.chosenSin || ""} 
+              className="w-full h-full object-cover" 
+              loading="lazy" 
             />
-          )}
-        </div>
-
-        {/* HP Bar */}
-        <div className={`relative ${compact ? "h-2.5" : "h-3.5"} bg-muted/50 rounded-full overflow-hidden mb-1`}>
-          <motion.div
-            animate={{ width: `${hpPercent}%` }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className={`absolute inset-y-0 left-0 rounded-full hp-bar-fill ${
-              hpPercent > 60 ? "hp-bar-high" : hpPercent > 30 ? "hp-bar-mid" : "hp-bar-low"
-            }`}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className={`${compact ? "text-[7px]" : "text-[9px]"} font-bold text-foreground/90 drop-shadow-sm`}>
-              {player.currentHp}/{player.maxHp}
-              {shieldValue > 0 && <span className="text-neon-cyan ml-0.5">(+{shieldValue}🛡)</span>}
-            </span>
           </div>
-        </div>
-
-        {/* Energy Bar */}
-        {player.isAlive && (
-          <div className={`relative ${compact ? "h-1.5" : "h-2"} bg-muted/30 rounded-full overflow-hidden mb-1`}>
-            <motion.div
-              animate={{ width: `${player.maxEnergy > 0 ? (player.currentEnergy / MAX_ENERGY) * 100 : 0}%` }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              className="absolute inset-y-0 left-0 rounded-full energy-bar-fill"
-              style={{ background: `linear-gradient(to right, ${cfg.cssColor}cc, ${cfg.cssColor})` }}
-            />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className={`${compact ? "text-[6px]" : "text-[7px]"} font-bold text-foreground/70 drop-shadow-sm`}>
-                {player.currentEnergy}/{player.maxEnergy}
-                {player.bonusEnergy > 0 && <span className="text-neon-green"> +{player.bonusEnergy}</span>}
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1">
+              <span
+                className={`${compact ? "text-sm" : "text-base"} font-bold text-foreground truncate`}
+                style={{ 
+                  fontFamily: "var(--font-heading)",
+                  textDecoration: !player.isAlive ? "line-through" : "none"
+                }}
+              >
+                {player.username}
+                {playerIsBot && " (BOT)"}
               </span>
+              {isMe && <span className="text-neon-cyan/60 ml-1 text-xs">(YOU)</span>}
             </div>
+            
+            {isCurrentTurn && player.isAlive && (
+              <motion.div
+                animate={{ opacity: [0.4, 1, 0.4] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+                className={`${compact ? "w-2 h-2" : "w-2.5 h-2.5"} rounded-full bg-neon-yellow mt-1`}
+              />
+            )}
           </div>
+        </div>
+
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`relative flex-1 ${compact ? "h-4" : "h-5"} bg-muted/50 rounded-full overflow-hidden`}>
+            <motion.div
+              animate={{ width: `${hpPercent}%` }}
+              transition={{ duration: 0.6, ease: "easeOut" }}
+              className={`absolute inset-y-0 left-0 rounded-full ${
+                hpPercent > 60 ? "bg-green-500" : hpPercent > 30 ? "bg-yellow-500" : "bg-red-500"
+              }`}
+            />
+            {shieldValue > 0 && (
+              <motion.div
+                animate={{ width: `${Math.min(shieldPercent, 100 - hpPercent)}%` }}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="absolute inset-y-0 bg-cyan-400 rounded-full"
+                style={{ left: `${hpPercent}%` }}
+              />
+            )}
+          </div>
+          <span className={`${compact ? "text-sm" : "text-base"} font-bold text-foreground flex-shrink-0`}>
+            {player.currentHp}/{player.maxHp}
+            {shieldValue > 0 && <span className="text-cyan-400 ml-1">+{shieldValue}</span>}
+          </span>
+        </div>
+
+        {player.isAlive && (
+          <EnergyOrbs
+            current={player.currentEnergy}
+            max={MAX_ENERGY}
+            sinColor={sinColor}
+            bonusEnergy={player.bonusEnergy}
+          />
         )}
 
-        {/* Stats Row */}
-        <div className={`flex items-center justify-between ${compact ? "text-[7px]" : "text-[8px]"} text-muted-foreground/50 mb-1`}>
-          <span className="flex items-center gap-0.5">
-            <Zap className="w-2 h-2" /> {player.currentEnergy}E
-          </span>
-          <span>{player.deckSize}d · {player.discardSize}x</span>
-        </div>
-
-        {/* Active Effects — EffectBadge (Slay the Spire style) */}
-        {activeEffects.length > 0 && (
-          <div className="flex gap-1 flex-wrap mt-1">
-            {activeEffects.map((effect, i) => (
+        {visibleEffects.length > 0 && (
+          <div className="flex gap-1 flex-wrap">
+            {visibleEffects.map((effect, i) => (
               <EffectBadge
                 key={`${effect.cardId}-${effect.effectType}-${i}`}
                 effect={effect}
@@ -762,18 +906,30 @@ function PlayerPanel({
                 compact={compact}
               />
             ))}
+            {hiddenEffectsCount > 0 && (
+              <div className="inline-flex items-center px-1.5 py-0.5 rounded-md border border-border/30 bg-background/20">
+                <span className="text-xs text-muted-foreground font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                  +{hiddenEffectsCount}
+                </span>
+              </div>
+            )}
           </div>
         )}
 
-        {/* Targetable indicator */}
         {isTargetable && (
           <motion.div
-            animate={{ opacity: [0.3, 0.8, 0.3] }}
+            animate={{ opacity: [0.4, 1, 0.4] }}
             transition={{ duration: 1, repeat: Infinity }}
-            className="mt-1 text-center"
+            className="mt-2 text-center"
           >
-            <span className={`${compact ? "text-[7px]" : "text-[8px]"} text-neon-cyan uppercase tracking-wider`} style={{ fontFamily: "var(--font-heading)" }}>
-              Click to target
+            <span 
+              className={`${compact ? "text-xs" : "text-sm"} font-bold uppercase tracking-wider`} 
+              style={{ 
+                fontFamily: "var(--font-heading)",
+                color: sinColor 
+              }}
+            >
+              TARGET
             </span>
           </motion.div>
         )}

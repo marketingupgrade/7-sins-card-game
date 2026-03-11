@@ -14,9 +14,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect, useMemo, useState } from "react";
 import { Flame, Trophy, Swords, Heart, Shield, Zap, RotateCcw } from "lucide-react";
-import type { PlayerState, GameLogEntry } from "@shared/gameTypes";
+import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { getGameLog } from "@/lib/gameEngine";
+import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import ShareableBattleCard from "./ShareableBattleCard";
 
 interface GameOverScreenProps {
   players: PlayerState[];
@@ -34,12 +36,7 @@ const SIN_COLORS: Record<string, string> = {
   envy: "#22c55e",
 };
 
-const SIN_ICONS: Record<string, string> = {
-  wrath: "\u{1F525}",
-  sloth: "\u{1F4A4}",
-  greed: "\u{1F4B0}",
-  envy: "\u{1F441}",
-};
+// Painterly Spell Icons used instead of emoji - see SIN_ARCHETYPE_ICONS from iconUtils
 
 const STREAK_NARRATOR: Record<number, string> = {
   1: "A win. Don't let it go to your head.",
@@ -277,7 +274,12 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
               >
                 <p className="text-white/40 text-xs uppercase tracking-widest mb-2">Winner</p>
                 <div className="flex items-center justify-center gap-3">
-                  <span className="text-2xl">{SIN_ICONS[winner.chosenSin || "wrath"]}</span>
+                  <img
+                    src={SIN_ARCHETYPE_ICONS[(winner.chosenSin as SinType) || 'wrath']}
+                    alt={winner.chosenSin || 'sin'}
+                    className="w-8 h-8 object-contain"
+                    style={{ filter: `drop-shadow(0 0 6px ${SIN_COLORS[winner.chosenSin || 'wrath']})` }}
+                  />
                   <span
                     className="text-2xl font-bold"
                     style={{ color: SIN_COLORS[winner.chosenSin || "wrath"] }}
@@ -382,7 +384,12 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                       <span className="text-white/30 text-sm font-mono w-5">
                         {i === 0 ? "\u{1F451}" : `#${i + 1}`}
                       </span>
-                      <span className="text-lg">{SIN_ICONS[p.chosenSin || "wrath"]}</span>
+                      <img
+                        src={SIN_ARCHETYPE_ICONS[(p.chosenSin as SinType) || 'wrath']}
+                        alt={p.chosenSin || 'sin'}
+                        className="w-6 h-6 object-contain"
+                        style={{ filter: p.isAlive ? `drop-shadow(0 0 4px ${SIN_COLORS[p.chosenSin || 'wrath']})` : 'grayscale(1) opacity(0.4)' }}
+                      />
                       <span
                         className="font-semibold text-sm"
                         style={{ color: p.isAlive ? SIN_COLORS[p.chosenSin || "wrath"] : "#666" }}
@@ -408,6 +415,25 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                 ))}
               </div>
             </motion.div>
+
+            {/* Shareable Battle Card (CD5: Social) */}
+            <ShareableBattleCard
+              playerName={currentPlayer?.username || 'Player'}
+              sin={(currentPlayer?.chosenSin || 'wrath') as 'wrath' | 'sloth' | 'greed' | 'envy'}
+              isWinner={isPlayerWinner}
+              stats={{
+                damageDealt: stats.totalDamageDealt,
+                healingDone: stats.totalHealingDone,
+                cardsPlayed: stats.cardsPlayed,
+                roundsSurvived: currentRound,
+              }}
+              onGenerate={(dataUrl) => {
+                const link = document.createElement('a');
+                link.download = '7sins-battle-card.png';
+                link.href = dataUrl;
+                link.click();
+              }}
+            />
 
             {/* Actions (CD5: Rematch) */}
             <motion.div

@@ -11,8 +11,9 @@ import { useState } from "react";
 import {
   Flame, Heart, Shield, Skull, Zap, TrendingDown, TrendingUp, Sparkles
 } from "lucide-react";
-import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS } from "@shared/gameTypes";
+import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
+import { getEffectIconUrl } from "@/lib/iconUtils";
 
 interface EffectBadgeProps {
   effect: ActiveEffect;
@@ -92,6 +93,8 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
   const Icon = cfg.icon;
 
   const card = CARD_MAP[effect.cardId];
+  const cardSin = card?.sin as SinType | undefined;
+  const spellIconUrl = cardSin ? getEffectIconUrl(effect.effectType, cardSin) : null;
   const isCompounding = effect.isCompounding;
   const currentTick = effect.currentTick ?? 0;
   const totalTicks = isCompounding ? COMPOUND_MULTIPLIERS.length : effect.durationRounds;
@@ -127,7 +130,9 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         style={{ fontFamily: "var(--font-heading)" }}
         title={`${cfg.label} ${currentValue} (${ticksRemaining} rounds left)`}
       >
-        <Icon className="w-2.5 h-2.5" />
+        {spellIconUrl
+          ? <img src={spellIconUrl} alt={cfg.label} className="w-3.5 h-3.5 object-contain flex-shrink-0" loading="lazy" />
+          : <Icon className="w-2.5 h-2.5" />}
         <span>{currentValue}</span>
         {isCompounding && (
           <span className="opacity-60 text-[7px]">{currentTick + 1}/{totalTicks}</span>
@@ -160,7 +165,9 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         )}
 
         {/* Effect Icon */}
-        <Icon className={`w-3.5 h-3.5 ${cfg.color} flex-shrink-0`} />
+        {spellIconUrl
+          ? <img src={spellIconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
+          : <Icon className={`w-3.5 h-3.5 ${cfg.color} flex-shrink-0`} />}
 
         {/* Value */}
         <span
@@ -214,7 +221,9 @@ export default function EffectBadge({ effect, currentRound, compact = false }: E
         >
           {/* Card name */}
           <div className="flex items-center gap-1.5 mb-1.5">
-            <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
+            {spellIconUrl
+              ? <img src={spellIconUrl} alt={cfg.label} className="w-4 h-4 object-contain flex-shrink-0" loading="lazy" />
+              : <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />}
             <span className="text-xs font-bold text-foreground" style={{ fontFamily: "var(--font-heading)" }}>
               {card?.name || "Unknown Effect"}
             </span>

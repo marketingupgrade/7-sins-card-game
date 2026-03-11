@@ -334,3 +334,12 @@
 - [x] Audit the game through all 8 core drives during E2E playtest
 - [x] Document findings: what drives are strong, what's missing (see octalysis-audit.md)
 - [x] Apply top 3 quick-win Octalysis recommendations (post-game summary, win streak, rematch)
+
+## Phase 2: Faction Unlock System (Octalysis CD2 + CD6)
+- [x] useFactionUnlocks hook — localStorage-based play count tracking
+- [x] Gate Greed & Envy behind 3-game play threshold
+- [x] Locked faction cards in Lobby — greyed out with progress bar
+- [x] Locked faction preview cards on Home page
+- [x] FactionUnlockCelebration overlay — cinematic unlock animation
+- [x] Progress bar showing games played / threshold
+- [x] Vitest tests for unlock logic (28 tests)
