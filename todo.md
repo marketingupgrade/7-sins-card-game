@@ -587,13 +587,12 @@
 - [x] Show action feed (Battle Log) in mobile center area within MobileBattleOverview
 
 ## Homepage AAA Redesign (Round 14)
-- [ ] Research HeyGen API for photo-to-video animation
-- [ ] Generate animated portrait videos for all 7 sin factions via HeyGen
-- [ ] Upload animated videos to CDN
-- [ ] Build rotating sin portrait hero component with animated videos
-- [ ] Redesign homepage with AAA premium game look and feel (cinematic hero, parallax, particle effects, premium typography)
-- [ ] Mobile-responsive premium homepage
-- [ ] Push to GitHub
+- [x] Research HeyGen API — account has 0 video credits, pivoted to AI image generation
+- [x] Generated cinematic hero portraits for all 7 sins (AI-generated, uploaded to CDN)
+- [x] Built HeroBabylonScene — reactive 3D background with sin-colored particles, ritual rings, volumetric beam
+- [x] Redesigned homepage with AAA premium game look (rotating sin showcase, Latin taglines, cinematic typography)
+- [x] Mobile-responsive premium homepage
+- [x] Push to GitHub (aa4d004)
 
 ## Faction Icon Fixes (Round 15)
 - [x] Replace Pride icon with radiant crown (pride_crown)
@@ -606,8 +605,40 @@
 - [x] Fix defeat cinematic gets stuck in endless loop — onComplete callback created new ref each render, causing useEffect infinite re-trigger. Fixed with useRef pattern in VictoryCinematic + DeathSequence
 
 ## Homepage AAA Redesign (Round 17)
-- [ ] Generate animated portrait variations for all 7 sins (action poses, energy effects)
-- [ ] Optimize and upload portrait variations to CDN
-- [ ] Redesign homepage with AAA premium game look — rotating sin showcase hero section
-- [ ] Add cinematic parallax effects, particle systems, premium typography
+- [x] Generated cinematic hero portraits for all 7 sins
+- [x] Built HeroBabylonScene with reactive sin-colored 3D effects
+- [x] Redesigned Home.tsx with rotating sin showcase, Latin names, taglines, subtitles
+- [x] Babylon.js particle systems, volumetric beam, ritual rings shift color per sin
+- [x] Pushed to GitHub (aa4d004)
+
+## Major Gameplay Overhaul (Round 18)
+- [x] Change HP from 25 to 50
+- [x] Change rounds from 10 to 20
+- [x] Add affliction doubling mechanic after round 16
+- [x] Remove all flat cards — ALL cards are now compound-only
+- [x] Redesign Wrath deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Sloth deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Greed deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Envy deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Pride deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Lust deck: 36 compound cards with creative faction-specific mechanics
+- [x] Redesign Gluttony deck: 36 compound cards with creative faction-specific mechanics
+- [x] Apply behavioral science frameworks to card design (Octalysis, loss aversion, variable rewards)
+- [x] Mathematical balance: Monte Carlo simulation across all 252 cards (15,000 games)
+- [x] Optimize card stats until all 7 factions are balanced (max 2.9% deviation from 25% target)
+- [x] Update gameTypes.ts constants (MAX_ROUNDS=20, STARTING_HP=50, ROUND_16_DOUBLING=16)
+- [x] Update game engine for compound-only, doubling mechanic, new HP/rounds
+- [x] Update UI for new game parameters
+- [x] Update all tests (172 passing across 8 files)
+- [ ] Push to GitHub
+
+## Design Constraints Update (Round 18b)
+- [x] One passive per faction only (remove Wrath Overcharge)
+- [x] All 36 cards per deck must synergize with faction passive
+- [x] Expanded parameters: energy cost, compounding factor, target mode (single/duo/AoE), target order (single/clockwise/pingpong)
+- [x] Expanded variables: DMG, Heal (gain/block/steal), Shield (gain/block/steal), Energy (gain/block/steal), Affliction manipulation (transfer/amplify)
+- [x] All cards compound-only, no flat effects
+- [x] 20 rounds, 50 HP, affliction doubling after round 16
+- [x] Update homepage to reflect new mechanics (compound-only, 20 rounds, 50 HP, doubling, new target modes)
+- [x] Remove all flat card dead code across entire codebase (CardType "flat", flat badge CSS, flat card logic in engine)
 - [ ] Push to GitHub

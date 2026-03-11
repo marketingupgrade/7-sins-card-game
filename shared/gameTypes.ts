@@ -1,5 +1,13 @@
 /**
- * 7 Deadly Sins Card Game - Shared Type Definitions
+ * 7 Deadly Sins Card Game — Shared Type Definitions (v4)
+ *
+ * v4 Balance Overhaul:
+ * - ALL cards are compound-only (no flat cards)
+ * - 50 HP, 20 rounds, 3 energy/turn (fixed, no ramp)
+ * - 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn
+ * - 13 effect types with 4 target modes
+ * - 7 faction passives tuned via Monte Carlo (15k games, max 2.9% deviation)
+ * - Round 16 affliction doubling mechanic
  *
  * These types are shared between client and server to ensure
  * type safety across the entire game stack.
@@ -8,143 +16,191 @@
 // ─── Sin Types ───────────────────────────────────────────────
 export type SinType = "wrath" | "sloth" | "greed" | "envy" | "pride" | "lust" | "gluttony";
 
-// ─── Card Effect Types ───────────────────────────────────────
-export type EffectType = "damage" | "heal" | "shield" | "buff" | "debuff" | "energy_drain" | "energy_gain" | "damage_all" | "self_damage";
+// ─── Effect Types (v4) ──────────────────────────────────────
+/**
+ * 13 effect types covering damage, healing, shielding, energy, and control:
+ *
+ * OFFENSIVE:
+ *   damage           — Deal compound damage to target(s)
+ *   self_damage       — Deal compound damage to self (Wrath specialty)
+ *   affliction_amplify — Increase base value of target's worst affliction
+ *   affliction_transfer — Move your worst affliction to a target
+ *
+ * DEFENSIVE:
+ *   heal_gain         — Heal self over time (compound)
+ *   shield_gain       — Gain shield over time (compound)
+ *
+ * STEAL (offensive + defensive):
+ *   heal_steal        — Steal HP from target (instant, damage + heal)
+ *   shield_steal      — Steal shield from target (instant)
+ *   energy_steal      — Steal energy from target (instant)
+ *
+ * CONTROL (debuffs):
+ *   heal_block        — Prevent target from healing for N rounds
+ *   shield_block      — Prevent target from gaining shield for N rounds
+ *   energy_block      — Prevent target from gaining energy for N rounds
+ *
+ * UTILITY:
+ *   energy_gain       — Gain energy instantly (self)
+ */
+export type EffectType =
+  | "damage"
+  | "self_damage"
+  | "heal_gain"
+  | "heal_steal"
+  | "heal_block"
+  | "shield_gain"
+  | "shield_steal"
+  | "shield_block"
+  | "energy_gain"
+  | "energy_steal"
+  | "energy_block"
+  | "affliction_amplify"
+  | "affliction_transfer";
 
-export type TargetType = "self" | "single_enemy" | "all_enemies" | "random_enemy";
+// ─── Target Modes (v4) ──────────────────────────────────────
+/**
+ * 4 target modes:
+ *   single — Targets lowest-HP enemy (default)
+ *   duo    — Targets 2 lowest-HP enemies
+ *   aoe    — Targets all enemies
+ *   self   — Targets the caster
+ */
+export type TargetMode = "single" | "duo" | "aoe" | "self";
 
+// ─── Compound Patterns (v4) ─────────────────────────────────
+/**
+ * 3 compound tick patterns that determine how effects scale over their duration:
+ *
+ *   standard:   Fibonacci [1,1,2,3,5,8,13,21,34,55] — balanced scaling
+ *   aggressive: Powers of 2 [1,2,4,8,16,32,...] — explosive growth
+ *   slowburn:   Flat-ish [1,1,1,1,2,2,3,3,4,5] — consistent pressure
+ *
+ * Each tick, the effect value = baseValue * pattern[tickIndex].
+ * Duration determines how many ticks occur.
+ */
+export type CompoundPattern = "standard" | "aggressive" | "slowburn";
+
+export const COMPOUND_TICKS: Record<CompoundPattern, readonly number[]> = {
+  standard: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+  aggressive: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+  slowburn: [1, 1, 1, 1, 2, 2, 3, 3, 4, 5],
+};
+
+/**
+ * Get the tick multiplier for a compound pattern at a given round index.
+ * @param pattern The compound pattern type
+ * @param tickIndex 0-based tick index
+ */
+export function getCompoundTick(pattern: CompoundPattern, tickIndex: number): number {
+  const ticks = COMPOUND_TICKS[pattern];
+  if (tickIndex < 0) return 0;
+  return ticks[Math.min(tickIndex, ticks.length - 1)];
+}
+
+/**
+ * Calculate the value of a compound effect at a specific tick.
+ * @param baseValue The card's base value
+ * @param pattern The compound pattern
+ * @param tickIndex 0-based tick index
+ */
+export function getCompoundTickValue(baseValue: number, pattern: CompoundPattern, tickIndex: number): number {
+  return Math.round(baseValue * getCompoundTick(pattern, tickIndex));
+}
+
+// Legacy compat: old 3-tick Fibonacci [1,1,2] — used by some UI components
+export const COMPOUND_MULTIPLIERS = [1, 1, 2] as const;
+export const COMPOUND_DURATION = 3;
+export const COMPOUND_TOTAL_MULT = 4;
+
+// ─── Card Effect (v4) ───────────────────────────────────────
 export interface CardEffect {
   type: EffectType;
   baseValue: number;
-  /** How many rounds this effect persists. 0 = instant (flat cards only) */
+  /** How many rounds this effect ticks. Minimum 1. */
   duration: number;
-  target: TargetType;
+  /** Who this effect targets */
+  targetMode: TargetMode;
   /** Optional description override for narrator */
   narratorText?: string;
 }
 
-// ─── Catch-Up Mechanic ───────────────────────────────────────
-export type CatchupCondition = 
-  | "hp_less_than_target"      // Player HP < target's HP
-  | "hp_less_than_any_opponent" // Player HP < any living opponent's HP
-  | "hp_below_threshold"       // Player HP <= CATCHUP_HP_THRESHOLD
-  | "hp_lowest";               // Player has the lowest HP among all living players
+// ─── Card Tier ──────────────────────────────────────────────
+export type CardTier = "common" | "rare" | "epic";
 
-export interface CatchupEffect {
-  type: "bonus_damage" | "bonus_heal" | "bonus_debuff_all";
-  bonusValue: number;
-  /** Duration for bonus_debuff_all */
-  bonusDuration?: number;
-  condition: CatchupCondition;
-}
-
-// ─── Card Type ───────────────────────────────────────────────
+// ─── Card Definition (v4) ───────────────────────────────────
 /**
- * FLAT: One-time powerful effect. Resolves immediately, no duration.
- * COMPOUNDING: Weaker base but ticks for 3 rounds with Fibonacci escalation [1×, 1×, 2×].
- *   - Round 1: base × 1 (pay corruption cost)
- *   - Round 2: base × 1 (free)
- *   - Round 3: base × 2 (free, the payoff)
- *   - Total value = base × 4 over 3 rounds
+ * ALL cards are compound. No flat cards exist in v4.
+ *
+ * Each card has:
+ * - A compound pattern (standard/aggressive/slowburn) that determines tick scaling
+ * - One or more effects, each with its own duration and target mode
+ * - A corruption (energy) cost
+ * - A tier for visual styling
  */
-export type CardType = "flat" | "compounding";
-
-// ─── Card Definition ─────────────────────────────────────────
 export interface CardDefinition {
   id: string;
   name: string;
   sin: SinType;
   /** Corruption (energy) cost to play */
   cost: number;
-  /** Whether this card is flat (instant) or compounding (3-round escalating) */
-  cardType: CardType;
-  /** Effects for flat cards (instant resolution) */
+  /** Compound tick pattern */
+  compoundPattern: CompoundPattern;
+  /** Card effects — all compound, tick according to compoundPattern */
   effects: CardEffect[];
-  /** Flavor text shown on card */
-  flavorText: string;
-  /** Sassy narrator quip when played */
-  narratorQuip: string;
+  /** Short description shown on card */
+  description: string;
   /** Visual tier for card border styling */
-  tier: "common" | "rare" | "epic";
-  /** Optional catch-up mechanic — bonus when player is behind */
-  catchup?: CatchupEffect;
+  tier: CardTier;
 }
 
-// ─── Compounding Mechanic ────────────────────────────────────
+// ─── Energy / Corruption System (v4) ────────────────────────
 /**
- * FIBONACCI COMPOUNDING SYSTEM
- *
- * Compounding cards tick for exactly 3 rounds with escalating multipliers.
- * The Fibonacci pattern [1, 1, 2] creates a "slow build to payoff" feel:
- *   - Tick 1: base × 1 (initial hit)
- *   - Tick 2: base × 1 (same pressure)
- *   - Tick 3: base × 2 (double payoff)
- *
- * Total value = base × (1 + 1 + 2) = base × 4
- *
- * This applies to ALL effect types: damage, heal, shield, debuff, etc.
- * Only pay corruption cost on the round the card is played.
- */
-export const COMPOUND_MULTIPLIERS = [1, 1, 2] as const;
-export const COMPOUND_DURATION = 3;
-export const COMPOUND_TOTAL_MULT = 4; // sum of [1, 1, 2]
-
-/**
- * Get the multiplier for a specific tick of a compounding effect.
- * @param tickIndex 0-based index (0 = first tick, 1 = second, 2 = third)
- */
-export function getCompoundMultiplier(tickIndex: number): number {
-  if (tickIndex < 0 || tickIndex >= COMPOUND_DURATION) return 0;
-  return COMPOUND_MULTIPLIERS[tickIndex];
-}
-
-/**
- * Calculate the value of a compounding effect at a specific tick.
- * @param baseValue The card's base value
- * @param tickIndex 0-based tick index (0, 1, or 2)
- */
-export function getCompoundTickValue(baseValue: number, tickIndex: number): number {
-  return Math.round(baseValue * getCompoundMultiplier(tickIndex));
-}
-
-// ─── Energy / Corruption System ─────────────────────────────
-/**
- * CORRUPTION SYSTEM
+ * CORRUPTION SYSTEM (v4)
  *
  * Energy is themed as "Corruption" — the fuel of sin.
  *
  * Core rules:
- * - Start at 2 Corruption, gain +1 per round, cap at 7 (7 deadly sins)
+ * - Fixed 3 energy per turn (no ramp, no cap increase)
  * - Full refresh each turn — "use it or lose it"
- * - Every card has a Corruption cost (0-5 range)
+ * - Every card has a Corruption cost (0-6 range)
  * - Can't play a card if you don't have enough Corruption
  *
- * Sin-specific passives:
- * - Wrath: OVERCHARGE - Burn 2 HP to gain +1 energy (active ability)
- * - Sloth: LETHARGY - Unspent energy carries over (max +2 bonus)
- * - Greed: AVARICE - Playing a card that costs 3+ grants +1 bonus energy next turn
- * - Envy: COVET - At start of turn, if any opponent has more HP, gain +1 bonus energy
+ * Sin-specific passives (v4 balanced):
+ * - Wrath:    FURY — Self-damage cards deal +3 bonus damage to target AND heal 2 HP
+ * - Sloth:    ENDURANCE — Taking compound damage grants +1 shield
+ * - Greed:    AVARICE — Steal-type cards grant +1 energy
+ * - Envy:     JEALOUSY — Damage cards amplify target's worst affliction by +1
+ * - Pride:    HUBRIS — 0-cost cards grant +1 shield
+ * - Lust:     TEMPTATION — Single-target damage heals self for +1 HP
+ * - Gluttony: DEVOUR — AoE cards grant +1 energy
  */
-export const STARTING_ENERGY = 2;
-export const MAX_ENERGY = 7;
-export const ENERGY_PER_ROUND = 1;
-export const SLOTH_MAX_CARRYOVER = 2;
-export const WRATH_OVERCHARGE_HP_COST = 2;
-export const WRATH_OVERCHARGE_ENERGY_GAIN = 1;
-export const WRATH_SIPHON_RATE = 0.10; // Wrath heals 10% of compound damage dealt to others
-export const GREED_AVARICE_COST_THRESHOLD = 3;
-export const GREED_AVARICE_BONUS = 1;
-export const ENVY_COVET_BONUS = 1;
+export const MAX_ENERGY = 3;
+export const ENERGY_PER_TURN = 3; // Fixed, no ramp
 
-// Pride: HUBRIS - Playing a card that costs 0 grants +2 shield
-export const PRIDE_HUBRIS_SHIELD = 2;
-// Lust: TEMPTATION - Single-target damage cards also heal self for 1 HP
+// Passive constants
+export const WRATH_FURY_BONUS_DAMAGE = 3;
+export const WRATH_FURY_HEAL = 2;
+export const SLOTH_ENDURANCE_SHIELD = 1;
+export const GREED_AVARICE_ENERGY = 1;
+export const ENVY_JEALOUSY_AMPLIFY = 1;
+export const PRIDE_HUBRIS_SHIELD = 1;
 export const LUST_TEMPTATION_HEAL = 1;
-// Gluttony: DEVOUR - Playing AoE cards grants +1 energy
 export const GLUTTONY_DEVOUR_ENERGY = 1;
 
-export function getBaseEnergyForRound(round: number): number {
-  return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_ROUND, MAX_ENERGY);
+// Legacy compat exports (some UI components still reference these)
+export const STARTING_ENERGY = 3;
+export const ENERGY_PER_ROUND = 0; // No ramp in v4
+export const SLOTH_MAX_CARRYOVER = 0; // Removed in v4
+export const WRATH_OVERCHARGE_HP_COST = 0; // Removed in v4
+export const WRATH_OVERCHARGE_ENERGY_GAIN = 0; // Removed in v4
+export const WRATH_SIPHON_RATE = 0; // Replaced by FURY passive
+export const GREED_AVARICE_COST_THRESHOLD = 0; // Replaced by steal-based trigger
+export const GREED_AVARICE_BONUS = 1;
+export const ENVY_COVET_BONUS = 0; // Replaced by JEALOUSY passive
+
+export function getBaseEnergyForRound(_round: number): number {
+  return MAX_ENERGY; // Fixed 3 energy per turn in v4
 }
 
 // ─── Game State ──────────────────────────────────────────────
@@ -176,10 +232,12 @@ export interface ActiveEffect {
   appliedAtRound: number;
   durationRounds: number;
   cardId: string;
-  /** For compounding effects: which tick we're on (0, 1, or 2) */
+  /** For compound effects: which tick we're on (0-based) */
   currentTick?: number;
-  /** Whether this is a compounding effect */
-  isCompounding?: boolean;
+  /** Compound pattern for tick scaling */
+  compoundPattern?: CompoundPattern;
+  /** Whether this affliction has been doubled (round 16+) */
+  doubled?: boolean;
 }
 
 export interface GameState {
@@ -208,17 +266,35 @@ export interface GameLogEntry {
   timestamp: number;
 }
 
-// ─── Game Constants ─────────────────────────────────────────
-export const MAX_ROUNDS = 10;
-export const STARTING_HP = 25;
+// ─── Game Constants (v4) ────────────────────────────────────
+export const MAX_ROUNDS = 20;
+export const STARTING_HP = 50;
 export const HAND_SIZE = 5;
 export const CARDS_PER_DECK = 36;
-export const CATCHUP_HP_THRESHOLD = 10; // 40% of 25 HP
+export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
+export const CATCHUP_HP_THRESHOLD = 20; // 40% of 50 HP
 
 /**
- * @deprecated Use getCompoundTickValue() for compounding cards.
- * Flat cards use baseValue directly with no round multiplier.
+ * @deprecated Use getCompoundTickValue() with pattern for compound cards.
  */
 export function calculateEffectiveValue(baseValue: number, _currentRound: number): number {
   return Math.round(baseValue);
 }
+
+// ─── Catch-Up Mechanic (legacy compat) ──────────────────────
+export type CatchupCondition =
+  | "hp_less_than_target"
+  | "hp_less_than_any_opponent"
+  | "hp_below_threshold"
+  | "hp_lowest";
+
+export interface CatchupEffect {
+  type: "bonus_damage" | "bonus_heal" | "bonus_debuff_all";
+  bonusValue: number;
+  bonusDuration?: number;
+  condition: CatchupCondition;
+}
+
+// Legacy type aliases for backward compatibility
+export type CardType = "compounding"; // All cards are compound in v4
+export type TargetType = TargetMode; // Alias

@@ -57,7 +57,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
   const sinColor = sinColorMap[card.sin] || sinColorMap.wrath;
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const artUrl = CARD_ART_URLS[card.id];
-  const isCompounding = card.cardType === "compounding";
+  const patternLabel = card.compoundPattern === "aggressive" ? "A" : card.compoundPattern === "slowburn" ? "S" : "C";
 
   return (
     <motion.button
@@ -126,11 +126,11 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
             className="text-[7px] px-1 py-0.5 rounded font-bold uppercase"
             style={{
               fontFamily: "var(--font-heading)",
-              background: isCompounding ? "oklch(0.55 0.18 290 / 0.7)" : "oklch(0.4 0.1 70 / 0.7)",
-              color: isCompounding ? "oklch(0.85 0.1 290)" : "oklch(0.8 0.05 70)",
+              background: "oklch(0.55 0.18 290 / 0.7)",
+              color: "oklch(0.85 0.1 290)",
             }}
           >
-            {isCompounding ? "3R" : "F"}
+            {patternLabel}
           </span>
         </div>
       </div>

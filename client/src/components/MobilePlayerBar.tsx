@@ -62,8 +62,8 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
 
   // Shield calculation
   const shieldValue = activeEffects
-    .filter((e) => e.effectType === "shield")
-    .reduce((sum, e) => sum + (e.isCompounding ? getCompoundTickValue(e.baseValue, e.currentTick || 0) : e.baseValue), 0);
+    .filter((e) => e.effectType === "shield_gain")
+    .reduce((sum, e) => sum + Math.round(getCompoundTickValue(e.baseValue, e.compoundPattern || "standard", e.currentTick || 0)), 0);
 
   const displayName = (player.username || "Player") + (playerIsBot ? " ⚙" : "");
 

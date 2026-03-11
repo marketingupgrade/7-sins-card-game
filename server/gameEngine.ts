@@ -1,14 +1,11 @@
 /**
- * Game Engine - Core Game Logic for 7 Deadly Sins Card Game
+ * Server-Side Game Engine (v4)
  *
- * Handles: game creation, joining, sin selection, turn management,
- * card playing, effect resolution, and win condition checking.
- *
- * COMPOUNDING SYSTEM (Fibonacci [1, 1, 2]):
- * - Compounding cards tick for 3 rounds with escalating multipliers
- * - Tick 0: base × 1 (pay cost), Tick 1: base × 1, Tick 2: base × 2
- * - Applies to ALL effect types: damage, heal, shield, debuff, energy_drain
- * - Flat cards resolve instantly with no duration
+ * ALL cards are compound. No flat cards exist.
+ * 50 HP, 20 rounds, 3 energy/turn (fixed).
+ * 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn.
+ * 7 faction passives tuned via Monte Carlo simulation.
+ * Round 16: all afflictions double.
  */
 
 import { nanoid } from "nanoid";
@@ -16,6 +13,7 @@ import { getCardById, getDeckForSin } from "../shared/cardData";
 import {
   ActiveEffect,
   CardEffect,
+  CompoundPattern,
   GameState,
   HAND_SIZE,
   MAX_ROUNDS,
@@ -24,17 +22,15 @@ import {
   SinType,
   STARTING_HP,
   STARTING_ENERGY,
-  ENERGY_PER_ROUND,
-  SLOTH_MAX_CARRYOVER,
-  WRATH_OVERCHARGE_HP_COST,
-  WRATH_OVERCHARGE_ENERGY_GAIN,
-  GREED_AVARICE_COST_THRESHOLD,
-  GREED_AVARICE_BONUS,
-  ENVY_COVET_BONUS,
-  getBaseEnergyForRound,
-  CATCHUP_HP_THRESHOLD,
-  CatchupCondition,
-  COMPOUND_DURATION,
+  ROUND_16_DOUBLING,
+  WRATH_FURY_BONUS_DAMAGE,
+  WRATH_FURY_HEAL,
+  SLOTH_ENDURANCE_SHIELD,
+  GREED_AVARICE_ENERGY,
+  ENVY_JEALOUSY_AMPLIFY,
+  PRIDE_HUBRIS_SHIELD,
+  LUST_TEMPTATION_HEAL,
+  GLUTTONY_DEVOUR_ENERGY,
   getCompoundTickValue,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
@@ -57,6 +53,15 @@ function shuffleDeck(cardIds: string[]): string[] {
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
+}
+
+// ─── Ensure Player Exists ────────────────────────────────────
+async function ensurePlayer(playerId: string, username: string): Promise<void> {
+  const sb = getServerSupabase();
+  const { data: existing } = await sb.from("players").select("id").eq("id", playerId).single();
+  if (!existing) {
+    await sb.from("players").insert({ id: playerId, username });
+  }
 }
 
 // ─── Create Game ─────────────────────────────────────────────
@@ -145,7 +150,6 @@ export async function chooseSin(
   sin: SinType
 ): Promise<void> {
   const sb = getServerSupabase();
-
   const { error } = await sb
     .from("game_players")
     .update({ chosen_sin: sin })
@@ -170,8 +174,6 @@ export async function startGame(gameId: string): Promise<void> {
   const allReady = players.every((p) => p.chosen_sin);
   if (!allReady) throw new Error("All players must choose a sin");
 
-  const startingEnergy = getBaseEnergyForRound(1);
-
   for (const player of players) {
     const deckCards = getDeckForSin(player.chosen_sin as SinType);
     const shuffled = shuffleDeck(deckCards);
@@ -187,8 +189,8 @@ export async function startGame(gameId: string): Promise<void> {
         current_hp: STARTING_HP,
         max_hp: STARTING_HP,
         is_alive: true,
-        current_energy: startingEnergy,
-        max_energy: startingEnergy,
+        current_energy: STARTING_ENERGY,
+        max_energy: MAX_ENERGY,
         bonus_energy: 0,
       })
       .eq("id", player.id);
@@ -258,15 +260,41 @@ export async function playCard(
     throw new Error("Not enough corruption to play this card");
   }
 
-  const newEnergy = currentEnergy - card.cost;
+  let newEnergy = currentEnergy - card.cost;
+  const sin = player.chosen_sin as SinType;
 
-  // Greed AVARICE: playing a card that costs 3+ grants +1 bonus energy next turn
-  if (player.chosen_sin === "greed" && card.cost >= GREED_AVARICE_COST_THRESHOLD) {
-    const currentBonus = player.bonus_energy ?? 0;
-    await sb
-      .from("game_players")
-      .update({ bonus_energy: currentBonus + GREED_AVARICE_BONUS })
-      .eq("id", player.id);
+  // ─── V4 PASSIVES (on card play) ───────────────────────────
+
+  // PRIDE HUBRIS: 0-cost cards grant +1 shield
+  if (sin === "pride" && card.cost === 0) {
+    await sb.from("active_effects").insert({
+      game_id: gameId,
+      target_player_id: player.id,
+      source_player_id: player.id,
+      effect_type: "shield_gain",
+      base_value: PRIDE_HUBRIS_SHIELD,
+      applied_at_round: game.current_round,
+      duration_rounds: 1,
+      card_id: cardId,
+    });
+  }
+
+  // GLUTTONY DEVOUR: AoE cards grant +1 energy
+  if (sin === "gluttony") {
+    const hasAoE = card.effects.some((e) => e.targetMode === "aoe");
+    if (hasAoE) {
+      newEnergy = Math.min(newEnergy + GLUTTONY_DEVOUR_ENERGY, MAX_ENERGY);
+    }
+  }
+
+  // GREED AVARICE: steal-type cards grant +1 energy
+  if (sin === "greed") {
+    const hasSteal = card.effects.some((e) =>
+      ["heal_steal", "shield_steal", "energy_steal"].includes(e.type)
+    );
+    if (hasSteal) {
+      newEnergy = Math.min(newEnergy + GREED_AVARICE_ENERGY, MAX_ENERGY);
+    }
   }
 
   // Remove card from hand, add to discard
@@ -279,63 +307,41 @@ export async function playCard(
     .update({ hand: newHand, discard_pile: discard, current_energy: newEnergy })
     .eq("id", player.id);
 
-  // ─── Resolve Effects ──────────────────────────────────────
+  // ─── Resolve Effects (ALL COMPOUND) ───────────────────────
   const effectDescriptions: string[] = [];
 
-  if (card.cardType === "flat") {
-    // FLAT CARDS: Apply all effects instantly with baseValue (no multiplier)
-    for (const effect of card.effects) {
-      const targets = resolveTargets(effect, player, allPlayers, targetPlayerId);
-      for (const target of targets) {
-        if (effect.duration > 0) {
-          // Some flat cards may still have duration (e.g. shields that persist)
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: target.id,
-            source_player_id: player.id,
-            effect_type: effect.type,
-            base_value: effect.baseValue,
-            applied_at_round: game.current_round,
-            duration_rounds: effect.duration,
-            card_id: cardId,
-          });
-          effectDescriptions.push(
-            `${effect.type} ${effect.baseValue} on ${target.player_id === playerId ? "self" : "enemy"} for ${effect.duration}r`
-          );
-        } else {
-          await applyInstantEffect(effect.type, effect.baseValue, target, gameId);
-          effectDescriptions.push(
-            `${effect.type} ${effect.baseValue} on ${target.player_id === playerId ? "self" : "enemy"}`
-          );
+  for (const effect of card.effects) {
+    const targets = resolveTargets(effect, player, allPlayers, targetPlayerId);
+    const firstTickValue = getCompoundTickValue(effect.baseValue, card.compoundPattern, 0);
+
+    for (const target of targets) {
+      // Apply first tick immediately
+      await applyInstantEffect(effect.type, firstTickValue, target, gameId, player.id);
+
+      // WRATH FURY: self_damage cards deal +3 bonus damage to target AND heal 2 HP
+      if (sin === "wrath" && effect.type === "self_damage") {
+        const enemies = allPlayers.filter((p) => p.is_alive && p.player_id !== playerId);
+        const lowestEnemy = enemies.sort((a, b) => a.current_hp - b.current_hp)[0];
+        if (lowestEnemy) {
+          await applyInstantEffect("damage", WRATH_FURY_BONUS_DAMAGE, lowestEnemy, gameId, player.id);
+          effectDescriptions.push(`FURY: +${WRATH_FURY_BONUS_DAMAGE} bonus damage`);
         }
+        await applyInstantEffect("heal_gain", WRATH_FURY_HEAL, player, gameId, player.id);
+        effectDescriptions.push(`FURY: healed ${WRATH_FURY_HEAL} HP`);
       }
-    }
-  } else {
-    // COMPOUNDING CARDS: Apply first tick (×1) immediately, store for future ticks
-    for (const effect of card.effects) {
-      const targets = resolveTargets(effect, player, allPlayers, targetPlayerId);
-      const firstTickValue = getCompoundTickValue(effect.baseValue, 0); // tick 0 = ×1
 
-      for (const target of targets) {
-        // Apply first tick immediately
-        if (effect.type === "shield") {
-          // Shields go into active_effects (they persist)
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: target.id,
-            source_player_id: player.id,
-            effect_type: "shield",
-            base_value: firstTickValue,
-            applied_at_round: game.current_round,
-            duration_rounds: 1, // first tick shield lasts 1 round
-            card_id: cardId,
-          });
-        } else {
-          await applyInstantEffect(effect.type, firstTickValue, target, gameId);
-        }
+      // LUST TEMPTATION: single-target damage heals self +1 HP
+      if (sin === "lust" && effect.type === "damage" && effect.targetMode === "single") {
+        await applyInstantEffect("heal_gain", LUST_TEMPTATION_HEAL, player, gameId, player.id);
+      }
 
-        // Store the compounding effect for ticks 1 and 2
-        // We store with current_tick = 1 (next tick to apply)
+      // ENVY JEALOUSY: damage cards amplify target's worst affliction by +1
+      if (sin === "envy" && effect.type === "damage" && target.player_id !== playerId) {
+        await amplifyWorstAffliction(gameId, target.id, ENVY_JEALOUSY_AMPLIFY);
+      }
+
+      // Store compound effect for future ticks (if duration > 1)
+      if (effect.duration > 1) {
         await sb.from("active_effects").insert({
           game_id: gameId,
           target_player_id: target.id,
@@ -343,81 +349,16 @@ export async function playCard(
           effect_type: effect.type,
           base_value: effect.baseValue,
           applied_at_round: game.current_round,
-          duration_rounds: COMPOUND_DURATION,
+          duration_rounds: effect.duration,
           card_id: cardId,
-          is_compounding: true,
-          current_tick: 1, // next tick to apply (0 was just applied)
+          current_tick: 1,
+          compound_pattern: card.compoundPattern,
         });
-
-        effectDescriptions.push(
-          `${effect.type} ${firstTickValue} on ${target.player_id === playerId ? "self" : "enemy"} (compounds ×${COMPOUND_DURATION}r)`
-        );
       }
-    }
-  }
 
-  // ─── Catch-Up Bonus Resolution ─────────────────────────────
-  if (card.catchup) {
-    const { data: freshPlayer } = await sb
-      .from("game_players")
-      .select("current_hp, is_alive")
-      .eq("game_id", gameId)
-      .eq("player_id", playerId)
-      .single();
-
-    const playerHp = freshPlayer?.current_hp ?? player.current_hp;
-    const catchupMet = evaluateCatchupCondition(
-      card.catchup.condition,
-      playerHp,
-      allPlayers,
-      playerId,
-      targetPlayerId
-    );
-
-    if (catchupMet) {
-      const bonusValue = card.catchup.bonusValue;
-      switch (card.catchup.type) {
-        case "bonus_damage": {
-          const dmgTargets = allPlayers.filter(
-            (p) => p.is_alive && p.player_id !== playerId
-          );
-          const primaryTarget = targetPlayerId
-            ? dmgTargets.find((p) => p.player_id === targetPlayerId) || dmgTargets[0]
-            : dmgTargets[0];
-          if (primaryTarget) {
-            await applyInstantEffect("damage", bonusValue, primaryTarget, gameId);
-            effectDescriptions.push(`CATCH-UP bonus damage ${bonusValue}`);
-          }
-          break;
-        }
-        case "bonus_heal": {
-          const selfTarget = allPlayers.find((p) => p.player_id === playerId);
-          if (selfTarget) {
-            await applyInstantEffect("heal", bonusValue, selfTarget, gameId);
-            effectDescriptions.push(`CATCH-UP bonus heal ${bonusValue}`);
-          }
-          break;
-        }
-        case "bonus_debuff_all": {
-          const enemies = allPlayers.filter(
-            (p) => p.is_alive && p.player_id !== playerId
-          );
-          for (const enemy of enemies) {
-            await sb.from("active_effects").insert({
-              game_id: gameId,
-              target_player_id: enemy.id,
-              source_player_id: player.id,
-              effect_type: "debuff",
-              base_value: card.catchup.bonusValue,
-              applied_at_round: game.current_round,
-              duration_rounds: card.catchup.bonusDuration ?? 2,
-              card_id: cardId,
-            });
-          }
-          effectDescriptions.push(`CATCH-UP bonus debuff all enemies`);
-          break;
-        }
-      }
+      effectDescriptions.push(
+        `${effect.type} ${firstTickValue} on ${target.player_id === playerId ? "self" : "enemy"} (${card.compoundPattern} ×${effect.duration}r)`
+      );
     }
   }
 
@@ -430,17 +371,14 @@ export async function playCard(
       cardId,
       targetPlayerId,
       effects: effectDescriptions,
-      cardType: card.cardType,
+      compoundPattern: card.compoundPattern,
       energySpent: card.cost,
       energyRemaining: newEnergy,
     },
     round_number: game.current_round,
   });
 
-  // Turn does NOT advance after playing a card — player can play multiple cards per turn
-  // Turn only advances when player explicitly passes (passTurn)
-
-  return { narratorQuip: card.narratorQuip, effects: effectDescriptions };
+  return { narratorQuip: card.description, effects: effectDescriptions };
 }
 
 // ─── Pass Turn ───────────────────────────────────────────────
@@ -529,7 +467,8 @@ export async function getGameState(gameId: string): Promise<GameState> {
     durationRounds: e.duration_rounds,
     cardId: e.card_id,
     currentTick: e.current_tick ?? undefined,
-    isCompounding: e.is_compounding ?? undefined,
+    compoundPattern: e.compound_pattern ?? undefined,
+    doubled: e.doubled ?? undefined,
   }));
 
   return {
@@ -555,17 +494,7 @@ export async function getGameLog(gameId: string): Promise<any[]> {
   return data || [];
 }
 
-// ─── Helper: Ensure Player Exists ────────────────────────────
-async function ensurePlayer(playerId: string, username: string): Promise<void> {
-  const sb = getServerSupabase();
-  const { data: existing } = await sb.from("players").select("id").eq("id", playerId).single();
-
-  if (!existing) {
-    await sb.from("players").insert({ id: playerId, username });
-  }
-}
-
-// ─── Helper: Resolve Targets ─────────────────────────────────
+// ─── Helper: Resolve Targets (v4 targetMode) ────────────────
 function resolveTargets(
   effect: CardEffect,
   source: any,
@@ -574,61 +503,62 @@ function resolveTargets(
 ): any[] {
   const alive = allPlayers.filter((p) => p.is_alive);
 
-  switch (effect.target) {
+  switch (effect.targetMode) {
     case "self":
       return [source];
-    case "single_enemy":
+    case "single": {
       if (targetPlayerId) {
         const target = alive.find((p) => p.player_id === targetPlayerId);
         return target ? [target] : [];
       }
-      return alive.filter((p) => p.player_id !== source.player_id).slice(0, 1);
-    case "all_enemies":
-      return alive.filter((p) => p.player_id !== source.player_id);
-    case "random_enemy": {
       const enemies = alive.filter((p) => p.player_id !== source.player_id);
-      if (enemies.length === 0) return [];
-      return [enemies[Math.floor(Math.random() * enemies.length)]];
+      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 1);
     }
+    case "duo": {
+      const enemies = alive.filter((p) => p.player_id !== source.player_id);
+      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 2);
+    }
+    case "aoe":
+      return alive.filter((p) => p.player_id !== source.player_id);
     default:
       return [];
   }
 }
 
-// ─── Helper: Apply Instant Effect ────────────────────────────
+// ─── Helper: Apply Instant Effect (v4) ──────────────────────
 async function applyInstantEffect(
   type: string,
   value: number,
   target: any,
-  gameId?: string
+  gameId?: string,
+  sourcePlayerId?: string
 ): Promise<void> {
   const sb = getServerSupabase();
   const roundedValue = Math.round(value);
 
   switch (type) {
-    case "damage": {
+    case "damage":
+    case "self_damage": {
       let remainingDamage = roundedValue;
 
-      // Shield absorption: check for active shield effects on target
       if (gameId) {
         const { data: shields } = await sb
           .from("active_effects")
           .select("*")
           .eq("game_id", gameId)
           .eq("target_player_id", target.id)
-          .eq("effect_type", "shield");
+          .in("effect_type", ["shield_gain"]);
 
         if (shields && shields.length > 0) {
           for (const shield of shields) {
             if (remainingDamage <= 0) break;
-            const shieldValue = shield.base_value; // Use raw base_value for shields
+            const shieldValue = shield.base_value;
             if (shieldValue <= remainingDamage) {
               remainingDamage -= shieldValue;
               await sb.from("active_effects").delete().eq("id", shield.id);
             } else {
-              const newBase = shieldValue - remainingDamage;
+              await sb.from("active_effects").update({ base_value: shieldValue - remainingDamage }).eq("id", shield.id);
               remainingDamage = 0;
-              await sb.from("active_effects").update({ base_value: newBase }).eq("id", shield.id);
             }
           }
         }
@@ -643,46 +573,60 @@ async function applyInstantEffect(
           .eq("id", target.id);
         target.current_hp = newHp;
         target.is_alive = isAlive;
+
+        // SLOTH ENDURANCE: taking compound damage grants +1 shield
+        if (target.chosen_sin === "sloth" && target.is_alive && sourcePlayerId !== target.player_id) {
+          if (gameId) {
+            await sb.from("active_effects").insert({
+              game_id: gameId,
+              target_player_id: target.id,
+              source_player_id: target.id,
+              effect_type: "shield_gain",
+              base_value: SLOTH_ENDURANCE_SHIELD,
+              applied_at_round: 0,
+              duration_rounds: 1,
+              card_id: "sloth-endurance",
+            });
+          }
+        }
       }
       break;
     }
-    case "heal": {
-      const newHp = Math.min(target.max_hp, target.current_hp + roundedValue);
+    case "heal_gain": {
+      const newHp = Math.min(target.max_hp ?? STARTING_HP, target.current_hp + roundedValue);
       await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
       target.current_hp = newHp;
       break;
     }
-    case "energy_drain": {
-      // Drain energy from target
-      const currentTargetEnergy = target.current_energy ?? 0;
-      const drained = Math.min(roundedValue, currentTargetEnergy);
-      await sb
-        .from("game_players")
-        .update({ current_energy: currentTargetEnergy - drained })
-        .eq("id", target.id);
-      target.current_energy = currentTargetEnergy - drained;
+    case "heal_steal": {
+      const stolen = Math.min(roundedValue, target.current_hp);
+      const newTargetHp = Math.max(0, target.current_hp - stolen);
+      const isAlive = newTargetHp > 0;
+      await sb.from("game_players").update({ current_hp: newTargetHp, is_alive: isAlive }).eq("id", target.id);
+      target.current_hp = newTargetHp;
+      target.is_alive = isAlive;
+
+      if (sourcePlayerId && gameId) {
+        const { data: sourcePlayer } = await sb
+          .from("game_players")
+          .select("*")
+          .eq("player_id", sourcePlayerId)
+          .eq("game_id", gameId)
+          .single();
+        if (sourcePlayer) {
+          const newSourceHp = Math.min(sourcePlayer.max_hp ?? STARTING_HP, sourcePlayer.current_hp + stolen);
+          await sb.from("game_players").update({ current_hp: newSourceHp }).eq("id", sourcePlayer.id);
+        }
+      }
       break;
     }
-    case "energy_gain": {
-      // Gain energy for target (usually self)
-      const currentSelfEnergy = target.current_energy ?? 0;
-      const newEnergy = Math.min(currentSelfEnergy + roundedValue, MAX_ENERGY);
-      await sb
-        .from("game_players")
-        .update({ current_energy: newEnergy })
-        .eq("id", target.id);
-      target.current_energy = newEnergy;
-      break;
-    }
-    case "shield":
-      // Shields are stored as active_effects, not applied instantly
-      // If called here, create a shield effect
+    case "shield_gain": {
       if (gameId) {
         await sb.from("active_effects").insert({
           game_id: gameId,
           target_player_id: target.id,
-          source_player_id: target.id, // self-shield
-          effect_type: "shield",
+          source_player_id: sourcePlayerId || target.id,
+          effect_type: "shield_gain",
           base_value: roundedValue,
           applied_at_round: 0,
           duration_rounds: 1,
@@ -690,10 +634,130 @@ async function applyInstantEffect(
         });
       }
       break;
-    case "debuff":
-      // Debuffs deal half damage
-      await applyInstantEffect("damage", Math.round(roundedValue / 2), target, gameId);
+    }
+    case "shield_steal": {
+      if (gameId) {
+        const { data: shields } = await sb
+          .from("active_effects")
+          .select("*")
+          .eq("game_id", gameId)
+          .eq("target_player_id", target.id)
+          .eq("effect_type", "shield_gain");
+
+        let stolen = 0;
+        if (shields && shields.length > 0) {
+          for (const shield of shields) {
+            if (stolen >= roundedValue) break;
+            const take = Math.min(shield.base_value, roundedValue - stolen);
+            stolen += take;
+            if (take >= shield.base_value) {
+              await sb.from("active_effects").delete().eq("id", shield.id);
+            } else {
+              await sb.from("active_effects").update({ base_value: shield.base_value - take }).eq("id", shield.id);
+            }
+          }
+        }
+        if (stolen > 0 && sourcePlayerId) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: sourcePlayerId,
+            source_player_id: sourcePlayerId,
+            effect_type: "shield_gain",
+            base_value: stolen,
+            applied_at_round: 0,
+            duration_rounds: 1,
+            card_id: "stolen-shield",
+          });
+        }
+      }
       break;
+    }
+    case "energy_gain": {
+      const currentSelfEnergy = target.current_energy ?? 0;
+      const newEnergy = Math.min(currentSelfEnergy + roundedValue, MAX_ENERGY);
+      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
+      target.current_energy = newEnergy;
+      break;
+    }
+    case "energy_steal": {
+      const currentTargetEnergy = target.current_energy ?? 0;
+      const drained = Math.min(roundedValue, currentTargetEnergy);
+      await sb.from("game_players").update({ current_energy: currentTargetEnergy - drained }).eq("id", target.id);
+      target.current_energy = currentTargetEnergy - drained;
+
+      if (sourcePlayerId && gameId) {
+        const { data: sourcePlayer } = await sb
+          .from("game_players")
+          .select("*")
+          .eq("player_id", sourcePlayerId)
+          .eq("game_id", gameId)
+          .single();
+        if (sourcePlayer) {
+          const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + drained, MAX_ENERGY);
+          await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
+        }
+      }
+      break;
+    }
+    case "energy_block":
+    case "heal_block":
+    case "shield_block": {
+      if (gameId) {
+        await sb.from("active_effects").insert({
+          game_id: gameId,
+          target_player_id: target.id,
+          source_player_id: sourcePlayerId || target.id,
+          effect_type: type,
+          base_value: roundedValue,
+          applied_at_round: 0,
+          duration_rounds: roundedValue,
+          card_id: "block-effect",
+        });
+      }
+      break;
+    }
+    case "affliction_amplify": {
+      if (gameId) {
+        await amplifyWorstAffliction(gameId, target.id, roundedValue);
+      }
+      break;
+    }
+    case "affliction_transfer": {
+      if (gameId && sourcePlayerId) {
+        const { data: sourceEffects } = await sb
+          .from("active_effects")
+          .select("*")
+          .eq("game_id", gameId)
+          .eq("target_player_id", sourcePlayerId)
+          .in("effect_type", ["damage", "self_damage"]);
+
+        if (sourceEffects && sourceEffects.length > 0) {
+          const worst = sourceEffects.sort((a, b) => b.base_value - a.base_value)[0];
+          await sb.from("active_effects")
+            .update({ target_player_id: target.id })
+            .eq("id", worst.id);
+        }
+      }
+      break;
+    }
+  }
+}
+
+// ─── Helper: Amplify Worst Affliction ────────────────────────
+async function amplifyWorstAffliction(gameId: string, targetId: string, amount: number): Promise<void> {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb
+    .from("active_effects")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("target_player_id", targetId)
+    .in("effect_type", ["damage", "self_damage"]);
+
+  if (effects && effects.length > 0) {
+    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
+    await sb.from("active_effects")
+      .update({ base_value: worst.base_value + amount })
+      .eq("id", worst.id);
   }
 }
 
@@ -736,7 +800,6 @@ async function advanceTurn(gameId: string): Promise<void> {
 
   const alivePlayers = allPlayers.filter((p) => p.is_alive);
 
-  // Check win condition
   if (alivePlayers.length <= 1) {
     const winner = alivePlayers[0];
     await sb
@@ -753,11 +816,9 @@ async function advanceTurn(gameId: string): Promise<void> {
   let nextIndex = (game.current_player_index + 1) % alivePlayers.length;
   let newRound = game.current_round;
 
-  // If we've wrapped around, new round
   if (nextIndex === 0) {
     newRound = game.current_round + 1;
 
-    // ─── Round 10 Game Over: highest HP wins ─────────────────
     if (newRound > MAX_ROUNDS) {
       const sortedByHp = [...alivePlayers].sort((a, b) => b.current_hp - a.current_hp);
       const winner = sortedByHp[0];
@@ -773,10 +834,13 @@ async function advanceTurn(gameId: string): Promise<void> {
       return;
     }
 
-    // Resolve compounding effects at round start
+    // ROUND 16 DOUBLING
+    if (newRound === ROUND_16_DOUBLING) {
+      await doubleAllAfflictions(gameId);
+    }
+
     await resolveActiveEffects(gameId, newRound);
 
-    // Re-check alive players after effect resolution (effects can kill)
     const { data: postEffectPlayers } = await sb
       .from("game_players")
       .select("*")
@@ -797,7 +861,6 @@ async function advanceTurn(gameId: string): Promise<void> {
       return;
     }
 
-    // Refresh energy and draw a card for each alive player
     for (const p of stillAlive) {
       const { data: freshPlayer } = await sb
         .from("game_players")
@@ -805,12 +868,11 @@ async function advanceTurn(gameId: string): Promise<void> {
         .eq("id", p.id)
         .single();
       if (freshPlayer && freshPlayer.is_alive) {
-        await refreshPlayerEnergy(freshPlayer, newRound);
+        await refreshPlayerEnergy(freshPlayer);
         await drawCard(freshPlayer);
       }
     }
 
-    // Recalculate nextIndex based on updated alive list
     nextIndex = 0;
   }
 
@@ -820,46 +882,44 @@ async function advanceTurn(gameId: string): Promise<void> {
     .eq("id", gameId);
 }
 
-// ─── Helper: Refresh Player Energy at Round Start ────────────
-async function refreshPlayerEnergy(player: any, newRound: number): Promise<void> {
+// ─── Helper: Refresh Player Energy (v4 — fixed 3/turn) ──────
+async function refreshPlayerEnergy(player: any): Promise<void> {
   const sb = getServerSupabase();
-
-  const baseEnergy = getBaseEnergyForRound(newRound);
-  const currentUnspent = player.current_energy ?? 0;
-  const chosenSin = player.chosen_sin as SinType;
-
-  let bonusEnergy = 0;
-
-  if (chosenSin === "sloth" && currentUnspent > 0) {
-    bonusEnergy = Math.min(currentUnspent, SLOTH_MAX_CARRYOVER);
-  } else if (chosenSin === "greed") {
-    bonusEnergy = player.bonus_energy ?? 0;
-  } else if (chosenSin === "envy") {
-    const { data: allPlayers } = await sb
-      .from("game_players")
-      .select("current_hp, is_alive, player_id")
-      .eq("game_id", player.game_id);
-    const anyOpponentHigherHp = (allPlayers || []).some(
-      (p: any) => p.player_id !== player.player_id && p.is_alive && p.current_hp > player.current_hp
-    );
-    if (anyOpponentHigherHp) {
-      bonusEnergy = ENVY_COVET_BONUS;
-    }
-  }
-
-  const totalEnergy = Math.min(baseEnergy + bonusEnergy, MAX_ENERGY);
+  const totalEnergy = MAX_ENERGY;
 
   await sb
     .from("game_players")
     .update({
       current_energy: totalEnergy,
       max_energy: totalEnergy,
-      bonus_energy: bonusEnergy,
+      bonus_energy: 0,
     })
     .eq("id", player.id);
 }
 
-// ─── Helper: Resolve Active Effects (Compounding Ticks) ──────
+// ─── Helper: Double All Afflictions (Round 16) ──────────────
+async function doubleAllAfflictions(gameId: string): Promise<void> {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb
+    .from("active_effects")
+    .select("*")
+    .eq("game_id", gameId);
+
+  if (!effects) return;
+
+  for (const effect of effects) {
+    if (
+      ["damage", "self_damage"].includes(effect.effect_type) &&
+      !effect.doubled
+    ) {
+      await sb.from("active_effects")
+        .update({ base_value: effect.base_value * 2, doubled: true })
+        .eq("id", effect.id);
+    }
+  }
+}
+
+// ─── Helper: Resolve Active Effects (v4 Compound Ticks) ─────
 async function resolveActiveEffects(gameId: string, currentRound: number): Promise<void> {
   const sb = getServerSupabase();
 
@@ -871,178 +931,44 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
   if (!effects) return;
 
   for (const effect of effects) {
-    // Handle compounding effects
-    if (effect.is_compounding) {
-      const tick = effect.current_tick ?? 1;
-
-      // If tick >= COMPOUND_DURATION, effect is done
-      if (tick >= COMPOUND_DURATION) {
-        await sb.from("active_effects").delete().eq("id", effect.id);
-        continue;
-      }
-
-      // Get target player
-      const { data: target } = await sb
-        .from("game_players")
-        .select("*")
-        .eq("id", effect.target_player_id)
-        .single();
-
-      if (!target || !target.is_alive) {
-        await sb.from("active_effects").delete().eq("id", effect.id);
-        continue;
-      }
-
-      // Calculate tick value using Fibonacci multipliers
-      const tickValue = getCompoundTickValue(effect.base_value, tick);
-
-      // Apply the effect
-      if (effect.effect_type === "shield") {
-        // Add shield as a new active_effect
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: effect.source_player_id,
-          effect_type: "shield",
-          base_value: tickValue,
-          applied_at_round: currentRound,
-          duration_rounds: 1,
-          card_id: effect.card_id,
-        });
-      } else {
-        await applyInstantEffect(effect.effect_type, tickValue, target, gameId);
-      }
-
-      // Advance tick or expire
-      const nextTick = tick + 1;
-      if (nextTick >= COMPOUND_DURATION) {
-        await sb.from("active_effects").delete().eq("id", effect.id);
-      } else {
-        await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
-      }
-    } else {
-      // Non-compounding persistent effects (flat shields, debuffs, etc.)
-      const roundsActive = currentRound - effect.applied_at_round;
-
-      if (roundsActive > effect.duration_rounds) {
-        await sb.from("active_effects").delete().eq("id", effect.id);
-        continue;
-      }
-
-      // Only resolve non-shield persistent effects (shields are passive)
-      if (effect.effect_type !== "shield") {
-        const { data: target } = await sb
-          .from("game_players")
-          .select("*")
-          .eq("id", effect.target_player_id)
-          .single();
-
-        if (!target || !target.is_alive) {
+    if (["shield_gain", "heal_block", "shield_block", "energy_block"].includes(effect.effect_type)) {
+      if (effect.effect_type.endsWith("_block")) {
+        const roundsActive = currentRound - effect.applied_at_round;
+        if (roundsActive > effect.duration_rounds) {
           await sb.from("active_effects").delete().eq("id", effect.id);
-          continue;
-        }
-
-        switch (effect.effect_type) {
-          case "damage":
-            await applyInstantEffect("damage", effect.base_value, target, gameId);
-            break;
-          case "heal":
-            await applyInstantEffect("heal", effect.base_value, target, gameId);
-            break;
-          case "debuff":
-            await applyInstantEffect("damage", Math.round(effect.base_value / 2), target, gameId);
-            break;
         }
       }
+      continue;
+    }
+
+    const tick = effect.current_tick ?? 0;
+    const pattern: CompoundPattern = effect.compound_pattern || "standard";
+
+    if (tick >= effect.duration_rounds) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+
+    const { data: target } = await sb
+      .from("game_players")
+      .select("*")
+      .eq("id", effect.target_player_id)
+      .single();
+
+    if (!target || !target.is_alive) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+
+    const tickValue = getCompoundTickValue(effect.base_value, pattern, tick);
+    await applyInstantEffect(effect.effect_type, tickValue, target, gameId, effect.source_player_id);
+
+    const nextTick = tick + 1;
+    if (nextTick >= effect.duration_rounds) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+    } else {
+      await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
     }
   }
 }
 
-// ─── Overcharge (Wrath Passive) ─────────────────────────────
-export async function overcharge(
-  gameId: string,
-  playerId: string
-): Promise<{ success: boolean; newEnergy: number; newHp: number }> {
-  const sb = getServerSupabase();
-
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game || game.status !== "active") throw new Error("Game not active");
-
-  const { data: player } = await sb
-    .from("game_players")
-    .select("*")
-    .eq("game_id", gameId)
-    .eq("player_id", playerId)
-    .single();
-
-  if (!player) throw new Error("Player not in game");
-  if (!player.is_alive) throw new Error("Player is eliminated");
-  if (player.chosen_sin !== "wrath") throw new Error("Only Wrath players can Overcharge");
-
-  const currentEnergy = player.current_energy ?? 0;
-  if (currentEnergy >= MAX_ENERGY) throw new Error("Already at max corruption");
-  if (player.current_hp <= WRATH_OVERCHARGE_HP_COST) throw new Error("Not enough HP to Overcharge");
-
-  const { data: allPlayers } = await sb
-    .from("game_players")
-    .select("*")
-    .eq("game_id", gameId)
-    .order("seat_index");
-
-  if (!allPlayers) throw new Error("Failed to fetch players");
-  const alivePlayers = allPlayers.filter((p: any) => p.is_alive);
-  const currentTurnPlayer = alivePlayers[game.current_player_index % alivePlayers.length];
-  if (currentTurnPlayer.player_id !== playerId) throw new Error("Not your turn");
-
-  const newHp = Math.max(0, player.current_hp - WRATH_OVERCHARGE_HP_COST);
-  const newEnergy = Math.min(currentEnergy + WRATH_OVERCHARGE_ENERGY_GAIN, MAX_ENERGY);
-  const isAlive = newHp > 0;
-
-  await sb
-    .from("game_players")
-    .update({
-      current_hp: newHp,
-      is_alive: isAlive,
-      current_energy: newEnergy,
-      max_energy: Math.max(player.max_energy ?? 0, newEnergy),
-    })
-    .eq("id", player.id);
-
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    player_id: player.id,
-    action_type: "overcharge",
-    action_data: { hpCost: WRATH_OVERCHARGE_HP_COST, energyGained: WRATH_OVERCHARGE_ENERGY_GAIN },
-    round_number: game.current_round,
-  });
-
-  return { success: true, newEnergy, newHp };
-}
-
-// ─── Helper: Evaluate Catch-Up Condition ────────────────────
-function evaluateCatchupCondition(
-  condition: CatchupCondition,
-  playerHp: number,
-  allPlayers: any[],
-  playerId: string,
-  targetPlayerId?: string
-): boolean {
-  const alivePlayers = allPlayers.filter((p) => p.is_alive);
-  const opponents = alivePlayers.filter((p) => p.player_id !== playerId);
-
-  switch (condition) {
-    case "hp_less_than_target": {
-      if (!targetPlayerId) return false;
-      const target = alivePlayers.find((p) => p.player_id === targetPlayerId);
-      return target ? playerHp < target.current_hp : false;
-    }
-    case "hp_less_than_any_opponent":
-      return opponents.some((p) => playerHp < p.current_hp);
-    case "hp_below_threshold":
-      return playerHp <= CATCHUP_HP_THRESHOLD;
-    case "hp_lowest":
-      return alivePlayers.every((p) => p.player_id === playerId || playerHp <= p.current_hp);
-    default:
-      return false;
-  }
-}

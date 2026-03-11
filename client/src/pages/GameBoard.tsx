@@ -25,7 +25,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
-import { playCard, passTurn, getGameLog, clientOvercharge } from "@/lib/gameEngine";
+import { playCard, passTurn, getGameLog } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +33,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, WRATH_OVERCHARGE_HP_COST, WRATH_OVERCHARGE_ENERGY_GAIN } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 import { lazy, Suspense } from "react";
@@ -89,7 +89,6 @@ export default function GameBoard() {
   const [isPlayingCard, setIsPlayingCard] = useState(false);
   const [isPassing, setIsPassing] = useState(false);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
-  const [isOvercharging, setIsOvercharging] = useState(false);
   const { setCurrentPage } = useTutorial();
 
   const actionFeed = useRef<ActionFeedEntry[]>([]);
@@ -282,7 +281,7 @@ export default function GameBoard() {
     const card = CARD_MAP[selectedCard];
     if (!card) return;
     const target = overrideTarget || selectedTarget;
-    const needsTarget = card.effects.some((e) => e.target === "single_enemy");
+    const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
     if (needsTarget && !target) {
       addMessage("Pick a target, sinner. The card won't throw itself.", "info");
       return;
@@ -296,13 +295,13 @@ export default function GameBoard() {
         else if (sin === "sloth") soundEngine.play("damage_ice");
         else if (sin === "envy") soundEngine.play("damage_electric");
         else soundEngine.play("damage_generic");
-      } else if (soundTypes.includes("heal")) {
+      } else if (soundTypes.includes("heal_gain") || soundTypes.includes("heal_steal")) {
         soundEngine.play("heal");
-      } else if (soundTypes.includes("shield")) {
+      } else if (soundTypes.includes("shield_gain") || soundTypes.includes("shield_steal")) {
         soundEngine.play("shield");
-      } else if (soundTypes.includes("energy_drain")) {
+      } else if (soundTypes.includes("energy_steal") || soundTypes.includes("energy_block")) {
         soundEngine.play("energy_drain");
-      } else if (soundTypes.includes("debuff")) {
+      } else if (soundTypes.includes("affliction_amplify") || soundTypes.includes("affliction_transfer")) {
         soundEngine.play("steal");
       } else {
         soundEngine.play("card_play");
@@ -346,10 +345,10 @@ export default function GameBoard() {
       for (const eff of card.effects) {
         const val = eff.baseValue || 0;
         if (val > 0) {
-          const numType: 'damage'|'heal'|'shield'|null = eff.type === 'damage' ? 'damage' : eff.type === 'heal' ? 'heal' : eff.type === 'shield' ? 'shield' : null;
+          const numType: 'damage'|'heal'|'shield'|null = (eff.type === 'damage' || eff.type === 'self_damage') ? 'damage' : (eff.type === 'heal_gain' || eff.type === 'heal_steal') ? 'heal' : (eff.type === 'shield_gain' || eff.type === 'shield_steal') ? 'shield' : null;
           if (numType) {
             const xBase = 50 + (Math.random() - 0.5) * 30;
-            const yBase = eff.target === 'self' ? 70 : 30;
+            const yBase = eff.targetMode === 'self' ? 70 : 30;
             setFloatingNumbers(prev => [...prev, { id: `${Date.now()}-${eff.type}`, value: val, type: numType, x: xBase, y: yBase }]);
           }
           if (eff.type === 'damage') {
@@ -407,7 +406,7 @@ export default function GameBoard() {
     if (!selectedCard) return;
     const card = CARD_MAP[selectedCard];
     if (!card) return;
-    const needsTarget = card.effects.some((e) => e.target === "single_enemy");
+    const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
     if (needsTarget) {
       setSelectedTarget(targetId);
       handlePlayCard(targetId);
@@ -433,23 +432,7 @@ export default function GameBoard() {
     }
   };
 
-  const handleOvercharge = async () => {
-    if (!gameId) return;
-    setIsOvercharging(true);
-    soundEngine.play("damage_fire");
-    try {
-      await clientOvercharge(gameId, playerId);
-      addMessage(`Overcharged! Burned ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption.`, "action");
-      addToActionFeed(`${myPlayer?.username} overcharged (+${WRATH_OVERCHARGE_ENERGY_GAIN} energy)`);
-      refetch();
-    } catch (err: any) {
-      addMessage(err.message, "info");
-    } finally {
-      setIsOvercharging(false);
-    }
-  };
 
-  const canOvercharge = isMyTurn && myPlayer?.chosenSin === "wrath" && (myPlayer?.currentEnergy ?? 0) < MAX_ENERGY && (myPlayer?.currentHp ?? 0) > WRATH_OVERCHARGE_HP_COST;
 
   const getPlayerEffects = (player: PlayerState) =>
     gameState?.activeEffects.filter((e) => e.targetPlayerId === player.gamePlayerId) || [];
@@ -954,24 +937,9 @@ export default function GameBoard() {
                   {isPlayingCard ? "PLAYING..." : "PLAY"}
                 </motion.button>
               )}
-              {canOvercharge && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-3 md:px-6 py-2 md:py-3 rounded-lg bg-wrath/20 border-2 border-wrath/40 text-wrath text-xs md:text-sm font-bold uppercase tracking-wide hover:bg-wrath/30 transition-all disabled:opacity-50"
-                  style={{ 
-                    fontFamily: "var(--font-heading)",
-                    animation: isMyTurn ? "pulse 2s infinite" : "none"
-                  }}
-                  onClick={handleOvercharge}
-                  disabled={isOvercharging}
-                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption`}
-                >
-                  {isOvercharging ? "BURNING..." : "OVERCHARGE"}
-                </motion.button>
-              )}
+
               {/* END TURN — prominent gold button when energy is depleted */}
-              {(myPlayer?.currentEnergy ?? 0) === 0 && !canOvercharge && (
+              {(myPlayer?.currentEnergy ?? 0) === 0 && (
                 <motion.button
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
@@ -999,7 +967,7 @@ export default function GameBoard() {
                 </motion.button>
               )}
               {/* PASS — subtle when energy remains */}
-              {((myPlayer?.currentEnergy ?? 0) > 0 || canOvercharge) && (
+              {(myPlayer?.currentEnergy ?? 0) > 0 && (
                 <motion.button
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
@@ -1147,8 +1115,8 @@ const PlayerPanel = memo(function PlayerPanel({
   })();
 
   const shieldValue = activeEffects
-    .filter((e) => e.effectType === "shield")
-    .reduce((sum, e) => sum + (e.isCompounding ? getCompoundTickValue(e.baseValue, e.currentTick || 0) : e.baseValue), 0);
+    .filter((e) => e.effectType === "shield_gain")
+    .reduce((sum, e) => sum + Math.round(getCompoundTickValue(e.baseValue, e.compoundPattern || "standard", e.currentTick || 0)), 0);
 
   const shieldPercent = player.maxHp > 0 ? Math.min((shieldValue / player.maxHp) * 100, 100) : 0;
 

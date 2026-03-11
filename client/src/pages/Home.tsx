@@ -43,49 +43,49 @@ const SIN_HEROES: SinHeroData[] = [
   {
     key: "wrath", name: "WRATH", latin: "IRA", subtitle: "The Destroyer",
     tagline: "Burn everything. Self-harm is just collateral. Impulse control is for the weak.",
-    desc: "Overcharge: Burn 2 HP for +1 energy. Siphon: Heal 10% of compound damage dealt.",
+    desc: "Fury: +1 bonus damage on all attacks. Pure aggression, no subtlety.",
     color: "wrath",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-wrath-TeSKthKHRdCAbA6HrjewHv.webp",
   },
   {
     key: "sloth", name: "SLOTH", latin: "ACEDIA", subtitle: "The Enduring",
     tagline: "Outlast everyone. Shields and heals that grow over time. Patience is a weapon.",
-    desc: "Lethargy: Carry over unspent energy to the next round.",
+    desc: "Endurance: Gain +1 shield at the start of each round. Outlast everyone.",
     color: "sloth",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-sloth-oJiaiRD273Z7ZfsDE8JiiD.webp",
   },
   {
     key: "greed", name: "GREED", latin: "AVARITIA", subtitle: "The Collector",
     tagline: "Steal resources. Drain opponents. Everything has a price, and you're collecting.",
-    desc: "Avarice: Spending 4+ energy grants bonus energy next round.",
+    desc: "Avarice: Spending 3+ energy in a turn grants +1 bonus energy next round.",
     color: "greed",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-greed-fEbEo6DMdYo6bqsMextgsR.webp",
   },
   {
     key: "envy", name: "ENVY", latin: "INVIDIA", subtitle: "The Mimic",
     tagline: "Copy strengths. Punish the strong. If you can't beat them, become them.",
-    desc: "Covet: Gain +1 energy when an opponent has more HP than you.",
+    desc: "Jealousy: Steal effects deal +1 extra. Take what others have.",
     color: "envy",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-envy-gZJhB9uBpa2wku9NUmabkD.webp",
   },
   {
     key: "pride", name: "PRIDE", latin: "SUPERBIA", subtitle: "The Exalted",
     tagline: "Ascend above all. Free cards build divine shields. Perfection is your birthright.",
-    desc: "Hubris: Playing a 0-cost card grants +2 shield.",
+    desc: "Hubris: Playing a 0-cost card grants +1 shield. Elegance through efficiency.",
     color: "pride",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-pride-Yeo45kXyHSX3c74SFiP9Fu.webp",
   },
   {
     key: "lust", name: "LUST", latin: "LUXURIA", subtitle: "The Temptress",
     tagline: "Seduce and drain. Each strike heals you. Desire is the sweetest poison.",
-    desc: "Temptation: Dealing single-target damage heals you for 1 HP.",
+    desc: "Temptation: Dealing single-target damage heals you for 1 HP. Desire sustains.",
     color: "lust",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-lust-MFSDRVMFLfbKcSyzMA5fPX.webp",
   },
   {
     key: "gluttony", name: "GLUTTONY", latin: "GULA", subtitle: "The Devourer",
     tagline: "Consume everything. AoE attacks fuel your hunger. More is never enough.",
-    desc: "Devour: Playing an AoE card grants +1 energy.",
+    desc: "Devour: AoE effects deal +1 bonus damage. Hunger feeds on the crowd.",
     color: "gluttony",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-gluttony-HzraaUCvjS3VoYDUowX6aj.webp",
   },
@@ -594,58 +594,71 @@ export default function Home() {
           <div className="max-w-3xl mx-auto">
             <div className="text-center mb-8">
               <p className="text-[10px] tracking-[0.4em] text-white/30 uppercase mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                The Two Paths of Sin
+                The Three Patterns of Sin
               </p>
               <h2 className="text-xl md:text-2xl font-black text-white/90 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                FLAT vs COMPOUNDING
+                COMPOUND PATTERNS
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Flat */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Standard */}
               <div className="rounded-xl p-5 border border-white/8 bg-white/3">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-sloth/10 border border-sloth/20 flex items-center justify-center">
+                    <img src={ICON_URLS.shield_generic} alt="" className="w-4 h-4 object-contain" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-sloth tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>STANDARD</h3>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Steady Growth</p>
+                  </div>
+                </div>
+                <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                  Scales linearly each tick. Reliable and predictable — the backbone of most decks.
+                </p>
+              </div>
+
+              {/* Aggressive */}
+              <div className="rounded-xl p-5 border border-wrath/8 bg-wrath/3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-wrath/10 border border-wrath/20 flex items-center justify-center">
                     <img src={ICON_URLS.damage_wrath} alt="" className="w-4 h-4 object-contain" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-wrath tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>FLAT</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Instant Judgement</p>
+                    <h3 className="text-sm font-bold text-wrath tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>AGGRESSIVE</h3>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Front-loaded</p>
                   </div>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  One devastating blow. Resolves immediately. No patience required — just wrath.
+                  Hits hard early, then fades. Maximum pressure in the first ticks.
                 </p>
               </div>
 
-              {/* Compounding */}
+              {/* Slowburn */}
               <div className="rounded-xl p-5 border border-greed-glow/8 bg-greed-glow/3">
                 <div className="flex items-center gap-2 mb-3">
                   <div className="w-8 h-8 rounded-lg bg-greed-glow/10 border border-greed-glow/20 flex items-center justify-center">
                     <img src={ICON_URLS.buff_generic} alt="" className="w-4 h-4 object-contain" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-greed-glow tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>COMPOUNDING</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>3-Round Penance</p>
+                    <h3 className="text-sm font-bold text-greed-glow tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>SLOWBURN</h3>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Exponential Payoff</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-white/50 leading-relaxed mb-3" style={{ fontFamily: "var(--font-body)" }}>
-                  Ticks for 3 rounds with Fibonacci scaling [1, 1, 2]. Pay once, collect thrice.
+                <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                  Weak at first, devastating at the end. Patience rewarded with exponential scaling.
                 </p>
-                <div className="flex items-center gap-3 justify-center">
-                  {[{ val: "1×", label: "TICK 1" }, { val: "1×", label: "TICK 2" }, { val: "2×", label: "PAYOFF" }].map((tick, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className="text-center">
-                        <div className={`w-9 h-9 rounded-lg flex items-center justify-center border ${i === 2 ? "bg-greed-glow/10 border-greed-glow/25" : "bg-greed-glow/5 border-greed-glow/12"}`}>
-                          <span className="text-xs font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>{tick.val}</span>
-                        </div>
-                        <p className="text-[7px] text-white/30 mt-0.5" style={{ fontFamily: "var(--font-heading)" }}>{tick.label}</p>
-                      </div>
-                      {i < 2 && <span className="text-white/15 text-xs mb-3">&rarr;</span>}
-                    </div>
-                  ))}
-                </div>
               </div>
+            </div>
+
+            {/* Round 16 Warning */}
+            <div className="mt-6 rounded-xl p-4 border border-wrath/15 bg-wrath/5 text-center">
+              <p className="text-[11px] text-wrath/80 font-bold uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                &#x26A0; Round 16: The Reckoning
+              </p>
+              <p className="text-[10px] text-white/40 mt-1" style={{ fontFamily: "var(--font-body)" }}>
+                All afflictions deal double damage from round 16 onward. End it fast, or be consumed.
+              </p>
             </div>
           </div>
         </section>
@@ -660,7 +673,7 @@ export default function Home() {
               {[
                 { num: "1", label: "Pick a sin", color: "wrath" },
                 { num: "2", label: "Spend corruption", color: "candle" },
-                { num: "3", label: "Flat or compound", color: "greed-glow" },
+                { num: "3", label: "Play compounds", color: "greed-glow" },
                 { num: "4", label: "Last sinner wins", color: "sloth" },
               ].map((step) => (
                 <div key={step.num} className="text-center">
@@ -677,7 +690,7 @@ export default function Home() {
         {/* ─── Footer ─── */}
         <footer className="py-8 px-4 text-center border-t border-white/5">
           <p className="text-[9px] text-white/20 mb-3" style={{ fontFamily: "var(--font-body)" }}>
-            252 cards &middot; 7 factions &middot; 10 rounds &middot; Fibonacci compounding &middot; Zero mercy
+            252 cards &middot; 7 factions &middot; 20 rounds &middot; 50 HP &middot; 3 compound patterns &middot; Zero mercy
           </p>
           <div className="text-[8px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
             <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>

@@ -1,22 +1,20 @@
 /**
- * Player Affliction Table — Expand-on-Hover Detail Matrix
+ * Player Affliction Table — Expand-on-Hover Detail Matrix (v4)
  *
  * A compact summary icon strip that sits adjacent to each player panel.
  * On hover, it smoothly expands into a full readable table showing
  * active afflictions with columns per effect type and rows per round.
  *
- * Default (collapsed): shows small colored pips per active effect type.
- * Expanded (hover): full table with round rows, values, and totals.
+ * v4: All effects are compound. Uses compoundPattern instead of isCompounding.
  */
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ICON_URLS } from "@/lib/assetUrls";
-import type { EffectType } from "@shared/gameTypes";
+import type { EffectType, CompoundPattern } from "@shared/gameTypes";
 import {
   ActiveEffect,
   getCompoundTickValue,
-  COMPOUND_MULTIPLIERS,
   PlayerState,
 } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
@@ -26,9 +24,7 @@ interface PlayerAfflictionTableProps {
   activeEffects: ActiveEffect[];
   currentRound: number;
   maxRound: number;
-  /** Position relative to the player panel */
   position?: "left" | "right" | "below";
-  /** Compact mode for mobile */
   compact?: boolean;
 }
 
@@ -54,25 +50,34 @@ const EFFECT_COLUMNS: EffectColumn[] = [
     sign: "-",
   },
   {
-    type: "debuff",
-    label: "DEBUFF",
-    shortLabel: "DBF",
-    color: "oklch(0.55 0.18 290)",
-    textClass: "text-violet-400",
-    icon: ICON_URLS.debuff_wrath,
+    type: "self_damage",
+    label: "SELF",
+    shortLabel: "SLF",
+    color: "oklch(0.55 0.20 25)",
+    textClass: "text-wrath",
+    icon: ICON_URLS.damage_wrath,
     sign: "-",
   },
   {
-    type: "energy_drain",
-    label: "E.DRAIN",
-    shortLabel: "EDR",
+    type: "heal_steal",
+    label: "H.STEAL",
+    shortLabel: "HST",
+    color: "oklch(0.60 0.22 350)",
+    textClass: "text-lust",
+    icon: ICON_URLS.heal_generic,
+    sign: "-",
+  },
+  {
+    type: "energy_steal",
+    label: "E.STEAL",
+    shortLabel: "EST",
     color: "oklch(0.50 0.15 310)",
     textClass: "text-purple-400",
     icon: ICON_URLS.energy_generic,
     sign: "-",
   },
   {
-    type: "heal",
+    type: "heal_gain",
     label: "HEAL",
     shortLabel: "HEL",
     color: "oklch(0.60 0.18 155)",
@@ -81,21 +86,12 @@ const EFFECT_COLUMNS: EffectColumn[] = [
     sign: "+",
   },
   {
-    type: "shield",
+    type: "shield_gain",
     label: "SHIELD",
     shortLabel: "SHD",
     color: "oklch(0.70 0.12 220)",
     textClass: "text-sky-400",
     icon: ICON_URLS.shield_generic,
-    sign: "+",
-  },
-  {
-    type: "buff",
-    label: "BUFF",
-    shortLabel: "BUF",
-    color: "oklch(0.75 0.15 85)",
-    textClass: "text-candle",
-    icon: ICON_URLS.buff_generic,
     sign: "+",
   },
   {
@@ -109,11 +105,26 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
 ];
 
+// All possible effect types for Record initialization
+const ALL_EFFECT_TYPES: EffectType[] = [
+  "damage", "self_damage", "heal_gain", "heal_steal", "shield_gain",
+  "shield_steal", "energy_gain", "energy_steal", "heal_block",
+  "shield_block", "energy_block", "affliction_amplify", "affliction_transfer",
+];
+
 // ─── Projection logic ───────────────────────────────────────
 interface RoundRow {
   round: number;
   values: Record<EffectType, number>;
   details: Record<EffectType, { name: string; value: number; tick?: string }[]>;
+}
+
+function makeEmptyRecord<T>(defaultVal: T): Record<EffectType, T> {
+  const rec = {} as Record<EffectType, T>;
+  for (const t of ALL_EFFECT_TYPES) {
+    rec[t] = typeof defaultVal === "object" ? (JSON.parse(JSON.stringify(defaultVal)) as T) : defaultVal;
+  }
+  return rec;
 }
 
 function projectEffectsMatrix(
@@ -127,14 +138,8 @@ function projectEffectsMatrix(
 
   const makeRow = (round: number): RoundRow => ({
     round,
-    values: {
-      damage: 0, heal: 0, shield: 0, buff: 0, debuff: 0,
-      energy_drain: 0, energy_gain: 0, damage_all: 0, self_damage: 0,
-    },
-    details: {
-      damage: [], heal: [], shield: [], buff: [], debuff: [],
-      energy_drain: [], energy_gain: [], damage_all: [], self_damage: [],
-    },
+    values: makeEmptyRecord(0),
+    details: makeEmptyRecord([] as { name: string; value: number; tick?: string }[]),
   });
 
   for (let r = currentRound; r <= maxProjection; r++) {
@@ -145,48 +150,27 @@ function projectEffectsMatrix(
     const card = CARD_MAP[effect.cardId];
     const cardName = card?.name || "???";
     const et = effect.effectType;
+    const pattern: CompoundPattern = effect.compoundPattern || "standard";
+    const totalTicks = effect.durationRounds;
+    const currentTick = effect.currentTick || 0;
 
-    if (effect.isCompounding) {
-      const totalTicks = COMPOUND_MULTIPLIERS.length;
-      const currentTick = effect.currentTick || 0;
+    for (let tick = currentTick; tick < totalTicks; tick++) {
+      const tickValue = Math.round(getCompoundTickValue(effect.baseValue, pattern, tick));
+      const roundForTick = currentRound + (tick - currentTick);
+      if (roundForTick > maxProjection) break;
 
-      for (let tick = currentTick; tick < totalTicks; tick++) {
-        const tickValue = getCompoundTickValue(effect.baseValue, tick);
-        const roundForTick = currentRound + (tick - currentTick);
-        if (roundForTick > maxProjection) break;
-
-        if (!roundMap.has(roundForTick)) {
-          roundMap.set(roundForTick, makeRow(roundForTick));
-        }
-
-        const row = roundMap.get(roundForTick)!;
-        row.values[et] += tickValue;
-        row.details[et].push({
-          name: cardName,
-          value: tickValue,
-          tick: `${tick + 1}/${totalTicks}`,
-        });
-        activeTypes.add(et);
+      if (!roundMap.has(roundForTick)) {
+        roundMap.set(roundForTick, makeRow(roundForTick));
       }
-    } else {
-      const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
-      for (
-        let round = currentRound;
-        round <= Math.min(expiresAtRound, maxProjection);
-        round++
-      ) {
-        if (!roundMap.has(round)) {
-          roundMap.set(round, makeRow(round));
-        }
 
-        const row = roundMap.get(round)!;
-        row.values[et] += effect.baseValue;
-        row.details[et].push({
-          name: cardName,
-          value: effect.baseValue,
-        });
-        activeTypes.add(et);
-      }
+      const row = roundMap.get(roundForTick)!;
+      row.values[et] += tickValue;
+      row.details[et].push({
+        name: cardName,
+        value: tickValue,
+        tick: `${tick + 1}/${totalTicks}`,
+      });
+      activeTypes.add(et);
     }
   }
 
@@ -232,10 +216,7 @@ export default function PlayerAfflictionTable({
   if (visibleColumns.length === 0) return null;
 
   // Calculate totals per column
-  const totals: Record<EffectType, number> = {
-    damage: 0, heal: 0, shield: 0, buff: 0, debuff: 0,
-    energy_drain: 0, energy_gain: 0, damage_all: 0, self_damage: 0,
-  };
+  const totals = makeEmptyRecord(0);
   for (const row of rows) {
     for (const col of visibleColumns) {
       totals[col.type] += row.values[col.type];
@@ -265,7 +246,6 @@ export default function PlayerAfflictionTable({
             className="flex flex-col gap-1 items-center cursor-pointer"
             title="Hover to expand afflictions"
           >
-            {/* Small icon strip showing active effect types */}
             <div
               className="rounded-lg px-2 py-1.5 flex flex-col gap-1 items-center"
               style={{
@@ -298,7 +278,6 @@ export default function PlayerAfflictionTable({
             </div>
           </motion.div>
         ) : (
-          /* Expanded state: full readable table */
           <motion.div
             key="expanded"
             initial={{ opacity: 0, scale: 0.92, y: -4 }}
@@ -411,10 +390,9 @@ export default function PlayerAfflictionTable({
                                 {col.sign}{val}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-muted-foreground/20">—</span>
+                              <span className="text-[10px] text-muted-foreground/20">&mdash;</span>
                             )}
 
-                            {/* Hover tooltip with card name details */}
                             {details.length > 0 && (
                               <div className="hidden group-hover:block absolute left-1/2 -translate-x-1/2 top-full mt-1 z-[60] min-w-[130px]">
                                 <div
@@ -481,7 +459,7 @@ export default function PlayerAfflictionTable({
                             {col.sign}{total}
                           </span>
                         ) : (
-                          <span className="text-[10px] text-muted-foreground/20">—</span>
+                          <span className="text-[10px] text-muted-foreground/20">&mdash;</span>
                         )}
                       </div>
                     );

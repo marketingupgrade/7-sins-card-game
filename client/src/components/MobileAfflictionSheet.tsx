@@ -1,5 +1,5 @@
 /**
- * MobileAfflictionSheet — Touch-friendly bottom sheet for affliction details
+ * MobileAfflictionSheet — Touch-friendly bottom sheet for affliction details (v4)
  *
  * Replaces hover-to-expand affliction table on mobile.
  * Tap the icon strip → bottom sheet slides up with full details.
@@ -8,7 +8,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useState } from "react";
 import { ICON_URLS } from "@/lib/assetUrls";
-import type { EffectType, ActiveEffect, PlayerState } from "@shared/gameTypes";
+import type { EffectType, ActiveEffect, PlayerState, CompoundPattern } from "@shared/gameTypes";
 import { getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 
@@ -28,14 +28,12 @@ interface EffectColumn {
 
 const EFFECT_COLUMNS: EffectColumn[] = [
   { type: "damage", label: "DMG", color: "oklch(0.65 0.22 25)", icon: ICON_URLS.damage_wrath, sign: "-" },
-  { type: "debuff", label: "DEBUFF", color: "oklch(0.55 0.18 290)", icon: ICON_URLS.debuff_wrath, sign: "-" },
-  { type: "energy_drain", label: "E.DRAIN", color: "oklch(0.50 0.15 310)", icon: ICON_URLS.energy_generic, sign: "-" },
-  { type: "heal", label: "HEAL", color: "oklch(0.60 0.18 155)", icon: ICON_URLS.heal_generic, sign: "+" },
-  { type: "shield", label: "SHIELD", color: "oklch(0.65 0.15 200)", icon: ICON_URLS.shield_generic, sign: "+" },
-  { type: "buff", label: "BUFF", color: "oklch(0.70 0.15 85)", icon: ICON_URLS.buff_generic, sign: "+" },
-  { type: "energy_gain", label: "E.GAIN", color: "oklch(0.65 0.18 85)", icon: ICON_URLS.energy_generic, sign: "+" },
-  { type: "damage_all", label: "AOE", color: "oklch(0.60 0.20 40)", icon: ICON_URLS.damage_wrath, sign: "-" },
   { type: "self_damage", label: "SELF", color: "oklch(0.55 0.15 350)", icon: ICON_URLS.damage_wrath, sign: "-" },
+  { type: "heal_steal", label: "H.STEAL", color: "oklch(0.60 0.22 350)", icon: ICON_URLS.heal_generic, sign: "-" },
+  { type: "energy_steal", label: "E.STEAL", color: "oklch(0.50 0.15 310)", icon: ICON_URLS.energy_generic, sign: "-" },
+  { type: "heal_gain", label: "HEAL", color: "oklch(0.60 0.18 155)", icon: ICON_URLS.heal_generic, sign: "+" },
+  { type: "shield_gain", label: "SHIELD", color: "oklch(0.65 0.15 200)", icon: ICON_URLS.shield_generic, sign: "+" },
+  { type: "energy_gain", label: "E.GAIN", color: "oklch(0.65 0.18 85)", icon: ICON_URLS.energy_generic, sign: "+" },
 ];
 
 export const MobileAfflictionSheet = memo(function MobileAfflictionSheet({
@@ -51,11 +49,8 @@ export const MobileAfflictionSheet = memo(function MobileAfflictionSheet({
     const effects = activeEffects.filter((e) => e.effectType === col.type);
     let total = 0;
     for (const eff of effects) {
-      if (eff.isCompounding) {
-        total += getCompoundTickValue(eff.baseValue, eff.currentTick || 0);
-      } else {
-        total += eff.baseValue;
-      }
+      const pattern: CompoundPattern = eff.compoundPattern || "standard";
+      total += Math.round(getCompoundTickValue(eff.baseValue, pattern, eff.currentTick || 0));
     }
     totals[col.type] = total;
   }
@@ -145,7 +140,7 @@ export const MobileAfflictionSheet = memo(function MobileAfflictionSheet({
                         <div className="flex flex-wrap gap-1 mt-0.5">
                           {effects.map((eff, i) => (
                             <span key={i} className="text-xs text-foreground/50">
-                              {CARD_MAP[eff.cardId]?.name || "Unknown"}{eff.isCompounding ? ` (tick ${(eff.currentTick || 0) + 1}/3)` : ""}
+                              {CARD_MAP[eff.cardId]?.name || "Unknown"} (tick {(eff.currentTick || 0) + 1}/{eff.durationRounds})
                               {i < effects.length - 1 ? "," : ""}
                             </span>
                           ))}

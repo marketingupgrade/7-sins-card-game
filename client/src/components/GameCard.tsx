@@ -5,15 +5,15 @@
  * Wrath bleeds crimson. Sloth oozes twilight indigo.
  * Greed gleams tarnished gold. Envy seethes poison emerald.
  *
- * Cards are either FLAT (instant, one-time) or COMPOUNDING (3-round Fibonacci escalation).
+ * ALL cards are compound in v4 — 3 patterns: standard, aggressive, slowburn.
  *
- * v3: Gothic theme — spell icons replace Lucide, ornate borders, cathedral aesthetic
+ * v4: Gothic theme — spell icons replace Lucide, ornate borders, cathedral aesthetic
  */
 
 import { motion } from "framer-motion";
 import { useRef, useCallback, useState, memo } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
-import { CardDefinition, SinType, COMPOUND_MULTIPLIERS, getCompoundTickValue } from "@shared/gameTypes";
+import { CardDefinition, SinType, CompoundPattern, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";
 import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
@@ -30,12 +30,24 @@ interface GameCardProps {
 
 const effectColors: Record<string, string> = {
   damage: "text-wrath",
-  heal: "text-envy-glow",
-  shield: "text-candle",
-  buff: "text-greed-glow",
-  debuff: "text-sloth",
-  energy_drain: "text-wrath",
+  self_damage: "text-wrath",
+  heal_gain: "text-envy-glow",
+  heal_steal: "text-lust",
+  shield_gain: "text-candle",
+  shield_steal: "text-candle",
   energy_gain: "text-envy-glow",
+  energy_steal: "text-greed-glow",
+  heal_block: "text-sloth",
+  shield_block: "text-sloth",
+  energy_block: "text-sloth",
+  affliction_amplify: "text-envy",
+  affliction_transfer: "text-pride",
+};
+
+const patternLabels: Record<CompoundPattern, { label: string; title: string }> = {
+  standard: { label: "STD", title: "Standard: Fibonacci growth [1x, 1x, 2x]" },
+  aggressive: { label: "AGG", title: "Aggressive: Powers of 2 [1x, 2x, 4x]" },
+  slowburn: { label: "SLO", title: "Slowburn: Slow ramp [0.5x, 1x, 2.5x]" },
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
@@ -108,7 +120,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
   const tier = tierStyles[card.tier] || tierStyles.common;
   const canAfford = playerEnergy === undefined || card.cost <= playerEnergy;
   const actuallyPlayable = isPlayable && canAfford;
-  const isCompounding = card.cardType === "compounding";
+  const pattern = patternLabels[card.compoundPattern] || patternLabels.standard;
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
 
   // 3D tilt
@@ -165,24 +177,14 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         <div className="flex items-center gap-1.5">
           {/* Sin archetype icon (spell icon, not Lucide) */}
           <img src={sinIcon} alt={card.sin} className="w-5 h-5 object-contain drop-shadow-sm" loading="lazy" />
-          {/* Card Type Badge */}
-          {isCompounding ? (
-            <span
-              className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
-              style={{ fontFamily: "var(--font-heading)" }}
-              title="Compounding: ticks for 3 rounds [1x, 1x, 2x]"
-            >
-              3R
-            </span>
-          ) : (
-            <span
-              className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-flat"
-              style={{ fontFamily: "var(--font-heading)" }}
-              title="Flat: instant one-time effect"
-            >
-              FLAT
-            </span>
-          )}
+          {/* Compound Pattern Badge */}
+          <span
+            className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
+            style={{ fontFamily: "var(--font-heading)" }}
+            title={pattern.title}
+          >
+            {pattern.label}
+          </span>
           {card.tier !== "common" && (
             <span
               className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}
@@ -270,49 +272,28 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
               >
                 {effect.type}
               </span>
-              {isCompounding ? (
-                <span
-                  className={`font-black ${color}`}
-                  title={`Ticks: ${COMPOUND_MULTIPLIERS.map((m) => effect.baseValue * m).join(" -> ")}`}
-                  style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-                >
-                  {getCompoundTickValue(effect.baseValue, 0)}-&gt;{getCompoundTickValue(effect.baseValue, 1)}-&gt;{getCompoundTickValue(effect.baseValue, 2)}
-                </span>
-              ) : (
-                <span
-                  className={`font-black ${color}`}
-                  style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-                >
-                  {effect.baseValue}
-                </span>
-              )}
-              {effect.target === "self" && (
+              <span
+                className={`font-black ${color}`}
+                title={`Ticks: ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 0)} -> ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 1)} -> ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 2)}`}
+                style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+              >
+                {effect.duration > 1 ? `${getCompoundTickValue(effect.baseValue, card.compoundPattern, 0)}→${getCompoundTickValue(effect.baseValue, card.compoundPattern, effect.duration - 1)}` : effect.baseValue}
+              </span>
+              {effect.targetMode === "self" && (
                 <span className="text-foreground/50 font-medium">(self)</span>
               )}
-              {effect.target === "all_enemies" && (
+              {effect.targetMode === "aoe" && (
                 <span className="text-foreground/50 font-medium">(all)</span>
+              )}
+              {effect.targetMode === "duo" && (
+                <span className="text-foreground/50 font-medium">(×2)</span>
               )}
             </div>
           );
         })}
       </div>
 
-      {/* Catch-up indicator */}
-      {card.catchup && (
-        <div className="px-3 mt-1">
-          <div className="flex items-center gap-1.5 text-[11px] sm:text-[12px] px-2 py-1 rounded bg-greed-glow/10 border border-greed-glow/20">
-            <img src={SIN_ARCHETYPE_ICONS.greed} alt="catch-up" className="w-3 h-3 object-contain flex-shrink-0" loading="lazy" />
-            <span className="text-greed-glow/90 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-              Catch-up
-            </span>
-            <span className="text-foreground/50 font-medium">
-              {card.catchup.type === "bonus_damage" ? "+DMG" : card.catchup.type === "bonus_heal" ? "+HEAL" : "+DEBUFF"}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Flavor Text — slightly larger, better contrast */}
+      {/* Description — flavor text */}
       <div className="absolute bottom-2 left-3 right-3">
         <p
           className="text-[10px] sm:text-[11px] text-foreground/60 italic leading-tight line-clamp-2"
@@ -321,7 +302,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
             textShadow: "0 1px 4px rgba(0,0,0,0.8)",
           }}
         >
-          {card.flavorText}
+          {card.description}
         </p>
       </div>
 

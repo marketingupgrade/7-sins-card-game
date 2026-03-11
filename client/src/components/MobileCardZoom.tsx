@@ -10,7 +10,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo } from "react";
 import type { CardDefinition } from "@shared/gameTypes";
-import { getCompoundTickValue, COMPOUND_MULTIPLIERS } from "@shared/gameTypes";
+import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
 
@@ -24,14 +24,24 @@ interface MobileCardZoomProps {
 
 const effectColors: Record<string, string> = {
   damage: "text-red-400",
-  heal: "text-emerald-400",
-  shield: "text-cyan-400",
-  debuff: "text-violet-400",
-  energy_drain: "text-purple-400",
-  energy_gain: "text-amber-400",
-  buff: "text-yellow-400",
-  damage_all: "text-orange-400",
   self_damage: "text-rose-300",
+  heal_gain: "text-emerald-400",
+  heal_steal: "text-pink-400",
+  shield_gain: "text-cyan-400",
+  shield_steal: "text-cyan-300",
+  energy_gain: "text-amber-400",
+  energy_steal: "text-purple-400",
+  heal_block: "text-violet-400",
+  shield_block: "text-violet-400",
+  energy_block: "text-violet-400",
+  affliction_amplify: "text-emerald-300",
+  affliction_transfer: "text-gray-300",
+};
+
+const patternLabels: Record<CompoundPattern, string> = {
+  standard: "STD",
+  aggressive: "AGG",
+  slowburn: "SLO",
 };
 
 const sinColorMap: Record<string, string> = {
@@ -55,7 +65,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
 
   const sinColor = sinColorMap[card.sin] || sinColorMap.wrath;
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
-  const isCompounding = card.cardType === "compounding";
+  const pattern = card.compoundPattern || "standard";
   const artUrl = CARD_ART_URLS[card.id];
 
   return (
@@ -97,13 +107,8 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                 >
                   {card.sin}
                 </span>
-                {isCompounding ? (
-                  <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
-                    style={{ fontFamily: "var(--font-heading)" }}>3R</span>
-                ) : (
-                  <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-flat"
-                    style={{ fontFamily: "var(--font-heading)" }}>FLAT</span>
-                )}
+                <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
+                  style={{ fontFamily: "var(--font-heading)" }}>{patternLabels[pattern]}</span>
                 {card.tier !== "common" && (
                   <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase"
                     style={{
@@ -181,38 +186,21 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                     <span className="text-foreground/80 capitalize font-semibold" style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}>
                       {effect.type.replace(/_/g, " ")}
                     </span>
-                    {isCompounding ? (
-                      <span className={`font-black ${color}`}>
-                        {getCompoundTickValue(effect.baseValue, 0)}&rarr;{getCompoundTickValue(effect.baseValue, 1)}&rarr;{getCompoundTickValue(effect.baseValue, 2)}
-                      </span>
-                    ) : (
-                      <span className={`font-black ${color}`}>{effect.baseValue}</span>
-                    )}
-                    {effect.target === "self" && <span className="text-foreground/50 text-sm">(self)</span>}
-                    {effect.target === "all_enemies" && <span className="text-foreground/50 text-sm">(all)</span>}
+                    <span className={`font-black ${color}`}>
+                      {effect.duration > 1 ? `${getCompoundTickValue(effect.baseValue, pattern, 0)}→${getCompoundTickValue(effect.baseValue, pattern, effect.duration - 1)}` : effect.baseValue}
+                    </span>
+                    {effect.targetMode === "self" && <span className="text-foreground/50 text-sm">(self)</span>}
+                    {effect.targetMode === "aoe" && <span className="text-foreground/50 text-sm">(all)</span>}
+                    {effect.targetMode === "duo" && <span className="text-foreground/50 text-sm">(×2)</span>}
                   </div>
                 );
               })}
             </div>
 
-            {/* Catch-up indicator */}
-            {card.catchup && (
-              <div className="px-4 pb-2">
-                <div className="flex items-center gap-2 text-sm px-3 py-1.5 rounded bg-greed-glow/10 border border-greed-glow/20">
-                  <span className="text-greed-glow/90 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                    Catch-up
-                  </span>
-                  <span className="text-foreground/50 font-medium">
-                    {card.catchup.type === "bonus_damage" ? "+DMG" : card.catchup.type === "bonus_heal" ? "+HEAL" : "+DEBUFF"}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* Flavor Text */}
+            {/* Description */}
             <div className="px-4 pb-3">
               <p className="text-sm text-foreground/50 italic leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                {card.flavorText}
+                {card.description}
               </p>
             </div>
 

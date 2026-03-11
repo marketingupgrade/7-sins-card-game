@@ -126,7 +126,7 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
       stats.cardsPlayed++;
       const cardId = data.card_id || data.cardId;
       const card = cardId ? CARD_MAP[cardId] : null;
-      if (card?.cardType === "compounding") stats.compoundingEffectsUsed++;
+      if (card?.compoundPattern) stats.compoundingEffectsUsed++;
 
       // Track damage from effects — effects can be strings or objects
       const effects = data.effects || [];
@@ -134,15 +134,15 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
         const parsed = parseEffectString(eff);
         if (!parsed) continue;
 
-        if (parsed.type === "damage" || parsed.type === "debuff") {
+        if (parsed.type === "damage" || parsed.type === "self_damage" || parsed.type === "affliction_amplify") {
           stats.totalDamageDealt += parsed.value;
           if (parsed.value > biggestHit) {
             biggestHit = parsed.value;
             biggestHitCard = card?.name || "Unknown";
           }
         }
-        if (parsed.type === "heal") stats.totalHealingDone += parsed.value;
-        if (parsed.type === "shield") stats.totalShieldApplied += parsed.value;
+        if (parsed.type === "heal_gain" || parsed.type === "heal_steal" || parsed.type === "heal") stats.totalHealingDone += parsed.value;
+        if (parsed.type === "shield_gain" || parsed.type === "shield_steal" || parsed.type === "shield") stats.totalShieldApplied += parsed.value;
       }
 
       // Check for catch-up effects in the descriptions
@@ -153,9 +153,6 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
       }
     }
 
-    if (entry.action_type === "overcharge") {
-      // Count overcharge as a notable action
-    }
 
     if (entry.action_type === "catchup_triggered") {
       stats.catchupsTriggered++;

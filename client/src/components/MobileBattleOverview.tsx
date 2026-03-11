@@ -11,7 +11,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useState } from "react";
 import type { PlayerState, SinType, ActiveEffect } from "@shared/gameTypes";
-import { getCompoundTickValue, COMPOUND_MULTIPLIERS } from "@shared/gameTypes";
+import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { ICON_URLS } from "@/lib/assetUrls";
@@ -59,9 +59,8 @@ const sinColorMap: Record<string, string> = {
 function summarizeEffects(effects: ActiveEffect[]) {
   const summary: Record<string, { total: number; count: number; sources: string[] }> = {};
   for (const eff of effects) {
-    const val = eff.isCompounding
-      ? getCompoundTickValue(eff.baseValue, eff.currentTick || 0)
-      : eff.baseValue;
+    const pattern: CompoundPattern = eff.compoundPattern || "standard";
+    const val = Math.round(getCompoundTickValue(eff.baseValue, pattern, eff.currentTick || 0));
     if (!summary[eff.effectType]) {
       summary[eff.effectType] = { total: 0, count: 0, sources: [] };
     }

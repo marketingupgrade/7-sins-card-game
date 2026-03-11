@@ -11,7 +11,7 @@ import { X, ChevronRight } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import type { SinType } from "@shared/gameTypes";
-import { ActiveEffect, getCompoundTickValue, COMPOUND_MULTIPLIERS, PlayerState } from "@shared/gameTypes";
+import { ActiveEffect, getCompoundTickValue, CompoundPattern, PlayerState } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { isBot } from "@/lib/botEngine";
 
@@ -35,7 +35,6 @@ interface ProjectedTick {
   tickIndex: number;
   tickValue: number;
   cardName: string;
-  isCompounding: boolean;
   totalTicks: number;
   isCurrentTick: boolean;
 }
@@ -93,53 +92,29 @@ export default function CompoundBalanceSheet({
   const projectedTicks: ProjectedTick[] = [];
 
   for (const effect of activeEffects) {
-    if (effect.isCompounding) {
-      // Compounding: project remaining ticks using Fibonacci [1, 1, 2]
-      const totalTicks = COMPOUND_MULTIPLIERS.length; // 3
-      const currentTick = effect.currentTick || 0;
+    const pattern: CompoundPattern = effect.compoundPattern || "standard";
+    const totalTicks = effect.durationRounds;
+    const currentTick = effect.currentTick || 0;
 
-      for (let tick = currentTick; tick < totalTicks; tick++) {
-        const tickValue = getCompoundTickValue(effect.baseValue, tick);
-        const roundForTick = currentRound + (tick - currentTick);
+    for (let tick = currentTick; tick < totalTicks; tick++) {
+      const tickValue = Math.round(getCompoundTickValue(effect.baseValue, pattern, tick));
+      const roundForTick = currentRound + (tick - currentTick);
 
-        projectedTicks.push({
-          round: roundForTick,
-          targetPlayerId: effect.targetPlayerId,
-          targetName: getPlayerName(players, effect.targetPlayerId),
-          targetSin: getPlayerSin(players, effect.targetPlayerId),
-          sourcePlayerId: effect.sourcePlayerId,
-          sourceName: getPlayerName(players, effect.sourcePlayerId),
-          effectType: effect.effectType,
-          baseValue: effect.baseValue,
-          tickIndex: tick,
-          tickValue,
-          cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
-          isCompounding: true,
-          totalTicks,
-          isCurrentTick: tick === currentTick,
-        });
-      }
-    } else {
-      // Flat effects that are still active (duration-based)
-      const expiresAtRound = effect.appliedAtRound + effect.durationRounds;
-      for (let round = currentRound; round <= expiresAtRound; round++) {
-        projectedTicks.push({
-          round,
-          targetPlayerId: effect.targetPlayerId,
-          targetName: getPlayerName(players, effect.targetPlayerId),
-          targetSin: getPlayerSin(players, effect.targetPlayerId),
-          sourcePlayerId: effect.sourcePlayerId,
-          sourceName: getPlayerName(players, effect.sourcePlayerId),
-          effectType: effect.effectType,
-          baseValue: effect.baseValue,
-          tickIndex: 0,
-          tickValue: effect.baseValue,
-          cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
-          isCompounding: false,
-          totalTicks: 1,
-          isCurrentTick: round === currentRound,
-        });
-      }
+      projectedTicks.push({
+        round: roundForTick,
+        targetPlayerId: effect.targetPlayerId,
+        targetName: getPlayerName(players, effect.targetPlayerId),
+        targetSin: getPlayerSin(players, effect.targetPlayerId),
+        sourcePlayerId: effect.sourcePlayerId,
+        sourceName: getPlayerName(players, effect.sourcePlayerId),
+        effectType: effect.effectType,
+        baseValue: effect.baseValue,
+        tickIndex: tick,
+        tickValue,
+        cardName: CARD_MAP[effect.cardId]?.name || "Unknown",
+        totalTicks,
+        isCurrentTick: tick === currentTick,
+      });
     }
   }
 
@@ -335,18 +310,10 @@ export default function CompoundBalanceSheet({
                                   >
                                     {pt.targetName}
                                   </span>
-                                  {pt.isCompounding && (
-                                    <span className="text-[7px] px-1 py-0 rounded bg-greed-glow/15 text-greed-glow border border-greed-glow/20 font-bold uppercase flex items-center gap-0.5">
-                                      <span className="w-2 h-2 inline-block text-[8px]">⏱</span>
-                                      Tick {pt.tickIndex + 1}/{pt.totalTicks}
-                                    </span>
-                                  )}
-                                  {!pt.isCompounding && (
-                                    <span className="text-[7px] px-1 py-0 rounded bg-candle/15 text-candle border border-candle/20 font-bold uppercase flex items-center gap-0.5">
-                                      <span className="w-2 h-2 inline-block text-[8px]">⚡</span>
-                                      FLAT
-                                    </span>
-                                  )}
+                                  <span className="text-[7px] px-1 py-0 rounded bg-greed-glow/15 text-greed-glow border border-greed-glow/20 font-bold uppercase flex items-center gap-0.5">
+                                    <span className="w-2 h-2 inline-block text-[8px]">⏱</span>
+                                    Tick {pt.tickIndex + 1}/{pt.totalTicks}
+                                  </span>
                                 </div>
                                 <div className="flex items-center gap-1 text-[8px] text-muted-foreground/70">
                                   <span>from {pt.sourceName}</span>
@@ -363,17 +330,15 @@ export default function CompoundBalanceSheet({
                                 >
                                   {isNegative ? "-" : "+"}{pt.tickValue}
                                 </span>
-                                {pt.isCompounding && (
-                                  <div className="text-[7px] text-muted-foreground/70 font-medium" style={{ fontFamily: "var(--font-heading)" }}>
-                                    {pt.baseValue}&times;{COMPOUND_MULTIPLIERS[pt.tickIndex]}
-                                  </div>
-                                )}
-                                {pt.isCompounding && pt.tickIndex < pt.totalTicks - 1 && (
+                                <div className="text-[7px] text-muted-foreground/70 font-medium" style={{ fontFamily: "var(--font-heading)" }}>
+                                  base:{pt.baseValue} tick:{pt.tickIndex + 1}/{pt.totalTicks}
+                                </div>
+                                {pt.tickIndex < pt.totalTicks - 1 && (
                                   <div className="text-[7px] text-greed-glow/50" style={{ fontFamily: "var(--font-heading)" }}>
                                     {pt.totalTicks - pt.tickIndex - 1} tick{pt.totalTicks - pt.tickIndex - 1 > 1 ? "s" : ""} left
                                   </div>
                                 )}
-                                {pt.isCompounding && pt.tickIndex === pt.totalTicks - 1 && (
+                                {pt.tickIndex === pt.totalTicks - 1 && (
                                   <div className="text-[7px] text-red-400/50" style={{ fontFamily: "var(--font-heading)" }}>
                                     FINAL TICK
                                   </div>
