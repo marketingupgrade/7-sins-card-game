@@ -481,7 +481,7 @@ export default function Home() {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[
-              { color: "wrath", glass: "glass-panel-wrath", name: "WRATH", key: "wrath" as const, desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy" },
+              { color: "wrath", glass: "glass-panel-wrath", name: "WRATH", key: "wrath" as const, desc: "Burn fast. Hit hard. Self-harm is just a bonus.", tag: "Aggression: Maximum", passive: "Overcharge: Burn 2 HP for +1 energy. Siphon: Heal 10% of compound dmg dealt" },
               { color: "sloth", glass: "glass-panel-sloth", name: "SLOTH", key: "sloth" as const, desc: "Outlast everyone. Shields and heals that grow over time.", tag: "Endurance: Maximum", passive: "Lethargy: Carry over unspent energy" },
               { color: "greed", glass: "glass-panel-greed", name: "GREED", key: "greed" as const, desc: "Steal resources. Drain opponents. Everything has a price.", tag: "Profit: Maximum", passive: "Avarice: Big spends grant bonus energy" },
               { color: "envy", glass: "glass-panel-envy", name: "ENVY", key: "envy" as const, desc: "Copy strengths. Punish the strong. Become them.", tag: "Jealousy: Maximum", passive: "Covet: Gain energy when outmatched" },

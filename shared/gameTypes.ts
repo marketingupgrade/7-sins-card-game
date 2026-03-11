@@ -131,6 +131,7 @@ export const ENERGY_PER_ROUND = 1;
 export const SLOTH_MAX_CARRYOVER = 2;
 export const WRATH_OVERCHARGE_HP_COST = 2;
 export const WRATH_OVERCHARGE_ENERGY_GAIN = 1;
+export const WRATH_SIPHON_RATE = 0.10; // Wrath heals 10% of compound damage dealt to others
 export const GREED_AVARICE_COST_THRESHOLD = 3;
 export const GREED_AVARICE_BONUS = 1;
 export const ENVY_COVET_BONUS = 1;

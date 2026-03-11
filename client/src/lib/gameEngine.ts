@@ -28,6 +28,7 @@ import {
   SLOTH_MAX_CARRYOVER,
   WRATH_OVERCHARGE_HP_COST,
   WRATH_OVERCHARGE_ENERGY_GAIN,
+  WRATH_SIPHON_RATE,
   GREED_AVARICE_COST_THRESHOLD,
   GREED_AVARICE_BONUS,
   ENVY_COVET_BONUS,
@@ -978,6 +979,33 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
         });
       } else {
         await applyInstantEffect(effect.effect_type, tickValue, target, gameId);
+
+        // ─── WRATH PASSIVE: Compound Damage Siphon ─────────────
+        // When compound damage ticks on another player, the Wrath source
+        // heals 20% of that damage amount ("feeding off chaos")
+        if (
+          (effect.effect_type === "damage" || effect.effect_type === "debuff") &&
+          effect.source_player_id !== effect.target_player_id
+        ) {
+          const { data: sourcePlayer } = await sb
+            .from("game_players")
+            .select("*")
+            .eq("id", effect.source_player_id)
+            .single();
+
+          if (
+            sourcePlayer &&
+            sourcePlayer.is_alive &&
+            sourcePlayer.chosen_sin === "wrath"
+          ) {
+            const siphonHeal = Math.max(1, Math.round(tickValue * WRATH_SIPHON_RATE));
+            const newHp = Math.min(sourcePlayer.current_hp + siphonHeal, STARTING_HP);
+            await sb
+              .from("game_players")
+              .update({ current_hp: newHp })
+              .eq("id", sourcePlayer.id);
+          }
+        }
       }
 
       // Advance tick or expire

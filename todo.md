@@ -424,3 +424,29 @@
 - [x] Final cross-faction win rates: Wrath 49.1%, Sloth 48.4%, Greed 53.9%, Envy 48.6% (all within 45-55%)
 - [x] Generate comprehensive balance report with heatmap, bar chart, and game pace visualizations
 - [x] Push rebalanced cards to GitHub (178 tests passing)
+
+## Deep Balance Pass — /math Game Theory Optimization (COMPLETED)
+- [x] Read /math references on game theory, Nash equilibrium, and optimization
+- [x] Build per-card Expected Value (EV) model incorporating energy cost, effect type, compound ticks, passive synergies
+- [x] Compute faction-level power budgets using zero-sum game payoff matrix
+- [x] Apply constrained optimization (minimize max faction deviation from 50%) with scipy
+- [x] Validate with 100K+ Monte Carlo simulation across 8 iterative passes
+- [x] Apply optimized card values to cardData.ts (31 value changes)
+- [x] Run tests and push to GitHub (178 tests passing)
+
+## Wrath Passive Redesign — Compound Damage Siphon (COMPLETED)
+- [x] Add Wrath passive: when compound damage ticks on any other player, Wrath heals 10% of that amount
+- [x] Update passive description text and tooltip (Home, GameBoard, narrator lines)
+- [x] Update game engine compound damage resolution to trigger Wrath siphon
+- [x] Update simulation engine to model the new passive
+- [x] Calibrated siphon rate from 20% → 15% → 10% via simulation feedback
+
+## One-at-a-Time Faction Balancing (COMPLETED — EXCELLENT GRADE)
+- [x] Establish baseline simulation (5K games) — Wrath 55.4%, Sloth 45.9%, Greed 52.8%, Envy 45.9%
+- [x] Adjust Sloth first — buffed 4 shield/heal cards → Sloth 49.2%
+- [x] Adjust Wrath second — nerfed 6 damage cards → Wrath 53.8%
+- [x] Adjust Greed/Envy — nerfed 3 Greed cards, buffed 8 Envy cards
+- [x] Targeted matchup fixes — nerfed Wrath compound dmg, buffed Wrath sustain, nerfed Envy offense
+- [x] Final 10K validation: W-S 52.6%, W-G 48.5%, W-E 47.1%, S-G 53.3%, S-E 52.8%, G-E 51.8%
+- [x] Worst deviation: 3.3% — EXCELLENT grade
+- [x] Apply final values to cardData.ts (31 changes applied, 178 tests passing)

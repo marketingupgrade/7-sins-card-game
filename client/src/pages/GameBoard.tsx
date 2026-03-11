@@ -741,7 +741,7 @@ export default function GameBoard() {
                   }}
                   onClick={handleOvercharge}
                   disabled={isOvercharging}
-                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption`}
+                  title={`Burn ${WRATH_OVERCHARGE_HP_COST} HP for +${WRATH_OVERCHARGE_ENERGY_GAIN} Corruption | Siphon: Heal 10% of compound dmg dealt to others`}
                 >
                   {isOvercharging ? "BURNING..." : "OVERCHARGE"}
                 </motion.button>
