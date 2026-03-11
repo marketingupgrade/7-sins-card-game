@@ -367,8 +367,17 @@
 - [x] Redesign card frames with gothic arch borders and stained glass insets
 - [x] Update Home page hero with cathedral-themed design
 - [x] Update Home page sin cards with stained glass aesthetic
-- [ ] Update Lobby with gothic UI elements (stone panels, candle accents)
-- [ ] Update GameBoard with cathedral floor / dark stone aesthetic
+- [x] Update Lobby with gothic UI elements (stone panels, candle accents)
+- [x] Update GameBoard with cathedral floor / dark stone aesthetic
 - [x] Update GameCard component with gothic frame styling
-- [ ] Replace EmberField with cathedral dust motes / candle particles
+- [x] Replace EmberField with cathedral dust motes / candle particles
 - [x] Update all sin faction colors to Dante's Inferno palette
+
+## Compound Balance Sheets on GameBoard
+- [x] Build PlayerAfflictionTable component with Pain/Gain/Net columns, round rows, and totals
+- [x] Position balance sheets adjacent to each player panel on GameBoard (right of North/South, below East/West)
+- [x] Style with gothic theme (stone texture, gold borders, sin-colored accents)
+- [x] Show active compounding effects with projected values per upcoming round (Fibonacci tick projections)
+- [x] Add compact mode for mobile layout
+- [x] Add hover tooltips with per-effect breakdown per round
+- [x] Write 24 vitest tests for affliction projection logic (174 total tests passing)

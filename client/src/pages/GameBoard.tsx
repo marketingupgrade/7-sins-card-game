@@ -46,6 +46,7 @@ import CardPlayArc from "@/components/CardPlayArc";
 import SinShaderOverlay from "@/components/WebGLSinShaders";
 import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
+import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
 
 interface ActionFeedEntry {
   id: string;
@@ -463,34 +464,52 @@ export default function GameBoard() {
         <div className="hidden md:grid flex-1 grid-cols-[minmax(160px,220px)_1fr_minmax(160px,220px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
           
           {/* NORTH */}
-          <div className="col-start-2 row-start-1 flex justify-center">
+          <div className="col-start-2 row-start-1 flex justify-center items-start gap-2">
             {opponents.north && (
-              <PlayerPanel
-                player={opponents.north}
-                isCurrentTurn={currentTurnPlayer?.id === opponents.north.id}
-                isTargetable={isMyTurn && !!selectedCard && opponents.north.isAlive}
-                isSelected={selectedTarget === opponents.north.id}
-                onSelect={() => handleSelectTarget(opponents.north.id)}
-                activeEffects={getPlayerEffects(opponents.north)}
-                currentRound={gameState.currentRound}
-                position="north"
-              />
+              <>
+                <PlayerPanel
+                  player={opponents.north}
+                  isCurrentTurn={currentTurnPlayer?.id === opponents.north.id}
+                  isTargetable={isMyTurn && !!selectedCard && opponents.north.isAlive}
+                  isSelected={selectedTarget === opponents.north.id}
+                  onSelect={() => handleSelectTarget(opponents.north.id)}
+                  activeEffects={getPlayerEffects(opponents.north)}
+                  currentRound={gameState.currentRound}
+                  position="north"
+                />
+                <PlayerAfflictionTable
+                  player={opponents.north}
+                  activeEffects={getPlayerEffects(opponents.north)}
+                  currentRound={gameState.currentRound}
+                  maxRound={MAX_ROUNDS}
+                  position="right"
+                />
+              </>
             )}
           </div>
 
           {/* WEST */}
-          <div className="col-start-1 row-start-2 flex items-center justify-center">
+          <div className="col-start-1 row-start-2 flex flex-col items-center justify-center gap-2">
             {opponents.west && (
-              <PlayerPanel
-                player={opponents.west}
-                isCurrentTurn={currentTurnPlayer?.id === opponents.west.id}
-                isTargetable={isMyTurn && !!selectedCard && opponents.west.isAlive}
-                isSelected={selectedTarget === opponents.west.id}
-                onSelect={() => handleSelectTarget(opponents.west.id)}
-                activeEffects={getPlayerEffects(opponents.west)}
-                currentRound={gameState.currentRound}
-                position="west"
-              />
+              <>
+                <PlayerPanel
+                  player={opponents.west}
+                  isCurrentTurn={currentTurnPlayer?.id === opponents.west.id}
+                  isTargetable={isMyTurn && !!selectedCard && opponents.west.isAlive}
+                  isSelected={selectedTarget === opponents.west.id}
+                  onSelect={() => handleSelectTarget(opponents.west.id)}
+                  activeEffects={getPlayerEffects(opponents.west)}
+                  currentRound={gameState.currentRound}
+                  position="west"
+                />
+                <PlayerAfflictionTable
+                  player={opponents.west}
+                  activeEffects={getPlayerEffects(opponents.west)}
+                  currentRound={gameState.currentRound}
+                  maxRound={MAX_ROUNDS}
+                  position="below"
+                />
+              </>
             )}
           </div>
 
@@ -521,35 +540,53 @@ export default function GameBoard() {
           </div>
 
           {/* EAST */}
-          <div className="col-start-3 row-start-2 flex items-center justify-center">
+          <div className="col-start-3 row-start-2 flex flex-col items-center justify-center gap-2">
             {opponents.east && (
-              <PlayerPanel
-                player={opponents.east}
-                isCurrentTurn={currentTurnPlayer?.id === opponents.east.id}
-                isTargetable={isMyTurn && !!selectedCard && opponents.east.isAlive}
-                isSelected={selectedTarget === opponents.east.id}
-                onSelect={() => handleSelectTarget(opponents.east.id)}
-                activeEffects={getPlayerEffects(opponents.east)}
-                currentRound={gameState.currentRound}
-                position="east"
-              />
+              <>
+                <PlayerPanel
+                  player={opponents.east}
+                  isCurrentTurn={currentTurnPlayer?.id === opponents.east.id}
+                  isTargetable={isMyTurn && !!selectedCard && opponents.east.isAlive}
+                  isSelected={selectedTarget === opponents.east.id}
+                  onSelect={() => handleSelectTarget(opponents.east.id)}
+                  activeEffects={getPlayerEffects(opponents.east)}
+                  currentRound={gameState.currentRound}
+                  position="east"
+                />
+                <PlayerAfflictionTable
+                  player={opponents.east}
+                  activeEffects={getPlayerEffects(opponents.east)}
+                  currentRound={gameState.currentRound}
+                  maxRound={MAX_ROUNDS}
+                  position="below"
+                />
+              </>
             )}
           </div>
 
           {/* SOUTH */}
-          <div data-tutorial="player-panel" className="col-start-2 row-start-3 flex justify-center">
+          <div data-tutorial="player-panel" className="col-start-2 row-start-3 flex justify-center items-start gap-2">
             {myPlayer && (
-              <PlayerPanel
-                player={myPlayer}
-                isCurrentTurn={isMyTurn}
-                isTargetable={false}
-                isSelected={false}
-                onSelect={() => {}}
-                activeEffects={getPlayerEffects(myPlayer)}
-                currentRound={gameState.currentRound}
-                isMe
-                position="south"
-              />
+              <>
+                <PlayerPanel
+                  player={myPlayer}
+                  isCurrentTurn={isMyTurn}
+                  isTargetable={false}
+                  isSelected={false}
+                  onSelect={() => {}}
+                  activeEffects={getPlayerEffects(myPlayer)}
+                  currentRound={gameState.currentRound}
+                  isMe
+                  position="south"
+                />
+                <PlayerAfflictionTable
+                  player={myPlayer}
+                  activeEffects={getPlayerEffects(myPlayer)}
+                  currentRound={gameState.currentRound}
+                  maxRound={MAX_ROUNDS}
+                  position="right"
+                />
+              </>
             )}
           </div>
         </div>
@@ -558,17 +595,26 @@ export default function GameBoard() {
         <div className="md:hidden flex-1 flex flex-col gap-2 p-3 overflow-y-auto">
           <div className="flex gap-2 justify-center flex-wrap">
             {[opponents.west, opponents.north, opponents.east].filter(Boolean).map((opp) => (
-              <PlayerPanel
-                key={opp!.id}
-                player={opp!}
-                isCurrentTurn={currentTurnPlayer?.id === opp!.id}
-                isTargetable={isMyTurn && !!selectedCard && opp!.isAlive}
-                isSelected={selectedTarget === opp!.id}
-                onSelect={() => handleSelectTarget(opp!.id)}
-                activeEffects={getPlayerEffects(opp!)}
-                currentRound={gameState.currentRound}
-                compact
-              />
+              <div key={opp!.id} className="flex flex-col items-center gap-1">
+                <PlayerPanel
+                  player={opp!}
+                  isCurrentTurn={currentTurnPlayer?.id === opp!.id}
+                  isTargetable={isMyTurn && !!selectedCard && opp!.isAlive}
+                  isSelected={selectedTarget === opp!.id}
+                  onSelect={() => handleSelectTarget(opp!.id)}
+                  activeEffects={getPlayerEffects(opp!)}
+                  currentRound={gameState.currentRound}
+                  compact
+                />
+                <PlayerAfflictionTable
+                  player={opp!}
+                  activeEffects={getPlayerEffects(opp!)}
+                  currentRound={gameState.currentRound}
+                  maxRound={MAX_ROUNDS}
+                  position="below"
+                  compact
+                />
+              </div>
             ))}
           </div>
 
@@ -584,7 +630,7 @@ export default function GameBoard() {
           </div>
 
           {myPlayer && (
-            <div data-tutorial="player-panel">
+            <div data-tutorial="player-panel" className="flex flex-col items-center gap-1">
               <PlayerPanel
                 player={myPlayer}
                 isCurrentTurn={isMyTurn}
@@ -594,6 +640,14 @@ export default function GameBoard() {
                 activeEffects={getPlayerEffects(myPlayer)}
                 currentRound={gameState.currentRound}
                 isMe
+                compact
+              />
+              <PlayerAfflictionTable
+                player={myPlayer}
+                activeEffects={getPlayerEffects(myPlayer)}
+                currentRound={gameState.currentRound}
+                maxRound={MAX_ROUNDS}
+                position="below"
                 compact
               />
             </div>
