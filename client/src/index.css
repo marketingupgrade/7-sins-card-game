@@ -198,27 +198,23 @@
   /* ─── Neon Glow Effects ─────────────────────────────────── */
   .glow-wrath {
     box-shadow:
-      0 0 8px oklch(0.6 0.28 25 / 0.4),
-      0 0 24px oklch(0.6 0.28 25 / 0.15),
-      0 0 48px oklch(0.6 0.28 25 / 0.05);
+      0 0 6px oklch(0.6 0.28 25 / 0.25),
+      0 0 16px oklch(0.6 0.28 25 / 0.08);
   }
   .glow-sloth {
     box-shadow:
-      0 0 8px oklch(0.52 0.18 290 / 0.4),
-      0 0 24px oklch(0.52 0.18 290 / 0.15),
-      0 0 48px oklch(0.52 0.18 290 / 0.05);
+      0 0 6px oklch(0.52 0.18 290 / 0.25),
+      0 0 16px oklch(0.52 0.18 290 / 0.08);
   }
   .glow-greed {
     box-shadow:
-      0 0 8px oklch(0.75 0.18 85 / 0.4),
-      0 0 24px oklch(0.75 0.18 85 / 0.15),
-      0 0 48px oklch(0.75 0.18 85 / 0.05);
+      0 0 6px oklch(0.75 0.18 85 / 0.25),
+      0 0 16px oklch(0.75 0.18 85 / 0.08);
   }
   .glow-envy {
     box-shadow:
-      0 0 8px oklch(0.6 0.2 155 / 0.4),
-      0 0 24px oklch(0.6 0.2 155 / 0.15),
-      0 0 48px oklch(0.6 0.2 155 / 0.05);
+      0 0 6px oklch(0.6 0.2 155 / 0.25),
+      0 0 16px oklch(0.6 0.2 155 / 0.08);
   }
   .glow-cyan {
     box-shadow:

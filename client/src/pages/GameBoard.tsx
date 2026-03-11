@@ -257,8 +257,8 @@ export default function GameBoard() {
             const yBase = eff.target === 'self' ? 70 : 30;
             setFloatingNumbers(prev => [...prev, { id: `${Date.now()}-${eff.type}`, value: val, type: numType, x: xBase, y: yBase }]);
           }
-          if (eff.type === 'damage') {
-            setShakeIntensity(val >= 10 ? 'heavy' : 'light');
+          if (eff.type === 'damage' && val >= 8) {
+            setShakeIntensity(val >= 15 ? 'heavy' : 'light');
             setShakeTrigger(prev => prev + 1);
           }
         }

@@ -1,16 +1,19 @@
+/**
+ * SinCursor.tsx
+ * Very subtle mouse trail with tiny sin-colored particles.
+ * Does NOT override the system cursor. Minimal visual noise.
+ * Disabled on touch devices.
+ */
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 interface Particle {
   id: number;
   x: number;
   y: number;
-  vx: number;
-  vy: number;
   opacity: number;
   size: number;
   life: number;
-  maxLife: number;
-  angle?: number;
 }
 
 interface SinCursorProps {
@@ -18,221 +21,88 @@ interface SinCursorProps {
   isActive: boolean;
 }
 
+const sinParticleColors: Record<string, string> = {
+  wrath: 'oklch(0.65 0.25 25)',
+  sloth: 'oklch(0.52 0.18 290)',
+  greed: 'oklch(0.75 0.18 85)',
+  envy: 'oklch(0.6 0.2 155)',
+};
+
 const SinCursor: React.FC<SinCursorProps> = ({ sin, isActive }) => {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [particles, setParticles] = useState<Particle[]>([]);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
-  const particleIdRef = useRef(0);
-  const animationRef = useRef<number | null>(null);
+  const idRef = useRef(0);
+  const frameRef = useRef<number | null>(null);
+  const lastEmit = useRef(0);
 
   useEffect(() => {
     setIsTouchDevice('ontouchstart' in window || navigator.maxTouchPoints > 0);
   }, []);
 
-  const createParticle = useCallback((x: number, y: number): Particle => {
-    const baseParticle = {
-      id: particleIdRef.current++,
-      x,
-      y,
-      opacity: 1,
-      life: 0,
-    };
-
-    switch (sin) {
-      case 'wrath':
-        return {
-          ...baseParticle,
-          vx: (Math.random() - 0.5) * 2,
-          vy: Math.random() * 2 + 1,
-          size: Math.random() * 6 + 4,
-          maxLife: 60,
-        };
-      case 'sloth':
-        return {
-          ...baseParticle,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: (Math.random() - 0.5) * 0.5,
-          size: Math.random() * 8 + 6,
-          maxLife: 120,
-        };
-      case 'greed':
-        return {
-          ...baseParticle,
-          vx: (Math.random() - 0.5) * 3,
-          vy: (Math.random() - 0.5) * 3,
-          size: Math.random() * 4 + 2,
-          maxLife: 80,
-        };
-      case 'envy':
-        return {
-          ...baseParticle,
-          vx: Math.random() * 2 - 1,
-          vy: Math.random() * 2 - 1,
-          size: Math.random() * 5 + 3,
-          maxLife: 100,
-          angle: Math.random() * Math.PI * 2,
-        };
-      default:
-        return {
-          ...baseParticle,
-          vx: 0,
-          vy: 0,
-          size: 4,
-          maxLife: 60,
-        };
-    }
-  }, [sin]);
-
-  const updateParticles = useCallback(() => {
-    setParticles(prevParticles => {
-      return prevParticles
-        .map(particle => {
-          const newParticle = { ...particle };
-          newParticle.life += 1;
-          
-          if (sin === 'envy' && newParticle.angle !== undefined) {
-            const spiral = newParticle.life * 0.1;
-            newParticle.x += Math.cos(newParticle.angle + spiral) * 0.5;
-            newParticle.y += Math.sin(newParticle.angle + spiral) * 0.5;
-          } else {
-            newParticle.x += newParticle.vx;
-            newParticle.y += newParticle.vy;
-          }
-          
-          newParticle.opacity = 1 - (newParticle.life / newParticle.maxLife);
-          newParticle.size *= 0.98;
-          
-          return newParticle;
-        })
-        .filter(particle => particle.life < particle.maxLife);
-    });
-  }, [sin]);
-
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isActive || isTouchDevice) return;
-    
-    setMousePos({ x: e.clientX, y: e.clientY });
-    
-    setParticles(prevParticles => {
-      const newParticles = [...prevParticles];
-      
-      for (let i = 0; i < (Math.random() > 0.5 ? 2 : 3); i++) {
-        const particle = createParticle(
-          e.clientX + (Math.random() - 0.5) * 10,
-          e.clientY + (Math.random() - 0.5) * 10
-        );
-        newParticles.push(particle);
-      }
-      
-      return newParticles.slice(-30);
-    });
-  }, [isActive, isTouchDevice, createParticle]);
+    const now = Date.now();
+    // Emit at most every 80ms to keep it sparse
+    if (now - lastEmit.current < 80) return;
+    lastEmit.current = now;
+
+    setParticles(prev => [
+      ...prev.slice(-10),
+      {
+        id: idRef.current++,
+        x: e.clientX + (Math.random() - 0.5) * 6,
+        y: e.clientY + (Math.random() - 0.5) * 6,
+        opacity: 0.5,
+        size: 2 + Math.random() * 2,
+        life: 0,
+      },
+    ]);
+  }, [isActive, isTouchDevice]);
 
   useEffect(() => {
     if (!isActive || isTouchDevice) return;
-
     document.addEventListener('mousemove', handleMouseMove);
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, [handleMouseMove, isActive, isTouchDevice]);
 
   useEffect(() => {
     if (!isActive || isTouchDevice) return;
-
-    const animate = () => {
-      updateParticles();
-      animationRef.current = requestAnimationFrame(animate);
+    const tick = () => {
+      setParticles(prev =>
+        prev
+          .map(p => ({ ...p, life: p.life + 1, opacity: Math.max(0, 0.5 - p.life * 0.025) }))
+          .filter(p => p.life < 20)
+      );
+      frameRef.current = requestAnimationFrame(tick);
     };
-
-    animationRef.current = requestAnimationFrame(animate);
-    
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [updateParticles, isActive, isTouchDevice]);
-
-  const getParticleStyle = (particle: Particle): React.CSSProperties => {
-    const baseStyle: React.CSSProperties = {
-      position: 'fixed',
-      left: particle.x,
-      top: particle.y,
-      width: particle.size,
-      height: particle.size,
-      opacity: particle.opacity,
-      pointerEvents: 'none',
-      zIndex: 9999,
-      borderRadius: '50%',
-      transform: 'translate(-50%, -50%)',
-    };
-
-    switch (sin) {
-      case 'wrath':
-        return {
-          ...baseStyle,
-          background: `radial-gradient(circle, #ff6b35 0%, #ff4500 50%, #8b0000 100%)`,
-          boxShadow: `0 0 ${particle.size * 2}px rgba(255, 107, 53, 0.6)`,
-        };
-      case 'sloth':
-        return {
-          ...baseStyle,
-          background: `radial-gradient(circle, rgba(147, 112, 219, 0.8) 0%, rgba(75, 0, 130, 0.4) 100%)`,
-          filter: 'blur(2px)',
-        };
-      case 'greed':
-        return {
-          ...baseStyle,
-          background: `radial-gradient(circle, #ffd700 0%, #ffb347 50%, #daa520 100%)`,
-          boxShadow: `0 0 ${particle.size}px rgba(255, 215, 0, 0.8)`,
-          animation: `twinkle 0.5s ease-in-out infinite alternate`,
-        };
-      case 'envy':
-        return {
-          ...baseStyle,
-          background: `radial-gradient(circle, #20b2aa 0%, #008b8b 50%, #006666 100%)`,
-          boxShadow: `0 0 ${particle.size}px rgba(32, 178, 170, 0.5)`,
-        };
-      default:
-        return baseStyle;
-    }
-  };
+    frameRef.current = requestAnimationFrame(tick);
+    return () => { if (frameRef.current) cancelAnimationFrame(frameRef.current); };
+  }, [isActive, isTouchDevice]);
 
   if (isTouchDevice || !isActive) return null;
 
+  const color = sinParticleColors[sin] || '#fff';
+
   return (
-    <>
-      <style>
-        {`
-          * { cursor: none !important; }
-          @keyframes twinkle {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-50%, -50%) scale(1.2); }
-          }
-        `}
-      </style>
-      <div style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 9999 }}>
-        {particles.map(particle => (
-          <div
-            key={particle.id}
-            style={getParticleStyle(particle)}
-          />
-        ))}
+    <div style={{ position: 'fixed', top: 0, left: 0, pointerEvents: 'none', zIndex: 9999 }}>
+      {particles.map(p => (
         <div
+          key={p.id}
           style={{
             position: 'fixed',
-            left: mousePos.x,
-            top: mousePos.y,
-            width: 4,
-            height: 4,
-            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            left: p.x,
+            top: p.y,
+            width: p.size,
+            height: p.size,
+            opacity: p.opacity,
+            backgroundColor: color,
             borderRadius: '50%',
             transform: 'translate(-50%, -50%)',
             pointerEvents: 'none',
-            zIndex: 10000,
           }}
         />
-      </div>
-    </>
+      ))}
+    </div>
   );
 };
 

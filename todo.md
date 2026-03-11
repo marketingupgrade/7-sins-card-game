@@ -343,3 +343,14 @@
 - [x] FactionUnlockCelebration overlay — cinematic unlock animation
 - [x] Progress bar showing games played / threshold
 - [x] Vitest tests for unlock logic (28 tests)
+
+## Deployment
+- [x] Push latest code to Vercel project (tf-7-sins.vercel.app)
+
+## Bug Fixes - Visual Issues (from user video)
+- [x] YOUR TURN banner blocks entire screen - redesign as subtle top notification
+- [x] Screen shake never stops - fix reset logic, raise damage threshold
+- [x] Card animation/glow too intense red - tone down, ensure proper faction colors
+- [x] Restore all 4 factions as playable (remove lock gating)
+- [x] Floating text/numbers too large and intrusive on mobile
+- [x] Round/status text overlaps player panels on mobile

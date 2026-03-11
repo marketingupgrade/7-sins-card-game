@@ -14,7 +14,7 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
       left: 0,
       right: 0,
       bottom: 0,
-      opacity: isHovered ? 0.4 : 0,
+      opacity: isHovered ? 0.15 : 0,
       transition: 'opacity 300ms ease-in-out',
       mixBlendMode: 'overlay' as const,
       pointerEvents: 'none' as const,
@@ -44,7 +44,7 @@ const SinShaderOverlay: React.FC<SinShaderOverlayProps> = ({ sin, isHovered, chi
       case 'envy':
         return {
           ...baseStyles,
-          opacity: isHovered ? 0.3 : 0,
+          opacity: isHovered ? 0.12 : 0,
           background: 'linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4, #ffeaa7)',
           animation: isHovered ? 'envyShift 4s ease-in-out infinite' : 'none',
         };

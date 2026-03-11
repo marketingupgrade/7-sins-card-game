@@ -1,9 +1,10 @@
 /**
  * ScreenShake.tsx
- * Wrapper component that shakes its children on trigger
+ * Wrapper component that shakes its children on trigger.
+ * Subtle and brief - never blocks gameplay.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ScreenShakeProps {
   trigger: number;
@@ -14,51 +15,51 @@ interface ScreenShakeProps {
 const ScreenShake: React.FC<ScreenShakeProps> = ({ trigger, intensity, children }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
-  const [isShaking, setIsShaking] = useState(false);
+  const prevTrigger = useRef(0);
 
   const shakeConfig = {
-    light: { offset: 3, duration: 300, vibration: 50 },
-    heavy: { offset: 8, duration: 500, vibration: 100 },
+    light: { offset: 2, duration: 200 },
+    heavy: { offset: 4, duration: 350 },
   };
 
-  const config = shakeConfig[intensity];
-
   useEffect(() => {
-    if (trigger <= 0) return;
+    // Only shake on new triggers, not on mount
+    if (trigger <= 0 || trigger === prevTrigger.current) return;
+    prevTrigger.current = trigger;
 
     const container = containerRef.current;
     if (!container) return;
 
-    // Trigger vibration on mobile
-    if ('vibrate' in navigator) {
-      navigator.vibrate(config.vibration);
+    // Cancel any existing animation first
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
     }
 
-    setIsShaking(true);
+    // Brief mobile vibration
+    if ('vibrate' in navigator) {
+      navigator.vibrate(intensity === 'heavy' ? 80 : 30);
+    }
 
-    const startTime = Date.now();
-    const { offset, duration } = config;
+    const config = shakeConfig[intensity];
+    const startTime = performance.now();
 
-    const shake = () => {
-      const elapsed = Date.now() - startTime;
-      const progress = elapsed / duration;
+    const shake = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = elapsed / config.duration;
 
       if (progress >= 1) {
-        // Animation complete - return to original position
-        container.style.transform = 'translate3d(0, 0, 0)';
-        setIsShaking(false);
+        container.style.transform = '';
+        animationRef.current = null;
         return;
       }
 
-      // Easing function for shake intensity (starts strong, fades out)
-      const intensity = Math.cos(progress * Math.PI * 0.5);
-      
-      // Random shake direction with decreasing intensity
-      const x = (Math.random() - 0.5) * offset * 2 * intensity;
-      const y = (Math.random() - 0.5) * offset * 2 * intensity;
+      // Cosine easing: starts strong, fades to zero
+      const ease = Math.cos(progress * Math.PI * 0.5);
+      const x = (Math.random() - 0.5) * config.offset * 2 * ease;
+      const y = (Math.random() - 0.5) * config.offset * 2 * ease;
 
       container.style.transform = `translate3d(${x}px, ${y}px, 0)`;
-
       animationRef.current = requestAnimationFrame(shake);
     };
 
@@ -67,23 +68,16 @@ const ScreenShake: React.FC<ScreenShakeProps> = ({ trigger, intensity, children 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
       if (container) {
-        container.style.transform = 'translate3d(0, 0, 0)';
+        container.style.transform = '';
       }
-      setIsShaking(false);
     };
-  }, [trigger, config]);
+  }, [trigger, intensity]);
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        willChange: isShaking ? 'transform' : 'auto',
-        backfaceVisibility: 'hidden', // Optimize for animations
-        perspective: 1000,
-      }}
-    >
+    <div ref={containerRef}>
       {children}
     </div>
   );
