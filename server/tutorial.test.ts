@@ -27,15 +27,15 @@ describe("Tutorial Step Definitions", () => {
     }
   });
 
-  it("should have a total of 20 steps across all pages", () => {
-    expect(TOTAL_STEPS).toBe(20);
-    expect(ALL_TUTORIAL_STEPS.length).toBe(20);
+  it("should have a total of 19 steps across all pages", () => {
+    expect(TOTAL_STEPS).toBe(19);
+    expect(ALL_TUTORIAL_STEPS.length).toBe(19);
   });
 
-  it("should have 5 home steps, 5 lobby steps, and 10 game steps", () => {
+  it("should have 5 home steps, 5 lobby steps, and 9 game steps", () => {
     expect(TUTORIAL_STEPS.home.length).toBe(5);
     expect(TUTORIAL_STEPS.lobby.length).toBe(5);
-    expect(TUTORIAL_STEPS.game.length).toBe(10);
+    expect(TUTORIAL_STEPS.game.length).toBe(9);
   });
 
   it("should have unique IDs for all steps", () => {
@@ -162,31 +162,31 @@ describe("Tutorial Content Quality", () => {
     expect(lobbyIds).toContain("lobby-start");
   });
 
-  it("game page should explain HP, energy, hand, flat/compound cards, targeting, and balance sheet", () => {
+  it("game page should explain HP, energy, hand, compound patterns, targeting, and balance sheet", () => {
     const gameSteps = getStepsForPage("game");
     const gameIds = gameSteps.map((s) => s.id);
     expect(gameIds).toContain("game-hp-bar");
     expect(gameIds).toContain("game-energy-bar");
     expect(gameIds).toContain("game-hand");
-    expect(gameIds).toContain("game-flat-card");
-    expect(gameIds).toContain("game-compound-card");
+    expect(gameIds).toContain("game-compound-patterns");
     expect(gameIds).toContain("game-target");
     expect(gameIds).toContain("game-balance-sheet");
     expect(gameIds).toContain("game-pass");
   });
 
-  it("compounding card step should mention the 3-round tick system", () => {
-    const compoundStep = ALL_TUTORIAL_STEPS.find((s) => s.id === "game-compound-card");
+  it("compound patterns step should mention Standard, Aggressive, and Slowburn", () => {
+    const compoundStep = ALL_TUTORIAL_STEPS.find((s) => s.id === "game-compound-patterns");
     expect(compoundStep).toBeDefined();
-    expect(compoundStep!.body).toContain("3 rounds");
-    expect(compoundStep!.body).toContain("4");
+    expect(compoundStep!.body).toContain("STANDARD");
+    expect(compoundStep!.body).toContain("AGGRESSIVE");
+    expect(compoundStep!.body).toContain("SLOWBURN");
   });
 
   it("energy step should mention starting energy and max cap", () => {
     const energyStep = ALL_TUTORIAL_STEPS.find((s) => s.id === "game-energy-bar");
     expect(energyStep).toBeDefined();
     expect(energyStep!.body).toContain("2");  // Start energy
-    expect(energyStep!.body).toContain("7");  // Max cap
+    expect(energyStep!.body).toContain("3");  // Max cap (v4)
   });
 });
 
