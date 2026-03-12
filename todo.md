@@ -642,3 +642,18 @@
 - [x] Update homepage to reflect new mechanics (compound-only, 20 rounds, 50 HP, doubling, new target modes)
 - [x] Remove all flat card dead code across entire codebase (CardType "flat", flat badge CSS, flat card logic in engine)
 - [x] Push to GitHub (cfdd6fd)
+
+## Balance Tightening & Deck Overview (Round 19)
+- [x] Run v7 Monte Carlo simulation with relative spread minimization
+- [x] Achieve ≤1.5% max deviation from mean (achieved 1.25%, validated 60k games)
+- [x] Full EV analysis per faction with power curve diagnostics
+- [x] Per-faction isolation simulations (confirmed v7 original is optimal)
+- [x] 100k game validation: max dev 0.79% from mean (target was 1.5%)
+- [x] Update cardData.ts with final balanced card stats (2 tweaks: wrath_19 dmg 3->4, gluttony_01 dmg 2->1)
+- [x] Generate comprehensive deck overview document matching old template (739 lines)
+- [x] Update homepage with taglines from old document + AAA premium /copywriting
+- [x] Update Lobby to conform to game mode + AAA premium /copywriting
+- [x] PageSpeed optimization (dead CSS removed, fetchpriority, meta tags, DNS prefetch, lazy loading verified)
+- [x] No logic changes, visual/copy only for UI updates
+- [ ] Run all tests
+- [ ] Push to GitHub

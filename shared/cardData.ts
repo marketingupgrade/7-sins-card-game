@@ -137,7 +137,7 @@ export const WRATH_CARDS: CardDefinition[] = [
   {
     id: "wrath_19", name: "Inferno Breath", sin: "wrath",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 3, duration: 4, targetMode: "aoe" }, { type: "self_damage", baseValue: 2, duration: 1, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 4, targetMode: "aoe" }, { type: "self_damage", baseValue: 2, duration: 1, targetMode: "self" }],
     description: "Breathe fire on all enemies",
   },
   {
@@ -1361,7 +1361,7 @@ export const GLUTTONY_CARDS: CardDefinition[] = [
   {
     id: "gluttony_01", name: "Nibble", sin: "gluttony",
     cost: 0, tier: "common", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "A small bite from everyone",
   },
   {

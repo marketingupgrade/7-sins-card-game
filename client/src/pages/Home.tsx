@@ -42,50 +42,50 @@ interface SinHeroData {
 const SIN_HEROES: SinHeroData[] = [
   {
     key: "wrath", name: "WRATH", latin: "IRA", subtitle: "The Destroyer",
-    tagline: "Burn everything. Self-harm is just collateral. Impulse control is for the weak.",
-    desc: "Fury: +1 bonus damage on all attacks. Pure aggression, no subtlety.",
+    tagline: "Burn bright. Burn fast. Burn everything.",
+    desc: "Fury: Self-damage triggers 3 bonus damage to target + 2 HP heal.",
     color: "wrath",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-wrath-TeSKthKHRdCAbA6HrjewHv.webp",
   },
   {
     key: "sloth", name: "SLOTH", latin: "ACEDIA", subtitle: "The Enduring",
-    tagline: "Outlast everyone. Shields and heals that grow over time. Patience is a weapon.",
-    desc: "Endurance: Gain +1 shield at the start of each round. Outlast everyone.",
+    tagline: "Why rush? Everything dies eventually.",
+    desc: "Endurance: Taking affliction damage grants +1 shield.",
     color: "sloth",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-sloth-oJiaiRD273Z7ZfsDE8JiiD.webp",
   },
   {
     key: "greed", name: "GREED", latin: "AVARITIA", subtitle: "The Collector",
-    tagline: "Steal resources. Drain opponents. Everything has a price, and you're collecting.",
-    desc: "Avarice: Spending 3+ energy in a turn grants +1 bonus energy next round.",
+    tagline: "Everything has a price. Yours is higher.",
+    desc: "Avarice: Steal effects grant +1 bonus energy.",
     color: "greed",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-greed-fEbEo6DMdYo6bqsMextgsR.webp",
   },
   {
     key: "envy", name: "ENVY", latin: "INVIDIA", subtitle: "The Mimic",
-    tagline: "Copy strengths. Punish the strong. If you can't beat them, become them.",
-    desc: "Jealousy: Steal effects deal +1 extra. Take what others have.",
+    tagline: "If I can't have it, neither can you.",
+    desc: "Jealousy: Damage cards increase target's worst affliction by 1.",
     color: "envy",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-envy-gZJhB9uBpa2wku9NUmabkD.webp",
   },
   {
     key: "pride", name: "PRIDE", latin: "SUPERBIA", subtitle: "The Exalted",
-    tagline: "Ascend above all. Free cards build divine shields. Perfection is your birthright.",
-    desc: "Hubris: Playing a 0-cost card grants +1 shield. Elegance through efficiency.",
+    tagline: "Kneel. Or be made to.",
+    desc: "Hubris: 0-cost cards grant +1 shield. Elegance through efficiency.",
     color: "pride",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-pride-Yeo45kXyHSX3c74SFiP9Fu.webp",
   },
   {
     key: "lust", name: "LUST", latin: "LUXURIA", subtitle: "The Temptress",
-    tagline: "Seduce and drain. Each strike heals you. Desire is the sweetest poison.",
-    desc: "Temptation: Dealing single-target damage heals you for 1 HP. Desire sustains.",
+    tagline: "Come closer. It only hurts at first.",
+    desc: "Temptation: Damage cards heal you for 1 HP. Desire sustains.",
     color: "lust",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-lust-MFSDRVMFLfbKcSyzMA5fPX.webp",
   },
   {
     key: "gluttony", name: "GLUTTONY", latin: "GULA", subtitle: "The Devourer",
-    tagline: "Consume everything. AoE attacks fuel your hunger. More is never enough.",
-    desc: "Devour: AoE effects deal +1 bonus damage. Hunger feeds on the crowd.",
+    tagline: "More. Always more. Never enough.",
+    desc: "Devour: AoE effects grant +1 bonus energy. Hunger feeds itself.",
     color: "gluttony",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-gluttony-HzraaUCvjS3VoYDUowX6aj.webp",
   },
@@ -279,6 +279,8 @@ export default function Home() {
                       src={currentSin.heroImg}
                       alt={currentSin.name}
                       className="w-full h-full object-cover"
+                      fetchPriority="high"
+                      decoding="async"
                     />
                     {/* Bottom gradient overlay for text */}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
@@ -614,7 +616,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Scales linearly each tick. Reliable and predictable — the backbone of most decks.
+                  Fibonacci scaling: 1, 1, 2, 3, 5, 8... Reliable growth that accelerates over time.
                 </p>
               </div>
 
@@ -630,7 +632,7 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Hits hard early, then fades. Maximum pressure in the first ticks.
+                  Exponential scaling: 1, 2, 4, 8, 16... Devastating if left unchecked.
                 </p>
               </div>
 
@@ -642,11 +644,11 @@ export default function Home() {
                   </div>
                   <div>
                     <h3 className="text-sm font-bold text-greed-glow tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>SLOWBURN</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Exponential Payoff</p>
+                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Steady Payoff</p>
                   </div>
                 </div>
                 <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Weak at first, devastating at the end. Patience rewarded with exponential scaling.
+                  Linear scaling: 1, 1, 1, 1, 2, 2, 3... Minimal early, steady late. Patience rewarded.
                 </p>
               </div>
             </div>

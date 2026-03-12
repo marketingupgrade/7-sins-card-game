@@ -751,13 +751,7 @@
     color: oklch(0.55 0.03 50);
   }
 
-  /* ─── Compound Type Badge ────────────────────────────────── */
-  .badge-flat {
-    background: linear-gradient(135deg, oklch(0.82 0.12 75 / 0.15), oklch(0.7 0.15 80 / 0.08));
-    border: 1px solid oklch(0.82 0.12 75 / 0.3);
-    color: oklch(0.82 0.12 75);
-    text-shadow: 0 0 6px oklch(0.82 0.12 75 / 0.3);
-  }
+  /* ─── Compound Pattern Badge ─────────────────────────────── */
   .badge-compound {
     background: linear-gradient(135deg, oklch(0.7 0.15 80 / 0.15), oklch(0.45 0.14 280 / 0.08));
     border: 1px solid oklch(0.7 0.15 80 / 0.3);
