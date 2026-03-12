@@ -152,6 +152,8 @@ export interface CardDefinition {
   description: string;
   /** Visual tier for card border styling */
   tier: CardTier;
+  /** If true, this card resolves before normal cards in the resolution queue */
+  skipQueue?: boolean;
 }
 
 // ─── Energy / Corruption System (v4) ────────────────────────
@@ -203,6 +205,37 @@ export function getBaseEnergyForRound(_round: number): number {
   return MAX_ENERGY; // Fixed 3 energy per turn in v4
 }
 
+// ─── Turn Phase (Simultaneous Lock-In) ──────────────────────
+/**
+ * Simultaneous lock-in turn system:
+ *
+ *   SELECTION  — All players choose cards simultaneously. Each player
+ *                selects 0-N cards from hand (limited by energy). Cards
+ *                are "locked in" but hidden from opponents.
+ *
+ *   RESOLUTION — Cards resolve one-by-one in priority order:
+ *                1. Lowest HP plays first (tiebreak: lowest seat index)
+ *                2. Within each player's locked cards: lowest cost first
+ *                3. Skip-queue cards resolve before normal cards
+ *
+ *   ROUND_END  — Compound effects tick, energy refreshes, cards draw,
+ *                round advances. Then back to SELECTION.
+ */
+export type TurnPhase = "selection" | "resolution" | "round_end";
+
+/** A single locked-in card play (stored in games.locked_plays JSON) */
+export interface LockedPlay {
+  playerId: string;
+  gamePlayerId: string;
+  cardId: string;
+  targetPlayerId?: string;
+  /** Skip-queue cards resolve before normal cards */
+  skipQueue?: boolean;
+}
+
+/** Selection timer duration in seconds */
+export const SELECTION_TIMER_SECONDS = 30;
+
 // ─── Game State ──────────────────────────────────────────────
 export type GameStatus = "lobby" | "draft" | "active" | "finished";
 
@@ -221,6 +254,10 @@ export interface PlayerState {
   currentEnergy: number;
   maxEnergy: number;
   bonusEnergy: number;
+  /** Cards this player has locked in for the current selection phase */
+  lockedCards: LockedPlay[];
+  /** Whether this player has confirmed their selection */
+  hasLockedIn: boolean;
 }
 
 export interface ActiveEffect {
@@ -245,7 +282,12 @@ export interface GameState {
   roomCode: string;
   status: GameStatus;
   currentRound: number;
+  /** @deprecated Kept for backward compat. In simultaneous mode, all players act at once. */
   currentPlayerIndex: number;
+  /** Current turn phase: selection → resolution → round_end → selection */
+  turnPhase: TurnPhase;
+  /** All locked-in plays for the current round (populated during selection, consumed during resolution) */
+  lockedPlays: LockedPlay[];
   players: PlayerState[];
   activeEffects: ActiveEffect[];
   winnerId: string | null;

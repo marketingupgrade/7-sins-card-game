@@ -1,9 +1,9 @@
 /**
- * useBotController - Manages bot turn execution during gameplay
+ * useBotController - Manages bot lock-in during simultaneous selection phase
  *
- * When it's a bot's turn, this hook automatically triggers the bot
- * to play after a short "thinking" delay. Because even silicon
- * deserves a dramatic pause.
+ * In the simultaneous system, ALL bots lock in their cards during the
+ * selection phase (not sequentially). This hook watches for the selection
+ * phase and triggers all bots to lock in with a staggered "thinking" delay.
  */
 
 import { useCallback, useEffect, useRef } from "react";
@@ -19,59 +19,80 @@ interface BotControllerOptions {
 export function useBotController({ gameState, onBotAction, onRefetch }: BotControllerOptions) {
   const isProcessingRef = useRef(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastProcessedRoundRef = useRef<number>(-1);
 
-  const executeBotTurn = useCallback(async () => {
+  const executeAllBotLockIns = useCallback(async () => {
     if (!gameState || gameState.status !== "active" || isProcessingRef.current) return;
+    if (gameState.turnPhase !== "selection") return;
 
-    const alivePlayers = gameState.players.filter((p) => p.isAlive);
-    if (alivePlayers.length === 0) return;
+    // Prevent double-processing the same round
+    if (lastProcessedRoundRef.current === gameState.currentRound) return;
 
-    const currentPlayer = alivePlayers[gameState.currentPlayerIndex % alivePlayers.length];
-    if (!currentPlayer || !isBot(currentPlayer.id)) return;
+    const botPlayers = gameState.players.filter((p) => p.isAlive && isBot(p.id));
+    if (botPlayers.length === 0) return;
+
+    // Check if any bots still need to lock in
+    const botsNeedingLockIn = botPlayers.filter((p) => !p.hasLockedIn);
+    if (botsNeedingLockIn.length === 0) return;
 
     isProcessingRef.current = true;
+    lastProcessedRoundRef.current = gameState.currentRound;
 
     try {
-      // Dramatic bot "thinking" delay (1-2.5 seconds)
-      const thinkTime = 1000 + Math.random() * 1500;
-      await new Promise((resolve) => setTimeout(resolve, thinkTime));
+      // Stagger bot lock-ins with "thinking" delays
+      for (const bot of botsNeedingLockIn) {
+        const thinkTime = 800 + Math.random() * 1200;
+        await new Promise((resolve) => setTimeout(resolve, thinkTime));
 
-      const result = await botPlayTurn(gameState.id, currentPlayer.id);
+        try {
+          const result = await botPlayTurn(gameState.id, bot.id);
 
-      if (onBotAction) {
-        onBotAction(result);
+          if (onBotAction) {
+            onBotAction(result);
+          }
+        } catch (err) {
+          console.error(`Bot ${bot.id} lock-in failed:`, err);
+        }
       }
 
-      // Small delay before refetching to let Supabase propagate
+      // Delay before refetching to let Supabase propagate
       await new Promise((resolve) => setTimeout(resolve, 500));
       onRefetch();
     } catch (err) {
-      console.error("Bot turn failed:", err);
+      console.error("Bot controller failed:", err);
     } finally {
       isProcessingRef.current = false;
     }
   }, [gameState, onBotAction, onRefetch]);
 
-  // Watch for bot turns
+  // Watch for selection phase to trigger bot lock-ins
   useEffect(() => {
     if (!gameState || gameState.status !== "active") return;
+    if (gameState.turnPhase !== "selection") return;
 
-    const alivePlayers = gameState.players.filter((p) => p.isAlive);
-    if (alivePlayers.length === 0) return;
+    const botPlayers = gameState.players.filter((p) => p.isAlive && isBot(p.id));
+    if (botPlayers.length === 0) return;
 
-    const currentPlayer = alivePlayers[gameState.currentPlayerIndex % alivePlayers.length];
-    if (!currentPlayer || !isBot(currentPlayer.id)) return;
+    const botsNeedingLockIn = botPlayers.filter((p) => !p.hasLockedIn);
+    if (botsNeedingLockIn.length === 0) return;
 
-    // Schedule bot turn execution
+    // Schedule bot lock-ins
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
     timeoutRef.current = setTimeout(() => {
-      executeBotTurn();
-    }, 800);
+      executeAllBotLockIns();
+    }, 600);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [gameState?.currentPlayerIndex, gameState?.currentRound, gameState?.status, executeBotTurn]);
+  }, [gameState?.turnPhase, gameState?.currentRound, gameState?.status, executeAllBotLockIns]);
+
+  // Reset round tracking when game changes
+  useEffect(() => {
+    if (!gameState) {
+      lastProcessedRoundRef.current = -1;
+    }
+  }, [gameState?.id]);
 
   // Cleanup
   useEffect(() => {

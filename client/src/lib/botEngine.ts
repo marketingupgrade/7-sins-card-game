@@ -1,9 +1,9 @@
 /**
- * Bot Engine (v4) - AI-controlled players for solo testing
+ * Bot Engine (v5) - AI-controlled players for solo testing
  *
- * ALL cards are compound. No flat cards exist.
- * Bots use v4 passives and compound patterns.
- * Overcharge removed — Wrath uses FURY passive instead.
+ * Simultaneous lock-in system: bots select cards and call lockInCards()
+ * from the client gameEngine. No duplicate effect resolution code.
+ * Resolution happens centrally in gameEngine.resolveLockedPlays().
  */
 
 import { getClientSupabase } from "../../../shared/supabaseClient";
@@ -13,19 +13,8 @@ import {
   HAND_SIZE,
   STARTING_HP,
   MAX_ENERGY,
-  MAX_ROUNDS,
-  ROUND_16_DOUBLING,
-  CompoundPattern,
-  WRATH_FURY_BONUS_DAMAGE,
-  WRATH_FURY_HEAL,
-  SLOTH_ENDURANCE_SHIELD,
-  GREED_AVARICE_ENERGY,
-  ENVY_JEALOUSY_AMPLIFY,
-  PRIDE_HUBRIS_SHIELD,
-  LUST_TEMPTATION_HEAL,
-  GLUTTONY_DEVOUR_ENERGY,
-  getCompoundTickValue,
 } from "../../../shared/gameTypes";
+import { lockInCards } from "./gameEngine";
 
 // ─── Bot Names (sassy and cynical) ──────────────────────────
 const BOT_NAMES = [
@@ -125,7 +114,12 @@ export async function botChooseSin(gameId: string, botId: string): Promise<SinTy
   return sin;
 }
 
-// ─── Bot Play Turn (Multi-Card) ─────────────────────────────
+// ─── Bot Play Turn (Simultaneous Lock-In) ─────────────────────
+/**
+ * Bot selects cards to lock in during the selection phase.
+ * Uses the same lockInCards() function as human players.
+ * No direct effect resolution — that happens in resolveLockedPlays.
+ */
 export async function botPlayTurn(gameId: string, botId: string): Promise<{
   action: "play" | "pass";
   cardName?: string;
@@ -136,6 +130,7 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
 
   const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
   if (!game || game.status !== "active") return { action: "pass" };
+  if (game.turn_phase !== "selection") return { action: "pass" };
 
   const { data: botPlayer } = await sb
     .from("game_players")
@@ -146,6 +141,13 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
 
   if (!botPlayer || !botPlayer.is_alive) return { action: "pass" };
 
+  // Check if bot already locked in this round
+  const existingLocked = botPlayer.locked_cards || [];
+  if (Array.isArray(existingLocked) && existingLocked.length > 0) return { action: "pass" };
+  // Also check games.locked_plays
+  const gameLocked = (game.locked_plays || []) as any[];
+  if (gameLocked.some((lp: any) => lp.playerId === botId)) return { action: "pass" };
+
   const { data: allPlayers } = await sb
     .from("game_players")
     .select("*")
@@ -154,159 +156,49 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
 
   if (!allPlayers) return { action: "pass" };
 
-  const alivePlayers = allPlayers.filter((p) => p.is_alive);
-  const currentTurnPlayer = alivePlayers[game.current_player_index % alivePlayers.length];
-  if (currentTurnPlayer.player_id !== botId) return { action: "pass" };
-
-  // ─── Multi-Card Loop ─────────────────────────────────────────
+  // ─── Select cards to lock in ─────────────────────────────────
   let currentHand: string[] = [...(botPlayer.hand || [])];
   let currentEnergy = botPlayer.current_energy ?? 0;
-  let currentDiscard: string[] = [...(botPlayer.discard_pile || [])];
-  let cardsPlayed = 0;
-  let lastCardName: string | undefined;
-  let lastNarratorQuip: string | undefined;
+  const selections: Array<{ cardId: string; targetPlayerId?: string }> = [];
   const MAX_CARDS_PER_TURN = 5;
-  const sin = botPlayer.chosen_sin as SinType;
+  let lastCardName: string | undefined;
 
-  while (cardsPlayed < MAX_CARDS_PER_TURN) {
+  for (let i = 0; i < MAX_CARDS_PER_TURN; i++) {
     if (currentHand.length === 0) break;
 
-    const { data: freshPlayers } = await sb
-      .from("game_players")
-      .select("*")
-      .eq("game_id", gameId)
-      .order("seat_index");
-    const currentAllPlayers = freshPlayers || allPlayers;
-
     const botState = { ...botPlayer, current_energy: currentEnergy, hand: currentHand };
-    const cardToPlay = selectBestCard(currentHand, botState, currentAllPlayers, game.current_round);
+    const cardToPlay = selectBestCard(currentHand, botState, allPlayers, game.current_round);
     if (!cardToPlay) break;
 
     const card = getCardById(cardToPlay.cardId);
     if (!card) break;
 
-    const enemies = currentAllPlayers.filter((p) => p.is_alive && p.player_id !== botId);
+    const enemies = allPlayers.filter((p: any) => p.is_alive && p.player_id !== botId);
     const targetId = cardToPlay.targetId || (enemies.length > 0 ? selectBestTarget(enemies) : undefined);
 
-    let energyAfterPlay = currentEnergy - card.cost;
-    const newHand = currentHand.filter((id) => id !== cardToPlay.cardId);
-    currentDiscard.push(cardToPlay.cardId);
-
-    // V4 PASSIVES on card play
-    if (sin === "pride" && card.cost === 0) {
-      await sb.from("active_effects").insert({
-        game_id: gameId,
-        target_player_id: botPlayer.id,
-        source_player_id: botPlayer.id,
-        effect_type: "shield_gain",
-        base_value: PRIDE_HUBRIS_SHIELD,
-        applied_at_round: game.current_round,
-        duration_rounds: 1,
-        card_id: cardToPlay.cardId,
-      });
-    }
-
-    if (sin === "gluttony" && card.effects.some((e) => e.targetMode === "aoe")) {
-      energyAfterPlay = Math.min(energyAfterPlay + GLUTTONY_DEVOUR_ENERGY, MAX_ENERGY);
-    }
-
-    if (sin === "greed" && card.effects.some((e) => ["heal_steal", "shield_steal", "energy_steal"].includes(e.type))) {
-      energyAfterPlay = Math.min(energyAfterPlay + GREED_AVARICE_ENERGY, MAX_ENERGY);
-    }
-
-    await sb
-      .from("game_players")
-      .update({ hand: newHand, discard_pile: currentDiscard, current_energy: energyAfterPlay })
-      .eq("id", botPlayer.id);
-
-    // Resolve Effects (ALL COMPOUND)
-    for (const effect of card.effects) {
-      const targets = resolveTargets(effect, botPlayer, currentAllPlayers, targetId);
-      const firstTickValue = getCompoundTickValue(effect.baseValue, card.compoundPattern, 0);
-
-      for (const target of targets) {
-        await applyInstantEffect(effect.type, firstTickValue, target, gameId, botPlayer.id);
-
-        // WRATH FURY
-        if (sin === "wrath" && effect.type === "self_damage") {
-          const lowestEnemy = enemies.sort((a, b) => a.current_hp - b.current_hp)[0];
-          if (lowestEnemy) {
-            await applyInstantEffect("damage", WRATH_FURY_BONUS_DAMAGE, lowestEnemy, gameId, botPlayer.id);
-          }
-          await applyInstantEffect("heal_gain", WRATH_FURY_HEAL, botPlayer, gameId, botPlayer.id);
-        }
-
-        // LUST TEMPTATION
-        if (sin === "lust" && effect.type === "damage" && effect.targetMode === "single") {
-          await applyInstantEffect("heal_gain", LUST_TEMPTATION_HEAL, botPlayer, gameId, botPlayer.id);
-        }
-
-        // ENVY JEALOUSY
-        if (sin === "envy" && effect.type === "damage" && target.player_id !== botId) {
-          await amplifyWorstAffliction(gameId, target.id, ENVY_JEALOUSY_AMPLIFY);
-        }
-
-        // Store compound effect for future ticks
-        if (effect.duration > 1) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: target.id,
-            source_player_id: botPlayer.id,
-            effect_type: effect.type,
-            base_value: effect.baseValue,
-            applied_at_round: game.current_round,
-            duration_rounds: effect.duration,
-            card_id: cardToPlay.cardId,
-            current_tick: 1,
-            compound_pattern: card.compoundPattern,
-          });
-        }
-      }
-    }
-
-    // Log the card play
-    await sb.from("game_log").insert({
-      game_id: gameId,
-      player_id: botPlayer.id,
-      action_type: "play_card",
-      action_data: {
-        cardId: cardToPlay.cardId,
-        targetPlayerId: targetId,
-        energySpent: card.cost,
-        energyRemaining: energyAfterPlay,
-        compoundPattern: card.compoundPattern,
-      },
-      round_number: game.current_round,
-    });
-
-    currentHand = newHand;
-    currentEnergy = energyAfterPlay;
-    cardsPlayed++;
+    selections.push({ cardId: cardToPlay.cardId, targetPlayerId: targetId });
+    currentHand = currentHand.filter((id) => id !== cardToPlay.cardId);
+    currentEnergy -= card.cost;
     lastCardName = card.name;
-    lastNarratorQuip = card.description;
   }
 
-  // After playing all cards, draw if none played, then pass
-  if (cardsPlayed === 0) {
-    await drawCardForBot(botPlayer);
+  // Lock in the selections (or pass with 0 cards)
+  try {
+    const result = await lockInCards(gameId, botId, selections);
+    return {
+      action: selections.length > 0 ? "play" : "pass",
+      cardName: lastCardName,
+      narratorQuip: result.narratorQuip,
+      cardsPlayed: selections.length,
+    };
+  } catch (err) {
+    console.error("Bot lock-in failed:", err);
+    // Fallback: lock in with 0 cards (pass)
+    try {
+      await lockInCards(gameId, botId, []);
+    } catch { /* already locked in or game state changed */ }
+    return { action: "pass" };
   }
-
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    player_id: botPlayer.id,
-    action_type: "pass",
-    action_data: { unspentEnergy: currentEnergy, cardsPlayedThisTurn: cardsPlayed },
-    round_number: game.current_round,
-  });
-
-  await advanceBotTurn(gameId);
-
-  return {
-    action: cardsPlayed > 0 ? "play" : "pass",
-    cardName: lastCardName,
-    narratorQuip: lastNarratorQuip,
-    cardsPlayed,
-  };
 }
 
 // ─── Smart Card Selection (v4 — compound-only) ─────────────
@@ -389,442 +281,6 @@ function selectBestTarget(enemies: any[]): string | undefined {
   if (enemies.length === 0) return undefined;
   const sorted = [...enemies].sort((a, b) => a.current_hp - b.current_hp);
   return sorted[0]?.player_id;
-}
-
-// ─── Resolve Targets (v4 targetMode) ────────────────────────
-function resolveTargets(effect: any, source: any, allPlayers: any[], targetPlayerId?: string): any[] {
-  const alive = allPlayers.filter((p) => p.is_alive);
-  switch (effect.targetMode) {
-    case "self":
-      return [source];
-    case "single": {
-      if (targetPlayerId) {
-        const target = alive.find((p) => p.player_id === targetPlayerId);
-        return target ? [target] : [];
-      }
-      const enemies = alive.filter((p) => p.player_id !== source.player_id);
-      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 1);
-    }
-    case "duo": {
-      const enemies = alive.filter((p) => p.player_id !== source.player_id);
-      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 2);
-    }
-    case "aoe":
-      return alive.filter((p) => p.player_id !== source.player_id);
-    default:
-      return [];
-  }
-}
-
-// ─── Apply Instant Effect (v4 — with shield absorption) ─────
-async function applyInstantEffect(
-  type: string,
-  value: number,
-  target: any,
-  gameId?: string,
-  sourcePlayerId?: string
-): Promise<void> {
-  const sb = getClientSupabase();
-  const roundedValue = Math.round(value);
-
-  switch (type) {
-    case "damage":
-    case "self_damage": {
-      let remainingDamage = roundedValue;
-
-      if (gameId) {
-        const { data: shields } = await sb
-          .from("active_effects")
-          .select("*")
-          .eq("game_id", gameId)
-          .eq("target_player_id", target.id)
-          .in("effect_type", ["shield_gain"]);
-
-        if (shields && shields.length > 0) {
-          for (const shield of shields) {
-            if (remainingDamage <= 0) break;
-            const shieldValue = shield.base_value;
-            if (shieldValue <= remainingDamage) {
-              remainingDamage -= shieldValue;
-              await sb.from("active_effects").delete().eq("id", shield.id);
-            } else {
-              await sb.from("active_effects").update({ base_value: shieldValue - remainingDamage }).eq("id", shield.id);
-              remainingDamage = 0;
-            }
-          }
-        }
-      }
-
-      if (remainingDamage > 0) {
-        const newHp = Math.max(0, Math.round(target.current_hp - remainingDamage));
-        await sb.from("game_players").update({ current_hp: newHp, is_alive: newHp > 0 }).eq("id", target.id);
-        target.current_hp = newHp;
-        target.is_alive = newHp > 0;
-
-        // SLOTH ENDURANCE
-        if (target.chosen_sin === "sloth" && target.is_alive && sourcePlayerId !== target.player_id) {
-          if (gameId) {
-            await sb.from("active_effects").insert({
-              game_id: gameId,
-              target_player_id: target.id,
-              source_player_id: target.id,
-              effect_type: "shield_gain",
-              base_value: SLOTH_ENDURANCE_SHIELD,
-              applied_at_round: 0,
-              duration_rounds: 1,
-              card_id: "sloth-endurance",
-            });
-          }
-        }
-      }
-      break;
-    }
-    case "heal_gain": {
-      const newHp = Math.min(target.max_hp ?? STARTING_HP, Math.round(target.current_hp + value));
-      await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
-      target.current_hp = newHp;
-      break;
-    }
-    case "heal_steal": {
-      const stolen = Math.min(roundedValue, target.current_hp);
-      const newTargetHp = Math.max(0, target.current_hp - stolen);
-      await sb.from("game_players").update({ current_hp: newTargetHp, is_alive: newTargetHp > 0 }).eq("id", target.id);
-      target.current_hp = newTargetHp;
-      target.is_alive = newTargetHp > 0;
-
-      if (sourcePlayerId && gameId) {
-        const { data: sourcePlayer } = await sb
-          .from("game_players")
-          .select("*")
-          .eq("player_id", sourcePlayerId)
-          .eq("game_id", gameId)
-          .single();
-        if (sourcePlayer) {
-          const newSourceHp = Math.min(sourcePlayer.max_hp ?? STARTING_HP, sourcePlayer.current_hp + stolen);
-          await sb.from("game_players").update({ current_hp: newSourceHp }).eq("id", sourcePlayer.id);
-        }
-      }
-      break;
-    }
-    case "shield_gain": {
-      if (gameId) {
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: sourcePlayerId || target.id,
-          effect_type: "shield_gain",
-          base_value: roundedValue,
-          applied_at_round: 0,
-          duration_rounds: 1,
-          card_id: "instant-shield",
-        });
-      }
-      break;
-    }
-    case "shield_steal": {
-      if (gameId) {
-        const { data: shields } = await sb
-          .from("active_effects")
-          .select("*")
-          .eq("game_id", gameId)
-          .eq("target_player_id", target.id)
-          .eq("effect_type", "shield_gain");
-
-        let stolen = 0;
-        if (shields && shields.length > 0) {
-          for (const shield of shields) {
-            if (stolen >= roundedValue) break;
-            const take = Math.min(shield.base_value, roundedValue - stolen);
-            stolen += take;
-            if (take >= shield.base_value) {
-              await sb.from("active_effects").delete().eq("id", shield.id);
-            } else {
-              await sb.from("active_effects").update({ base_value: shield.base_value - take }).eq("id", shield.id);
-            }
-          }
-        }
-        if (stolen > 0 && sourcePlayerId) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: sourcePlayerId,
-            source_player_id: sourcePlayerId,
-            effect_type: "shield_gain",
-            base_value: stolen,
-            applied_at_round: 0,
-            duration_rounds: 1,
-            card_id: "stolen-shield",
-          });
-        }
-      }
-      break;
-    }
-    case "energy_gain": {
-      const currentSelfEnergy = target.current_energy ?? 0;
-      const newEnergy = Math.min(currentSelfEnergy + roundedValue, MAX_ENERGY);
-      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
-      target.current_energy = newEnergy;
-      break;
-    }
-    case "energy_steal": {
-      const currentTargetEnergy = target.current_energy ?? 0;
-      const drained = Math.min(roundedValue, currentTargetEnergy);
-      await sb.from("game_players").update({ current_energy: currentTargetEnergy - drained }).eq("id", target.id);
-      target.current_energy = currentTargetEnergy - drained;
-
-      if (sourcePlayerId && gameId) {
-        const { data: sourcePlayer } = await sb
-          .from("game_players")
-          .select("*")
-          .eq("player_id", sourcePlayerId)
-          .eq("game_id", gameId)
-          .single();
-        if (sourcePlayer) {
-          const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + drained, MAX_ENERGY);
-          await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
-        }
-      }
-      break;
-    }
-    case "energy_block":
-    case "heal_block":
-    case "shield_block": {
-      if (gameId) {
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: sourcePlayerId || target.id,
-          effect_type: type,
-          base_value: roundedValue,
-          applied_at_round: 0,
-          duration_rounds: roundedValue,
-          card_id: "block-effect",
-        });
-      }
-      break;
-    }
-    case "affliction_amplify": {
-      if (gameId) {
-        await amplifyWorstAffliction(gameId, target.id, roundedValue);
-      }
-      break;
-    }
-    case "affliction_transfer": {
-      if (gameId && sourcePlayerId) {
-        const { data: sourceEffects } = await sb
-          .from("active_effects")
-          .select("*")
-          .eq("game_id", gameId)
-          .eq("target_player_id", sourcePlayerId)
-          .in("effect_type", ["damage", "self_damage"]);
-
-        if (sourceEffects && sourceEffects.length > 0) {
-          const worst = sourceEffects.sort((a, b) => b.base_value - a.base_value)[0];
-          await sb.from("active_effects")
-            .update({ target_player_id: target.id })
-            .eq("id", worst.id);
-        }
-      }
-      break;
-    }
-  }
-}
-
-// ─── Helper: Amplify Worst Affliction ────────────────────────
-async function amplifyWorstAffliction(gameId: string, targetId: string, amount: number): Promise<void> {
-  const sb = getClientSupabase();
-  const { data: effects } = await sb
-    .from("active_effects")
-    .select("*")
-    .eq("game_id", gameId)
-    .eq("target_player_id", targetId)
-    .in("effect_type", ["damage", "self_damage"]);
-
-  if (effects && effects.length > 0) {
-    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
-    await sb.from("active_effects")
-      .update({ base_value: worst.base_value + amount })
-      .eq("id", worst.id);
-  }
-}
-
-// ─── Draw Card for Bot ──────────────────────────────────────
-async function drawCardForBot(player: any): Promise<void> {
-  const sb = getClientSupabase();
-  let deck: string[] = player.deck || [];
-  const hand: string[] = player.hand || [];
-  let discard: string[] = player.discard_pile || [];
-
-  if (hand.length >= HAND_SIZE + 2) return;
-
-  if (deck.length === 0 && discard.length > 0) {
-    deck = shuffleDeck(discard);
-    discard = [];
-  }
-
-  if (deck.length > 0) {
-    const drawn = deck.shift()!;
-    hand.push(drawn);
-
-    while (hand.length > HAND_SIZE + 2) {
-      const discarded = hand.shift()!;
-      discard.push(discarded);
-    }
-
-    await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
-  }
-}
-
-// ─── Advance Turn ───────────────────────────────────────────
-async function advanceBotTurn(gameId: string): Promise<void> {
-  const sb = getClientSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game) return;
-
-  const { data: allPlayers } = await sb
-    .from("game_players")
-    .select("*")
-    .eq("game_id", gameId)
-    .order("seat_index");
-
-  if (!allPlayers) return;
-  const alivePlayers = allPlayers.filter((p) => p.is_alive);
-
-  if (alivePlayers.length <= 1) {
-    const winner = alivePlayers[0];
-    await sb.from("games").update({
-      status: "finished",
-      winner_id: winner?.player_id || null,
-      finished_at: new Date().toISOString(),
-    }).eq("id", gameId);
-    return;
-  }
-
-  let nextIndex = (game.current_player_index + 1) % alivePlayers.length;
-  let newRound = game.current_round;
-  if (nextIndex === 0) {
-    newRound = game.current_round + 1;
-
-    if (newRound > MAX_ROUNDS) {
-      const sortedByHp = [...alivePlayers].sort((a, b) => b.current_hp - a.current_hp);
-      const winner = sortedByHp[0];
-      await sb.from("games").update({
-        status: "finished",
-        winner_id: winner?.player_id || null,
-        finished_at: new Date().toISOString(),
-        current_round: MAX_ROUNDS,
-      }).eq("id", gameId);
-      return;
-    }
-
-    // ROUND 16 DOUBLING
-    if (newRound === ROUND_16_DOUBLING) {
-      await doubleAllAfflictions(gameId);
-    }
-
-    await resolveActiveEffects(gameId, newRound);
-
-    const { data: postEffectPlayers } = await sb
-      .from("game_players")
-      .select("*")
-      .eq("game_id", gameId)
-      .order("seat_index");
-    const stillAlive = (postEffectPlayers || []).filter((p: any) => p.is_alive);
-
-    if (stillAlive.length <= 1) {
-      const winner = stillAlive[0];
-      await sb.from("games").update({
-        status: "finished",
-        winner_id: winner?.player_id || null,
-        finished_at: new Date().toISOString(),
-      }).eq("id", gameId);
-      return;
-    }
-
-    for (const p of stillAlive) {
-      const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
-      if (freshPlayer && freshPlayer.is_alive) {
-        await refreshBotEnergy(freshPlayer);
-        await drawCardForBot(freshPlayer);
-      }
-    }
-
-    nextIndex = 0;
-  }
-
-  await sb.from("games").update({ current_player_index: nextIndex, current_round: newRound }).eq("id", gameId);
-}
-
-// ─── Double All Afflictions (Round 16) ──────────────────────
-async function doubleAllAfflictions(gameId: string): Promise<void> {
-  const sb = getClientSupabase();
-  const { data: effects } = await sb
-    .from("active_effects")
-    .select("*")
-    .eq("game_id", gameId);
-
-  if (!effects) return;
-
-  for (const effect of effects) {
-    if (["damage", "self_damage"].includes(effect.effect_type) && !effect.doubled) {
-      await sb.from("active_effects")
-        .update({ base_value: effect.base_value * 2, doubled: true })
-        .eq("id", effect.id);
-    }
-  }
-}
-
-// ─── Resolve Active Effects (v4 Compound Ticks) ─────────────
-async function resolveActiveEffects(gameId: string, currentRound: number): Promise<void> {
-  const sb = getClientSupabase();
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
-  if (!effects) return;
-
-  for (const effect of effects) {
-    if (["shield_gain", "heal_block", "shield_block", "energy_block"].includes(effect.effect_type)) {
-      if (effect.effect_type.endsWith("_block")) {
-        const roundsActive = currentRound - effect.applied_at_round;
-        if (roundsActive > effect.duration_rounds) {
-          await sb.from("active_effects").delete().eq("id", effect.id);
-        }
-      }
-      continue;
-    }
-
-    const tick = effect.current_tick ?? 0;
-    const pattern: CompoundPattern = effect.compound_pattern || "standard";
-
-    if (tick >= effect.duration_rounds) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-      continue;
-    }
-
-    const { data: target } = await sb.from("game_players").select("*").eq("id", effect.target_player_id).single();
-    if (!target || !target.is_alive) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-      continue;
-    }
-
-    const tickValue = getCompoundTickValue(effect.base_value, pattern, tick);
-    await applyInstantEffect(effect.effect_type, tickValue, target, gameId, effect.source_player_id);
-
-    const nextTick = tick + 1;
-    if (nextTick >= effect.duration_rounds) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-    } else {
-      await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
-    }
-  }
-}
-
-// ─── Refresh Energy (v4 — fixed 3/turn) ────────────────────
-async function refreshBotEnergy(player: any): Promise<void> {
-  const sb = getClientSupabase();
-  const totalEnergy = MAX_ENERGY;
-  await sb.from("game_players").update({
-    current_energy: totalEnergy,
-    max_energy: totalEnergy,
-    bonus_energy: 0,
-  }).eq("id", player.id);
 }
 
 // ─── Check if Player is a Bot ───────────────────────────────

@@ -664,3 +664,32 @@
 - [x] Add hover tooltips to compound pattern badges on MobileCardZoom (shadcn Tooltip)
 - [x] Add pattern descriptions to EffectBadge custom tooltip
 - [x] Update CompoundBalanceSheet explanation text with all 3 pattern descriptions
+
+## Octalysis AAA Retention Enhancements (Round 21)
+- [x] CD3: CorruptionCascade.tsx — visual reward for creative 3+ card combos (Empowerment of Creativity)
+- [x] CD2: Profile.tsx — rank tiers + win-rate rings (Development & Accomplishment)
+- [x] CD6: musicEngine setTempo() — already implemented in previous iteration
+- [x] CD8: DeathSequence lethal blow — dramatic elimination (Loss & Avoidance)
+- [x] CD1: Battle Chronicle in GameOverScreen — epic narrative (Epic Meaning & Calling)
+- [x] CD7: Key Moments in GameOverScreen — unique per game (Unpredictability & Curiosity)
+- [x] Wire CorruptionCascade into GameBoard (import + state + trigger on 3+ cards)
+- [x] Add Profile route to App.tsx
+- [x] Wire dynamic tempo into GameBoard round processing (already wired)
+- [x] Wire lethal blow into GameBoard death handling (overkill 10+ HP)
+- [x] Reset cardsThisTurn on turn change
+- [x] Render CorruptionCascade component in GameBoard JSX
+- [ ] Push to GitHub
+
+## Simultaneous Lock-In Turn System (Round 22)
+- [x] Resolution algorithm: lowest HP plays first, skip-queue first, lowest cost first within player
+- [x] Update gameTypes.ts with new turn phases (selection, resolution, round_end) + LockedPlay + PlayerState fields
+- [x] Update client gameEngine for simultaneous card selection + lockInCards + resolveLockedPlays
+- [x] Update server gameEngine for simultaneous validation + resolution
+- [x] Update botEngine for simultaneous decision-making (all bots decide at once via lockInCards)
+- [x] Update GameBoard UI for selection phase (multi-card select, lock-in button, energy budget, locked-in indicator)
+- [ ] Add dramatic resolution phase animation (cards reveal one by one)
+- [ ] Design 28 skip-queue cards (4 per faction) — cards that resolve before normal queue
+- [ ] Generate custom art for skip-queue cards
+- [ ] Re-run Monte Carlo balance validation with simultaneous resolution + skip-queue
+- [ ] Verify ≤1.5% max deviation still holds
+- [ ] Push to GitHub

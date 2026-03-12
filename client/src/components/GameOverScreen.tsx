@@ -5,8 +5,10 @@
  * Cinematic reveal with dark overlay and animated results.
  * 
  * Octalysis Quick Wins:
+ * - CD1: Battle Chronicle — epic narrative recap (Epic Meaning & Calling)
  * - CD2: Post-game summary with stats + Win Streak counter
  * - CD5: Rematch button for social re-engagement
+ * - CD7: Key Moments — unique highlights per game (Unpredictability & Curiosity)
  * - CD8: Win streak creates something to protect
  */
 
@@ -196,6 +198,202 @@ function computePostGameStats(logEntries: any[], currentPlayerId: string, player
   return stats;
 }
 
+/** CD1: Generate an epic narrative recap of the battle */
+function generateBattleChronicle(
+  players: PlayerState[],
+  currentPlayerId: string,
+  isWinner: boolean,
+  winner: PlayerState | undefined,
+  currentRound: number,
+  stats: PostGameStats
+): string {
+  const me = players.find(p => p.id === currentPlayerId);
+  const mySin = me?.chosenSin || 'wrath';
+  const myName = me?.username || 'You';
+  const winnerName = winner?.username || 'Unknown';
+  const winnerSin = winner?.chosenSin || 'wrath';
+  const survivors = players.filter(p => p.isAlive).length;
+  const eliminated = players.filter(p => !p.isAlive).length;
+
+  const sinVerbs: Record<string, string> = {
+    wrath: 'burned through the arena',
+    sloth: 'slowly drained the life from all who opposed',
+    greed: 'hoarded power and crushed the competition',
+    envy: 'stole victory from the jaws of defeat',
+    pride: 'stood untouchable above all challengers',
+    lust: 'seduced fate itself',
+    gluttony: 'consumed everything in sight',
+  };
+
+  if (isWinner) {
+    if (currentRound >= 20) {
+      return `After 20 rounds of relentless combat, ${myName} ${sinVerbs[mySin] || 'prevailed'}. ${eliminated} sinners fell along the way, but your ${mySin.toUpperCase()} endured where others crumbled. ${stats.totalDamageDealt > 30 ? `With ${stats.totalDamageDealt} total damage dealt, you carved your name into the annals of damnation.` : 'A victory of attrition — patience rewarded.'}`;
+    }
+    return `${myName} ${sinVerbs[mySin] || 'prevailed'}, claiming victory in round ${currentRound}. ${eliminated > 2 ? 'A bloodbath — only one sinner remained standing.' : eliminated > 0 ? `${eliminated} fell before your ${mySin.toUpperCase()}.` : 'A flawless performance.'} ${stats.mvpMoment}`;
+  } else {
+    if (!me?.isAlive) {
+      return `${myName}'s ${mySin.toUpperCase()} was extinguished in the arena. ${winnerName}'s ${winnerSin.toUpperCase()} ${sinVerbs[winnerSin] || 'prevailed'}, claiming dominion over ${eliminated} fallen sinners. ${stats.totalDamageDealt > 20 ? `You dealt ${stats.totalDamageDealt} damage before falling — your mark was felt.` : 'The darkness claims another soul.'}`;
+    }
+    return `The battle raged for ${currentRound} rounds. ${winnerName}'s ${winnerSin.toUpperCase()} ${sinVerbs[winnerSin] || 'proved strongest'}, outlasting ${survivors > 1 ? `${survivors} survivors` : 'all challengers'}. ${stats.totalDamageDealt > 15 ? `Your ${stats.totalDamageDealt} damage wasn't enough this time.` : 'Next time, sin harder.'}`;
+  }
+}
+
+interface KeyMoment {
+  icon: string;
+  text: string;
+  color: string;
+}
+
+/** CD7: Generate unique key moments that differ every game */
+function generateKeyMoments(
+  players: PlayerState[],
+  currentPlayerId: string,
+  stats: PostGameStats,
+  currentRound: number
+): KeyMoment[] {
+  const moments: KeyMoment[] = [];
+  const me = players.find(p => p.id === currentPlayerId);
+
+  // Biggest damage dealer across all players
+  const lowestHpPlayer = [...players].sort((a, b) => a.currentHp - b.currentHp)[0];
+  if (lowestHpPlayer && lowestHpPlayer.id !== currentPlayerId) {
+    const hpLost = lowestHpPlayer.maxHp - lowestHpPlayer.currentHp;
+    if (hpLost > 15) {
+      moments.push({
+        icon: "\u2694\uFE0F",
+        text: `${lowestHpPlayer.username} took ${hpLost} total damage — the arena's punching bag.`,
+        color: "#ef4444",
+      });
+    }
+  }
+
+  // Survival against odds
+  if (me?.isAlive && me.currentHp <= 10) {
+    moments.push({
+      icon: "\u{1F9E1}",
+      text: `Survived with just ${me.currentHp} HP. Living on borrowed time.`,
+      color: "#f59e0b",
+    });
+  }
+
+  // Card efficiency
+  if (stats.cardsPlayed > 0 && stats.totalDamageDealt > 0) {
+    const efficiency = Math.round(stats.totalDamageDealt / stats.cardsPlayed);
+    if (efficiency >= 5) {
+      moments.push({
+        icon: "\u{1F4A5}",
+        text: `${efficiency} average damage per card — every play was a calculated sin.`,
+        color: "#e8200e",
+      });
+    }
+  }
+
+  // Healer recognition
+  if (stats.totalHealingDone > 15) {
+    moments.push({
+      icon: "\u2728",
+      text: `Healed ${stats.totalHealingDone} HP total. The cockroach strategy pays off.`,
+      color: "#22c55e",
+    });
+  }
+
+  // Shield wall
+  if (stats.totalShieldApplied > 10) {
+    moments.push({
+      icon: "\u{1F6E1}\uFE0F",
+      text: `Applied ${stats.totalShieldApplied} shield — an impenetrable fortress of sin.`,
+      color: "#3b82f6",
+    });
+  }
+
+  // Late game survival
+  if (currentRound >= 16) {
+    moments.push({
+      icon: "\u{1F525}",
+      text: `Survived past round 16 — when afflictions double and the weak are purged.`,
+      color: "#9055e8",
+    });
+  }
+
+  // Compound mastery
+  if (stats.compoundingEffectsUsed >= 4) {
+    moments.push({
+      icon: "\u{1F300}",
+      text: `${stats.compoundingEffectsUsed} compound effects triggered. Patience is the deadliest sin.`,
+      color: "#ec4899",
+    });
+  }
+
+  // Elimination count
+  const eliminated = players.filter(p => !p.isAlive).length;
+  if (eliminated >= 3) {
+    moments.push({
+      icon: "\u{1F480}",
+      text: `${eliminated} sinners eliminated. The arena ran red.`,
+      color: "#888",
+    });
+  }
+
+  // Always return at least 2 moments
+  if (moments.length === 0) {
+    moments.push({
+      icon: "\u{1F3B4}",
+      text: `${stats.cardsPlayed} cards played across ${currentRound} rounds of unholy combat.`,
+      color: "#888",
+    });
+  }
+  if (moments.length === 1) {
+    moments.push({
+      icon: "\u231B",
+      text: `The battle lasted ${currentRound} rounds. Every round was a gamble.`,
+      color: "#666",
+    });
+  }
+
+  return moments.slice(0, 4); // Max 4 moments
+}
+
+/** Save profile stats to localStorage for the Profile page */
+function saveProfileStats(players: PlayerState[], currentPlayerId: string, isWinner: boolean, stats: PostGameStats) {
+  try {
+    const me = players.find(p => p.id === currentPlayerId);
+    const raw = localStorage.getItem("7sins_profile_stats");
+    const profile = raw ? JSON.parse(raw) : {
+      totalGames: 0,
+      totalWins: 0,
+      sinStats: {} as Record<string, { games: number; wins: number }>,
+      totalDamageDealt: 0,
+      totalHealingDone: 0,
+      totalShieldApplied: 0,
+      longestWinStreak: 0,
+      currentWinStreak: 0,
+    };
+
+    profile.totalGames++;
+    if (isWinner) profile.totalWins++;
+    profile.totalDamageDealt += stats.totalDamageDealt;
+    profile.totalHealingDone += stats.totalHealingDone;
+    profile.totalShieldApplied += stats.totalShieldApplied;
+
+    if (me?.chosenSin) {
+      if (!profile.sinStats[me.chosenSin]) profile.sinStats[me.chosenSin] = { games: 0, wins: 0 };
+      profile.sinStats[me.chosenSin].games++;
+      if (isWinner) profile.sinStats[me.chosenSin].wins++;
+    }
+
+    if (isWinner) {
+      profile.currentWinStreak++;
+      if (profile.currentWinStreak > profile.longestWinStreak) {
+        profile.longestWinStreak = profile.currentWinStreak;
+      }
+    } else {
+      profile.currentWinStreak = 0;
+    }
+
+    localStorage.setItem("7sins_profile_stats", JSON.stringify(profile));
+  } catch { /* ignore storage errors */ }
+}
+
 export function GameOverScreen({ players, winnerId, currentPlayerId, currentRound, gameId, onRematch }: GameOverScreenProps) {
   const [, setLocation] = useLocation();
   const winner = players.find((p) => p.id === winnerId);
@@ -249,6 +447,13 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
     () => computePostGameStats(logEntries, currentPlayerId, players),
     [logEntries, currentPlayerId, players]
   );
+
+  // Save profile stats for the Profile page (CD2: Development & Accomplishment)
+  useEffect(() => {
+    if (stats.cardsPlayed > 0 || logEntries.length > 0) {
+      saveProfileStats(players, currentPlayerId, isPlayerWinner, stats);
+    }
+  }, [stats]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sort players by HP descending for final standings
   const standings = [...players].sort((a, b) => {
@@ -307,7 +512,7 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                 {isPlayerWinner ? "VICTORY" : "DEFEAT"}
               </h1>
               <p className="text-white/50 text-sm uppercase tracking-widest">
-                {currentRound >= 10 ? "Round 10 \u2014 Time's Up" : "Last One Standing"}
+                {currentRound >= 20 ? "Round 20 \u2014 Time's Up" : "Last One Standing"}
               </p>
             </motion.div>
 
@@ -420,6 +625,56 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                     <p className="text-[11px] text-white/60 italic" style={{ fontFamily: "var(--font-body)" }}>
                       {stats.mvpMoment}
                     </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Battle Chronicle (CD1: Epic Meaning) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="mb-4 mt-2"
+                >
+                  <div className="bg-white/5 rounded-lg px-4 py-3 border border-white/5 text-left">
+                    <p className="text-[9px] text-white/30 uppercase tracking-widest mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+                      Battle Chronicle
+                    </p>
+                    <p className="text-[11px] text-white/60 leading-relaxed italic" style={{ fontFamily: "var(--font-body)" }}>
+                      {generateBattleChronicle(players, currentPlayerId, isPlayerWinner, winner, currentRound, stats)}
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Key Moments (CD7: Unpredictability & Curiosity) */}
+            <AnimatePresence>
+              {showStats && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ delay: 0.7, duration: 0.4 }}
+                  className="mb-4"
+                >
+                  <div className="space-y-1.5">
+                    {generateKeyMoments(players, currentPlayerId, stats, currentRound).map((moment, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.8 + i * 0.15 }}
+                        className="flex items-start gap-2 bg-white/[0.03] rounded-lg px-3 py-2 border border-white/5"
+                      >
+                        <span className="text-[10px] mt-0.5" style={{ color: moment.color }}>{moment.icon}</span>
+                        <p className="text-[10px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                          {moment.text}
+                        </p>
+                      </motion.div>
+                    ))}
                   </div>
                 </motion.div>
               )}

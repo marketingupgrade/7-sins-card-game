@@ -25,7 +25,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
-import { playCard, passTurn, getGameLog } from "@/lib/gameEngine";
+import { playCard, passTurn, lockInCards, getGameLog } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
@@ -33,7 +33,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 import { lazy, Suspense } from "react";
@@ -57,6 +57,7 @@ import CardPlayArc from "@/components/CardPlayArc";
 import SinShaderOverlay from "@/components/WebGLSinShaders";
 import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
+import CorruptionCascade from "@/components/CorruptionCascade";
 import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
 import DeckPile from "@/components/DeckPile";
 import CinematicFlash from "@/components/CinematicFlash";
@@ -88,6 +89,9 @@ export default function GameBoard() {
   const [logEntries, setLogEntries] = useState<any[]>([]);
   const [isPlayingCard, setIsPlayingCard] = useState(false);
   const [isPassing, setIsPassing] = useState(false);
+  const [selectedCards, setSelectedCards] = useState<Array<{ cardId: string; targetPlayerId?: string }>>([]);
+  const [isLockingIn, setIsLockingIn] = useState(false);
+  const [hasLockedIn, setHasLockedIn] = useState(false);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
   const { setCurrentPage } = useTutorial();
 
@@ -107,6 +111,9 @@ export default function GameBoard() {
   const [deathShow, setDeathShow] = useState(false);
   const [deathPlayerName, setDeathPlayerName] = useState('');
   const [deathSin, setDeathSin] = useState<SinType>('wrath');
+  const [deathLethalBlow, setDeathLethalBlow] = useState(false);
+  const [deathKillerCard, setDeathKillerCard] = useState<string | undefined>(undefined);
+  const lastPlayedCardRef = useRef<string | null>(null);
   const [cardArcShow, setCardArcShow] = useState(false);
   const [cardArcName, setCardArcName] = useState('');
   const [cardArcColor, setCardArcColor] = useState('');
@@ -129,6 +136,8 @@ export default function GameBoard() {
   const [epicRevealSin, setEpicRevealSin] = useState<SinType>('wrath');
   const [epicRevealEnergy, setEpicRevealEnergy] = useState(4);
   const [cardPlayCount, setCardPlayCount] = useState(0);
+  const [cardsThisTurn, setCardsThisTurn] = useState(0);
+  const [corruptionCascadeTrigger, setCorruptionCascadeTrigger] = useState(0);
   const [lastPlayedSin, setLastPlayedSin] = useState<SinType>('wrath');
   const [victoryCinematicShow, setVictoryCinematicShow] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
@@ -190,16 +199,27 @@ export default function GameBoard() {
     () => gameState?.players.filter((p) => p.isAlive) || [],
     [gameState?.players]
   );
+  // In simultaneous mode, "my turn" means selection phase and I haven't locked in yet
+  const turnPhase = gameState?.turnPhase || "selection";
   const isMyTurn = useMemo(() => {
-    if (!gameState || !myPlayer) return false;
-    const currentPlayer = alivePlayers[gameState.currentPlayerIndex % alivePlayers.length];
-    return currentPlayer?.id === playerId;
-  }, [gameState, myPlayer, alivePlayers, playerId]);
+    if (!gameState || !myPlayer || !myPlayer.isAlive) return false;
+    if (gameState.status !== "active") return false;
+    // In simultaneous mode, it's always "your turn" during selection phase if you haven't locked in
+    return turnPhase === "selection" && !myPlayer.hasLockedIn && !hasLockedIn;
+  }, [gameState, myPlayer, turnPhase, hasLockedIn]);
 
   const currentTurnPlayer = useMemo(() => {
     if (!gameState) return null;
     return alivePlayers[gameState.currentPlayerIndex % alivePlayers.length] || null;
   }, [gameState, alivePlayers]);
+
+  // Reset lock-in state when round changes
+  useEffect(() => {
+    if (turnPhase === "selection") {
+      setHasLockedIn(false);
+      setSelectedCards([]);
+    }
+  }, [turnPhase, gameState?.currentRound]);
 
   const myCards = useMemo(
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
@@ -228,6 +248,7 @@ export default function GameBoard() {
   useEffect(() => {
     if (isMyTurn && !prevIsMyTurn.current) {
       setShowYourTurn(true);
+      setCardsThisTurn(0); // Reset cards-per-turn counter on new turn
     }
     prevIsMyTurn.current = isMyTurn;
   }, [isMyTurn]);
@@ -241,6 +262,10 @@ export default function GameBoard() {
       if (deadPlayer) {
         setDeathPlayerName(deadPlayer.username);
         setDeathSin((deadPlayer.chosenSin || 'wrath') as SinType);
+        // Lethal blow: overkill by 10+ HP or killed by a big card
+        const overkill = Math.abs(deadPlayer.currentHp);
+        setDeathLethalBlow(overkill >= 10);
+        setDeathKillerCard(lastPlayedCardRef.current || undefined);
         setDeathShow(true);
       }
     }
@@ -275,6 +300,78 @@ export default function GameBoard() {
       addToActionFeed("The arena awakens...");
     }
   }, [gameState?.status, lastRound, addRandomLine, addToActionFeed]);
+
+  // ─── Multi-card selection helpers ─────────────────────────────
+  const selectedCardsEnergyCost = useMemo(() => {
+    return selectedCards.reduce((sum, sel) => {
+      const card = CARD_MAP[sel.cardId];
+      return sum + (card?.cost ?? 0);
+    }, 0);
+  }, [selectedCards]);
+
+  const energyRemaining = useMemo(() => {
+    return (myPlayer?.currentEnergy ?? 0) - selectedCardsEnergyCost;
+  }, [myPlayer?.currentEnergy, selectedCardsEnergyCost]);
+
+  const toggleCardSelection = useCallback((cardId: string) => {
+    setSelectedCards(prev => {
+      const existing = prev.find(s => s.cardId === cardId);
+      if (existing) {
+        // Deselect
+        return prev.filter(s => s.cardId !== cardId);
+      }
+      // Check energy budget
+      const card = CARD_MAP[cardId];
+      if (!card) return prev;
+      const currentCost = prev.reduce((sum, s) => sum + (CARD_MAP[s.cardId]?.cost ?? 0), 0);
+      if (currentCost + card.cost > (myPlayer?.currentEnergy ?? 0)) return prev;
+      return [...prev, { cardId }];
+    });
+    // Also set selectedCard for target selection UI
+    setSelectedCard(cardId);
+  }, [myPlayer?.currentEnergy]);
+
+  const handleLockIn = useCallback(async () => {
+    if (!gameId || !playerId) return;
+    setIsLockingIn(true);
+    try {
+      // Play sound for lock-in
+      soundEngine.play("card_play");
+
+      const result = await lockInCards(gameId, playerId, selectedCards);
+      setHasLockedIn(true);
+      addMessage(result.narratorQuip, "action");
+      addToActionFeed(`${myPlayer?.username} locked in ${selectedCards.length} card${selectedCards.length !== 1 ? "s" : ""}`);
+      setSelectedCard(null);
+      setSelectedTarget(null);
+      setSelectedCards([]);
+      refetch();
+    } catch (err: any) {
+      addMessage(err.message || "Lock-in failed", "info");
+    } finally {
+      setIsLockingIn(false);
+    }
+  }, [gameId, playerId, selectedCards, addMessage, addToActionFeed, myPlayer, refetch]);
+
+  const handlePassLockIn = useCallback(async () => {
+    if (!gameId || !playerId) return;
+    setIsLockingIn(true);
+    try {
+      soundEngine.play("turn_pass");
+      await lockInCards(gameId, playerId, []);
+      setHasLockedIn(true);
+      addMessage("Choosing to do nothing? Bold strategy.", "action");
+      addToActionFeed(`${myPlayer?.username} passed (locked in 0 cards)`);
+      setSelectedCard(null);
+      setSelectedTarget(null);
+      setSelectedCards([]);
+      refetch();
+    } catch (err: any) {
+      addMessage(err.message || "Pass failed", "info");
+    } finally {
+      setIsLockingIn(false);
+    }
+  }, [gameId, playerId, addMessage, addToActionFeed, myPlayer, refetch]);
 
   const handlePlayCard = useCallback(async (overrideTarget?: string) => {
     if (!gameId || !selectedCard) return;
@@ -323,6 +420,12 @@ export default function GameBoard() {
       const cardSin = card.sin as SinType;
       setLastPlayedSin(cardSin);
       setCardPlayCount(prev => prev + 1);
+      lastPlayedCardRef.current = card.name;
+      setCardsThisTurn(prev => {
+        const next = prev + 1;
+        if (next >= 3) setCorruptionCascadeTrigger(prev => prev + 1);
+        return next;
+      });
       if (lastCardSinRef.current === cardSin) {
         setComboChain(prev => {
           const next = prev + 1;
@@ -403,17 +506,19 @@ export default function GameBoard() {
   }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch, myPlayer, gameState, addToActionFeed]);
 
   const handleSelectTarget = useCallback((targetId: string) => {
-    if (!selectedCard) return;
-    const card = CARD_MAP[selectedCard];
+    // In simultaneous mode, clicking a target assigns it to the last selected card
+    if (selectedCards.length === 0) return;
+    const lastSelection = selectedCards[selectedCards.length - 1];
+    const card = CARD_MAP[lastSelection.cardId];
     if (!card) return;
     const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
     if (needsTarget) {
-      setSelectedTarget(targetId);
-      handlePlayCard(targetId);
-    } else {
-      setSelectedTarget(selectedTarget === targetId ? null : targetId);
+      setSelectedCards(prev => prev.map((s, i) =>
+        i === prev.length - 1 ? { ...s, targetPlayerId: targetId } : s
+      ));
     }
-  }, [selectedCard, selectedTarget, handlePlayCard]);
+    setSelectedTarget(targetId);
+  }, [selectedCards]);
 
   const handlePass = async () => {
     if (!gameId) return;
@@ -572,7 +677,18 @@ export default function GameBoard() {
         </div>
 
         <div className="flex items-center justify-center flex-1">
-          {isMyTurn ? (
+          {turnPhase === "resolution" ? (
+            <motion.div
+              animate={{ opacity: [0.5, 1, 0.5] }}
+              transition={{ duration: 0.8, repeat: Infinity }}
+              className="flex items-center gap-2"
+            >
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-red-500" />
+              <span className="text-xs md:text-sm font-bold text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
+                RESOLVING...
+              </span>
+            </motion.div>
+          ) : isMyTurn ? (
             <motion.div
               animate={{ opacity: [0.6, 1, 0.6] }}
               transition={{ duration: 1.5, repeat: Infinity }}
@@ -580,14 +696,25 @@ export default function GameBoard() {
             >
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-greed-glow" />
               <span className="text-xs md:text-sm font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
-                YOUR TURN
+                SELECT YOUR CARDS
+              </span>
+            </motion.div>
+          ) : hasLockedIn ? (
+            <motion.div
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="flex items-center gap-2"
+            >
+              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-candle/60" />
+              <span className="text-xs md:text-sm font-bold text-candle/80" style={{ fontFamily: "var(--font-heading)" }}>
+                LOCKED IN — WAITING...
               </span>
             </motion.div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-muted-foreground/40" />
-              <span className="text-xs md:text-sm text-muted-foreground truncate max-w-[100px] md:max-w-none" style={{ fontFamily: "var(--font-heading)" }}>
-                {currentTurnPlayer ? `${currentTurnPlayer.username}${isBot(currentTurnPlayer.id) ? " (BOT)" : ""}` : "..."}
+              <span className="text-xs md:text-sm text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                Waiting for players...
               </span>
             </div>
           )}
@@ -617,7 +744,7 @@ export default function GameBoard() {
                 <PlayerPanel
                   player={opponents.north}
                   isCurrentTurn={currentTurnPlayer?.id === opponents.north.id}
-                  isTargetable={isMyTurn && !!selectedCard && opponents.north.isAlive}
+                  isTargetable={isMyTurn && selectedCards.length > 0 && opponents.north.isAlive}
                   isSelected={selectedTarget === opponents.north.id}
                   onSelect={() => handleSelectTarget(opponents.north.id)}
                   activeEffects={getPlayerEffects(opponents.north)}
@@ -650,7 +777,7 @@ export default function GameBoard() {
                   <PlayerPanel
                     player={opponents.west}
                     isCurrentTurn={currentTurnPlayer?.id === opponents.west.id}
-                    isTargetable={isMyTurn && !!selectedCard && opponents.west.isAlive}
+                    isTargetable={isMyTurn && selectedCards.length > 0 && opponents.west.isAlive}
                     isSelected={selectedTarget === opponents.west.id}
                     onSelect={() => handleSelectTarget(opponents.west.id)}
                     activeEffects={getPlayerEffects(opponents.west)}
@@ -703,7 +830,7 @@ export default function GameBoard() {
                   <PlayerPanel
                     player={opponents.east}
                     isCurrentTurn={currentTurnPlayer?.id === opponents.east.id}
-                    isTargetable={isMyTurn && !!selectedCard && opponents.east.isAlive}
+                    isTargetable={isMyTurn && selectedCards.length > 0 && opponents.east.isAlive}
                     isSelected={selectedTarget === opponents.east.id}
                     onSelect={() => handleSelectTarget(opponents.east.id)}
                     activeEffects={getPlayerEffects(opponents.east)}
@@ -772,7 +899,7 @@ export default function GameBoard() {
                 key={opp!.id}
                 player={opp!}
                 isCurrentTurn={currentTurnPlayer?.id === opp!.id}
-                isTargetable={isMyTurn && !!selectedCard && opp!.isAlive}
+                isTargetable={isMyTurn && selectedCards.length > 0 && opp!.isAlive}
                 isSelected={selectedTarget === opp!.id}
                 onSelect={() => handleSelectTarget(opp!.id)}
                 activeEffects={getPlayerEffects(opp!)}
@@ -858,14 +985,21 @@ export default function GameBoard() {
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0"
                 >
-                  <GameCard
-                    card={card}
-                    currentRound={gameState.currentRound}
-                    isPlayable={isMyTurn}
-                    isSelected={selectedCard === card.id}
-                    onClick={() => setSelectedCard(selectedCard === card.id ? null : card.id)}
-                    playerEnergy={myPlayer?.currentEnergy}
-                  />
+                  <div className="relative">
+                    <GameCard
+                      card={card}
+                      currentRound={gameState.currentRound}
+                      isPlayable={isMyTurn}
+                      isSelected={selectedCards.some(s => s.cardId === card.id)}
+                      onClick={() => toggleCardSelection(card.id)}
+                      playerEnergy={energyRemaining + (selectedCards.some(s => s.cardId === card.id) ? card.cost : 0)}
+                    />
+                    {selectedCards.findIndex(s => s.cardId === card.id) >= 0 && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-candle text-background text-xs font-black flex items-center justify-center shadow-lg z-10">
+                        {selectedCards.findIndex(s => s.cardId === card.id) + 1}
+                      </div>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -893,96 +1027,94 @@ export default function GameBoard() {
                     transition={{ delay: i * 0.03 }}
                     className="flex-shrink-0"
                   >
-                    <MobileCardThumbnail
-                      card={card}
-                      isPlayable={isMyTurn}
-                      isSelected={selectedCard === card.id}
-                      canAfford={(myPlayer?.currentEnergy ?? 0) >= card.cost}
-                      onClick={() => {
-                        if (selectedCard === card.id) {
-                          // Second tap on selected card → open zoom
-                          setMobileZoomCard(card.id);
-                        } else {
-                          setSelectedCard(card.id);
-                        }
-                      }}
-                    />
+                    <div className="relative">
+                      <MobileCardThumbnail
+                        card={card}
+                        isPlayable={isMyTurn}
+                        isSelected={selectedCards.some(s => s.cardId === card.id)}
+                        canAfford={energyRemaining + (selectedCards.some(s => s.cardId === card.id) ? card.cost : 0) >= card.cost}
+                        onClick={() => {
+                          if (selectedCards.some(s => s.cardId === card.id)) {
+                            // Second tap on selected card → open zoom
+                            setMobileZoomCard(card.id);
+                          } else {
+                            toggleCardSelection(card.id);
+                          }
+                        }}
+                      />
+                      {selectedCards.findIndex(s => s.cardId === card.id) >= 0 && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-candle text-background text-[10px] font-black flex items-center justify-center shadow-lg z-10">
+                          {selectedCards.findIndex(s => s.cardId === card.id) + 1}
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 ))}
               </AnimatePresence>
             </div>
           </div>
 
-          {/* Action Buttons — responsive sizing */}
+          {/* Action Buttons — Simultaneous Lock-In */}
           {isMyTurn && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex justify-center gap-2 md:gap-3 mt-1.5 md:mt-2"
+              className="flex flex-col items-center gap-1.5 mt-1.5 md:mt-2"
             >
-              {selectedCard && (
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-4 md:px-8 py-2 md:py-3 rounded-lg text-xs md:text-sm font-bold uppercase tracking-wide transition-all ${
-                    myPlayer?.chosenSin === "wrath" ? "btn-wrath" :
-                    myPlayer?.chosenSin === "sloth" ? "btn-sloth" :
-                    myPlayer?.chosenSin === "greed" ? "btn-greed" :
-                    myPlayer?.chosenSin === "envy" ? "btn-envy" : "btn-cyan"
-                  } disabled:opacity-50`}
-                  style={{ fontFamily: "var(--font-heading)" }}
-                  onClick={() => handlePlayCard()}
-                  disabled={isPlayingCard}
-                >
-                  {isPlayingCard ? "PLAYING..." : "PLAY"}
-                </motion.button>
+              {/* Selected cards count + energy budget */}
+              {selectedCards.length > 0 && (
+                <div className="text-xs md:text-sm text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                  {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} selected • {energyRemaining} energy remaining
+                </div>
               )}
 
-              {/* END TURN — prominent gold button when energy is depleted */}
-              {(myPlayer?.currentEnergy ?? 0) === 0 && (
+              <div className="flex justify-center gap-2 md:gap-3">
+                {/* LOCK IN — prominent gold button */}
                 <motion.button
-                  data-tutorial="pass-btn"
+                  data-tutorial="lock-in-btn"
                   whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
                   whileTap={{ scale: 0.95 }}
                   animate={{
-                    boxShadow: [
+                    boxShadow: selectedCards.length > 0 ? [
                       "0 0 8px oklch(0.75 0.15 85 / 0.2)",
                       "0 0 20px oklch(0.75 0.15 85 / 0.4)",
                       "0 0 8px oklch(0.75 0.15 85 / 0.2)",
-                    ],
+                    ] : "none",
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                   className="px-4 md:px-8 py-2 md:py-3 rounded-lg text-xs md:text-sm font-black uppercase tracking-wider disabled:opacity-50"
                   style={{
                     fontFamily: "var(--font-heading)",
-                    background: "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))",
-                    color: "oklch(0.10 0.02 70)",
-                    border: "2px solid oklch(0.80 0.12 85 / 0.6)",
-                    textShadow: "0 1px 0 oklch(0.85 0.10 85 / 0.3)",
+                    background: selectedCards.length > 0
+                      ? "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))"
+                      : "linear-gradient(135deg, oklch(0.35 0.05 85), oklch(0.30 0.04 70))",
+                    color: selectedCards.length > 0 ? "oklch(0.10 0.02 70)" : "oklch(0.60 0.05 70)",
+                    border: `2px solid oklch(0.80 0.12 85 / ${selectedCards.length > 0 ? 0.6 : 0.2})`,
+                    textShadow: selectedCards.length > 0 ? "0 1px 0 oklch(0.85 0.10 85 / 0.3)" : "none",
                   }}
-                  onClick={handlePass}
-                  disabled={isPassing}
+                  onClick={handleLockIn}
+                  disabled={isLockingIn || selectedCards.length === 0}
                 >
-                  {isPassing ? "ENDING..." : "END TURN"}
+                  {isLockingIn ? "LOCKING IN..." : `LOCK IN${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
                 </motion.button>
-              )}
-              {/* PASS — subtle when energy remains */}
-              {(myPlayer?.currentEnergy ?? 0) > 0 && (
+
+                {/* PASS — lock in with 0 cards */}
                 <motion.button
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="px-3 md:px-6 py-2 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-xs md:text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
                   style={{ fontFamily: "var(--font-heading)" }}
-                  onClick={handlePass}
-                  disabled={isPassing}
+                  onClick={handlePassLockIn}
+                  disabled={isLockingIn}
                 >
-                  {isPassing ? "PASSING..." : "PASS"}
+                  {isLockingIn ? "..." : "PASS"}
                 </motion.button>
-              )}
+              </div>
             </motion.div>
           )}
 
+          {/* Locked in / waiting / resolving status */}
           {!isMyTurn && myPlayer?.isAlive && (
             <motion.p
               animate={{ opacity: [0.4, 0.8, 0.4] }}
@@ -990,9 +1122,11 @@ export default function GameBoard() {
               className="text-center text-xs md:text-sm text-muted-foreground/60 mt-1 md:mt-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              {currentTurnPlayer && isBot(currentTurnPlayer.id)
-                ? "Bot is thinking..."
-                : "Waiting for opponent..."}
+              {turnPhase === "resolution"
+                ? "Cards are being resolved..."
+                : hasLockedIn
+                  ? "Locked in. Waiting for other players..."
+                  : "Waiting for players to select cards..."}
             </motion.p>
           )}
         </div>
@@ -1002,11 +1136,10 @@ export default function GameBoard() {
           <MobileCardZoom
             card={CARD_MAP[mobileZoomCard]}
             isPlayable={isMyTurn}
-            canAfford={(myPlayer?.currentEnergy ?? 0) >= (CARD_MAP[mobileZoomCard]?.cost ?? 0)}
+            canAfford={energyRemaining >= (CARD_MAP[mobileZoomCard]?.cost ?? 0)}
             onPlay={() => {
-              setSelectedCard(mobileZoomCard);
+              toggleCardSelection(mobileZoomCard);
               setMobileZoomCard(null);
-              handlePlayCard();
             }}
             onClose={() => setMobileZoomCard(null)}
           />
@@ -1018,7 +1151,15 @@ export default function GameBoard() {
       show={deathShow}
       playerName={deathPlayerName}
       sin={deathSin}
-      onComplete={() => setDeathShow(false)}
+      lethalBlow={deathLethalBlow}
+      killerCardName={deathKillerCard}
+      onComplete={() => { setDeathShow(false); setDeathLethalBlow(false); setDeathKillerCard(undefined); }}
+    />
+
+    {/* Tier 2: Corruption Cascade — CD3 reward for 3+ cards in one turn */}
+    <CorruptionCascade
+      trigger={corruptionCascadeTrigger}
+      sin={(myPlayer?.chosenSin || 'wrath') as SinType}
     />
 
     {/* Tier 3: Card Play Arc */}
@@ -1236,15 +1377,11 @@ const PlayerPanel = memo(function PlayerPanel({
               {player.chosenSin || "unknown"}
             </span>
 
-            {isCurrentTurn && player.isAlive && (
+            {player.isAlive && player.hasLockedIn && (
               <div className="flex items-center gap-1.5 mt-0.5">
-                <motion.div
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="w-2 h-2 rounded-full bg-greed-glow"
-                />
-                <span className="text-[10px] text-greed-glow/80 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                  Active
+                <div className="w-2 h-2 rounded-full bg-candle/80" />
+                <span className="text-[10px] text-candle/70 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                  Locked In
                 </span>
               </div>
             )}
