@@ -1,21 +1,18 @@
 /**
  * MobileBattleOverview — Scrollable center panel for mobile game board
  *
- * Fills the empty center area with useful game state info:
- * - Per-player affliction summary (active effects with icons)
- * - Recent action feed (last 5 actions)
- * - Round info badge
- *
- * Replaces the empty void that existed before.
+ * Shows per-player affliction breakdown with:
+ * - Grouped effect totals with icons
+ * - Per-round compound tick projections (upcoming damage/heal per round)
+ * - Tap to expand individual player details
+ * - Action feed at the bottom
  */
 import { motion, AnimatePresence } from "framer-motion";
 import { memo, useState } from "react";
-import type { PlayerState, SinType, ActiveEffect } from "@shared/gameTypes";
-import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
+import type { PlayerState, SinType, ActiveEffect, CompoundPattern } from "@shared/gameTypes";
+import { getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
-import { ICON_URLS } from "@/lib/assetUrls";
-import { getEffectIconUrl } from "@/lib/iconUtils";
 import { getSinOklchColor } from "@/lib/sinColors";
 
 interface ActionFeedEntry {
@@ -33,23 +30,31 @@ interface MobileBattleOverviewProps {
   alivePlayers: PlayerState[];
 }
 
-/** Effect type display config */
-const EFFECT_CONFIG: Record<string, { icon: string; color: string; label: string; sign: string }> = {
-  damage: { icon: "⚔️", color: "oklch(0.70 0.22 25)", label: "Damage", sign: "-" },
-  damage_all: { icon: "💥", color: "oklch(0.70 0.22 25)", label: "AoE Dmg", sign: "-" },
-  self_damage: { icon: "🩸", color: "oklch(0.55 0.18 25)", label: "Self Dmg", sign: "-" },
-  heal: { icon: "💚", color: "oklch(0.65 0.18 155)", label: "Heal", sign: "+" },
-  shield: { icon: "🛡️", color: "oklch(0.70 0.15 200)", label: "Shield", sign: "+" },
-  debuff: { icon: "☠️", color: "oklch(0.65 0.15 290)", label: "Debuff", sign: "" },
-  energy_drain: { icon: "⚡", color: "oklch(0.65 0.18 60)", label: "Drain", sign: "-" },
-  energy_gain: { icon: "✦", color: "oklch(0.70 0.15 85)", label: "Energy+", sign: "+" },
-  buff: { icon: "↑", color: "oklch(0.65 0.12 85)", label: "Buff", sign: "+" },
+/** Complete effect type display config — covers ALL 12 effect types */
+const EFFECT_CONFIG: Record<string, { emoji: string; color: string; label: string; sign: string; category: "harmful" | "beneficial" | "neutral" }> = {
+  damage:              { emoji: "⚔️", color: "oklch(0.70 0.22 25)",  label: "Damage",      sign: "-", category: "harmful" },
+  self_damage:         { emoji: "🩸", color: "oklch(0.55 0.18 25)",  label: "Self Dmg",    sign: "-", category: "harmful" },
+  heal_gain:           { emoji: "💚", color: "oklch(0.65 0.18 155)", label: "Heal",        sign: "+", category: "beneficial" },
+  heal_steal:          { emoji: "💜", color: "oklch(0.60 0.22 350)", label: "HP Steal",    sign: "-", category: "harmful" },
+  heal_block:          { emoji: "🚫", color: "oklch(0.55 0.15 25)",  label: "Heal Block",  sign: "",  category: "harmful" },
+  shield_gain:         { emoji: "🛡️", color: "oklch(0.70 0.15 200)", label: "Shield",      sign: "+", category: "beneficial" },
+  shield_steal:        { emoji: "🔰", color: "oklch(0.60 0.15 200)", label: "Shield Steal",sign: "-", category: "harmful" },
+  shield_block:        { emoji: "💔", color: "oklch(0.55 0.15 200)", label: "Shield Block",sign: "",  category: "harmful" },
+  energy_gain:         { emoji: "✦",  color: "oklch(0.70 0.15 85)",  label: "Energy+",     sign: "+", category: "beneficial" },
+  energy_steal:        { emoji: "⚡", color: "oklch(0.65 0.18 60)",  label: "Energy Steal",sign: "-", category: "harmful" },
+  energy_block:        { emoji: "🔒", color: "oklch(0.55 0.12 60)",  label: "Energy Block",sign: "",  category: "harmful" },
+  affliction_amplify:  { emoji: "📈", color: "oklch(0.65 0.15 290)", label: "Amplify",     sign: "×", category: "harmful" },
+  affliction_transfer: { emoji: "🔄", color: "oklch(0.60 0.12 290)", label: "Transfer",    sign: "",  category: "neutral" },
 };
 
+/** Summarize effects for a player into grouped totals with per-source detail */
+function summarizeEffects(effects: ActiveEffect[], currentRound: number) {
+  const summary: Record<string, {
+    total: number;
+    count: number;
+    sources: { name: string; value: number; ticksLeft: number; pattern: CompoundPattern; currentTick: number; durationRounds: number }[];
+  }> = {};
 
-/** Summarize effects for a player into grouped totals */
-function summarizeEffects(effects: ActiveEffect[]) {
-  const summary: Record<string, { total: number; count: number; sources: string[] }> = {};
   for (const eff of effects) {
     const pattern: CompoundPattern = eff.compoundPattern || "standard";
     const val = Math.round(getCompoundTickValue(eff.baseValue, pattern, eff.currentTick || 0));
@@ -59,11 +64,26 @@ function summarizeEffects(effects: ActiveEffect[]) {
     summary[eff.effectType].total += val;
     summary[eff.effectType].count += 1;
     const cardName = CARD_MAP[eff.cardId]?.name || "Unknown";
-    if (!summary[eff.effectType].sources.includes(cardName)) {
-      summary[eff.effectType].sources.push(cardName);
-    }
+    const ticksLeft = (eff.durationRounds || 1) - (eff.currentTick || 0);
+    summary[eff.effectType].sources.push({
+      name: cardName,
+      value: val,
+      ticksLeft,
+      pattern,
+      currentTick: eff.currentTick || 0,
+      durationRounds: eff.durationRounds || 1,
+    });
   }
   return summary;
+}
+
+/** Get upcoming round projections for a single effect source */
+function getUpcomingValues(baseValue: number, pattern: CompoundPattern, currentTick: number, duration: number): number[] {
+  const upcoming: number[] = [];
+  for (let t = currentTick; t < duration && upcoming.length < 4; t++) {
+    upcoming.push(Math.round(getCompoundTickValue(baseValue, pattern, t)));
+  }
+  return upcoming;
 }
 
 export const MobileBattleOverview = memo(function MobileBattleOverview({
@@ -102,11 +122,15 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
         {/* Per-player affliction cards */}
         {players.filter(p => p.isAlive).map((player) => {
           const playerEffects = activeEffects.filter(e => e.targetPlayerId === player.gamePlayerId);
-          const summary = summarizeEffects(playerEffects);
+          const summary = summarizeEffects(playerEffects, currentRound);
           const effectTypes = Object.keys(summary);
           const isMe = player.id === currentPlayerId;
           const isExpanded = expandedPlayer === player.gamePlayerId;
           const sinColor = getSinOklchColor(player.chosenSin as string);
+
+          // Separate harmful vs beneficial
+          const harmfulTypes = effectTypes.filter(t => EFFECT_CONFIG[t]?.category === "harmful");
+          const beneficialTypes = effectTypes.filter(t => EFFECT_CONFIG[t]?.category !== "harmful");
 
           return (
             <motion.button
@@ -136,12 +160,12 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
                 {/* Name */}
                 <span
                   className="text-[11px] font-bold text-foreground/90 truncate flex-shrink-0"
-                  style={{ fontFamily: "var(--font-heading)", maxWidth: 70 }}
+                  style={{ fontFamily: "var(--font-heading)", maxWidth: 65 }}
                 >
                   {player.username}{isMe ? " (You)" : ""}
                 </span>
-                {/* Effect summary icons */}
-                <div className="flex items-center gap-1.5 flex-1 min-w-0 overflow-x-auto">
+                {/* Effect summary icons — show all types */}
+                <div className="flex items-center gap-1 flex-1 min-w-0 overflow-x-auto">
                   {effectTypes.length === 0 ? (
                     <span className="text-[10px] text-muted-foreground/40 italic">No effects</span>
                   ) : (
@@ -150,9 +174,9 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
                       if (!cfg) return null;
                       return (
                         <div key={type} className="flex items-center gap-0.5 flex-shrink-0">
-                          <span className="text-[10px]">{cfg.icon}</span>
+                          <span className="text-[10px]">{cfg.emoji}</span>
                           <span
-                            className="text-[11px] font-black"
+                            className="text-[10px] font-black"
                             style={{ fontFamily: "var(--font-heading)", color: cfg.color }}
                           >
                             {cfg.sign}{summary[type].total}
@@ -173,7 +197,7 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
                 )}
               </div>
 
-              {/* Expanded detail */}
+              {/* Expanded detail — per-effect breakdown with upcoming rounds */}
               <AnimatePresence>
                 {isExpanded && effectTypes.length > 0 && (
                   <motion.div
@@ -183,39 +207,130 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="px-2 pb-2 pt-0.5 space-y-1 border-t border-foreground/5">
-                      {effectTypes.map((type) => {
-                        const cfg = EFFECT_CONFIG[type];
-                        if (!cfg) return null;
-                        const data = summary[type];
-                        return (
-                          <div key={type} className="flex items-start gap-2">
-                            <span className="text-xs mt-0.5">{cfg.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1">
-                                <span
-                                  className="text-[11px] font-bold"
-                                  style={{ fontFamily: "var(--font-heading)", color: cfg.color }}
-                                >
-                                  {cfg.label}: {cfg.sign}{data.total}
-                                </span>
-                                {data.count > 1 && (
-                                  <span className="text-[9px] text-muted-foreground/50">
-                                    ({data.count} sources)
+                    <div className="px-2 pb-2 pt-0.5 space-y-1.5 border-t border-foreground/5">
+                      {/* Harmful effects section */}
+                      {harmfulTypes.length > 0 && (
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-red-400/60" style={{ fontFamily: "var(--font-heading)" }}>
+                            Incoming
+                          </span>
+                          {harmfulTypes.map((type) => {
+                            const cfg = EFFECT_CONFIG[type]!;
+                            const data = summary[type];
+                            return (
+                              <div key={type} className="mt-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs">{cfg.emoji}</span>
+                                  <span className="text-[11px] font-bold" style={{ fontFamily: "var(--font-heading)", color: cfg.color }}>
+                                    {cfg.label}: {cfg.sign}{data.total}/round
                                   </span>
-                                )}
+                                </div>
+                                {/* Per-source breakdown with upcoming tick values */}
+                                {data.sources.map((src, i) => {
+                                  const upcoming = getUpcomingValues(
+                                    playerEffects.find(e => e.effectType === type && (CARD_MAP[e.cardId]?.name || "Unknown") === src.name)?.baseValue || src.value,
+                                    src.pattern,
+                                    src.currentTick,
+                                    src.durationRounds
+                                  );
+                                  return (
+                                    <div key={i} className="ml-5 mt-0.5">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[10px] text-foreground/50">{src.name}</span>
+                                        <span className="text-[9px] text-muted-foreground/40">
+                                          ({src.ticksLeft} rounds left)
+                                        </span>
+                                      </div>
+                                      {/* Upcoming round values */}
+                                      <div className="flex items-center gap-1 mt-0.5">
+                                        {upcoming.map((val, ri) => (
+                                          <div
+                                            key={ri}
+                                            className="flex items-center gap-0.5 px-1 py-0.5 rounded"
+                                            style={{
+                                              background: ri === 0 ? `color-mix(in oklch, ${cfg.color} 20%, transparent)` : "oklch(0.15 0.01 70 / 0.5)",
+                                              border: ri === 0 ? `1px solid color-mix(in oklch, ${cfg.color} 30%, transparent)` : "1px solid oklch(0.3 0.02 280 / 0.2)",
+                                            }}
+                                          >
+                                            <span className="text-[8px] text-muted-foreground/50">R{currentRound + ri}</span>
+                                            <span
+                                              className="text-[10px] font-black"
+                                              style={{ fontFamily: "var(--font-heading)", color: ri === 0 ? cfg.color : "oklch(0.6 0.05 70)" }}
+                                            >
+                                              {cfg.sign}{val}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                              <div className="flex flex-wrap gap-1">
-                                {data.sources.map((src, i) => (
-                                  <span key={i} className="text-[9px] text-foreground/40">
-                                    {src}{i < data.sources.length - 1 ? "," : ""}
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {/* Beneficial effects section */}
+                      {beneficialTypes.length > 0 && (
+                        <div>
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-green-400/60" style={{ fontFamily: "var(--font-heading)" }}>
+                            Buffs
+                          </span>
+                          {beneficialTypes.map((type) => {
+                            const cfg = EFFECT_CONFIG[type]!;
+                            const data = summary[type];
+                            return (
+                              <div key={type} className="mt-1">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-xs">{cfg.emoji}</span>
+                                  <span className="text-[11px] font-bold" style={{ fontFamily: "var(--font-heading)", color: cfg.color }}>
+                                    {cfg.label}: {cfg.sign}{data.total}/round
                                   </span>
-                                ))}
+                                </div>
+                                {data.sources.map((src, i) => {
+                                  const upcoming = getUpcomingValues(
+                                    playerEffects.find(e => e.effectType === type && (CARD_MAP[e.cardId]?.name || "Unknown") === src.name)?.baseValue || src.value,
+                                    src.pattern,
+                                    src.currentTick,
+                                    src.durationRounds
+                                  );
+                                  return (
+                                    <div key={i} className="ml-5 mt-0.5">
+                                      <div className="flex items-center gap-1">
+                                        <span className="text-[10px] text-foreground/50">{src.name}</span>
+                                        <span className="text-[9px] text-muted-foreground/40">
+                                          ({src.ticksLeft} rounds left)
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-1 mt-0.5">
+                                        {upcoming.map((val, ri) => (
+                                          <div
+                                            key={ri}
+                                            className="flex items-center gap-0.5 px-1 py-0.5 rounded"
+                                            style={{
+                                              background: ri === 0 ? `color-mix(in oklch, ${cfg.color} 20%, transparent)` : "oklch(0.15 0.01 70 / 0.5)",
+                                              border: ri === 0 ? `1px solid color-mix(in oklch, ${cfg.color} 30%, transparent)` : "1px solid oklch(0.3 0.02 280 / 0.2)",
+                                            }}
+                                          >
+                                            <span className="text-[8px] text-muted-foreground/50">R{currentRound + ri}</span>
+                                            <span
+                                              className="text-[10px] font-black"
+                                              style={{ fontFamily: "var(--font-heading)", color: ri === 0 ? cfg.color : "oklch(0.6 0.05 70)" }}
+                                            >
+                                              {cfg.sign}{val}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}

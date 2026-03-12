@@ -153,7 +153,7 @@ const GAME_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='energy-bar']",
     position: "bottom",
     title: "Corruption Energy",
-    body: "Start with 2 energy, gain +1 per round (max 3). Every card costs energy to play. Spend wisely \u2014 you can't play what you can't afford.",
+    body: "Start with 2 Corruption energy. Gain +1 each round (max 7). Unspent energy carries over! Every card costs energy to play. Spend wisely — or save up for a devastating combo.",
     quip: "Corruption: the currency of sin. Literally.",
   },
   {

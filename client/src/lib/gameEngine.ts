@@ -2,7 +2,7 @@
  * Client-Side Game Engine (v4)
  *
  * ALL cards are compound. No flat cards exist.
- * 200 HP, 20 rounds, 3 energy/turn (fixed).
+ * 200 HP, 20 rounds, start 2 energy +1/round (max 7), carry-over.
  * 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn.
  * 7 faction passives tuned via Monte Carlo simulation.
  * Round 16: all afflictions double.
@@ -19,6 +19,7 @@ import {
   LockedPlay,
   MAX_ROUNDS,
   MAX_ENERGY,
+  ENERGY_PER_TURN,
   PlayerState,
   SinType,
   STARTING_HP,
@@ -1038,16 +1039,18 @@ async function advanceRound(gameId: string): Promise<void> {
   }).eq("id", gameId);
 }
 
-// ─── Helper: Refresh Player Energy (v4 — fixed 3/turn) ──────
+// ─── Helper: Refresh Player Energy (carry-over + gain) ──────
 async function refreshPlayerEnergy(player: any): Promise<void> {
   const sb = getClientSupabase();
-  const totalEnergy = MAX_ENERGY; // Fixed 3 energy per turn
+  // Unspent energy carries over, add +1 per round gain, cap at MAX_ENERGY
+  const currentUnspent = player.current_energy ?? 0;
+  const newEnergy = Math.min(currentUnspent + ENERGY_PER_TURN, MAX_ENERGY);
 
   await sb
     .from("game_players")
     .update({
-      current_energy: totalEnergy,
-      max_energy: totalEnergy,
+      current_energy: newEnergy,
+      max_energy: MAX_ENERGY,
       bonus_energy: 0,
     })
     .eq("id", player.id);

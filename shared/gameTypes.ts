@@ -3,7 +3,7 @@
  *
  * v4 Balance Overhaul:
  * - ALL cards are compound-only (no flat cards)
- * - 200 HP, 20 rounds, 3 energy/turn (fixed, no ramp)
+ * - 200 HP, 20 rounds, start 2 energy +1/round (max 7), carry-over
  * - 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn
  * - 13 effect types with 4 target modes
  * - 7 faction passives tuned via Monte Carlo (15k games, max 2.9% deviation)
@@ -164,8 +164,8 @@ export interface CardDefinition {
  * Energy is themed as "Corruption" — the fuel of sin.
  *
  * Core rules:
- * - Fixed 3 energy per turn (no ramp, no cap increase)
- * - Full refresh each turn — "use it or lose it"
+ * - Start with 2 energy, +1 per round (cap 7)
+ * - Unspent energy carries over to next round
  * - Every card has a Corruption cost (0-6 range)
  * - Can't play a card if you don't have enough Corruption
  *
@@ -178,8 +178,8 @@ export interface CardDefinition {
  * - Lust:     TEMPTATION — Single-target damage heals self for +1 HP
  * - Gluttony: DEVOUR — AoE cards grant +1 energy
  */
-export const MAX_ENERGY = 3;
-export const ENERGY_PER_TURN = 3; // Fixed, no ramp
+export const MAX_ENERGY = 7;
+export const ENERGY_PER_TURN = 1; // +1 energy gained per round
 
 // Passive constants
 export const WRATH_FURY_BONUS_DAMAGE = 3;
@@ -192,8 +192,8 @@ export const LUST_TEMPTATION_HEAL = 1;
 export const GLUTTONY_DEVOUR_ENERGY = 1;
 
 // Legacy compat exports (some UI components still reference these)
-export const STARTING_ENERGY = 3;
-export const ENERGY_PER_ROUND = 0; // No ramp in v4
+export const STARTING_ENERGY = 2;
+export const ENERGY_PER_ROUND = 1; // +1 per round
 export const SLOTH_MAX_CARRYOVER = 0; // Removed in v4
 export const WRATH_OVERCHARGE_HP_COST = 0; // Removed in v4
 export const WRATH_OVERCHARGE_ENERGY_GAIN = 0; // Removed in v4
@@ -202,8 +202,8 @@ export const GREED_AVARICE_COST_THRESHOLD = 0; // Replaced by steal-based trigge
 export const GREED_AVARICE_BONUS = 1;
 export const ENVY_COVET_BONUS = 0; // Replaced by JEALOUSY passive
 
-export function getBaseEnergyForRound(_round: number): number {
-  return MAX_ENERGY; // Fixed 3 energy per turn in v4
+export function getBaseEnergyForRound(round: number): number {
+  return Math.min(STARTING_ENERGY + (round - 1) * ENERGY_PER_TURN, MAX_ENERGY);
 }
 
 // ─── Turn Phase (Simultaneous Lock-In) ──────────────────────

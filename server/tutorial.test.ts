@@ -186,7 +186,7 @@ describe("Tutorial Content Quality", () => {
     const energyStep = ALL_TUTORIAL_STEPS.find((s) => s.id === "game-energy-bar");
     expect(energyStep).toBeDefined();
     expect(energyStep!.body).toContain("2");  // Start energy
-    expect(energyStep!.body).toContain("3");  // Max cap (v4)
+    expect(energyStep!.body).toContain("7");  // Max cap (v5)
   });
 });
 

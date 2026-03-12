@@ -285,19 +285,22 @@ describe("Game Constants (v4)", () => {
   });
 });
 
-describe("Corruption Energy System (v4)", () => {
-  it("MAX_ENERGY is 3 (fixed per turn)", () => {
-    expect(MAX_ENERGY).toBe(3);
+describe("Corruption Energy System (v5 — carry-over)", () => {
+  it("MAX_ENERGY is 7 (cap)", () => {
+    expect(MAX_ENERGY).toBe(7);
   });
 
-  it("ENERGY_PER_TURN is 3 (fixed, no ramp)", () => {
-    expect(ENERGY_PER_TURN).toBe(3);
+  it("ENERGY_PER_TURN is 1 (gain per round)", () => {
+    expect(ENERGY_PER_TURN).toBe(1);
   });
 
-  it("getBaseEnergyForRound always returns MAX_ENERGY (no ramp)", () => {
-    for (let round = 1; round <= 20; round++) {
-      expect(getBaseEnergyForRound(round)).toBe(MAX_ENERGY);
-    }
+  it("getBaseEnergyForRound returns STARTING_ENERGY + (round-1) capped at MAX_ENERGY", () => {
+    // Round 1: start 2, Round 2: 3, Round 3: 4, ... Round 6: 7, Round 7+: 7
+    expect(getBaseEnergyForRound(1)).toBe(2);
+    expect(getBaseEnergyForRound(2)).toBe(3);
+    expect(getBaseEnergyForRound(5)).toBe(6);
+    expect(getBaseEnergyForRound(6)).toBe(7);
+    expect(getBaseEnergyForRound(10)).toBe(7);
   });
 
   describe("Card cost balance", () => {

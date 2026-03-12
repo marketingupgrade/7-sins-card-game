@@ -732,17 +732,20 @@ export default function GameBoard() {
       />
 
       {/* Targeting Tracer — node connector line from card to target */}
-      <TargetingTracer
-        isActive={isMyTurn && selectedCards.length > 0 && (() => {
-          const lastSel = selectedCards[selectedCards.length - 1];
-          const card = lastSel ? CARD_MAP[lastSel.cardId] : null;
-          return card ? card.effects.some(e => e.targetMode === 'single' || e.targetMode === 'duo') : false;
-        })()}
-        sin={mySin}
-        sourceRef={tracerSourceRef}
-        targetRef={tracerTargetRef}
-        isLocked={!!selectedTarget}
-      />
+      {/* Canvas targeting tracer — desktop only (mobile uses highlight borders instead) */}
+      {!isMobile && (
+        <TargetingTracer
+          isActive={isMyTurn && selectedCards.length > 0 && (() => {
+            const lastSel = selectedCards[selectedCards.length - 1];
+            const card = lastSel ? CARD_MAP[lastSel.cardId] : null;
+            return card ? card.effects.some(e => e.targetMode === 'single' || e.targetMode === 'duo') : false;
+          })()}
+          sin={mySin}
+          sourceRef={tracerSourceRef}
+          targetRef={tracerTargetRef}
+          isLocked={!!selectedTarget}
+        />
+      )}
 
       {/* Tier 1: Floating Numbers */}
       <FloatingNumbers

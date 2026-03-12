@@ -805,3 +805,9 @@
 - [x] Respect the resolve order (skipQueue > lowest HP > lowest seat > lowest cost)
 - [x] Fix mobile resolution: same ResolutionReveal component used on both desktop and mobile
 - [x] Ensure resolution works on both desktop and mobile with responsive layout
+
+## Critical Bugs (Round 3)
+- [x] BUG: Energy cap is 3, should be 7 (now start 2, +1/round, carry-over, cap 7)
+- [x] BUG: Targeting tracer line spawns all over the place on mobile (disabled canvas tracer on mobile, using border highlights instead)
+- [x] BUG: Affliction display on mobile — rewritten with complete effect config (all 12 types), per-round projections, and harmful/beneficial sections
+- [x] CHANGE: Energy system overhaul — start at 2, +1 per round, unspent energy carries over, cap at 7
