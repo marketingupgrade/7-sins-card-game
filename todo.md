@@ -655,5 +655,5 @@
 - [x] Update Lobby to conform to game mode + AAA premium /copywriting
 - [x] PageSpeed optimization (dead CSS removed, fetchpriority, meta tags, DNS prefetch, lazy loading verified)
 - [x] No logic changes, visual/copy only for UI updates
-- [ ] Run all tests
-- [ ] Push to GitHub
+- [x] Run all tests (172 passing)
+- [x] Push to GitHub (21bd2a0)
