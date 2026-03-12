@@ -187,8 +187,8 @@ describe("Game Constants (v4)", () => {
     expect(MAX_ROUNDS).toBe(20);
   });
 
-  it("STARTING_HP is 50", () => {
-    expect(STARTING_HP).toBe(50);
+  it("STARTING_HP is 200", () => {
+    expect(STARTING_HP).toBe(200);
   });
 
   it("HAND_SIZE is 5", () => {

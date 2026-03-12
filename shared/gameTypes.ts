@@ -3,10 +3,11 @@
  *
  * v4 Balance Overhaul:
  * - ALL cards are compound-only (no flat cards)
- * - 50 HP, 20 rounds, 3 energy/turn (fixed, no ramp)
+ * - 200 HP, 20 rounds, 3 energy/turn (fixed, no ramp)
  * - 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn
  * - 13 effect types with 4 target modes
  * - 7 faction passives tuned via Monte Carlo (15k games, max 2.9% deviation)
+ * - HP increased to 200 for longer, more strategic games
  * - Round 16 affliction doubling mechanic
  *
  * These types are shared between client and server to ensure
@@ -310,11 +311,11 @@ export interface GameLogEntry {
 
 // ─── Game Constants (v4) ────────────────────────────────────
 export const MAX_ROUNDS = 20;
-export const STARTING_HP = 50;
+export const STARTING_HP = 200;
 export const HAND_SIZE = 5;
 export const CARDS_PER_DECK = 36;
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
-export const CATCHUP_HP_THRESHOLD = 20; // 40% of 50 HP
+export const CATCHUP_HP_THRESHOLD = 80; // 40% of 200 HP
 
 /**
  * @deprecated Use getCompoundTickValue() with pattern for compound cards.

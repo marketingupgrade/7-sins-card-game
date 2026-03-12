@@ -1,24 +1,30 @@
 /**
  * useBotController - Manages bot lock-in during simultaneous selection phase
  *
- * In the simultaneous system, ALL bots lock in their cards during the
- * selection phase (not sequentially). This hook watches for the selection
- * phase and triggers all bots to lock in with a staggered "thinking" delay.
+ * Fixed: No longer spams duplicate "X cards locked" messages per bot.
+ * Now shows individual bot names locking in, with one summary at the end.
  */
 
 import { useCallback, useEffect, useRef } from "react";
-import { botPlayTurn, isBot, getBotIds } from "@/lib/botEngine";
+import { botPlayTurn, isBot } from "@/lib/botEngine";
 import type { GameState } from "@shared/gameTypes";
 
 interface BotControllerOptions {
   gameState: GameState | null;
-  onBotAction?: (result: { action: string; cardName?: string; narratorQuip?: string }) => void;
+  onBotAction?: (result: {
+    action: string;
+    cardName?: string;
+    narratorQuip?: string;
+    botName?: string;
+    cardsPlayed?: number;
+  }) => void;
+  onAllBotsLocked?: (summary: { totalBots: number; totalCards: number }) => void;
   onRefetch: () => void;
 }
 
-export function useBotController({ gameState, onBotAction, onRefetch }: BotControllerOptions) {
+export function useBotController({ gameState, onBotAction, onAllBotsLocked, onRefetch }: BotControllerOptions) {
   const isProcessingRef = useRef(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProcessedRoundRef = useRef<number>(-1);
 
   const executeAllBotLockIns = useCallback(async () => {
@@ -38,6 +44,9 @@ export function useBotController({ gameState, onBotAction, onRefetch }: BotContr
     isProcessingRef.current = true;
     lastProcessedRoundRef.current = gameState.currentRound;
 
+    let totalCardsPlayed = 0;
+    let botsLocked = 0;
+
     try {
       // Stagger bot lock-ins with "thinking" delays
       for (const bot of botsNeedingLockIn) {
@@ -46,13 +55,26 @@ export function useBotController({ gameState, onBotAction, onRefetch }: BotContr
 
         try {
           const result = await botPlayTurn(gameState.id, bot.id);
+          botsLocked++;
+          totalCardsPlayed += result.cardsPlayed || 0;
 
+          // Show individual bot action (without the generic quip)
           if (onBotAction) {
-            onBotAction(result);
+            onBotAction({
+              ...result,
+              botName: bot.username,
+              // Suppress the generic "X cards locked" quip per bot
+              narratorQuip: undefined,
+            });
           }
         } catch (err) {
           console.error(`Bot ${bot.id} lock-in failed:`, err);
         }
+      }
+
+      // Show one summary message after all bots are done
+      if (onAllBotsLocked && botsLocked > 0) {
+        onAllBotsLocked({ totalBots: botsLocked, totalCards: totalCardsPlayed });
       }
 
       // Delay before refetching to let Supabase propagate
@@ -63,7 +85,7 @@ export function useBotController({ gameState, onBotAction, onRefetch }: BotContr
     } finally {
       isProcessingRef.current = false;
     }
-  }, [gameState, onBotAction, onRefetch]);
+  }, [gameState, onBotAction, onAllBotsLocked, onRefetch]);
 
   // Watch for selection phase to trigger bot lock-ins
   useEffect(() => {

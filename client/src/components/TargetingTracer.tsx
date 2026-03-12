@@ -1,36 +1,48 @@
 /**
- * TargetingTracer - Themed SVG node-connector line from selected card to mouse cursor.
+ * TargetingTracer - Hearthstone-style smooth targeting arrow.
  *
- * When a card is selected and needs a target, a glowing bezier curve follows
- * the mouse. When a target is clicked, the line snaps to the target panel
- * with a pulse animation. Sin-themed colors and particle effects.
+ * A glowing, faction-colored bezier curve that flows from the selected card
+ * to the mouse cursor (or snaps to a locked target). Features smooth
+ * catenary-like droop curve, faction-colored gradient with animated energy
+ * flow, glowing trail with soft outer halo, diamond arrowhead at the
+ * endpoint, and pulsing source/target nodes.
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { SinType } from "@shared/gameTypes";
+import { getSinHexColor } from "@/lib/sinColors";
 
-const SIN_TRACER_COLORS: Record<string, { main: string; glow: string }> = {
-  wrath: { main: "rgba(220, 50, 50, 0.9)", glow: "rgba(220, 50, 50, 0.4)" },
-  greed: { main: "rgba(218, 165, 32, 0.9)", glow: "rgba(218, 165, 32, 0.4)" },
-  sloth: { main: "rgba(120, 80, 200, 0.9)", glow: "rgba(120, 80, 200, 0.4)" },
-  pride: { main: "rgba(180, 60, 180, 0.9)", glow: "rgba(180, 60, 180, 0.4)" },
-  lust: { main: "rgba(200, 50, 100, 0.9)", glow: "rgba(200, 50, 100, 0.4)" },
-  envy: { main: "rgba(50, 180, 80, 0.9)", glow: "rgba(50, 180, 80, 0.4)" },
-  gluttony: { main: "rgba(200, 120, 40, 0.9)", glow: "rgba(200, 120, 40, 0.4)" },
-};
+/* ── Helpers ─────────────────────────────────────────────── */
+
+function hexToRgba(hex: string, alpha: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** Lighten a hex color by mixing with white */
+function lightenHex(hex: string, amount: number): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const lr = Math.round(r + (255 - r) * amount);
+  const lg = Math.round(g + (255 - g) * amount);
+  const lb = Math.round(b + (255 - b) * amount);
+  return `#${lr.toString(16).padStart(2, "0")}${lg.toString(16).padStart(2, "0")}${lb.toString(16).padStart(2, "0")}`;
+}
+
+/* ── Types ───────────────────────────────────────────────── */
 
 interface TargetingTracerProps {
-  /** Whether targeting mode is active */
   isActive: boolean;
-  /** The sin type of the current player for theming */
   sin: SinType;
-  /** Ref to the source element (selected card) */
   sourceRef: React.RefObject<HTMLElement | null>;
-  /** Ref to the locked target element (player panel), null if no target yet */
   targetRef: React.RefObject<HTMLElement | null>;
-  /** Whether a target has been locked */
   isLocked: boolean;
 }
+
+/* ── Component ───────────────────────────────────────────── */
 
 export default function TargetingTracer({
   isActive,
@@ -39,214 +51,282 @@ export default function TargetingTracer({
   targetRef,
   isLocked,
 }: TargetingTracerProps) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
-  const [sourcePos, setSourcePos] = useState({ x: 0, y: 0 });
-  const [targetPos, setTargetPos] = useState({ x: 0, y: 0 });
-  const animFrameRef = useRef<number>(0);
-  const dashOffsetRef = useRef(0);
-  const particlesRef = useRef<{ x: number; y: number; age: number; vx: number; vy: number }[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const mouseRef = useRef({ x: 0, y: 0 });
+  const sourceRect = useRef({ x: 0, y: 0 });
+  const targetRect = useRef({ x: 0, y: 0 });
+  const timeRef = useRef(0);
+  const [, forceUpdate] = useState(0);
 
-  const colors = SIN_TRACER_COLORS[sin] || SIN_TRACER_COLORS.wrath;
+  const factionHex = getSinHexColor(sin);
+  const factionLight = lightenHex(factionHex, 0.5);
 
-  // Track mouse position
+  // Track mouse
   useEffect(() => {
     if (!isActive || isLocked) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePos({ x: e.clientX, y: e.clientY });
+    const onMove = (e: MouseEvent) => {
+      mouseRef.current = { x: e.clientX, y: e.clientY };
     };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
   }, [isActive, isLocked]);
 
-  // Update source position from ref
-  const updateSourcePos = useCallback(() => {
+  // Update source position
+  const updateSource = useCallback(() => {
     if (sourceRef.current) {
-      const rect = sourceRef.current.getBoundingClientRect();
-      setSourcePos({ x: rect.left + rect.width / 2, y: rect.top });
+      const r = sourceRef.current.getBoundingClientRect();
+      sourceRect.current = { x: r.left + r.width / 2, y: r.top };
     }
   }, [sourceRef]);
 
-  // Update target position from ref
-  const updateTargetPos = useCallback(() => {
+  // Update target position
+  const updateTarget = useCallback(() => {
     if (targetRef.current) {
-      const rect = targetRef.current.getBoundingClientRect();
-      setTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      const r = targetRef.current.getBoundingClientRect();
+      targetRect.current = { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     }
   }, [targetRef]);
 
   useEffect(() => {
     if (!isActive) return;
-    updateSourcePos();
-    const interval = setInterval(updateSourcePos, 100);
-    return () => clearInterval(interval);
-  }, [isActive, updateSourcePos]);
+    updateSource();
+    const iv = setInterval(updateSource, 80);
+    return () => clearInterval(iv);
+  }, [isActive, updateSource]);
 
   useEffect(() => {
     if (!isLocked) return;
-    updateTargetPos();
-    const interval = setInterval(updateTargetPos, 100);
-    return () => clearInterval(interval);
-  }, [isLocked, updateTargetPos]);
+    updateTarget();
+    const iv = setInterval(updateTarget, 80);
+    return () => clearInterval(iv);
+  }, [isLocked, updateTarget]);
 
-  // Animation loop for dash offset and particles
+  // Canvas animation loop
   useEffect(() => {
     if (!isActive) return;
 
-    const canvas = svgRef.current;
+    const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const animate = () => {
-      dashOffsetRef.current -= 1.5;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-      // Spawn particles along the line
-      if (Math.random() > 0.6) {
-        const t = Math.random();
-        const endX = isLocked ? targetPos.x : mousePos.x;
-        const endY = isLocked ? targetPos.y : mousePos.y;
-        particlesRef.current.push({
-          x: sourcePos.x + (endX - sourcePos.x) * t,
-          y: sourcePos.y + (endY - sourcePos.y) * t + (Math.random() - 0.5) * 20,
-          age: 0,
-          vx: (Math.random() - 0.5) * 0.5,
-          vy: -Math.random() * 0.8,
-        });
+    const dpr = window.devicePixelRatio || 1;
+
+    const resize = () => {
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const draw = () => {
+      timeRef.current += 0.02;
+      const t = timeRef.current;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const sx = sourceRect.current.x;
+      const sy = sourceRect.current.y;
+      const ex = isLocked ? targetRect.current.x : mouseRef.current.x;
+      const ey = isLocked ? targetRect.current.y : mouseRef.current.y;
+
+      const dx = ex - sx;
+      const dy = ey - sy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 5) {
+        animRef.current = requestAnimationFrame(draw);
+        return;
       }
 
-      // Age and prune particles
-      particlesRef.current = particlesRef.current
-        .map((p) => ({ ...p, x: p.x + p.vx, y: p.y + p.vy, age: p.age + 1 }))
-        .filter((p) => p.age < 30);
+      // Hearthstone-style targeting arrow: a smooth quadratic arc that bows
+      // upward through a single control point above the midpoint.
+      // This keeps the curve simple, elegant, and always within the viewport.
+      const midX = (sx + ex) / 2;
+      const topY = Math.min(sy, ey);
 
-      // Force re-render via SVG attribute update
-      const path = canvas.querySelector("#tracer-path") as SVGPathElement | null;
-      if (path) {
-        path.setAttribute("stroke-dashoffset", String(dashOffsetRef.current));
+      // Arc height: proportional to horizontal distance, clamped
+      const arcHeight = Math.min(Math.abs(dx) * 0.4 + 40, 180);
+
+      // Single control point above the midpoint for a clean parabolic arc
+      const cpx = midX;
+      const cpy = Math.max(20, topY - arcHeight);
+
+      // Convert to cubic bezier (quadratic -> cubic: cp1 = 1/3 start + 2/3 cp, cp2 = 2/3 cp + 1/3 end)
+      const cp1x = sx + (2 / 3) * (cpx - sx);
+      const cp1y = sy + (2 / 3) * (cpy - sy);
+      const cp2x = ex + (2 / 3) * (cpx - ex);
+      const cp2y = ey + (2 / 3) * (cpy - ey);
+
+      // ── Layer 1: Wide soft glow ──
+      ctx.save();
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = factionHex;
+      ctx.lineWidth = 20;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.shadowColor = factionHex;
+      ctx.shadowBlur = 30;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+      ctx.stroke();
+      ctx.restore();
+
+      // ── Layer 2: Medium glow ──
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      ctx.strokeStyle = factionHex;
+      ctx.lineWidth = 8;
+      ctx.lineCap = "round";
+      ctx.shadowColor = factionHex;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+      ctx.stroke();
+      ctx.restore();
+
+      // ── Layer 3: Core bright line ──
+      ctx.save();
+      ctx.globalAlpha = 0.9;
+      const grad = ctx.createLinearGradient(sx, sy, ex, ey);
+      grad.addColorStop(0, factionLight);
+      grad.addColorStop(0.5, factionHex);
+      grad.addColorStop(1, factionLight);
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.shadowColor = factionHex;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, ex, ey);
+      ctx.stroke();
+      ctx.restore();
+
+      // ── Layer 4: Animated energy orbs flowing along the curve ──
+      const numOrbs = 5;
+      for (let i = 0; i < numOrbs; i++) {
+        const orbT = ((t * 0.8 + i / numOrbs) % 1);
+        // Cubic bezier point at parameter orbT
+        const omt = 1 - orbT;
+        const px = omt * omt * omt * sx + 3 * omt * omt * orbT * cp1x + 3 * omt * orbT * orbT * cp2x + orbT * orbT * orbT * ex;
+        const py = omt * omt * omt * sy + 3 * omt * omt * orbT * cp1y + 3 * omt * orbT * orbT * cp2y + orbT * orbT * orbT * ey;
+
+        const orbAlpha = Math.sin(orbT * Math.PI) * 0.8;
+        const orbSize = 2 + Math.sin(orbT * Math.PI) * 2;
+
+        ctx.save();
+        ctx.globalAlpha = orbAlpha;
+        ctx.fillStyle = factionLight;
+        ctx.shadowColor = factionHex;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.arc(px, py, orbSize, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
 
-      // Update particle positions
-      const particleGroup = canvas.querySelector("#tracer-particles");
-      if (particleGroup) {
-        particleGroup.innerHTML = particlesRef.current
-          .map(
-            (p) =>
-              `<circle cx="${p.x}" cy="${p.y}" r="${1.5 - p.age * 0.04}" fill="${colors.main}" opacity="${Math.max(0, 1 - p.age / 30)}" />`
-          )
-          .join("");
+      // ── Layer 5: Source pulsing circle ──
+      const sourcePulse = 4 + Math.sin(t * 3) * 2;
+      ctx.save();
+      ctx.globalAlpha = 0.8;
+      ctx.fillStyle = factionHex;
+      ctx.shadowColor = factionHex;
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sourcePulse, 0, Math.PI * 2);
+      ctx.fill();
+      // Inner bright core
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = factionLight;
+      ctx.beginPath();
+      ctx.arc(sx, sy, sourcePulse * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // ── Layer 6: End point — diamond arrowhead or crosshair ──
+      if (isLocked) {
+        // Pulsing diamond at locked target
+        const targetPulse = 8 + Math.sin(t * 4) * 3;
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = factionHex;
+        ctx.shadowColor = factionHex;
+        ctx.shadowBlur = 20;
+        ctx.translate(ex, ey);
+        ctx.rotate(Math.PI / 4 + t * 0.5);
+        ctx.fillRect(-targetPulse / 2, -targetPulse / 2, targetPulse, targetPulse);
+        ctx.restore();
+
+        // Inner bright diamond
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = factionLight;
+        ctx.translate(ex, ey);
+        ctx.rotate(Math.PI / 4 + t * 0.5);
+        ctx.fillRect(-targetPulse / 4, -targetPulse / 4, targetPulse / 2, targetPulse / 2);
+        ctx.restore();
+      } else {
+        // Crosshair at mouse
+        const chSize = 10 + Math.sin(t * 2) * 2;
+        ctx.save();
+        ctx.globalAlpha = 0.7;
+        ctx.strokeStyle = factionHex;
+        ctx.lineWidth = 2;
+        ctx.shadowColor = factionHex;
+        ctx.shadowBlur = 8;
+
+        // Outer ring
+        ctx.beginPath();
+        ctx.arc(ex, ey, chSize, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Cross lines
+        ctx.beginPath();
+        ctx.moveTo(ex - chSize - 4, ey);
+        ctx.lineTo(ex - chSize / 2, ey);
+        ctx.moveTo(ex + chSize / 2, ey);
+        ctx.lineTo(ex + chSize + 4, ey);
+        ctx.moveTo(ex, ey - chSize - 4);
+        ctx.lineTo(ex, ey - chSize / 2);
+        ctx.moveTo(ex, ey + chSize / 2);
+        ctx.lineTo(ex, ey + chSize + 4);
+        ctx.stroke();
+
+        // Center dot
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = factionLight;
+        ctx.beginPath();
+        ctx.arc(ex, ey, 2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
       }
 
-      animFrameRef.current = requestAnimationFrame(animate);
+      animRef.current = requestAnimationFrame(draw);
     };
 
-    animFrameRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [isActive, sourcePos, mousePos, targetPos, isLocked, colors]);
+    animRef.current = requestAnimationFrame(draw);
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      window.removeEventListener("resize", resize);
+    };
+  }, [isActive, isLocked, factionHex, factionLight]);
 
   if (!isActive) return null;
 
-  const endX = isLocked ? targetPos.x : mousePos.x;
-  const endY = isLocked ? targetPos.y : mousePos.y;
-
-  // Bezier control points for a nice curve
-  const dx = endX - sourcePos.x;
-  const dy = endY - sourcePos.y;
-  const cpOffset = Math.min(Math.abs(dy) * 0.5, 120);
-
-  const pathD = `M ${sourcePos.x} ${sourcePos.y} C ${sourcePos.x} ${sourcePos.y - cpOffset}, ${endX} ${endY + cpOffset}, ${endX} ${endY}`;
-
   return (
-    <svg
-      ref={svgRef}
+    <canvas
+      ref={canvasRef}
       className="fixed inset-0 pointer-events-none"
-      style={{ zIndex: 50, width: "100vw", height: "100vh" }}
-    >
-      <defs>
-        <filter id="tracer-glow">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-        <linearGradient id="tracer-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={colors.main} />
-          <stop offset="100%" stopColor={colors.glow} />
-        </linearGradient>
-      </defs>
-
-      {/* Glow layer */}
-      <path
-        d={pathD}
-        fill="none"
-        stroke={colors.glow}
-        strokeWidth="6"
-        strokeLinecap="round"
-        filter="url(#tracer-glow)"
-        opacity="0.5"
-      />
-
-      {/* Main tracer line */}
-      <path
-        id="tracer-path"
-        d={pathD}
-        fill="none"
-        stroke="url(#tracer-gradient)"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeDasharray="8 4"
-        strokeDashoffset={dashOffsetRef.current}
-      />
-
-      {/* Source dot */}
-      <circle
-        cx={sourcePos.x}
-        cy={sourcePos.y}
-        r="5"
-        fill={colors.main}
-        filter="url(#tracer-glow)"
-      >
-        <animate
-          attributeName="r"
-          values="4;6;4"
-          dur="1.5s"
-          repeatCount="indefinite"
-        />
-      </circle>
-
-      {/* End dot */}
-      <circle
-        cx={endX}
-        cy={endY}
-        r={isLocked ? 7 : 4}
-        fill={isLocked ? colors.main : "transparent"}
-        stroke={colors.main}
-        strokeWidth="2"
-        filter="url(#tracer-glow)"
-      >
-        {isLocked && (
-          <animate
-            attributeName="r"
-            values="6;10;6"
-            dur="0.8s"
-            repeatCount="indefinite"
-          />
-        )}
-      </circle>
-
-      {/* Particles */}
-      <g id="tracer-particles" />
-
-      {/* Crosshair at mouse when not locked */}
-      {!isLocked && (
-        <g transform={`translate(${endX}, ${endY})`} opacity="0.6">
-          <line x1="-8" y1="0" x2="-3" y2="0" stroke={colors.main} strokeWidth="1.5" />
-          <line x1="3" y1="0" x2="8" y2="0" stroke={colors.main} strokeWidth="1.5" />
-          <line x1="0" y1="-8" x2="0" y2="-3" stroke={colors.main} strokeWidth="1.5" />
-          <line x1="0" y1="3" x2="0" y2="8" stroke={colors.main} strokeWidth="1.5" />
-        </g>
-      )}
-    </svg>
+      style={{ zIndex: 50 }}
+    />
   );
 }

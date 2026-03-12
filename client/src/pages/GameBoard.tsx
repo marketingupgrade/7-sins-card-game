@@ -162,7 +162,42 @@ export default function GameBoard() {
   const [bloomTrigger, setBloomTrigger] = useState(0);
   const [bloomSin, setBloomSin] = useState<SinType>('wrath');
 
+  // Resolution Reveal: Cache lockedPlays so animation persists after server clears them
+  const [cachedLockedPlays, setCachedLockedPlays] = useState<LockedPlay[]>([]);
+  const [cachedResolutionPlayers, setCachedResolutionPlayers] = useState<PlayerState[]>([]);
+  const [isShowingResolution, setIsShowingResolution] = useState(false);
+  const resolutionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const prevRoundRef = useRef<number>(0);
+
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
+
+  // Resolution Reveal: Cache lockedPlays when they appear, show animation even after server clears them
+  useEffect(() => {
+    if (!gameState) return;
+    const lp = gameState.lockedPlays;
+    // When locked plays appear (during brief resolution phase), cache them
+    if (lp && lp.length > 0 && !isShowingResolution) {
+      setCachedLockedPlays([...lp]);
+      setCachedResolutionPlayers([...gameState.players]);
+      setIsShowingResolution(true);
+      // Auto-dismiss after animation completes (1.8s per card + 1s buffer)
+      if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+      const duration = Math.max(3000, lp.length * 2000 + 1500);
+      resolutionTimerRef.current = setTimeout(() => {
+        setIsShowingResolution(false);
+        setCachedLockedPlays([]);
+      }, duration);
+    }
+    // Also detect round change as a signal that resolution just happened
+    if (gameState.currentRound !== prevRoundRef.current && prevRoundRef.current > 0) {
+      // Round changed — if we have cached plays, keep showing them
+      // If we don't have cached plays but round changed, the resolution was too fast to catch
+    }
+    prevRoundRef.current = gameState.currentRound;
+    return () => {
+      if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+    };
+  }, [gameState?.lockedPlays, gameState?.currentRound, gameState?.players, isShowingResolution]);
 
   useEffect(() => {
     musicEngine.init();
@@ -193,12 +228,21 @@ export default function GameBoard() {
   useBotController({
     gameState,
     onBotAction: (result) => {
-      if (result.narratorQuip) {
-        addMessage(result.narratorQuip, "action");
-        addToActionFeed(result.narratorQuip);
-      } else if (result.action === "pass") {
-        addRandomLine("botThinking");
+      if (result.action === "play" && result.botName) {
+        addToActionFeed(`${result.botName} locked in ${result.cardsPlayed || 0} card${(result.cardsPlayed || 0) !== 1 ? "s" : ""}`);
+      } else if (result.action === "pass" && result.botName) {
+        addToActionFeed(`${result.botName} is thinking...`);
       }
+    },
+    onAllBotsLocked: (summary) => {
+      const quips = [
+        "The shadows have chosen. Your move, mortal.",
+        "All sinners have cast their lot.",
+        "The cathedral hums with dark intent.",
+        "Fate is sealed. Let the cards speak.",
+        "Every soul has made their choice.",
+      ];
+      addMessage(quips[Math.floor(Math.random() * quips.length)], "action");
     },
     onRefetch: refetch,
   });
@@ -734,7 +778,7 @@ export default function GameBoard() {
         </div>
 
         <div className="flex items-center justify-center flex-1">
-          {turnPhase === "resolution" ? (
+          {(turnPhase === "resolution" || isShowingResolution) ? (
             <motion.div
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 0.8, repeat: Infinity }}
@@ -856,12 +900,12 @@ export default function GameBoard() {
           {/* CENTER — Ritual Circle + Resolution Reveal */}
           <div className="col-start-2 row-start-2 flex items-center justify-center relative">
             {/* Resolution card reveal overlay */}
-            {turnPhase === "resolution" && gameState.lockedPlays && (
+            {isShowingResolution && cachedLockedPlays.length > 0 && (
               <ResolutionReveal
-                lockedPlays={gameState.lockedPlays}
-                players={gameState.players}
+                lockedPlays={cachedLockedPlays}
+                players={cachedResolutionPlayers}
                 currentRound={gameState.currentRound}
-                isResolving={turnPhase === "resolution"}
+                isResolving={isShowingResolution}
               />
             )}
             <div className="text-center">
@@ -986,13 +1030,13 @@ export default function GameBoard() {
               alivePlayers={alivePlayers}
             />
             {/* Mobile Resolution Reveal — overlays the battle overview */}
-            {turnPhase === "resolution" && gameState.lockedPlays && (
+            {isShowingResolution && cachedLockedPlays.length > 0 && (
               <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
                 <ResolutionReveal
-                  lockedPlays={gameState.lockedPlays}
-                  players={gameState.players}
+                  lockedPlays={cachedLockedPlays}
+                  players={cachedResolutionPlayers}
                   currentRound={gameState.currentRound}
-                  isResolving={turnPhase === "resolution"}
+                  isResolving={isShowingResolution}
                 />
               </div>
             )}
@@ -1103,7 +1147,7 @@ export default function GameBoard() {
               className="text-center text-sm text-muted-foreground/60 py-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              {turnPhase === "resolution"
+              {(turnPhase === "resolution" || isShowingResolution)
                 ? "The sins are clashing..."
                 : hasLockedIn
                   ? "Locked in. Waiting on the others..."

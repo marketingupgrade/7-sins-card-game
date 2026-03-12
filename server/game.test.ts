@@ -264,8 +264,8 @@ describe("Game Constants (v4)", () => {
     expect(MAX_ROUNDS).toBe(20);
   });
 
-  it("STARTING_HP is 50", () => {
-    expect(STARTING_HP).toBe(50);
+  it("STARTING_HP is 200", () => {
+    expect(STARTING_HP).toBe(200);
   });
 
   it("HAND_SIZE is 5", () => {
@@ -280,8 +280,8 @@ describe("Game Constants (v4)", () => {
     expect(ROUND_16_DOUBLING).toBe(16);
   });
 
-  it("CATCHUP_HP_THRESHOLD is 20 (40% of 50 HP)", () => {
-    expect(CATCHUP_HP_THRESHOLD).toBe(20);
+  it("CATCHUP_HP_THRESHOLD is 80 (40% of 200 HP)", () => {
+    expect(CATCHUP_HP_THRESHOLD).toBe(80);
   });
 });
 

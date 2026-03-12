@@ -758,3 +758,34 @@
 - [x] Merged duplicate React imports in GameCard.tsx and GameBoard.tsx
 - [x] Removed unused SinType import from MobileCardThumbnail
 - [x] BUG: Tutorial popup overflows on mobile portrait — text cut off, buttons unreachable, must rotate to landscape to dismiss
+
+## Performance Optimization (Target: 90+ PageSpeed)
+- [x] Remove Babylon.js HeroBabylonScene from homepage (saves ~3MB bundle from initial load)
+- [x] Defer musicEngine.init() to first user interaction (saves 6.6MB OGG on page load)
+- [x] Add width/height + loading=lazy + decoding=async to hero images and faction portraits
+- [ ] Re-test PageSpeed after Vercel deploys new build
+
+## Bot AI Overhaul — Stop Ganging Up on Human
+- [x] Analyze current bot targeting logic mathematically (identify gang-up bias)
+- [x] Design game-theoretic targeting model (Nash equilibrium, threat assessment)
+- [x] Implement distinct bot personalities (aggressive, defensive, opportunistic, balanced)
+- [x] Add anti-gang-up fairness constraint (spread damage across targets)
+- [x] Verify with simulation that human isn't disproportionately targeted (weighted random + 50% human penalty)
+
+## Image Optimization (PageSpeed 90+ target)
+- [x] Download and resize all oversized portrait images (1920px → 600px webp)
+- [x] Download and resize all oversized icon images (icons already 256px, acceptable)
+- [x] Re-upload optimized images and update CDN URLs in code (252 card art + 14 portraits)
+- [x] Add preconnect hints for CDN domain (d2xsxph8kpxj0f.cloudfront.net)
+- [ ] Re-test PageSpeed after optimization (pending publish)
+
+## Desktop Game Board Layout Bugs
+- [x] BUG: "2 cards locked. The arena trembles." notification duplicates/stacks 3x — now shows individual bot names + one summary quip
+- [x] BUG: First card in hand is oversized and overlaps other cards (verified: cards are uniform size)
+- [x] BUG: Targeting tracer line goes off-screen — rewritten as smooth Hearthstone-style bezier arc
+- [x] BUG: Only player's own panel visible — verified opponent panels are visible and working
+- [x] BUG: Desktop resolution phase — added cached lockedPlays so animation plays from cached data
+- [x] CHANGE: Increase HP pool from 50 to 200 (games end too fast, only 3 rounds)
+- [x] Add glitch effect to "7 DEADLY SINS" homepage title with random faction color flashes
+- [x] Targeting tracer: use chosen faction color instead of hardcoded red
+- [x] Targeting tracer: smooth Hearthstone-style bezier curve with glow and arrowhead

@@ -15,6 +15,7 @@ import { useLocation } from "wouter";
 import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import GlitchTitle from "@/components/GlitchTitle";
 import type { SinType } from "@shared/gameTypes";
 // HeroBabylonScene removed from homepage for performance (Babylon.js = 3MB+ bundle)
 // The EmberField CSS particle system provides the atmospheric background instead
@@ -237,14 +238,7 @@ export default function Home() {
           >
             Enter the Cathedral
           </p>
-          <h1
-            className="text-4xl md:text-6xl lg:text-7xl font-black tracking-wider"
-            style={{ fontFamily: "var(--font-heading)" }}
-          >
-            <span className="text-white/90">7</span>{" "}
-            <span className="text-white/60">DEADLY</span>{" "}
-            <span className="text-white/90">SINS</span>
-          </h1>
+          <GlitchTitle />
           <div className="flex items-center justify-center gap-2 mt-3">
             <div className="h-px w-16 bg-gradient-to-r from-transparent to-white/15" />
             <div className="w-1 h-1 rotate-45 bg-white/20" />
