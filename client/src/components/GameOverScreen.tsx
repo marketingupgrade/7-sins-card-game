@@ -11,7 +11,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { RotateCcw } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
@@ -19,6 +19,7 @@ import { CARD_MAP } from "@shared/cardData";
 import { getGameLog } from "@/lib/gameEngine";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { FACTION_PORTRAITS_HD } from "@/lib/factionPortraits";
+const VictoryConfetti = lazy(() => import("./VictoryConfetti"));
 
 interface GameOverScreenProps {
   players: PlayerState[];
@@ -401,6 +402,13 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
         animate={{ opacity: 1 }}
         className="fixed inset-0 z-50 overflow-hidden"
       >
+        {/* ── Layer -1: Victory confetti ── */}
+        {isPlayerWinner && (
+          <Suspense fallback={null}>
+            <VictoryConfetti show={true} sin={mySin} />
+          </Suspense>
+        )}
+
         {/* ── Layer 0: Background portrait ── */}
         <motion.div
           className="absolute inset-0"

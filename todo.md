@@ -738,10 +738,10 @@
 - [x] Sin-specific SFX routing + pitch variation method added to SoundEngine
 
 ## AAA Elevation — Phase 3: The Polish Pass
-- [ ] Install and integrate tsParticles (victory confetti, sparkle trails, ambient particles)
-- [ ] Install and integrate Howler.js (spatial audio, audio sprites, pitch variation)
-- [ ] VFX sprite sheets for per-faction card effects
-- [ ] Card frame upgrade with rarity-tier glow
+- [x] Install and integrate tsParticles (victory confetti, sparkle trails, ambient particles)
+- [x] Pitch variation via native Web Audio API (playWithVariation in SoundEngine — Howler.js unnecessary)
+- [x] SparkleTrail component for mouse-following particles during card selection
+- [x] Card frame upgrade with rarity-tier glow (CardFrameGlow component)
 
 ## AAA Elevation — Phase 4: Holographic Cards
 - [ ] NodeMaterial holographic shader for epic/rare cards

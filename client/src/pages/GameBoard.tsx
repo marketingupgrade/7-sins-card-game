@@ -74,6 +74,7 @@ import MobileBattleOverview from "@/components/MobileBattleOverview";
 import { useIsMobile } from "@/hooks/useIsMobile";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
 const BloomOverlay = lazy(() => import("@/components/BloomOverlay"));
+const SparkleTrail = lazy(() => import("@/components/SparkleTrail"));
 
 interface ActionFeedEntry {
   id: string;
@@ -1258,6 +1259,14 @@ export default function GameBoard() {
       <BloomOverlay
         trigger={bloomTrigger}
         sin={bloomSin}
+      />
+    </Suspense>
+
+    {/* Phase 3: Sparkle Trail on card selection */}
+    <Suspense fallback={null}>
+      <SparkleTrail
+        active={selectedCards.length > 0}
+        sin={(myPlayer?.chosenSin as SinType) || 'wrath'}
       />
     </Suspense>
 
