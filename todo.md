@@ -695,4 +695,4 @@
 - [ ] Push to GitHub
 
 ## Bug Fixes (Round 22b)
-- [ ] Fix game creation stuck at "Opening the cathedral doors..." after simultaneous lock-in changes
+- [x] Fix game creation stuck at "Opening the cathedral doors..." — root cause: locked_plays column default was {} (object) not [] (array), causing .filter() TypeError. Fixed SQL default + added Array.isArray() safety checks in both engines.
