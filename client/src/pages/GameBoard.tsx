@@ -1226,7 +1226,7 @@ export default function GameBoard() {
 
           {/* Mobile hand — compact thumbnails */}
           <div className="md:hidden">
-            <div className="flex items-end justify-center gap-1.5 overflow-x-auto pb-1 scrollbar-thin px-1">
+            <div className="flex items-end gap-1.5 overflow-x-auto pb-1 scrollbar-thin px-2 pr-4" style={{ WebkitOverflowScrolling: 'touch' }}>
               {myPlayer && (
                 <DeckPile
                   sin={(myPlayer.chosenSin as SinType) || "wrath"}
@@ -1258,11 +1258,16 @@ export default function GameBoard() {
                         isSelected={selectedCards.some(s => s.cardId === card.id)}
                         canAfford={energyRemaining + (selectedCards.some(s => s.cardId === card.id) ? card.cost : 0) >= card.cost}
                         onClick={() => {
-                          if (selectedCards.some(s => s.cardId === card.id)) {
+                          const isSelected = selectedCards.some(s => s.cardId === card.id);
+                          const affordable = energyRemaining + (isSelected ? card.cost : 0) >= card.cost;
+                          if (isSelected) {
                             // Second tap on selected card → open zoom
                             setMobileZoomCard(card.id);
-                          } else {
+                          } else if (affordable && isMyTurn) {
                             toggleCardSelection(card.id);
+                          } else {
+                            // Can't afford or not your turn → open zoom to view details
+                            setMobileZoomCard(card.id);
                           }
                         }}
                       />
@@ -1285,7 +1290,7 @@ export default function GameBoard() {
         {isMobile && mobileZoomCard && (
           <MobileCardZoom
             card={CARD_MAP[mobileZoomCard]}
-            isPlayable={isMyTurn}
+            isPlayable={isMyTurn && energyRemaining >= (CARD_MAP[mobileZoomCard]?.cost ?? 0)}
             canAfford={energyRemaining >= (CARD_MAP[mobileZoomCard]?.cost ?? 0)}
             onPlay={() => {
               toggleCardSelection(mobileZoomCard);

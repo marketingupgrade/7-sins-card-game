@@ -811,3 +811,8 @@
 - [x] BUG: Targeting tracer line spawns all over the place on mobile (disabled canvas tracer on mobile, using border highlights instead)
 - [x] BUG: Affliction display on mobile — rewritten with complete effect config (all 12 types), per-round projections, and harmful/beneficial sections
 - [x] CHANGE: Energy system overhaul — start at 2, +1 per round, unspent energy carries over, cap at 7
+
+## Mobile Fixes (Round 4)
+- [x] BUG: Affliction overview on mobile only shows total damage per player, not per-effect breakdown table
+- [x] BUG: Card hand clipped on right side — last card cut off on mobile
+- [x] BUG: Can't tap/view cards when not enough energy — should allow viewing card details regardless

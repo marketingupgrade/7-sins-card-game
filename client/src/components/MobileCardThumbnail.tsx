@@ -60,12 +60,12 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
 
   return (
     <motion.button
-      whileTap={isPlayable ? { scale: 0.92 } : {}}
+      whileTap={{ scale: 0.92 }}
       animate={isSelected ? { y: -8, scale: 1.05 } : { y: 0, scale: 1 }}
-      onClick={isPlayable ? onClick : undefined}
+      onClick={onClick}
       className={`
         relative rounded-lg overflow-hidden flex-shrink-0 touch-manipulation
-        ${!isPlayable ? "opacity-40" : ""}
+        ${!canAfford && !isSelected ? "opacity-60" : ""}
         ${isSelected ? "ring-2 ring-offset-1 ring-offset-background" : ""}
       `}
       style={{
