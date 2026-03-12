@@ -189,7 +189,20 @@ export async function startGame(gameId: string): Promise<void> {
   const startingEnergy = getBaseEnergyForRound(1);
 
   for (const player of players) {
-    const deckCards = getDeckForSin(player.chosen_sin as SinType);
+    // Check localStorage for a custom deck saved via DeckBuilder
+    let deckCards: string[];
+    try {
+      const raw = localStorage.getItem(`7sins_deck_${player.chosen_sin}`);
+      const saved: string[] = raw ? JSON.parse(raw) : null;
+      // Validate: must have at least 10 cards and all IDs must belong to the sin
+      const defaultDeck = getDeckForSin(player.chosen_sin as SinType);
+      const validIds = new Set(defaultDeck);
+      deckCards = (saved && saved.length >= 10 && saved.every(id => validIds.has(id)))
+        ? saved
+        : defaultDeck;
+    } catch {
+      deckCards = getDeckForSin(player.chosen_sin as SinType);
+    }
     const shuffled = shuffleDeck(deckCards);
     const hand = shuffled.slice(0, HAND_SIZE);
     const remainingDeck = shuffled.slice(HAND_SIZE);
