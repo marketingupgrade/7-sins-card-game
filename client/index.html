@@ -10,34 +10,19 @@
     <meta name="description" content="A strategic 4-player card game where seven deadly sins clash in a gothic cathedral. Choose your sin, master compound mechanics, and outlast your rivals across 20 rounds of judgment." />
     <meta name="theme-color" content="#1a1520" />
 
-    <!-- Resource hints for critical third-party origins -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
-
-    <!-- Preconnect to Supabase (database/auth calls) -->
-    <link rel="dns-prefetch" href="https://supabase.co" />
-
-    <!-- Preconnect to CDN for music/assets -->
-    <link rel="dns-prefetch" href="https://opengameart.org" />
-
-    <!-- Preconnect to CloudFront CDN for portraits, card art, and icons -->
+    <!-- Preconnect to CloudFront CDN for portraits, card art, icons, and fonts -->
     <link rel="preconnect" href="https://d2xsxph8kpxj0f.cloudfront.net" crossorigin />
     <link rel="dns-prefetch" href="https://d2xsxph8kpxj0f.cloudfront.net" />
 
-    <!-- Preconnect to asset CDN -->
-    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net" />
+    <!-- Preload hero image (LCP candidate) -->
+    <link rel="preload" href="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-wrath-opt_37c4a2c3.webp" as="image" type="image/webp" />
 
-    <!-- Google Fonts: only load weights actually used, with display=swap for fast text paint -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Uncial+Antiqua&display=swap"
-      rel="stylesheet"
-      media="print"
-      onload="this.media='all'" />
-    <noscript>
-      <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Uncial+Antiqua&display=swap" rel="stylesheet" />
-    </noscript>
+    <!-- Preload critical fonts (eliminates Google Fonts render-blocking chain) -->
+    <link rel="preload" href="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/cinzel-latin_44fd42d0.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/cormorant-garamond-latin_d0ded694.woff2" as="font" type="font/woff2" crossorigin />
+
+    <!-- Preconnect to Supabase (database/auth calls) -->
+    <link rel="dns-prefetch" href="https://supabase.co" />
   </head>
 
   <body>

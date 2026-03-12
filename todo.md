@@ -816,3 +816,15 @@
 - [x] BUG: Affliction overview on mobile only shows total damage per player, not per-effect breakdown table
 - [x] BUG: Card hand clipped on right side — last card cut off on mobile
 - [x] BUG: Can't tap/view cards when not enough energy — should allow viewing card details regardless
+
+## PageSpeed Optimization
+- [x] Audit current performance bottlenecks (Lighthouse/PageSpeed) — baseline: 66 mobile
+- [x] Self-host Google Fonts on CDN with preload hints (eliminates 1,780ms render-blocking chain)
+- [x] Optimize font loading (preload woff2, font-display: swap, unicode-range subsetting)
+- [x] Defer non-critical JS (gameEngine 86KB, soundEngine 3KB, musicEngine 7KB via dynamic import)
+- [x] Lazy-load TutorialOverlay (defers framer-motion 123KB from app shell)
+- [x] Add immutable cache headers for hashed assets (365 days)
+- [x] Preload hero image (LCP candidate) and critical fonts
+- [x] Remove unused preconnect/dns-prefetch hints
+- [x] CLS already green (0.019) — no changes needed
+- [ ] Further TBT reduction (vendor chunk 560KB still loads eagerly — React+Radix core, hard to split)

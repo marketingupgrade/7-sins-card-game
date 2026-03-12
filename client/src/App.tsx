@@ -11,9 +11,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
-import TutorialOverlay from "./components/TutorialOverlay";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { TutorialProvider } from "./contexts/TutorialContext";
+
+// Lazy-load TutorialOverlay to defer framer-motion from critical path
+const TutorialOverlay = lazy(() => import("./components/TutorialOverlay"));
 
 // Lazy-load all page routes for code splitting
 const Home = lazy(() => import("./pages/Home"));
@@ -59,7 +61,9 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
-            <TutorialOverlay />
+            <Suspense fallback={null}>
+              <TutorialOverlay />
+            </Suspense>
           </TooltipProvider>
         </TutorialProvider>
       </ThemeProvider>

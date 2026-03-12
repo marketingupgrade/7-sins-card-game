@@ -58,7 +58,19 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  // Hashed assets get immutable cache (1 year), HTML gets no-cache for instant updates
+  app.use("/assets", express.static(path.join(distPath, "assets"), {
+    maxAge: "365d",
+    immutable: true,
+  }));
+  app.use(express.static(distPath, {
+    maxAge: "1h",
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith(".html")) {
+        res.setHeader("Cache-Control", "no-cache");
+      }
+    },
+  }));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {

@@ -23,9 +23,21 @@ import EmberField from "@/components/EmberField";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
-import { createGame, joinGame } from "@/lib/gameEngine";
-import { soundEngine } from "@/lib/soundEngine";
-import { musicEngine } from "@/lib/musicEngine";
+// Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
+const lazyGameEngine = () => import("@/lib/gameEngine");
+// Dynamic imports for audio engines - only needed after user interaction
+let _soundEngine: any = null;
+let _musicEngine: any = null;
+const getSoundEngine = async () => {
+  if (!_soundEngine) _soundEngine = (await import("@/lib/soundEngine")).soundEngine;
+  return _soundEngine;
+};
+const getMusicEngine = async () => {
+  if (!_musicEngine) _musicEngine = (await import("@/lib/musicEngine")).musicEngine;
+  return _musicEngine;
+};
+// Fire-and-forget sound play helper (non-blocking)
+const playSound = (name: string) => { getSoundEngine().then(se => se.play(name)).catch(() => {}); };
 import { MusicToggle } from "@/components/MusicToggle";
 
 /* ─── Sin Data ───────────────────────────────────────────────── */
@@ -103,9 +115,10 @@ export default function Home() {
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);
   // Defer music init to first user interaction to avoid loading 6.6MB of OGG files on page load
   useEffect(() => {
-    const initMusic = () => {
-      musicEngine.init();
-      musicEngine.setScene("menu");
+    const initMusic = async () => {
+      const me = await getMusicEngine();
+      me.init();
+      me.setScene("menu");
       window.removeEventListener("click", initMusic);
       window.removeEventListener("touchstart", initMusic);
     };
@@ -152,13 +165,13 @@ export default function Home() {
   const goNext = useCallback(() => {
     setAutoRotate(false);
     setHeroIndex((prev) => (prev + 1) % SIN_HEROES.length);
-    soundEngine.play("ui_hover");
+    playSound("ui_hover");
   }, []);
 
   const goPrev = useCallback(() => {
     setAutoRotate(false);
     setHeroIndex((prev) => (prev - 1 + SIN_HEROES.length) % SIN_HEROES.length);
-    soundEngine.play("ui_hover");
+    playSound("ui_hover");
   }, []);
 
   // Resume auto-rotate after 12s of inactivity
@@ -171,9 +184,10 @@ export default function Home() {
   const handleCreate = async () => {
     if (!username.trim()) { setError("A name, sinner. Even the damned have names."); return; }
     setError(null); setIsCreating(true);
-    soundEngine.play("card_shuffle");
+    playSound("card_shuffle");
     localStorage.setItem("7sins_username", username.trim());
     try {
+      const { createGame } = await lazyGameEngine();
       const result = await createGame(playerId, username.trim());
       setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
@@ -185,9 +199,10 @@ export default function Home() {
     if (!username.trim()) { setError("A name. The confessional requires a name."); return; }
     if (!roomCode.trim()) { setError("The sacred code. Your fellow sinner should have given you one."); return; }
     setError(null); setIsJoining(true);
-    soundEngine.play("teleport");
+    playSound("teleport");
     localStorage.setItem("7sins_username", username.trim());
     try {
+      const { joinGame } = await lazyGameEngine();
       const result = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
       setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
@@ -199,7 +214,7 @@ export default function Home() {
   const sinDots = useMemo(() => SIN_HEROES.map((s, i) => (
     <button
       key={s.key}
-      onClick={() => { setHeroIndex(i); setAutoRotate(false); soundEngine.play("ui_hover"); }}
+      onClick={() => { setHeroIndex(i); setAutoRotate(false); playSound("ui_hover"); }}
       className={`w-2 h-2 rounded-full transition-all duration-500 ${
         i === heroIndex
           ? `bg-${s.color} scale-125 shadow-[0_0_8px_var(--color-${s.color})]`
