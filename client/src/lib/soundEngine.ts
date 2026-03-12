@@ -28,9 +28,10 @@ type GameSoundEvent =
   | "ui_hover"
   | "ui_click"
   | "game_start"
-  | "teleport";
+  | "teleport"
+  | "epic_reveal";
 
-// Map game events to SFX file names
+// Map game events to SFX file names (only valid SfxName keys from SFX_URLS)
 const EVENT_TO_SFX: Record<GameSoundEvent, SfxName> = {
   card_play: "playcard",
   card_draw: "draw",
@@ -51,6 +52,33 @@ const EVENT_TO_SFX: Record<GameSoundEvent, SfxName> = {
   ui_click: "playcard",
   game_start: "shuffle",
   teleport: "teleport_in",
+  epic_reveal: "fire_launch",
+};
+
+// Sin-specific damage SFX — maps sin name to the best matching audio SFX
+const SIN_DAMAGE_SFX: Record<string, SfxName> = {
+  wrath: "fire_impact",
+  sloth: "ice_impact",
+  greed: "sword_swing",
+  envy: "electric_hit",
+  pride: "fire_launch",
+  lust: "dark_magic",
+  gluttony: "sword_swing",
+};
+
+const SIN_SHIELD_SFX: Record<string, SfxName> = {
+  wrath: "shield_activate",
+  sloth: "shield_activate",
+  greed: "shield_activate",
+  envy: "shield_activate",
+  pride: "shield_activate",
+  lust: "shield_activate",
+  gluttony: "shield_activate",
+};
+
+const SIN_HEAL_SFX: Record<string, SfxName> = {
+  sloth: "heal_chime",
+  lust: "heal_chime",
 };
 
 const STORAGE_KEY = "7sins_sfx_settings";
@@ -102,6 +130,9 @@ class SoundEngine {
       "shield_activate",
       "tap",
       "passturn",
+      "fire_launch",
+      "electric_hit",
+      "dark_magic",
     ];
 
     for (const name of prioritySounds) {
@@ -146,6 +177,24 @@ class SoundEngine {
     this.audioCache.set(sfxName, audio);
   }
 
+  /** Play sin-specific damage sound */
+  playSinDamage(sin: string) {
+    const sfx = SIN_DAMAGE_SFX[sin] || "sword_swing" as SfxName;
+    this.playSfx(sfx);
+  }
+
+  /** Play sin-specific shield sound */
+  playSinShield(sin: string) {
+    const sfx = SIN_SHIELD_SFX[sin] || "shield_activate" as SfxName;
+    this.playSfx(sfx);
+  }
+
+  /** Play sin-specific heal sound */
+  playSinHeal(sin: string) {
+    const sfx = SIN_HEAL_SFX[sin] || "heal_chime" as SfxName;
+    this.playSfx(sfx);
+  }
+
   /** Play a raw SFX by name */
   playSfx(name: SfxName) {
     if (!this.settings.enabled) return;
@@ -164,6 +213,19 @@ class SoundEngine {
     audio.volume = this.settings.volume;
     audio.play().catch(() => {});
     this.audioCache.set(name, audio);
+  }
+
+  /** Play with pitch variation for repeated sounds (avoids monotony) */
+  playWithVariation(name: SfxName, pitchRange = 0.15) {
+    if (!this.settings.enabled) return;
+    const url = SFX_URLS[name];
+    if (!url) return;
+
+    const audio = new Audio(url);
+    audio.volume = this.settings.volume;
+    // Vary playback rate for pitch variation
+    audio.playbackRate = 1 + (Math.random() - 0.5) * pitchRange * 2;
+    audio.play().catch(() => {});
   }
 
   get enabled() {

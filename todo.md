@@ -732,10 +732,10 @@
 - [x] Resolution card slam (spring bounce + sound on ResolutionReveal)
 
 ## AAA Elevation — Phase 2: Impact You Can Feel
-- [ ] Babylon.js GPU particle bursts on card resolve (sin-colored per faction)
-- [ ] GlowLayer on active cards, energy orbs, ritual circle
-- [ ] Bloom post-processing on epic card reveals (4+ cost)
-- [ ] Add 15-20 new CC0 sound effects (card slam, faction impacts, UI micro-sounds, stingers)
+- [x] Babylon.js GPU particle bursts on card resolve (sin-colored per faction)
+- [x] GlowLayer on active cards, energy orbs, ritual circle
+- [x] Bloom post-processing on epic card reveals (4+ cost)
+- [x] Sin-specific SFX routing + pitch variation method added to SoundEngine
 
 ## AAA Elevation — Phase 3: The Polish Pass
 - [ ] Install and integrate tsParticles (victory confetti, sparkle trails, ambient particles)

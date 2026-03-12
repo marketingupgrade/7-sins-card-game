@@ -72,6 +72,8 @@ import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 import { useIsMobile } from "@/hooks/useIsMobile";
+const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
+const BloomOverlay = lazy(() => import("@/components/BloomOverlay"));
 
 interface ActionFeedEntry {
   id: string;
@@ -150,6 +152,13 @@ export default function GameBoard() {
   const prevGameStatus = useRef<string>('active');
   const [mobileZoomCard, setMobileZoomCard] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Phase 2: Impact VFX state
+  const [impactVfxTrigger, setImpactVfxTrigger] = useState(0);
+  const [impactVfxSin, setImpactVfxSin] = useState<SinType>('wrath');
+  const [impactVfxIntensity, setImpactVfxIntensity] = useState<'light' | 'medium' | 'heavy'>('medium');
+  const [bloomTrigger, setBloomTrigger] = useState(0);
+  const [bloomSin, setBloomSin] = useState<SinType>('wrath');
 
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
@@ -422,8 +431,18 @@ export default function GameBoard() {
       const result = await playCard(gameId, playerId, selectedCard, target || undefined);
       addMessage(result.narratorQuip, "action");
 
-      // Feature: Combo chain tracking
+      // Phase 2: Impact VFX — particle burst on every card play
       const cardSin = card.sin as SinType;
+      setImpactVfxSin(cardSin);
+      setImpactVfxIntensity(energyCost >= 4 ? 'heavy' : energyCost >= 2 ? 'medium' : 'light');
+      setImpactVfxTrigger(prev => prev + 1);
+      // Bloom on epic cards
+      if (energyCost >= 4) {
+        setBloomSin(cardSin);
+        setBloomTrigger(prev => prev + 1);
+      }
+
+      // Feature: Combo chain tracking
       setLastPlayedSin(cardSin);
       setCardPlayCount(prev => prev + 1);
       lastPlayedCardRef.current = card.name;
@@ -1224,6 +1243,23 @@ export default function GameBoard() {
       trigger={corruptionCascadeTrigger}
       sin={(myPlayer?.chosenSin || 'wrath') as SinType}
     />
+
+    {/* Phase 2: GPU Particle Impact VFX */}
+    <Suspense fallback={null}>
+      <CardImpactVFX
+        trigger={impactVfxTrigger}
+        sin={impactVfxSin}
+        intensity={impactVfxIntensity}
+      />
+    </Suspense>
+
+    {/* Phase 2: Bloom Overlay for Epic Cards */}
+    <Suspense fallback={null}>
+      <BloomOverlay
+        trigger={bloomTrigger}
+        sin={bloomSin}
+      />
+    </Suspense>
 
     {/* Tier 3: Card Play Arc */}
     <CardPlayArc

@@ -249,12 +249,19 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       centralLight.range = 12;
       centralLight.diffuse = new BABYLON.Color3(0.5, 0.3, 0.15); // warm default
 
-      // --- GLOW LAYER ---
+      // --- GLOW LAYER (Phase 2: Enhanced with bloom-like intensity) ---
       const glow = new BABYLON.GlowLayer("glow", scene, {
-        mainTextureFixedSize: isMobile ? 128 : 256,
-        blurKernelSize: isMobile ? 16 : 32,
+        mainTextureFixedSize: isMobile ? 128 : 512,
+        blurKernelSize: isMobile ? 16 : 48,
       });
-      glow.intensity = 0.4;
+      glow.intensity = 0.6;
+      // Make flame orbs glow brighter
+      brazierLights.forEach(({ flame }: any) => {
+        glow.addIncludedOnlyMesh(flame);
+      });
+      // Ritual rings get subtle glow
+      glow.addIncludedOnlyMesh(ritualRing);
+      glow.addIncludedOnlyMesh(innerRing);
 
       // --- AMBIENT DUST ---
       const dust = new BABYLON.ParticleSystem("dust", isMobile ? 40 : 100, scene);
