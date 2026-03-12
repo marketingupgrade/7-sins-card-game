@@ -37,7 +37,7 @@ const HOME_STEPS: TutorialStep[] = [
     targetSelector: null,
     position: "center",
     title: "Welcome to 7 Deadly Sins",
-    body: "A strategic card game where you pick a sin faction, spend Corruption energy, and play compound cards that escalate over time. 7 factions, 20 rounds, 50 HP. Last sinner standing wins.",
+    body: "A strategic card game where you pick a sin faction, spend Corruption energy, and play compound cards that escalate over time. 7 factions, 20 rounds, 200 HP. Last sinner standing wins.",
     quip: "Don't worry, we'll hold your hand. For now.",
   },
   {
@@ -144,7 +144,7 @@ const GAME_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='player-panel']",
     position: "bottom",
     title: "Player HP & Status",
-    body: "Each player starts with 50 HP. The HP bar shows your current health, shield points (cyan overlay), and whether it's your turn. Hit 0 and you're eliminated. Games last 20 rounds.",
+    body: "Each player starts with 200 HP. The HP bar shows your current health, shield points (cyan overlay), and whether it's your turn. Hit 0 and you're eliminated. Games last 20 rounds.",
     quip: "That red bar? That's your life force. Try to keep it.",
   },
   {

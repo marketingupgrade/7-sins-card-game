@@ -2,7 +2,7 @@
  * Client-Side Game Engine (v4)
  *
  * ALL cards are compound. No flat cards exist.
- * 50 HP, 20 rounds, 3 energy/turn (fixed).
+ * 200 HP, 20 rounds, 3 energy/turn (fixed).
  * 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn.
  * 7 faction passives tuned via Monte Carlo simulation.
  * Round 16: all afflictions double.

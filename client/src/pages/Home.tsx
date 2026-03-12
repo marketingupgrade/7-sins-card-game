@@ -704,7 +704,7 @@ export default function Home() {
         {/* ─── Footer ─── */}
         <footer className="py-8 px-4 text-center border-t border-white/5">
           <p className="text-[9px] text-white/20 mb-3" style={{ fontFamily: "var(--font-body)" }}>
-            252 cards &middot; 7 factions &middot; 20 rounds &middot; 50 HP &middot; 3 compound patterns &middot; Zero mercy
+            252 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
           </p>
           <div className="text-[8px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
             <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>

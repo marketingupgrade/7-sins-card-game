@@ -171,6 +171,13 @@ export default function GameBoard() {
 
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
+  // Resolution complete callback — called by ResolutionReveal when animation finishes
+  const handleResolutionComplete = useCallback(() => {
+    setIsShowingResolution(false);
+    setCachedLockedPlays([]);
+    setCachedResolutionPlayers([]);
+  }, []);
+
   // Resolution Reveal: Cache lockedPlays when they appear, show animation even after server clears them
   useEffect(() => {
     if (!gameState) return;
@@ -180,18 +187,14 @@ export default function GameBoard() {
       setCachedLockedPlays([...lp]);
       setCachedResolutionPlayers([...gameState.players]);
       setIsShowingResolution(true);
-      // Auto-dismiss after animation completes (1.8s per card + 1s buffer)
+      // Safety fallback timer — if animation doesn't call onComplete, auto-dismiss
       if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
-      const duration = Math.max(3000, lp.length * 2000 + 1500);
+      const maxDuration = Math.max(8000, lp.filter(p => !('pass' in p) && p.cardId).length * 3500 + 3000);
       resolutionTimerRef.current = setTimeout(() => {
         setIsShowingResolution(false);
         setCachedLockedPlays([]);
-      }, duration);
-    }
-    // Also detect round change as a signal that resolution just happened
-    if (gameState.currentRound !== prevRoundRef.current && prevRoundRef.current > 0) {
-      // Round changed — if we have cached plays, keep showing them
-      // If we don't have cached plays but round changed, the resolution was too fast to catch
+        setCachedResolutionPlayers([]);
+      }, maxDuration);
     }
     prevRoundRef.current = gameState.currentRound;
     return () => {
@@ -906,6 +909,7 @@ export default function GameBoard() {
                 players={cachedResolutionPlayers}
                 currentRound={gameState.currentRound}
                 isResolving={isShowingResolution}
+                onComplete={handleResolutionComplete}
               />
             )}
             <div className="text-center">
@@ -1037,6 +1041,7 @@ export default function GameBoard() {
                   players={cachedResolutionPlayers}
                   currentRound={gameState.currentRound}
                   isResolving={isShowingResolution}
+                  onComplete={handleResolutionComplete}
                 />
               </div>
             )}

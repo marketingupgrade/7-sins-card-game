@@ -796,3 +796,12 @@
 - [ ] Add responsive srcset attributes to all homepage images
 - [ ] Fix render-blocking CSS (defer or inline critical CSS)
 - [ ] Add cache headers guidance for CloudFront CDN images
+
+## Resolution Reveal Animation Overhaul
+- [x] Rebuild ResolutionReveal: cards animate from player position toward target(s)
+- [x] Add themed projectile/particle effects per card type (faction-themed particles + projectile beams)
+- [x] Show floating damage numbers and effect badges on targets
+- [x] Sequential resolution: each card plays one at a time with proper timing
+- [x] Respect the resolve order (skipQueue > lowest HP > lowest seat > lowest cost)
+- [x] Fix mobile resolution: same ResolutionReveal component used on both desktop and mobile
+- [x] Ensure resolution works on both desktop and mobile with responsive layout
