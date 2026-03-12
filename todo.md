@@ -789,3 +789,10 @@
 - [x] Add glitch effect to "7 DEADLY SINS" homepage title with random faction color flashes
 - [x] Targeting tracer: use chosen faction color instead of hardcoded red
 - [x] Targeting tracer: smooth Hearthstone-style bezier curve with glow and arrowhead
+
+## PageSpeed Optimization (Target 90+)
+- [ ] Optimize icon images: resize from 1920x1920 to 64x64 webp (icon_lust, icon_gluttony, icon_pride, etc.)
+- [ ] Optimize hero image: resize from 1434x1914 to ~700x940 webp
+- [ ] Add responsive srcset attributes to all homepage images
+- [ ] Fix render-blocking CSS (defer or inline critical CSS)
+- [ ] Add cache headers guidance for CloudFront CDN images
