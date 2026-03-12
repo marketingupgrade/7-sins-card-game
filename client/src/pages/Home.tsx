@@ -8,7 +8,7 @@
  * - Game action panel (create / join)
  */
 
-import { useState, useEffect, useCallback, lazy, Suspense, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
@@ -16,7 +16,8 @@ import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight } from "lucide-rea
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import type { SinType } from "@shared/gameTypes";
-const HeroBabylonScene = lazy(() => import("@/components/HeroBabylonScene"));
+// HeroBabylonScene removed from homepage for performance (Babylon.js = 3MB+ bundle)
+// The EmberField CSS particle system provides the atmospheric background instead
 import EmberField from "@/components/EmberField";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
@@ -99,7 +100,21 @@ export default function Home() {
   const factionUnlocks = useFactionUnlocks();
 
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);
-  useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
+  // Defer music init to first user interaction to avoid loading 6.6MB of OGG files on page load
+  useEffect(() => {
+    const initMusic = () => {
+      musicEngine.init();
+      musicEngine.setScene("menu");
+      window.removeEventListener("click", initMusic);
+      window.removeEventListener("touchstart", initMusic);
+    };
+    window.addEventListener("click", initMusic, { once: true });
+    window.addEventListener("touchstart", initMusic, { once: true });
+    return () => {
+      window.removeEventListener("click", initMusic);
+      window.removeEventListener("touchstart", initMusic);
+    };
+  }, []);
 
   const autoTriggeredRef = useState(() => ({ current: false }))[0];
   useEffect(() => {
@@ -195,10 +210,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#050508] relative overflow-hidden">
-      {/* ═══ Babylon.js 3D Background ═══ */}
-      <Suspense fallback={<EmberField count={24} />}>
-        <HeroBabylonScene activeSin={currentSin.key} className="opacity-50" />
-      </Suspense>
+      {/* ═══ Lightweight Atmospheric Background ═══ */}
+      <EmberField count={24} />
 
       {/* Noise overlay */}
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />
@@ -279,6 +292,8 @@ export default function Home() {
                       src={currentSin.heroImg}
                       alt={currentSin.name}
                       className="w-full h-full object-cover"
+                      width={693}
+                      height={928}
                       fetchPriority="high"
                       decoding="async"
                     />
@@ -556,7 +571,10 @@ export default function Home() {
                         src={FACTION_PORTRAITS[sin.key]}
                         alt={sin.name}
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        width={369}
+                        height={492}
                         loading="lazy"
+                        decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute top-2 right-2">
