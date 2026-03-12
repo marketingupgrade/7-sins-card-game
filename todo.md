@@ -724,3 +724,27 @@
 - [ ] Replace "(self)" target label with something readable
 - [ ] Audit all HUD copy for technical jargon and rewrite to sassy plainspeak
 - [x] BUG: Mobile — played cards not visible during resolution phase (user can't see what's happening)
+
+## AAA Elevation — Phase 1: Cards That Move
+- [x] Shared layout animation for card play (layoutId hand → center)
+- [x] Staggered card deal animation (cards fan out one-by-one with spring physics)
+- [x] Card hover parallax tilt (useMotionValue + useTransform for rotateX/Y)
+- [x] Resolution card slam (spring bounce + sound on ResolutionReveal)
+
+## AAA Elevation — Phase 2: Impact You Can Feel
+- [ ] Babylon.js GPU particle bursts on card resolve (sin-colored per faction)
+- [ ] GlowLayer on active cards, energy orbs, ritual circle
+- [ ] Bloom post-processing on epic card reveals (4+ cost)
+- [ ] Add 15-20 new CC0 sound effects (card slam, faction impacts, UI micro-sounds, stingers)
+
+## AAA Elevation — Phase 3: The Polish Pass
+- [ ] Install and integrate tsParticles (victory confetti, sparkle trails, ambient particles)
+- [ ] Install and integrate Howler.js (spatial audio, audio sprites, pitch variation)
+- [ ] VFX sprite sheets for per-faction card effects
+- [ ] Card frame upgrade with rarity-tier glow
+
+## AAA Elevation — Phase 4: Holographic Cards
+- [ ] NodeMaterial holographic shader for epic/rare cards
+- [ ] Animated card art for 7 faction signature cards
+- [ ] VolumetricLightScattering god-rays in cathedral scenes
+- [ ] Adaptive music system refinement (layered instruments based on tension)

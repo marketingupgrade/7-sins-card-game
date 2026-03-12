@@ -7,10 +7,11 @@
  *
  * ALL cards are compound in v4 — 3 patterns: standard, aggressive, slowburn.
  *
- * v4: Gothic theme — spell icons replace Lucide, ornate borders, cathedral aesthetic
+ * v5: AAA Elevation Phase 1 — Motion parallax tilt with useMotionValue,
+ *     holographic light streak on hover, spring physics on select/deselect
  */
 
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { useRef, useCallback, useState, memo } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
 import { CardDefinition, SinType, CompoundPattern, getCompoundTickValue } from "@shared/gameTypes";
@@ -146,36 +147,66 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
   const pattern = patternLabels[card.compoundPattern] || patternLabels.standard;
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
 
-  // 3D tilt
+  // Motion-based 3D parallax tilt
+  const mouseX = useMotionValue(0.5);
+  const mouseY = useMotionValue(0.5);
+  const rotateX = useTransform(mouseY, [0, 1], [12, -12]);
+  const rotateY = useTransform(mouseX, [0, 1], [-12, 12]);
+  const springRotateX = useSpring(rotateX, { stiffness: 300, damping: 30 });
+  const springRotateY = useSpring(rotateY, { stiffness: 300, damping: 30 });
+  // Holographic light streak position
+  const lightX = useTransform(mouseX, [0, 1], [0, 100]);
+  const lightY = useTransform(mouseY, [0, 1], [0, 100]);
+
   const cardRef = useRef<HTMLDivElement>(null);
+  const [isHovered, setIsHovered] = useState(false);
+
   const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const el = cardRef.current;
     if (!el || !actuallyPlayable) return;
     const rect = el.getBoundingClientRect();
     const x = (e.clientX - rect.left) / rect.width;
     const y = (e.clientY - rect.top) / rect.height;
-    const tiltX = (10 * (0.5 - y)).toFixed(2);
-    const tiltY = (10 * (x - 0.5)).toFixed(2);
-    el.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) translateY(-24px) scale(1.06)`;
+    mouseX.set(x);
+    mouseY.set(y);
+  }, [actuallyPlayable, mouseX, mouseY]);
+
+  const handleMouseEnter = useCallback(() => {
+    if (actuallyPlayable) {
+      setIsHovered(true);
+      try { soundEngine.play("ui_hover"); } catch {}
+    }
   }, [actuallyPlayable]);
-  const [isHovered, setIsHovered] = useState(false);
+
   const handleMouseLeave = useCallback(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    el.style.transform = '';
-    el.style.transition = 'transform 0.3s ease-out';
-    setTimeout(() => { if (el) el.style.transition = ''; }, 300);
+    mouseX.set(0.5);
+    mouseY.set(0.5);
     setIsHovered(false);
-  }, []);
+  }, [mouseX, mouseY]);
 
   return (
     <motion.div
       ref={cardRef}
       layout
-      onMouseMove={(e) => { handleMouseMove(e); setIsHovered(true); }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       whileTap={actuallyPlayable ? { scale: 0.96 } : {}}
-      animate={isSelected ? { y: -32, scale: 1.1 } : { y: 0, scale: 1 }}
+      animate={isSelected
+        ? { y: -32, scale: 1.08 }
+        : { y: 0, scale: 1 }
+      }
+      transition={isSelected
+        ? { type: "spring", stiffness: 400, damping: 25 }
+        : { type: "spring", stiffness: 300, damping: 30 }
+      }
+      style={{
+        perspective: 800,
+        willChange: "transform",
+        rotateX: isHovered ? springRotateX : 0,
+        rotateY: isHovered ? springRotateY : 0,
+        transformStyle: "preserve-3d",
+      }}
       onClick={actuallyPlayable ? onClick : undefined}
       className={`
         relative w-[180px] sm:w-[200px] h-[270px] sm:h-[300px] rounded-xl overflow-hidden select-none
@@ -185,10 +216,19 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         ${actuallyPlayable ? "holo-sheen" : ""}
         border-2
         ${!actuallyPlayable ? "opacity-40 cursor-not-allowed saturate-50" : "cursor-pointer"}
-        transition-all duration-300
       `}
-      style={{ willChange: 'transform' }}
     >
+      {/* Holographic light streak — follows cursor */}
+      {isHovered && actuallyPlayable && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none z-20 rounded-xl"
+          style={{
+            background: `radial-gradient(circle at ${lightX.get()}% ${lightY.get()}%, rgba(255,255,255,0.15) 0%, transparent 50%)`,
+            mixBlendMode: "overlay",
+          }}
+        />
+      )}
+
       {/* Subtle inner glow */}
       <div
         className="absolute inset-0 opacity-20 pointer-events-none"
@@ -245,7 +285,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       </div>
 
       {/* Card Art Area — unique AI-generated art per card */}
-      <SinShaderOverlay sin={card.sin } isHovered={isHovered}>
+      <SinShaderOverlay sin={card.sin} isHovered={isHovered}>
       <div
         className="mx-2.5 h-[90px] sm:h-[100px] rounded-lg relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}

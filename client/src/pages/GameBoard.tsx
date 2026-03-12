@@ -1094,10 +1094,21 @@ export default function GameBoard() {
               {myCards.map((card, i) => (
                 <motion.div
                   key={card.id}
-                  initial={{ opacity: 0, y: 50, rotate: -5 }}
-                  animate={{ opacity: 1, y: 0, rotate: (i - myCards.length / 2) * 1.5 }}
-                  exit={{ opacity: 0, y: 50 }}
-                  transition={{ delay: i * 0.05 }}
+                  initial={{ opacity: 0, y: 80, rotate: -8, scale: 0.85 }}
+                  animate={{
+                    opacity: 1,
+                    y: 0,
+                    rotate: (i - myCards.length / 2) * 2,
+                    scale: 1,
+                  }}
+                  exit={{ opacity: 0, y: 60, scale: 0.9, transition: { duration: 0.2 } }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 350,
+                    damping: 28,
+                    mass: 0.8,
+                    delay: i * 0.08,
+                  }}
                   className="flex-shrink-0"
                 >
                   <div className="relative" data-card-id={card.id} ref={(el) => {
@@ -1142,10 +1153,15 @@ export default function GameBoard() {
                 {myCards.map((card, i) => (
                   <motion.div
                     key={card.id}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 30 }}
-                    transition={{ delay: i * 0.03 }}
+                    initial={{ opacity: 0, y: 40, scale: 0.9 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 30, scale: 0.9, transition: { duration: 0.15 } }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 30,
+                      delay: i * 0.05,
+                    }}
                     className="flex-shrink-0"
                   >
                     <div className="relative">

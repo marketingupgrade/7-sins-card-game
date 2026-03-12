@@ -1,10 +1,9 @@
 /**
  * ResolutionReveal — Cinematic card-by-card reveal during resolution phase
  *
- * Shows a central stack of locked plays. Each card slides in one at a time
- * in priority order (skip-queue first, lowest HP first). The player name,
- * card art, and target are shown with dramatic animation before the next
- * card resolves.
+ * v2: AAA Elevation — Cards SLAM down from above with spring bounce,
+ *     screen-shake impulse, dramatic vignette pulse, and staggered timing.
+ *     Each card feels like it physically impacts the table.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
@@ -56,6 +55,7 @@ export default function ResolutionReveal({
 }: ResolutionRevealProps) {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [showCard, setShowCard] = useState(false);
+  const [impactFlash, setImpactFlash] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const hasStartedRef = useRef(false);
 
@@ -96,17 +96,19 @@ export default function ResolutionReveal({
       }
       setCurrentIndex(idx);
       setShowCard(true);
+      // Impact flash on slam
+      setImpactFlash(true);
+      setTimeout(() => setImpactFlash(false), 150);
       try { soundEngine.play("card_play"); } catch {}
       
       idx++;
       timerRef.current = setTimeout(() => {
         setShowCard(false);
-        setTimeout(revealNext, 300); // Brief gap between cards
-      }, 1800); // Each card visible for 1.8s
+        setTimeout(revealNext, 250);
+      }, 1600);
     };
 
-    // Start after a brief delay
-    timerRef.current = setTimeout(revealNext, 500);
+    timerRef.current = setTimeout(revealNext, 400);
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -136,30 +138,48 @@ export default function ResolutionReveal({
 
   return (
     <div className="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
-      {/* Backdrop pulse */}
+      {/* Impact flash — brief white/sin-color burst on card slam */}
+      <AnimatePresence>
+        {impactFlash && (
+          <motion.div
+            initial={{ opacity: 0.6 }}
+            animate={{ opacity: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 rounded-2xl z-40"
+            style={{
+              background: `radial-gradient(circle at center, ${sinColor}40 0%, transparent 60%)`,
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Backdrop vignette */}
       <AnimatePresence>
         {showCard && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
             className="absolute inset-0 rounded-2xl"
             style={{
-              background: `radial-gradient(circle at center, ${sinColor}15 0%, transparent 70%)`,
+              background: `radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.4) 100%), radial-gradient(circle at center, ${sinColor}12 0%, transparent 60%)`,
             }}
           />
         )}
       </AnimatePresence>
 
       {/* Progress dots */}
-      <div className="absolute top-2 flex gap-1.5">
+      <div className="absolute top-2 md:top-4 flex gap-1.5 z-50">
         {sortedPlays.map((_, i) => (
           <motion.div
             key={i}
             animate={{
-              scale: i === currentIndex ? 1.3 : 1,
+              scale: i === currentIndex ? 1.4 : 1,
               opacity: i <= currentIndex ? 1 : 0.3,
             }}
+            transition={{ type: "spring", stiffness: 500, damping: 25 }}
             className="w-2 h-2 rounded-full"
             style={{
               backgroundColor:
@@ -168,31 +188,39 @@ export default function ResolutionReveal({
                   : i < currentIndex
                     ? "oklch(0.75 0.12 70 / 0.6)"
                     : "oklch(0.5 0 0 / 0.3)",
+              boxShadow: i === currentIndex ? `0 0 8px ${sinColor}80` : "none",
             }}
           />
         ))}
       </div>
 
-      {/* Card reveal */}
+      {/* Card SLAM reveal */}
       <AnimatePresence mode="wait">
         {showCard && currentCard && currentPlayer && (
           <motion.div
             key={`${currentIndex}-${currentPlay?.cardId}`}
-            initial={{ opacity: 0, scale: 0.6, y: 40, rotateX: 20 }}
+            initial={{ opacity: 0, scale: 1.3, y: -200, rotateX: -30 }}
             animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -30 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex flex-col items-center gap-3"
+            exit={{ opacity: 0, scale: 0.85, y: 20, rotateX: 5 }}
+            transition={{
+              type: "spring",
+              stiffness: 600,
+              damping: 35,
+              mass: 0.8,
+            }}
+            className="flex flex-col items-center gap-2 md:gap-3"
+            style={{ perspective: 1000 }}
           >
             {/* Player badge */}
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.05, type: "spring", stiffness: 400, damping: 25 }}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-sm"
               style={{
-                background: `${sinColor}20`,
-                border: `1px solid ${sinColor}40`,
+                background: `${sinColor}25`,
+                border: `1px solid ${sinColor}50`,
+                boxShadow: `0 0 20px ${sinColor}15`,
               }}
             >
               <div
@@ -221,15 +249,20 @@ export default function ResolutionReveal({
               )}
             </motion.div>
 
-            {/* Card mini-art */}
+            {/* Card — larger, with impact shadow */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.6 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="relative w-32 h-44 rounded-lg overflow-hidden"
+              transition={{ delay: 0.08, type: "spring", stiffness: 500, damping: 30 }}
+              className="relative w-36 h-48 md:w-40 md:h-56 rounded-lg overflow-hidden"
               style={{
-                border: `2px solid ${sinColor}60`,
-                boxShadow: `0 0 30px ${sinColor}30, 0 8px 32px rgba(0,0,0,0.5)`,
+                border: `2px solid ${sinColor}70`,
+                boxShadow: `
+                  0 0 40px ${sinColor}40,
+                  0 0 80px ${sinColor}15,
+                  0 20px 60px rgba(0,0,0,0.6),
+                  inset 0 1px 0 rgba(255,255,255,0.1)
+                `,
               }}
             >
               {/* Card art background */}
@@ -243,65 +276,85 @@ export default function ResolutionReveal({
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: `linear-gradient(to top, ${sinColor}90 0%, transparent 60%)`,
+                    background: `linear-gradient(to top, ${sinColor}95 0%, ${sinColor}30 40%, transparent 70%)`,
                   }}
                 />
               </div>
 
               {/* Card name overlay */}
-              <div className="absolute bottom-0 left-0 right-0 p-2">
+              <div className="absolute bottom-0 left-0 right-0 p-2.5">
                 <p
-                  className="text-xs font-black text-white uppercase tracking-wider leading-tight"
+                  className="text-sm md:text-base font-black text-white uppercase tracking-wider leading-tight"
                   style={{
                     fontFamily: "var(--font-heading)",
-                    textShadow: "0 1px 4px rgba(0,0,0,0.8)",
+                    textShadow: `0 2px 8px rgba(0,0,0,0.9), 0 0 20px ${sinColor}40`,
                   }}
                 >
                   {currentCard.name}
                 </p>
                 {/* Effect summary */}
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {currentCard.effects.slice(0, 2).map((eff, i) => (
-                    <span
+                <div className="flex flex-wrap gap-1 mt-1.5">
+                  {currentCard.effects.slice(0, 3).map((eff, i) => (
+                    <motion.span
                       key={i}
-                      className="text-[9px] font-bold px-1 py-0.5 rounded"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.15 + i * 0.08 }}
+                      className="text-[9px] md:text-[10px] font-bold px-1.5 py-0.5 rounded"
                       style={{
-                        background: "rgba(0,0,0,0.5)",
-                        color: "rgba(255,255,255,0.8)",
+                        background: "rgba(0,0,0,0.6)",
+                        color: "rgba(255,255,255,0.9)",
+                        backdropFilter: "blur(4px)",
                       }}
                     >
                       {effectDisplayNames[eff.type] || eff.type}
-                    </span>
+                    </motion.span>
                   ))}
                 </div>
               </div>
 
-              {/* Energy cost badge */}
-              <div
-                className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black"
+              {/* Energy cost badge — glowing */}
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 600, damping: 20 }}
+                className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center text-sm font-black"
                 style={{
-                  background: `${sinColor}`,
-                  color: "rgba(0,0,0,0.8)",
-                  boxShadow: `0 0 8px ${sinColor}60`,
+                  background: sinColor,
+                  color: "rgba(0,0,0,0.85)",
+                  boxShadow: `0 0 12px ${sinColor}80, 0 0 24px ${sinColor}30`,
                 }}
               >
                 {currentCard.cost}
-              </div>
+              </motion.div>
             </motion.div>
 
-            {/* Target arrow */}
+            {/* Target arrow — dramatic */}
             {targetPlayer && targetPlayer.id !== currentPlayer.id && (
               <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
+                initial={{ opacity: 0, y: 15, scale: 0.8 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 400, damping: 25 }}
                 className="flex items-center gap-2"
               >
-                <span className="text-xs text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+                <motion.span
+                  animate={{ x: [0, 4, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="text-xs font-bold uppercase tracking-widest"
+                  style={{ fontFamily: "var(--font-heading)", color: `${sinColor}90` }}
+                >
+                  ▸
+                </motion.span>
+                <span className="text-xs text-muted-foreground font-medium" style={{ fontFamily: "var(--font-heading)" }}>
                   targeting
                 </span>
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-red-500/10 border border-red-500/20">
-                  <div className="w-4 h-4 rounded-full overflow-hidden">
+                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full backdrop-blur-sm"
+                  style={{
+                    background: "rgba(220,50,50,0.12)",
+                    border: "1px solid rgba(220,50,50,0.25)",
+                  }}
+                >
+                  <div className="w-5 h-5 rounded-full overflow-hidden border border-red-500/30">
                     <img
                       src={FACTION_PORTRAITS[(targetPlayer.chosenSin as SinType) || "wrath"]}
                       alt=""
@@ -312,15 +365,23 @@ export default function ResolutionReveal({
                     {targetPlayer.username}
                   </span>
                 </div>
+                <motion.span
+                  animate={{ x: [0, -4, 0] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="text-xs font-bold uppercase tracking-widest"
+                  style={{ fontFamily: "var(--font-heading)", color: `${sinColor}90` }}
+                >
+                  ◂
+                </motion.span>
               </motion.div>
             )}
 
             {/* Resolve counter */}
             <motion.p
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
-              transition={{ delay: 0.4 }}
-              className="text-[10px] text-muted-foreground uppercase tracking-widest"
+              animate={{ opacity: 0.6 }}
+              transition={{ delay: 0.3 }}
+              className="text-[10px] text-muted-foreground uppercase tracking-[0.2em]"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               {currentIndex + 1} of {sortedPlays.length}
@@ -339,9 +400,10 @@ export default function ResolutionReveal({
             className="flex items-center gap-2"
           >
             <motion.div
-              animate={{ scale: [1, 1.2, 1] }}
-              transition={{ duration: 0.6, repeat: Infinity }}
-              className="w-2 h-2 rounded-full bg-candle/40"
+              animate={{ scale: [1, 1.3, 1] }}
+              transition={{ duration: 0.5, repeat: Infinity }}
+              className="w-2 h-2 rounded-full"
+              style={{ backgroundColor: `${sinColor}60` }}
             />
           </motion.div>
         )}
