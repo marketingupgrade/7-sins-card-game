@@ -63,6 +63,8 @@ import DeckPile from "@/components/DeckPile";
 import CinematicFlash from "@/components/CinematicFlash";
 import ComboChainBanner from "@/components/ComboChainBanner";
 import EpicCardReveal from "@/components/EpicCardReveal";
+import ResolutionReveal from "@/components/ResolutionReveal";
+import TargetingTracer from "@/components/TargetingTracer";
 import SinCorruptionBorder from "@/components/SinCorruptionBorder";
 import VictoryCinematic from "@/components/VictoryCinematic";
 import MobilePlayerBar from "@/components/MobilePlayerBar";
@@ -97,6 +99,10 @@ export default function GameBoard() {
 
   const actionFeed = useRef<ActionFeedEntry[]>([]);
   const [actionFeedState, setActionFeedState] = useState<ActionFeedEntry[]>([]);
+
+  // Targeting tracer refs
+  const tracerSourceRef = useRef<HTMLElement | null>(null);
+  const tracerTargetRef = useRef<HTMLElement | null>(null);
 
   // Tier 1 Multimedia State
   const [floatingNumbers, setFloatingNumbers] = useState<Array<{id: string, value: number, type: 'damage'|'heal'|'shield', x: number, y: number}>>([]);
@@ -518,6 +524,9 @@ export default function GameBoard() {
       ));
     }
     setSelectedTarget(targetId);
+    // Update tracer target ref
+    const targetEl = document.querySelector(`[data-player-id="${targetId}"]`) as HTMLElement | null;
+    tracerTargetRef.current = targetEl;
   }, [selectedCards]);
 
   const handlePass = async () => {
@@ -640,6 +649,19 @@ export default function GameBoard() {
         onComplete={() => setEpicRevealShow(false)}
       />
 
+      {/* Targeting Tracer — node connector line from card to target */}
+      <TargetingTracer
+        isActive={isMyTurn && selectedCards.length > 0 && (() => {
+          const lastSel = selectedCards[selectedCards.length - 1];
+          const card = lastSel ? CARD_MAP[lastSel.cardId] : null;
+          return card ? card.effects.some(e => e.targetMode === 'single' || e.targetMode === 'duo') : false;
+        })()}
+        sin={mySin}
+        sourceRef={tracerSourceRef}
+        targetRef={tracerTargetRef}
+        isLocked={!!selectedTarget}
+      />
+
       {/* Tier 1: Floating Numbers */}
       <FloatingNumbers
         numbers={floatingNumbers}
@@ -728,7 +750,7 @@ export default function GameBoard() {
 
       {/* Arena Grid — Gothic Cathedral Interior */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
-        <div className="hidden md:grid flex-1 grid-cols-[minmax(160px,220px)_1fr_minmax(160px,220px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
+        <div className="hidden md:grid flex-1 grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] grid-rows-[auto_1fr_auto] gap-3 p-3">
           
           {/* NORTH */}
           <div className="col-start-2 row-start-1 flex justify-center items-start gap-2">
@@ -796,8 +818,17 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* CENTER — Ritual Circle */}
-          <div className="col-start-2 row-start-2 flex items-center justify-center">
+          {/* CENTER — Ritual Circle + Resolution Reveal */}
+          <div className="col-start-2 row-start-2 flex items-center justify-center relative">
+            {/* Resolution card reveal overlay */}
+            {turnPhase === "resolution" && gameState.lockedPlays && (
+              <ResolutionReveal
+                lockedPlays={gameState.lockedPlays}
+                players={gameState.players}
+                currentRound={gameState.currentRound}
+                isResolving={turnPhase === "resolution"}
+              />
+            )}
             <div className="text-center">
               <div className="w-28 h-28 mx-auto rounded-full border-2 border-candle/30 flex items-center justify-center mb-3 relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 30px oklch(0.75 0.12 70 / 0.1), inset 0 0 20px oklch(0.75 0.12 70 / 0.05)' }}>
                 {/* Rotating ritual ring */}
@@ -962,10 +993,81 @@ export default function GameBoard() {
           </div>
         </div>
 
+        {/* Action Buttons — above cards so they're never hidden */}
+        <div className="shrink-0 relative z-20">
+          {isMyTurn && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex flex-col items-center gap-1.5 py-2"
+            >
+              {selectedCards.length > 0 && (
+                <div className="text-xs md:text-sm text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                  {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} selected {"\u00B7"} {energyRemaining} energy left
+                </div>
+              )}
+              <div className="flex justify-center gap-2 md:gap-3">
+                <motion.button
+                  data-tutorial="lock-in-btn"
+                  whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
+                  whileTap={{ scale: 0.95 }}
+                  animate={{
+                    boxShadow: selectedCards.length > 0 ? [
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
+                      "0 0 20px oklch(0.75 0.15 85 / 0.4)",
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
+                    ] : "none",
+                  }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="px-5 md:px-10 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-black uppercase tracking-wider disabled:opacity-50"
+                  style={{
+                    fontFamily: "var(--font-heading)",
+                    background: selectedCards.length > 0
+                      ? "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))"
+                      : "linear-gradient(135deg, oklch(0.35 0.05 85), oklch(0.30 0.04 70))",
+                    color: selectedCards.length > 0 ? "oklch(0.10 0.02 70)" : "oklch(0.60 0.05 70)",
+                    border: `2px solid oklch(0.80 0.12 85 / ${selectedCards.length > 0 ? 0.6 : 0.2})`,
+                    textShadow: selectedCards.length > 0 ? "0 1px 0 oklch(0.85 0.10 85 / 0.3)" : "none",
+                  }}
+                  onClick={handleLockIn}
+                  disabled={isLockingIn || selectedCards.length === 0}
+                >
+                  {isLockingIn ? "LOCKING IN..." : `LOCK IN${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
+                </motion.button>
+                <motion.button
+                  data-tutorial="pass-btn"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm md:text-base font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                  onClick={handlePassLockIn}
+                  disabled={isLockingIn}
+                >
+                  {isLockingIn ? "..." : "PASS"}
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+          {!isMyTurn && myPlayer?.isAlive && (
+            <motion.p
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="text-center text-sm text-muted-foreground/60 py-2"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              {turnPhase === "resolution"
+                ? "The sins are clashing..."
+                : hasLockedIn
+                  ? "Locked in. Waiting on the others..."
+                  : "Pick your cards, sinner."}
+            </motion.p>
+          )}
+        </div>
+
         {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
-        <div data-tutorial="card-hand" className="px-2 md:px-3 pb-2 md:pb-3 shrink-0">
+        <div data-tutorial="card-hand" className="px-2 md:px-4 pb-3 md:pb-4 shrink-0">
           {/* Desktop hand */}
-          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-2 scrollbar-thin">
+          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-4 pt-2 scrollbar-thin">
             {myPlayer && (
               <DeckPile
                 sin={(myPlayer.chosenSin as SinType) || "wrath"}
@@ -985,7 +1087,13 @@ export default function GameBoard() {
                   transition={{ delay: i * 0.05 }}
                   className="flex-shrink-0"
                 >
-                  <div className="relative">
+                  <div className="relative" data-card-id={card.id} ref={(el) => {
+                    // Set tracer source to the last selected card that needs a target
+                    const lastSel = selectedCards[selectedCards.length - 1];
+                    if (lastSel && lastSel.cardId === card.id) {
+                      tracerSourceRef.current = el;
+                    }
+                  }}>
                     <GameCard
                       card={card}
                       currentRound={gameState.currentRound}
@@ -1054,81 +1162,7 @@ export default function GameBoard() {
             </div>
           </div>
 
-          {/* Action Buttons — Simultaneous Lock-In */}
-          {isMyTurn && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-1.5 mt-1.5 md:mt-2"
-            >
-              {/* Selected cards count + energy budget */}
-              {selectedCards.length > 0 && (
-                <div className="text-xs md:text-sm text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                  {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} selected • {energyRemaining} energy remaining
-                </div>
-              )}
-
-              <div className="flex justify-center gap-2 md:gap-3">
-                {/* LOCK IN — prominent gold button */}
-                <motion.button
-                  data-tutorial="lock-in-btn"
-                  whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={{
-                    boxShadow: selectedCards.length > 0 ? [
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
-                      "0 0 20px oklch(0.75 0.15 85 / 0.4)",
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
-                    ] : "none",
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="px-4 md:px-8 py-2 md:py-3 rounded-lg text-xs md:text-sm font-black uppercase tracking-wider disabled:opacity-50"
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    background: selectedCards.length > 0
-                      ? "linear-gradient(135deg, oklch(0.75 0.15 85), oklch(0.65 0.18 70))"
-                      : "linear-gradient(135deg, oklch(0.35 0.05 85), oklch(0.30 0.04 70))",
-                    color: selectedCards.length > 0 ? "oklch(0.10 0.02 70)" : "oklch(0.60 0.05 70)",
-                    border: `2px solid oklch(0.80 0.12 85 / ${selectedCards.length > 0 ? 0.6 : 0.2})`,
-                    textShadow: selectedCards.length > 0 ? "0 1px 0 oklch(0.85 0.10 85 / 0.3)" : "none",
-                  }}
-                  onClick={handleLockIn}
-                  disabled={isLockingIn || selectedCards.length === 0}
-                >
-                  {isLockingIn ? "LOCKING IN..." : `LOCK IN${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
-                </motion.button>
-
-                {/* PASS — lock in with 0 cards */}
-                <motion.button
-                  data-tutorial="pass-btn"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="px-3 md:px-6 py-2 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-xs md:text-sm font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                  onClick={handlePassLockIn}
-                  disabled={isLockingIn}
-                >
-                  {isLockingIn ? "..." : "PASS"}
-                </motion.button>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Locked in / waiting / resolving status */}
-          {!isMyTurn && myPlayer?.isAlive && (
-            <motion.p
-              animate={{ opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="text-center text-xs md:text-sm text-muted-foreground/60 mt-1 md:mt-2"
-              style={{ fontFamily: "var(--font-body)" }}
-            >
-              {turnPhase === "resolution"
-                ? "Cards are being resolved..."
-                : hasLockedIn
-                  ? "Locked in. Waiting for other players..."
-                  : "Waiting for players to select cards..."}
-            </motion.p>
-          )}
+          {/* Action buttons moved above card hand */}
         </div>
 
         {/* Mobile Card Zoom Overlay */}
@@ -1278,7 +1312,7 @@ const PlayerPanel = memo(function PlayerPanel({
       whileTap={isTargetable ? { scale: 0.97 } : {}}
       onClick={isTargetable ? onSelect : undefined}
       animate={{
-        width: isHovered && !compact ? 280 : compact ? 170 : 220,
+        width: isHovered && !compact ? 320 : compact ? 180 : 260,
       }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`
@@ -1298,7 +1332,7 @@ const PlayerPanel = memo(function PlayerPanel({
             ? '2px solid oklch(0.75 0.12 70 / 0.4)'
             : isMe 
               ? '2px solid oklch(0.75 0.12 70 / 0.25)'
-              : '1px solid oklch(0.3 0.02 280 / 0.3)',
+              : '2px solid oklch(0.3 0.02 280 / 0.3)',
         boxShadow: isHovered
           ? `0 8px 24px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(0.4 0.05 70 / 0.15)${isTargetable && player.isAlive ? `, 0 0 20px ${sinColor}40` : ''}`
           : isTargetable && player.isAlive 
@@ -1332,7 +1366,7 @@ const PlayerPanel = memo(function PlayerPanel({
         {/* Avatar + Name Row */}
         <div className="flex items-center gap-2.5 mb-2.5">
           <div 
-            className={`${compact ? "w-10 h-10" : isHovered ? "w-14 h-14" : "w-12 h-12"} rounded-full overflow-hidden border-2 flex-shrink-0 transition-all duration-200`} 
+            className={`${compact ? "w-10 h-10" : isHovered ? "w-16 h-16" : "w-14 h-14"} rounded-full overflow-hidden border-2 flex-shrink-0 transition-all duration-200`} 
             style={{ borderColor: sinColor }}
           >
             <motion.img
@@ -1349,7 +1383,7 @@ const PlayerPanel = memo(function PlayerPanel({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <span
-                className={`${compact ? "text-sm" : isHovered ? "text-lg" : "text-base"} font-bold text-foreground transition-all duration-200 ${isHovered ? '' : 'truncate'}`}
+                className={`${compact ? "text-sm" : isHovered ? "text-xl" : "text-lg"} font-bold text-foreground transition-all duration-200 ${isHovered ? '' : 'truncate'}`}
                 style={{ 
                   fontFamily: "var(--font-heading)",
                   textDecoration: !player.isAlive ? "line-through" : "none",
@@ -1371,7 +1405,7 @@ const PlayerPanel = memo(function PlayerPanel({
             
             {/* Sin name label */}
             <span
-              className="text-[11px] font-medium uppercase tracking-wider opacity-60"
+              className="text-xs font-medium uppercase tracking-wider opacity-60"
               style={{ fontFamily: "var(--font-heading)", color: sinColor }}
             >
               {player.chosenSin || "unknown"}
@@ -1389,8 +1423,8 @@ const PlayerPanel = memo(function PlayerPanel({
         </div>
 
         {/* HP Bar — larger and more readable */}
-        <div className="flex items-center gap-2.5 mb-2">
-          <div className={`relative flex-1 ${compact ? "h-5" : "h-6"} bg-muted/50 rounded-full overflow-hidden`}>
+          <div className="flex items-center gap-2.5 mb-2">
+          <div className={`relative flex-1 ${compact ? "h-5" : "h-7"} bg-muted/50 rounded-full overflow-hidden`}>
             <motion.div
               animate={{ width: `${hpPercent}%` }}
               transition={{ duration: 0.6, ease: "easeOut" }}
@@ -1408,7 +1442,7 @@ const PlayerPanel = memo(function PlayerPanel({
             )}
             {/* HP text inside the bar */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-[11px] font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>
                 {player.currentHp}/{player.maxHp}
                 {shieldValue > 0 && <span className="text-cyan-300 ml-1">+{shieldValue}</span>}
               </span>

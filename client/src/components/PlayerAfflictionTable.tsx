@@ -42,8 +42,8 @@ interface EffectColumn {
 const EFFECT_COLUMNS: EffectColumn[] = [
   {
     type: "damage",
-    label: "DMG",
-    shortLabel: "DMG",
+    label: "Hurt",
+    shortLabel: "Hurt",
     color: "oklch(0.65 0.22 25)",
     textClass: "text-wrath",
     icon: ICON_URLS.damage_wrath,
@@ -51,8 +51,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "self_damage",
-    label: "SELF",
-    shortLabel: "SLF",
+    label: "Recoil",
+    shortLabel: "Rcl",
     color: "oklch(0.55 0.20 25)",
     textClass: "text-wrath",
     icon: ICON_URLS.damage_wrath,
@@ -60,8 +60,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "heal_steal",
-    label: "H.STEAL",
-    shortLabel: "HST",
+    label: "Siphon",
+    shortLabel: "Sip",
     color: "oklch(0.60 0.22 350)",
     textClass: "text-lust",
     icon: ICON_URLS.heal_generic,
@@ -69,8 +69,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "energy_steal",
-    label: "E.STEAL",
-    shortLabel: "EST",
+    label: "Drain",
+    shortLabel: "Drn",
     color: "oklch(0.50 0.15 310)",
     textClass: "text-purple-400",
     icon: ICON_URLS.energy_generic,
@@ -78,8 +78,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "heal_gain",
-    label: "HEAL",
-    shortLabel: "HEL",
+    label: "Mend",
+    shortLabel: "Mnd",
     color: "oklch(0.60 0.18 155)",
     textClass: "text-envy-glow",
     icon: ICON_URLS.heal_generic,
@@ -87,8 +87,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "shield_gain",
-    label: "SHIELD",
-    shortLabel: "SHD",
+    label: "Ward",
+    shortLabel: "Wrd",
     color: "oklch(0.70 0.12 220)",
     textClass: "text-sky-400",
     icon: ICON_URLS.shield_generic,
@@ -96,8 +96,8 @@ const EFFECT_COLUMNS: EffectColumn[] = [
   },
   {
     type: "energy_gain",
-    label: "E.GAIN",
-    shortLabel: "EGN",
+    label: "Juice",
+    shortLabel: "Jce",
     color: "oklch(0.65 0.15 130)",
     textClass: "text-emerald-400",
     icon: ICON_URLS.energy_generic,
@@ -316,7 +316,7 @@ export default function PlayerAfflictionTable({
                     className="text-[11px] font-bold text-candle/90 uppercase tracking-[0.15em]"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    Active Afflictions
+                    What's Cooking
                   </span>
                 </div>
               </div>
@@ -336,7 +336,7 @@ export default function PlayerAfflictionTable({
                     className="text-[10px] text-candle/50 font-bold uppercase"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
-                    RND
+                    When
                   </span>
                   {visibleColumns.map((col) => (
                     <div key={col.type} className="flex flex-col items-center gap-0.5">

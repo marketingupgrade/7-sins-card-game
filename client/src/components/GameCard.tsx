@@ -45,10 +45,32 @@ const effectColors: Record<string, string> = {
   affliction_transfer: "text-pride",
 };
 
+const effectDisplayNames: Record<string, string> = {
+  damage: "Hurt",
+  self_damage: "Backlash",
+  heal_gain: "Mend",
+  heal_steal: "Siphon Life",
+  shield_gain: "Ward",
+  shield_steal: "Crack Ward",
+  energy_gain: "Recharge",
+  energy_steal: "Drain",
+  heal_block: "Cursed",
+  shield_block: "Shatter",
+  energy_block: "Exhaust",
+  affliction_amplify: "Intensify",
+  affliction_transfer: "Redirect",
+};
+
+const targetDisplayNames: Record<string, string> = {
+  self: "you",
+  aoe: "everyone",
+  duo: "x2 targets",
+};
+
 const patternLabels: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
-  standard: { label: "STD", title: "Standard", desc: "Fibonacci growth — ticks at 1\u00d7, 1\u00d7, 2\u00d7. Balanced scaling that rewards patience." },
-  aggressive: { label: "AGG", title: "Aggressive", desc: "Powers of 2 — ticks at 1\u00d7, 2\u00d7, 4\u00d7. Explosive late-game damage, high risk." },
-  slowburn: { label: "SLO", title: "Slowburn", desc: "Slow ramp — ticks at 0.5\u00d7, 1\u00d7, 2.5\u00d7. Weak start, devastating finish." },
+  standard: { label: "◆", title: "Steady", desc: "Grows at a steady pace. Nothing fancy, just reliable." },
+  aggressive: { label: "🔥", title: "Volatile", desc: "Starts tame, then goes nuclear. High risk, high reward." },
+  slowburn: { label: "⌛", title: "Patient", desc: "Barely a scratch at first. Then it really kicks in." },
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
@@ -275,10 +297,10 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
                 <img src={sinIcon} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm opacity-60" loading="lazy" />
               )}
               <span
-                className="text-foreground/80 capitalize font-semibold"
+                className="text-foreground/80 font-semibold"
                 style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
               >
-                {effect.type}
+                {effectDisplayNames[effect.type] || effect.type}
               </span>
               <span
                 className={`font-black ${color}`}
@@ -287,14 +309,10 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
               >
                 {effect.duration > 1 ? `${getCompoundTickValue(effect.baseValue, card.compoundPattern, 0)}→${getCompoundTickValue(effect.baseValue, card.compoundPattern, effect.duration - 1)}` : effect.baseValue}
               </span>
-              {effect.targetMode === "self" && (
-                <span className="text-foreground/50 font-medium">(self)</span>
-              )}
-              {effect.targetMode === "aoe" && (
-                <span className="text-foreground/50 font-medium">(all)</span>
-              )}
-              {effect.targetMode === "duo" && (
-                <span className="text-foreground/50 font-medium">(×2)</span>
+              {effect.targetMode && effect.targetMode !== "single" && (
+                <span className="text-foreground/50 font-medium text-[10px] sm:text-[11px]">
+                  {targetDisplayNames[effect.targetMode] || effect.targetMode}
+                </span>
               )}
             </div>
           );

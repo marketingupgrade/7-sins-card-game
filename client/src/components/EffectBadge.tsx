@@ -29,7 +29,7 @@ const EFFECT_CONFIG: Record<string, {
 }> = {
   damage: {
     iconUrl: ICON_URLS.damage_wrath,
-    label: "DMG",
+    label: "Hurt",
     color: "text-wrath",
     bgColor: "bg-wrath/15",
     borderColor: "border-wrath/30",
@@ -37,7 +37,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   self_damage: {
     iconUrl: ICON_URLS.damage_wrath,
-    label: "SELF",
+    label: "Recoil",
     color: "text-wrath",
     bgColor: "bg-wrath/15",
     borderColor: "border-wrath/30",
@@ -45,7 +45,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   heal_gain: {
     iconUrl: ICON_URLS.heal_generic,
-    label: "HEAL",
+    label: "Mend",
     color: "text-envy-glow",
     bgColor: "bg-envy-glow/15",
     borderColor: "border-envy-glow/30",
@@ -53,7 +53,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   heal_steal: {
     iconUrl: ICON_URLS.heal_generic,
-    label: "LSTL",
+    label: "Siphon",
     color: "text-lust",
     bgColor: "bg-lust/15",
     borderColor: "border-lust/30",
@@ -61,7 +61,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   shield_gain: {
     iconUrl: ICON_URLS.shield_generic,
-    label: "SHD",
+    label: "Ward",
     color: "text-candle",
     bgColor: "bg-candle/15",
     borderColor: "border-candle/30",
@@ -69,7 +69,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   shield_steal: {
     iconUrl: ICON_URLS.shield_generic,
-    label: "SSTL",
+    label: "Crack",
     color: "text-candle",
     bgColor: "bg-candle/15",
     borderColor: "border-candle/30",
@@ -77,7 +77,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   energy_gain: {
     iconUrl: ICON_URLS.energy_generic,
-    label: "NRG",
+    label: "Juice",
     color: "text-candle",
     bgColor: "bg-candle/15",
     borderColor: "border-candle/30",
@@ -85,7 +85,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   energy_steal: {
     iconUrl: ICON_URLS.steal_envy,
-    label: "ESTL",
+    label: "Drain",
     color: "text-greed-glow",
     bgColor: "bg-greed-glow/15",
     borderColor: "border-greed-glow/30",
@@ -93,7 +93,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   heal_block: {
     iconUrl: ICON_URLS.debuff_wrath,
-    label: "HBLK",
+    label: "Cursed",
     color: "text-sloth",
     bgColor: "bg-sloth/15",
     borderColor: "border-sloth/30",
@@ -101,7 +101,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   shield_block: {
     iconUrl: ICON_URLS.debuff_wrath,
-    label: "SBLK",
+    label: "Shatter",
     color: "text-sloth",
     bgColor: "bg-sloth/15",
     borderColor: "border-sloth/30",
@@ -109,7 +109,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   energy_block: {
     iconUrl: ICON_URLS.debuff_wrath,
-    label: "EBLK",
+    label: "Exhaust",
     color: "text-sloth",
     bgColor: "bg-sloth/15",
     borderColor: "border-sloth/30",
@@ -117,7 +117,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   affliction_amplify: {
     iconUrl: ICON_URLS.steal_envy,
-    label: "AMP",
+    label: "Amp",
     color: "text-envy",
     bgColor: "bg-envy/15",
     borderColor: "border-envy/30",
@@ -125,7 +125,7 @@ const EFFECT_CONFIG: Record<string, {
   },
   affliction_transfer: {
     iconUrl: ICON_URLS.steal_envy,
-    label: "XFER",
+    label: "Redirect",
     color: "text-pride",
     bgColor: "bg-pride/15",
     borderColor: "border-pride/30",
@@ -134,15 +134,21 @@ const EFFECT_CONFIG: Record<string, {
 };
 
 const PATTERN_LABELS: Record<CompoundPattern, string> = {
-  standard: "STD",
-  aggressive: "AGG",
-  slowburn: "SLO",
+  standard: "◆",
+  aggressive: "🔥",
+  slowburn: "⌛",
+};
+
+const PATTERN_NAMES: Record<CompoundPattern, string> = {
+  standard: "Steady",
+  aggressive: "Volatile",
+  slowburn: "Patient",
 };
 
 const PATTERN_DESCS: Record<CompoundPattern, string> = {
-  standard: "Fibonacci: 1\u00d7, 1\u00d7, 2\u00d7",
-  aggressive: "Powers of 2: 1\u00d7, 2\u00d7, 4\u00d7",
-  slowburn: "Slow ramp: 0.5\u00d7, 1\u00d7, 2.5\u00d7",
+  standard: "Grows at a steady pace. Nothing fancy.",
+  aggressive: "Starts tame, then goes nuclear.",
+  slowburn: "Barely a scratch at first. Then it kicks in.",
 };
 
 const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = false }: EffectBadgeProps) {
@@ -180,7 +186,7 @@ const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = 
           ${cfg.bgColor} ${cfg.borderColor} ${cfg.color}
         `}
         style={{ fontFamily: "var(--font-heading)" }}
-        title={`${cfg.label} ${currentValue} (${ticksRemaining} ticks left) [${PATTERN_LABELS[pattern]}]`}
+        title={`${cfg.label} ${currentValue} (${ticksRemaining} rounds left) • ${PATTERN_NAMES[pattern]}`}
       >
         <img src={spellIconUrl || cfg.iconUrl} alt={cfg.label} className="w-3.5 h-3.5 object-contain flex-shrink-0" loading="lazy" />
         <span>{currentValue}</span>
@@ -263,19 +269,19 @@ const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = 
               {card?.name || "Unknown Effect"}
             </span>
             <span className="text-[7px] px-1 py-0.5 rounded bg-greed-glow/15 text-greed-glow font-bold border border-greed-glow/20">
-              {PATTERN_LABELS[pattern]}
+              {PATTERN_NAMES[pattern]}
             </span>
           </div>
 
           {/* Effect type and value */}
           <p className="text-[10px] text-muted-foreground mb-1.5" style={{ fontFamily: "var(--font-body)" }}>
-            {cfg.label} · Base: {effect.baseValue} · Current: {currentValue}
+            {cfg.label} · Starts at {effect.baseValue}, now hitting for {currentValue}
           </p>
 
           {/* Tick progression */}
           <div className="mb-1.5">
             <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>
-              Tick Progression ({PATTERN_LABELS[pattern]})
+              How it scales ({PATTERN_NAMES[pattern]})
             </p>
             <p className="text-[8px] text-greed-glow/50 mb-1" style={{ fontFamily: "var(--font-body)" }}>
               {PATTERN_DESCS[pattern]}
@@ -303,8 +309,8 @@ const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = 
 
           {/* Rounds remaining */}
           <div className="flex items-center justify-between text-[9px] text-muted-foreground/60">
-            <span>Applied R{effect.appliedAtRound}</span>
-            <span>{ticksRemaining} tick{ticksRemaining !== 1 ? "s" : ""} left</span>
+            <span>Cast round {effect.appliedAtRound}</span>
+            <span>{ticksRemaining} round{ticksRemaining !== 1 ? "s" : ""} left</span>
           </div>
 
           {/* Arrow pointer */}

@@ -696,3 +696,30 @@
 
 ## Bug Fixes (Round 22b)
 - [x] Fix game creation stuck at "Opening the cathedral doors..." — root cause: locked_plays column default was {} (object) not [] (array), causing .filter() TypeError. Fixed SQL default + added Array.isArray() safety checks in both engines.
+
+## UI Fixes (Round 22c) — GameBoard Desktop
+- [ ] Fix cards cut off at bottom of screen — hand area cards clipped on desktop
+- [ ] Fix player panel border jitter — targeting highlight causes layout shift on hover
+- [ ] Add themed targeting tracer line — node-connector SVG from selected card to mouse/target with sin-themed colors, locks on target selection
+
+## AAA Defeat Screen + Share Fix (Round 22d)
+- [x] Redesign GameOverScreen to AAA quality — thematic enhancements, dramatic animations, premium feel
+- [x] Replace "Share Battle Card" with Discord share + WhatsApp share buttons
+
+## Resolution Animation + Targeting Tracer + AAA Game Over (Round 22e)
+- [x] Resolution phase card reveal animation: central stack, cards flip/slide 1 at a time in priority order
+- [x] Targeting tracer line: themed SVG node-connector from selected card to mouse cursor, locks on target
+- [x] AAA quality game-over screen redesign with cinematic animations
+- [x] Replace share button with Discord + WhatsApp share buttons
+
+## Desktop Layout Fixes (Round 22f)
+- [ ] Fix Lock In / Pass buttons hidden under card hand area — z-index / layout issue
+- [ ] Increase player panel size on desktop — names truncated, afflictions unreadable
+- [ ] Make layout responsive to viewport/resolution size (use vw/vh-relative sizing)
+
+## Jargon Rewrite (Round 22g)
+- [ ] Replace "STD" badge with plain label (e.g., "Slow Burn" or similar)
+- [ ] Replace "Shield_gain", "Heal_gain", "Shield_block", "Damage" etc. with plain sassy labels
+- [ ] Rewrite compound tooltip from "Fibonacci growth" to plain language
+- [ ] Replace "(self)" target label with something readable
+- [ ] Audit all HUD copy for technical jargon and rewrite to sassy plainspeak
