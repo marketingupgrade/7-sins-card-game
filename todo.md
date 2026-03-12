@@ -723,3 +723,4 @@
 - [ ] Rewrite compound tooltip from "Fibonacci growth" to plain language
 - [ ] Replace "(self)" target label with something readable
 - [ ] Audit all HUD copy for technical jargon and rewrite to sassy plainspeak
+- [x] BUG: Mobile — played cards not visible during resolution phase (user can't see what's happening)

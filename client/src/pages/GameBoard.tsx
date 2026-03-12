@@ -940,15 +940,28 @@ export default function GameBoard() {
           </div>
 
           {/* Center area — battle overview with afflictions + action feed */}
-          <MobileBattleOverview
-            players={gameState.players}
-            currentPlayerId={playerId}
-            activeEffects={gameState.activeEffects}
-            currentRound={gameState.currentRound}
-            maxRounds={MAX_ROUNDS}
-            actionFeed={actionFeedState}
-            alivePlayers={alivePlayers}
-          />
+          <div className="flex-1 relative min-h-0">
+            <MobileBattleOverview
+              players={gameState.players}
+              currentPlayerId={playerId}
+              activeEffects={gameState.activeEffects}
+              currentRound={gameState.currentRound}
+              maxRounds={MAX_ROUNDS}
+              actionFeed={actionFeedState}
+              alivePlayers={alivePlayers}
+            />
+            {/* Mobile Resolution Reveal — overlays the battle overview */}
+            {turnPhase === "resolution" && gameState.lockedPlays && (
+              <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
+                <ResolutionReveal
+                  lockedPlays={gameState.lockedPlays}
+                  players={gameState.players}
+                  currentRound={gameState.currentRound}
+                  isResolving={turnPhase === "resolution"}
+                />
+              </div>
+            )}
+          </div>
 
           {/* My player bar */}
           {myPlayer && (
