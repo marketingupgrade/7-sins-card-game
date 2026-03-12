@@ -17,6 +17,7 @@ import { CardDefinition, SinType, CompoundPattern, getCompoundTickValue } from "
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";
 import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface GameCardProps {
   card: CardDefinition;
@@ -44,10 +45,10 @@ const effectColors: Record<string, string> = {
   affliction_transfer: "text-pride",
 };
 
-const patternLabels: Record<CompoundPattern, { label: string; title: string }> = {
-  standard: { label: "STD", title: "Standard: Fibonacci growth [1x, 1x, 2x]" },
-  aggressive: { label: "AGG", title: "Aggressive: Powers of 2 [1x, 2x, 4x]" },
-  slowburn: { label: "SLO", title: "Slowburn: Slow ramp [0.5x, 1x, 2.5x]" },
+const patternLabels: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
+  standard: { label: "STD", title: "Standard", desc: "Fibonacci growth — ticks at 1\u00d7, 1\u00d7, 2\u00d7. Balanced scaling that rewards patience." },
+  aggressive: { label: "AGG", title: "Aggressive", desc: "Powers of 2 — ticks at 1\u00d7, 2\u00d7, 4\u00d7. Explosive late-game damage, high risk." },
+  slowburn: { label: "SLO", title: "Slowburn", desc: "Slow ramp — ticks at 0.5\u00d7, 1\u00d7, 2.5\u00d7. Weak start, devastating finish." },
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
@@ -177,14 +178,21 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         <div className="flex items-center gap-1.5">
           {/* Sin archetype icon (spell icon, not Lucide) */}
           <img src={sinIcon} alt={card.sin} className="w-5 h-5 object-contain drop-shadow-sm" loading="lazy" />
-          {/* Compound Pattern Badge */}
-          <span
-            className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
-            style={{ fontFamily: "var(--font-heading)" }}
-            title={pattern.title}
-          >
-            {pattern.label}
-          </span>
+          {/* Compound Pattern Badge with Tooltip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound cursor-help"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {pattern.label}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[220px] bg-[#1a1520] border border-white/10 text-white/90 p-3">
+              <p className="font-bold text-xs mb-1" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{pattern.title}</p>
+              <p className="text-[10px] text-white/60 leading-relaxed">{pattern.desc}</p>
+            </TooltipContent>
+          </Tooltip>
           {card.tier !== "common" && (
             <span
               className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}

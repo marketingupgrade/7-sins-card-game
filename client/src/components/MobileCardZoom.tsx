@@ -13,6 +13,7 @@ import type { CardDefinition } from "@shared/gameTypes";
 import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 interface MobileCardZoomProps {
   card: CardDefinition | null;
@@ -38,10 +39,10 @@ const effectColors: Record<string, string> = {
   affliction_transfer: "text-gray-300",
 };
 
-const patternLabels: Record<CompoundPattern, string> = {
-  standard: "STD",
-  aggressive: "AGG",
-  slowburn: "SLO",
+const patternInfo: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
+  standard: { label: "STD", title: "Standard", desc: "Fibonacci growth — ticks at 1\u00d7, 1\u00d7, 2\u00d7. Balanced scaling." },
+  aggressive: { label: "AGG", title: "Aggressive", desc: "Powers of 2 — ticks at 1\u00d7, 2\u00d7, 4\u00d7. Explosive late-game." },
+  slowburn: { label: "SLO", title: "Slowburn", desc: "Slow ramp — ticks at 0.5\u00d7, 1\u00d7, 2.5\u00d7. Devastating finish." },
 };
 
 const sinColorMap: Record<string, string> = {
@@ -107,8 +108,16 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                 >
                   {card.sin}
                 </span>
-                <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound"
-                  style={{ fontFamily: "var(--font-heading)" }}>{patternLabels[pattern]}</span>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound cursor-help"
+                      style={{ fontFamily: "var(--font-heading)" }}>{patternInfo[pattern]?.label || "STD"}</span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-[220px] bg-[#1a1520] border border-white/10 text-white/90 p-3">
+                    <p className="font-bold text-xs mb-1" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{patternInfo[pattern]?.title}</p>
+                    <p className="text-[10px] text-white/60 leading-relaxed">{patternInfo[pattern]?.desc}</p>
+                  </TooltipContent>
+                </Tooltip>
                 {card.tier !== "common" && (
                   <span className="text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase"
                     style={{

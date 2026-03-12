@@ -178,7 +178,7 @@ export default function CompoundBalanceSheet({
               className="text-[10px] text-muted-foreground/70 italic"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Compounding effects tick for 3 rounds: base, base, then double.
+              All effects compound over 3 ticks. STD (Fibonacci): 1×, 1×, 2× — AGG (Powers): 1×, 2×, 4× — SLO (Ramp): 0.5×, 1×, 2.5×
             </p>
           </div>
 

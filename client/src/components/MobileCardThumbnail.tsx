@@ -12,9 +12,16 @@
  */
 import { motion } from "framer-motion";
 import { memo } from "react";
-import type { CardDefinition, SinType } from "@shared/gameTypes";
+import type { CardDefinition, SinType, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
+const patternInfo: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
+  standard: { label: "STD", title: "Standard", desc: "Fibonacci: 1\u00d7, 1\u00d7, 2\u00d7" },
+  aggressive: { label: "AGG", title: "Aggressive", desc: "Powers of 2: 1\u00d7, 2\u00d7, 4\u00d7" },
+  slowburn: { label: "SLO", title: "Slowburn", desc: "Slow ramp: 0.5\u00d7, 1\u00d7, 2.5\u00d7" },
+};
 
 interface MobileCardThumbnailProps {
   card: CardDefinition;
@@ -57,7 +64,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
   const sinColor = sinColorMap[card.sin] || sinColorMap.wrath;
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const artUrl = CARD_ART_URLS[card.id];
-  const patternLabel = card.compoundPattern === "aggressive" ? "A" : card.compoundPattern === "slowburn" ? "S" : "C";
+  const pInfo = patternInfo[card.compoundPattern] || patternInfo.standard;
 
   return (
     <motion.button
@@ -120,18 +127,26 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
           {card.cost}
         </div>
 
-        {/* Type badge — top-left */}
+        {/* Type badge — top-left with tooltip */}
         <div className="absolute top-0.5 left-0.5">
-          <span
-            className="text-[7px] px-1 py-0.5 rounded font-bold uppercase"
-            style={{
-              fontFamily: "var(--font-heading)",
-              background: "oklch(0.55 0.18 290 / 0.7)",
-              color: "oklch(0.85 0.1 290)",
-            }}
-          >
-            {patternLabel}
-          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="text-[7px] px-1 py-0.5 rounded font-bold uppercase cursor-help"
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  background: "oklch(0.55 0.18 290 / 0.7)",
+                  color: "oklch(0.85 0.1 290)",
+                }}
+              >
+                {pInfo.label}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-[180px] bg-[#1a1520] border border-white/10 text-white/90 p-2">
+              <p className="font-bold text-[10px] mb-0.5" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{pInfo.title}</p>
+              <p className="text-[9px] text-white/60">{pInfo.desc}</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

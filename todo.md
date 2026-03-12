@@ -657,3 +657,10 @@
 - [x] No logic changes, visual/copy only for UI updates
 - [x] Run all tests (172 passing)
 - [x] Push to GitHub (21bd2a0)
+
+## UI Cleanup (Round 20)
+- [x] Add hover tooltips to compound pattern badges on GameCard (shadcn Tooltip)
+- [x] Add hover tooltips to compound pattern badges on MobileCardThumbnail (shadcn Tooltip)
+- [x] Add hover tooltips to compound pattern badges on MobileCardZoom (shadcn Tooltip)
+- [x] Add pattern descriptions to EffectBadge custom tooltip
+- [x] Update CompoundBalanceSheet explanation text with all 3 pattern descriptions

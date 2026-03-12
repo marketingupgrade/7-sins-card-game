@@ -139,6 +139,12 @@ const PATTERN_LABELS: Record<CompoundPattern, string> = {
   slowburn: "SLO",
 };
 
+const PATTERN_DESCS: Record<CompoundPattern, string> = {
+  standard: "Fibonacci: 1\u00d7, 1\u00d7, 2\u00d7",
+  aggressive: "Powers of 2: 1\u00d7, 2\u00d7, 4\u00d7",
+  slowburn: "Slow ramp: 0.5\u00d7, 1\u00d7, 2.5\u00d7",
+};
+
 const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = false }: EffectBadgeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const cfg = EFFECT_CONFIG[effect.effectType] || EFFECT_CONFIG.damage;
@@ -268,8 +274,11 @@ const EffectBadge = memo(function EffectBadge({ effect, currentRound, compact = 
 
           {/* Tick progression */}
           <div className="mb-1.5">
-            <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider mb-1" style={{ fontFamily: "var(--font-heading)" }}>
+            <p className="text-[8px] text-muted-foreground/60 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>
               Tick Progression ({PATTERN_LABELS[pattern]})
+            </p>
+            <p className="text-[8px] text-greed-glow/50 mb-1" style={{ fontFamily: "var(--font-body)" }}>
+              {PATTERN_DESCS[pattern]}
             </p>
             <div className="flex items-center gap-1">
               {tickDots.map((dot, i) => (
