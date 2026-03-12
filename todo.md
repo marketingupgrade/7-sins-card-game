@@ -678,7 +678,7 @@
 - [x] Wire lethal blow into GameBoard death handling (overkill 10+ HP)
 - [x] Reset cardsThisTurn on turn change
 - [x] Render CorruptionCascade component in GameBoard JSX
-- [ ] Push to GitHub
+- [x] Push to GitHub (df9cf4a)
 
 ## Simultaneous Lock-In Turn System (Round 22)
 - [x] Resolution algorithm: lowest HP plays first, skip-queue first, lowest cost first within player
@@ -693,3 +693,6 @@
 - [ ] Re-run Monte Carlo balance validation with simultaneous resolution + skip-queue
 - [ ] Verify ≤1.5% max deviation still holds
 - [ ] Push to GitHub
+
+## Bug Fixes (Round 22b)
+- [ ] Fix game creation stuck at "Opening the cathedral doors..." after simultaneous lock-in changes

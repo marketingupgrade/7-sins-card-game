@@ -269,7 +269,7 @@ export async function lockInCards(
   const storedLocked = lockedPlays.length > 0 ? lockedPlays : [{ pass: true }];
   await sb.from("game_players").update({ locked_cards: storedLocked }).eq("id", player.id);
 
-  const existingLocked: LockedPlay[] = (game.locked_plays || []).filter(
+  const existingLocked: LockedPlay[] = (Array.isArray(game.locked_plays) ? game.locked_plays : []).filter(
     (lp: LockedPlay) => lp.playerId !== playerId
   );
   const allLocked = [...existingLocked, ...lockedPlays];
@@ -292,8 +292,8 @@ export async function lockInCards(
   const alivePlayers = (allPlayers || []).filter((p: any) => p.is_alive);
   const allConfirmed = alivePlayers.every((p: any) => {
     if (p.player_id === playerId) return true;
-    const pLocked = p.locked_cards;
-    return Array.isArray(pLocked) && pLocked.length > 0;
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    return pLocked.length > 0;
   });
 
   if (allConfirmed) {
@@ -323,7 +323,7 @@ async function resolveLockedPlays(gameId: string): Promise<void> {
     .order("seat_index");
   if (!allPlayers) return;
 
-  const lockedPlays: LockedPlay[] = game.locked_plays || [];
+  const lockedPlays: LockedPlay[] = Array.isArray(game.locked_plays) ? game.locked_plays : [];
 
   const sortedPlays = [...lockedPlays].sort((a, b) => {
     if (a.skipQueue && !b.skipQueue) return -1;
@@ -498,11 +498,12 @@ export async function getGameState(gameId: string): Promise<GameState> {
     .select("*")
     .eq("game_id", gameId);
 
-  const allLockedPlays: LockedPlay[] = game.locked_plays || [];
+  const rawLocked = game.locked_plays;
+  const allLockedPlays: LockedPlay[] = Array.isArray(rawLocked) ? rawLocked : [];
 
   const players: PlayerState[] = (gamePlayers || []).map((gp: any) => {
     const playerLocked = allLockedPlays.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
-    const gpLockedCards = gp.locked_cards || [];
+    const gpLockedCards = Array.isArray(gp.locked_cards) ? gp.locked_cards : [];
     return {
       id: gp.player_id,
       gamePlayerId: gp.id,

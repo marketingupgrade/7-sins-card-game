@@ -565,11 +565,12 @@ export async function getGameState(gameId: string): Promise<GameState> {
     .select("*")
     .eq("game_id", gameId);
 
-  const allLockedPlays: LockedPlay[] = game.locked_plays || [];
+  const rawLocked = game.locked_plays;
+  const allLockedPlays: LockedPlay[] = Array.isArray(rawLocked) ? rawLocked : [];
 
   const players: PlayerState[] = (gamePlayers || []).map((gp: any) => {
     const playerLocked = allLockedPlays.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
-    const gpLockedCards = gp.locked_cards || [];
+    const gpLockedCards = Array.isArray(gp.locked_cards) ? gp.locked_cards : [];
     return {
       id: gp.player_id,
       gamePlayerId: gp.id,
