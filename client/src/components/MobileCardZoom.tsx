@@ -14,6 +14,7 @@ import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { getSinCssVar } from "@/lib/sinColors";
 
 interface MobileCardZoomProps {
   card: CardDefinition | null;
@@ -45,15 +46,6 @@ const patternInfo: Record<CompoundPattern, { label: string; title: string; desc:
   slowburn: { label: "SLO", title: "Slowburn", desc: "Slow ramp — ticks at 0.5\u00d7, 1\u00d7, 2.5\u00d7. Devastating finish." },
 };
 
-const sinColorMap: Record<string, string> = {
-  wrath: "var(--color-wrath)",
-  sloth: "var(--color-sloth)",
-  greed: "var(--color-greed)",
-  envy: "var(--color-envy)",
-  pride: "var(--color-pride)",
-  lust: "var(--color-lust)",
-  gluttony: "var(--color-gluttony)",
-};
 
 export const MobileCardZoom = memo(function MobileCardZoom({
   card,
@@ -64,7 +56,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
 }: MobileCardZoomProps) {
   if (!card) return null;
 
-  const sinColor = sinColorMap[card.sin] || sinColorMap.wrath;
+  const sinColor = getSinCssVar(card.sin);
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const pattern = card.compoundPattern || "standard";
   const artUrl = CARD_ART_URLS[card.id];

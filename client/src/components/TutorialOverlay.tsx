@@ -4,6 +4,9 @@
  * Renders a dark overlay with a spotlight cutout around the target element,
  * plus a tooltip with step info, navigation, and sassy narrator quips.
  * Uses portal rendering to sit above everything.
+ *
+ * Mobile-responsive: tooltip shrinks to fit viewport, uses safe-area insets,
+ * and centers on small screens to prevent overflow.
  */
 
 import { useEffect, useState, useRef, useCallback } from "react";
@@ -33,7 +36,16 @@ export default function TutorialOverlay() {
 
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
   const [tooltipStyle, setTooltipStyle] = useState<React.CSSProperties>({});
+  const [isMobile, setIsMobile] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   // Find and measure the target element
   const measureTarget = useCallback(() => {
@@ -78,18 +90,34 @@ export default function TutorialOverlay() {
     };
   }, [isActive, currentStep, measureTarget]);
 
-  // Calculate tooltip position
+  // Calculate tooltip position — mobile-aware
   useEffect(() => {
     if (!currentStep) return;
 
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 12;
+
+    // On mobile: always center the tooltip, constrained to viewport
+    if (isMobile) {
+      const mobileWidth = Math.min(vw - margin * 2, 340);
+      setTooltipStyle({
+        position: "fixed",
+        bottom: `${margin}px`,
+        left: `${(vw - mobileWidth) / 2}px`,
+        width: `${mobileWidth}px`,
+        maxHeight: `${vh * 0.55}px`,
+        overflowY: "auto",
+      });
+      return;
+    }
+
+    // Desktop: position relative to target
     const tooltipWidth = 340;
     const tooltipHeight = 220;
     const gap = 16;
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
 
     if (!currentStep.targetSelector || !targetRect) {
-      // Center overlay (no target)
       setTooltipStyle({
         position: "fixed",
         top: "50%",
@@ -119,8 +147,8 @@ export default function TutorialOverlay() {
     }
 
     // Clamp to viewport
-    left = Math.max(12, Math.min(left, vw - tooltipWidth - 12));
-    top = Math.max(12, Math.min(top, vh - tooltipHeight - 12));
+    left = Math.max(margin, Math.min(left, vw - tooltipWidth - margin));
+    top = Math.max(margin, Math.min(top, vh - tooltipHeight - margin));
 
     setTooltipStyle({
       position: "fixed",
@@ -128,7 +156,7 @@ export default function TutorialOverlay() {
       left: `${left}px`,
       width: `${tooltipWidth}px`,
     });
-  }, [currentStep, targetRect]);
+  }, [currentStep, targetRect, isMobile]);
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -225,26 +253,26 @@ export default function TutorialOverlay() {
           }}
         />
 
-        {/* Tooltip */}
+        {/* Tooltip — mobile-responsive */}
         <motion.div
           key={currentStep.id}
-          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          initial={{ opacity: 0, y: isMobile ? 30 : 10, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -10, scale: 0.95 }}
+          exit={{ opacity: 0, y: isMobile ? 30 : -10, scale: 0.95 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
           style={tooltipStyle}
           className="z-[10000] pointer-events-auto"
         >
-          <div className="bg-background/95 backdrop-blur-xl border border-candle/30 rounded-2xl p-5 shadow-[0_0_30px_oklch(0.82_0.16_195/0.15)]">
+          <div className="bg-background/95 backdrop-blur-xl border border-candle/30 rounded-2xl p-4 sm:p-5 shadow-[0_0_30px_oklch(0.82_0.16_195/0.15)]">
             {/* Header */}
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-candle/10 border border-candle/20 flex items-center justify-center">
-                  <GraduationCap className="w-4 h-4 text-candle" />
+            <div className="flex items-start justify-between mb-2 sm:mb-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-candle/10 border border-candle/20 flex items-center justify-center shrink-0">
+                  <GraduationCap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-candle" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h3
-                    className="text-sm font-bold text-foreground tracking-wide"
+                    className="text-xs sm:text-sm font-bold text-foreground tracking-wide truncate"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     {currentStep.title}
@@ -259,7 +287,7 @@ export default function TutorialOverlay() {
               </div>
               <button
                 onClick={skipTutorial}
-                className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors p-1"
+                className="text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors p-1 shrink-0"
                 title="Skip tutorial (Esc)"
               >
                 <X className="w-4 h-4" />
@@ -268,7 +296,7 @@ export default function TutorialOverlay() {
 
             {/* Body */}
             <p
-              className="text-[12px] text-foreground/80 leading-relaxed mb-3"
+              className="text-[11px] sm:text-[12px] text-foreground/80 leading-relaxed mb-2 sm:mb-3"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {currentStep.body}
@@ -276,10 +304,10 @@ export default function TutorialOverlay() {
 
             {/* Narrator quip */}
             {currentStep.quip && (
-              <div className="flex items-start gap-2 mb-4 bg-background/40 rounded-lg p-2.5 border border-border/10">
-                <Sparkles className="w-3.5 h-3.5 text-greed-glow/70 mt-0.5 shrink-0" />
+              <div className="flex items-start gap-2 mb-3 sm:mb-4 bg-background/40 rounded-lg p-2 sm:p-2.5 border border-border/10">
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-greed-glow/70 mt-0.5 shrink-0" />
                 <p
-                  className="text-[11px] text-greed-glow/70 italic leading-relaxed"
+                  className="text-[10px] sm:text-[11px] text-greed-glow/70 italic leading-relaxed"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   "{currentStep.quip}"
@@ -288,7 +316,7 @@ export default function TutorialOverlay() {
             )}
 
             {/* Progress bar */}
-            <div className="w-full h-1 bg-border/10 rounded-full mb-3 overflow-hidden">
+            <div className="w-full h-1 bg-border/10 rounded-full mb-2 sm:mb-3 overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
                 style={{ background: "oklch(0.82 0.16 195)" }}
@@ -299,20 +327,20 @@ export default function TutorialOverlay() {
             </div>
 
             {/* Navigation */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <button
                 onClick={prevStep}
                 disabled={isFirstStep}
-                className="flex items-center gap-1 text-[11px] text-muted-foreground/60 hover:text-foreground/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1 rounded-lg hover:bg-border/10"
+                className="flex items-center gap-1 text-[10px] sm:text-[11px] text-muted-foreground/60 hover:text-foreground/80 disabled:opacity-30 disabled:cursor-not-allowed transition-colors px-2 py-1.5 rounded-lg hover:bg-border/10"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                 BACK
               </button>
 
               <button
                 onClick={skipTutorial}
-                className="text-[10px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors px-2 py-1"
+                className="text-[9px] sm:text-[10px] text-muted-foreground/40 hover:text-muted-foreground/60 transition-colors px-2 py-1"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 SKIP ALL
@@ -320,21 +348,23 @@ export default function TutorialOverlay() {
 
               <button
                 onClick={nextStep}
-                className="flex items-center gap-1 text-[11px] text-candle font-semibold hover:text-candle/80 transition-colors px-3 py-1.5 rounded-lg bg-candle/10 hover:bg-candle/15 border border-candle/20"
+                className="flex items-center gap-1 text-[10px] sm:text-[11px] text-candle font-semibold hover:text-candle/80 transition-colors px-2.5 sm:px-3 py-1.5 rounded-lg bg-candle/10 hover:bg-candle/15 border border-candle/20"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {isLastStep ? "FINISH" : isLastOnPage ? "GOT IT" : "NEXT"}
-                {!isLastStep && <ChevronRight className="w-3.5 h-3.5" />}
+                {!isLastStep && <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />}
               </button>
             </div>
 
-            {/* Keyboard hint */}
-            <p
-              className="text-[8px] text-muted-foreground/30 text-center mt-2 tracking-wider"
-              style={{ fontFamily: "var(--font-heading)" }}
-            >
-              ARROW KEYS OR ENTER TO NAVIGATE &middot; ESC TO SKIP
-            </p>
+            {/* Keyboard hint — hide on mobile (no keyboard) */}
+            {!isMobile && (
+              <p
+                className="text-[8px] text-muted-foreground/30 text-center mt-2 tracking-wider"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                ARROW KEYS OR ENTER TO NAVIGATE &middot; ESC TO SKIP
+              </p>
+            )}
           </div>
         </motion.div>
       </motion.div>

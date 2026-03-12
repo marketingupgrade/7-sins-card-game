@@ -13,6 +13,7 @@ import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { isBot } from "@/lib/botEngine";
 import { PlayerState, SinType, MAX_ENERGY, getCompoundTickValue, ActiveEffect } from "@shared/gameTypes";
 import MobileAfflictionSheet from "./MobileAfflictionSheet";
+import { getSinCssVar } from "@/lib/sinColors";
 
 interface MobilePlayerBarProps {
   player: PlayerState;
@@ -25,15 +26,6 @@ interface MobilePlayerBarProps {
   isMe?: boolean;
 }
 
-const sinColorMap: Record<string, string> = {
-  wrath: "var(--color-wrath)",
-  sloth: "var(--color-sloth)",
-  greed: "var(--color-greed)",
-  envy: "var(--color-envy)",
-  pride: "var(--color-pride)",
-  lust: "var(--color-lust)",
-  gluttony: "var(--color-gluttony)",
-};
 
 export const MobilePlayerBar = memo(function MobilePlayerBar({
   player,
@@ -45,7 +37,7 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
   currentRound,
   isMe,
 }: MobilePlayerBarProps) {
-  const sinColor = sinColorMap[player.chosenSin || "wrath"] || sinColorMap.wrath;
+  const sinColor = getSinCssVar(player.chosenSin || "wrath");
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
 

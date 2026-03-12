@@ -12,10 +12,11 @@
  */
 import { motion } from "framer-motion";
 import { memo } from "react";
-import type { CardDefinition, SinType, CompoundPattern } from "@shared/gameTypes";
+import type { CardDefinition, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { getSinCssVar } from "@/lib/sinColors";
 
 const patternInfo: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
   standard: { label: "STD", title: "Standard", desc: "Fibonacci: 1\u00d7, 1\u00d7, 2\u00d7" },
@@ -31,15 +32,6 @@ interface MobileCardThumbnailProps {
   onClick: () => void;
 }
 
-const sinColorMap: Record<string, string> = {
-  wrath: "var(--color-wrath)",
-  sloth: "var(--color-sloth)",
-  greed: "var(--color-greed)",
-  envy: "var(--color-envy)",
-  pride: "var(--color-pride)",
-  lust: "var(--color-lust)",
-  gluttony: "var(--color-gluttony)",
-};
 
 /** Readable effect labels with color and symbol */
 const EFFECT_DISPLAY: Record<string, { symbol: string; color: string; label: string }> = {
@@ -61,7 +53,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
   canAfford,
   onClick,
 }: MobileCardThumbnailProps) {
-  const sinColor = sinColorMap[card.sin] || sinColorMap.wrath;
+  const sinColor = getSinCssVar(card.sin);
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const artUrl = CARD_ART_URLS[card.id];
   const pInfo = patternInfo[card.compoundPattern] || patternInfo.standard;

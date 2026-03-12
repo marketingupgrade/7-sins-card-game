@@ -29,14 +29,13 @@ import { playCard, passTurn, lockInCards, getGameLog } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
-import { useCallback, useEffect, useMemo, useState, useRef, memo } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
 import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
-import { lazy, Suspense } from "react";
 const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
 import { GameOverScreen } from "@/components/GameOverScreen";
 import { SoundToggle } from "@/components/SoundToggle";
@@ -72,9 +71,11 @@ import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { getSinHexColor, getSinCssVar } from "@/lib/sinColors";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
 const BloomOverlay = lazy(() => import("@/components/BloomOverlay"));
 const SparkleTrail = lazy(() => import("@/components/SparkleTrail"));
+const GodRays = lazy(() => import("@/components/GodRays"));
 
 interface ActionFeedEntry {
   id: string;
@@ -169,14 +170,6 @@ export default function GameBoard() {
     return () => { musicEngine.setScene("menu"); };
   }, []);
 
-  // Feature: Dynamic tempo — speeds up as game enters late rounds
-  useEffect(() => {
-    if (!gameState) return;
-    const round = gameState.currentRound;
-    // 1.0 at round 1, ramp to 1.35 at round 8+
-    const tempo = Math.min(1.35, 1.0 + Math.max(0, round - 3) * 0.05);
-    musicEngine.setTempo(tempo);
-  }, [gameState?.currentRound]);
 
   // Feature: Victory cinematic trigger
   useEffect(() => {
@@ -215,6 +208,20 @@ export default function GameBoard() {
     () => gameState?.players.filter((p) => p.isAlive) || [],
     [gameState?.players]
   );
+  // Feature: Adaptive tension music — considers round, HP ratio, and deaths
+  useEffect(() => {
+    if (!gameState || !myPlayer) return;
+    const round = gameState.currentRound;
+    const hpRatio = myPlayer.currentHp / (myPlayer.maxHp || 25);
+    const deadCount = gameState.players.filter(p => !p.isAlive).length;
+    const totalPlayers = gameState.players.length;
+    const roundTension = Math.min(1, (round - 1) / 12);
+    const hpTension = Math.max(0, 1 - hpRatio);
+    const deathTension = deadCount / Math.max(1, totalPlayers - 1);
+    const tension = Math.min(1, roundTension * 0.4 + hpTension * 0.35 + deathTension * 0.25);
+    musicEngine.setTension(tension);
+  }, [gameState?.currentRound, myPlayer?.currentHp, alivePlayers.length]);
+
   // In simultaneous mode, "my turn" means selection phase and I haven't locked in yet
   const turnPhase = gameState?.turnPhase || "selection";
   const isMyTurn = useMemo(() => {
@@ -470,7 +477,7 @@ export default function GameBoard() {
       }, 4000);
 
       // Floating numbers + screen shake + cinematic flash
-      const sinColorMap: Record<string, string> = { wrath: '#ef4444', sloth: '#a855f7', greed: '#eab308', envy: '#10b981', pride: '#f0f0f0', lust: '#ec4899', gluttony: '#b45309' };
+
       for (const eff of card.effects) {
         const val = eff.baseValue || 0;
         if (val > 0) {
@@ -487,7 +494,7 @@ export default function GameBoard() {
             }
             // Feature: Cinematic flash for big damage (20+)
             if (val >= 20) {
-              setCinematicFlashColor(sinColorMap[card.sin] || '#ffffff');
+              setCinematicFlashColor(getSinHexColor(card.sin));
               setCinematicFlashTrigger(prev => prev + 1);
             }
           }
@@ -496,7 +503,7 @@ export default function GameBoard() {
       
       // Trigger card play arc animation toward target
       setCardArcName(card.name);
-      setCardArcColor(sinColorMap[card.sin] || '#06b6d4');
+      setCardArcColor(getSinHexColor(card.sin));
       // Calculate target position from the target player's panel element
       const actualTarget = target || undefined;
       if (actualTarget) {
@@ -642,6 +649,14 @@ export default function GameBoard() {
       <SinCursor sin={mySin} isActive={true} />
 
       <EmberField count={12} />
+
+      {/* Phase 4: God Rays — cathedral light beams */}
+      <Suspense fallback={null}>
+        <GodRays
+          sin={mySin}
+          intensity={0.25 + Math.min(0.3, (gameState.currentRound - 1) * 0.03)}
+        />
+      </Suspense>
 
       {/* Feature: Sin Corruption Border — glowing cracks spread from edges */}
       <SinCorruptionBorder
@@ -1318,12 +1333,6 @@ interface PlayerPanelProps {
   compact?: boolean;
 }
 
-const sinColors: Record<string, string> = {
-  wrath: "var(--color-wrath)",
-  sloth: "var(--color-sloth)",
-  greed: "var(--color-greed)",
-  envy: "var(--color-envy)",
-};
 
 const PlayerPanel = memo(function PlayerPanel({
   player,
@@ -1337,7 +1346,7 @@ const PlayerPanel = memo(function PlayerPanel({
   position,
   compact,
 }: PlayerPanelProps) {
-  const sinColor = sinColors[player.chosenSin || "wrath"] || sinColors.wrath;
+  const sinColor = getSinCssVar(player.chosenSin || "wrath");
   const hpPercent = player.maxHp > 0 ? (player.currentHp / player.maxHp) * 100 : 0;
   const playerIsBot = isBot(player.id);
   const [isHovered, setIsHovered] = useState(false);

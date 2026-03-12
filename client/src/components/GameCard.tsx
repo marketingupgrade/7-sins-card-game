@@ -12,13 +12,15 @@
  */
 
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
-import { useRef, useCallback, useState, memo } from "react";
+import { useRef, useCallback, useState, memo, lazy, Suspense } from "react";
 import SinShaderOverlay from "./WebGLSinShaders";
 import { CardDefinition, SinType, CompoundPattern, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";
 import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+const HolographicCardShader = lazy(() => import("./HolographicCardShader"));
+const AnimatedCardArt = lazy(() => import("./AnimatedCardArt"));
 
 interface GameCardProps {
   card: CardDefinition;
@@ -303,6 +305,10 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
             <img src={sinIcon} alt={card.sin} className="w-10 h-10 object-contain opacity-40" loading="lazy" />
           </div>
         )}
+        {/* Animated card art for epic signature cards */}
+        <Suspense fallback={null}>
+          <AnimatedCardArt sin={card.sin as SinType} isSignature={card.tier === "epic" && card.cost >= 4} />
+        </Suspense>
         {/* Art overlay gradient for text readability */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -310,6 +316,16 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         />
       </div>
       </SinShaderOverlay>
+
+      {/* Holographic shimmer for rare/epic cards */}
+      {(card.tier === "rare" || card.tier === "epic") && isHovered && (
+        <Suspense fallback={null}>
+          <HolographicCardShader
+            sin={card.sin as SinType}
+            intensity={card.tier === "epic" ? "epic" : "rare"}
+          />
+        </Suspense>
+      )}
 
       {/* Card Name — large, bold, with text shadow for contrast */}
       <div className="px-3 py-1.5">

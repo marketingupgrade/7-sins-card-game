@@ -16,6 +16,7 @@ import { CARD_MAP } from "@shared/cardData";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { getEffectIconUrl } from "@/lib/iconUtils";
+import { getSinOklchColor } from "@/lib/sinColors";
 
 interface ActionFeedEntry {
   id: string;
@@ -45,15 +46,6 @@ const EFFECT_CONFIG: Record<string, { icon: string; color: string; label: string
   buff: { icon: "↑", color: "oklch(0.65 0.12 85)", label: "Buff", sign: "+" },
 };
 
-const sinColorMap: Record<string, string> = {
-  wrath: "oklch(0.65 0.22 25)",
-  sloth: "oklch(0.55 0.12 290)",
-  greed: "oklch(0.65 0.18 145)",
-  envy: "oklch(0.65 0.18 175)",
-  pride: "oklch(0.85 0.03 85)",
-  lust: "oklch(0.65 0.18 350)",
-  gluttony: "oklch(0.55 0.12 55)",
-};
 
 /** Summarize effects for a player into grouped totals */
 function summarizeEffects(effects: ActiveEffect[]) {
@@ -114,7 +106,7 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
           const effectTypes = Object.keys(summary);
           const isMe = player.id === currentPlayerId;
           const isExpanded = expandedPlayer === player.gamePlayerId;
-          const sinColor = sinColorMap[player.chosenSin as string] || sinColorMap.wrath;
+          const sinColor = getSinOklchColor(player.chosenSin as string);
 
           return (
             <motion.button

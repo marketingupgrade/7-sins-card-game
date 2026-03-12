@@ -266,6 +266,33 @@ class MusicEngine {
       }
     }
   }
+
+  /**
+   * Adaptive tension system — adjusts drone layer volume and tempo based on game tension.
+   * tension: 0 (calm early game) to 1 (critical late game, low HP, many deaths)
+   *
+   * At low tension: drone is quiet (30%), tempo normal
+   * At high tension: drone is loud (90%), tempo 1.25x, main track slightly quieter
+   */
+  setTension(tension: number) {
+    if (this.muted || this.currentScene !== "arena") return;
+    const t = Math.max(0, Math.min(1, tension));
+
+    // Drone layer scales from 30% to 90% of master volume with tension
+    const droneAudio = this.tracks.get("arenaDrone");
+    if (droneAudio && !droneAudio.paused) {
+      droneAudio.volume = this.volume * (0.3 + t * 0.6);
+    }
+
+    // Main arena track gets slightly quieter at high tension (creates "underwater" pressure feel)
+    const arenaAudio = this.tracks.get("arena");
+    if (arenaAudio && !arenaAudio.paused) {
+      arenaAudio.volume = this.volume * (1.0 - t * 0.15);
+    }
+
+    // Tempo ramps with tension: 1.0 at calm, 1.25 at max tension
+    this.setTempo(1.0 + t * 0.25);
+  }
 }
 
 // Singleton

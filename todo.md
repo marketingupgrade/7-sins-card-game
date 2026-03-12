@@ -744,7 +744,17 @@
 - [x] Card frame upgrade with rarity-tier glow (CardFrameGlow component)
 
 ## AAA Elevation — Phase 4: Holographic Cards
-- [ ] NodeMaterial holographic shader for epic/rare cards
-- [ ] Animated card art for 7 faction signature cards
-- [ ] VolumetricLightScattering god-rays in cathedral scenes
-- [ ] Adaptive music system refinement (layered instruments based on tension)
+- [x] WebGL holographic shader for epic/rare cards (HolographicCardShader.tsx)
+- [x] Animated card art for 7 faction signature cards (AnimatedCardArt.tsx)
+- [x] God-rays light beams in arena (GodRays.tsx — CSS for performance)
+- [x] Adaptive tension music system (setTension in musicEngine — round + HP + deaths)
+
+## Cleanup & Refactor
+- [x] Remove AI chatbot code (AIChatBox.tsx, Markdown.tsx) and all references
+- [x] Full code audit: dead code, unused imports, duplicate logic
+- [x] Refactor without breaking anything
+- [x] Deleted 49 unused files (7 dead components + 42 unused UI components)
+- [x] Consolidated 6 duplicate sinColorMap definitions into shared sinColors.ts utility
+- [x] Merged duplicate React imports in GameCard.tsx and GameBoard.tsx
+- [x] Removed unused SinType import from MobileCardThumbnail
+- [x] BUG: Tutorial popup overflows on mobile portrait — text cut off, buttons unreachable, must rotate to landscape to dismiss
