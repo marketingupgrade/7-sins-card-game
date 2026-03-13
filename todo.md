@@ -1098,3 +1098,4 @@
 - [x] Fix selection number overlay visibility — make badge more prominent
 - [x] Add deck building utilities: sort by cost/name/type, search bar, deck stats summary
 - [x] Add deck mana curve visualization
+- [x] Increase footer text contrast for better readability

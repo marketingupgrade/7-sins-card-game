@@ -582,7 +582,7 @@ export default function Home() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-[11px] tracking-[0.15em] uppercase text-white/30 hover:text-white/60 transition-colors"
+                  className="text-[11px] tracking-[0.15em] uppercase text-white/50 hover:text-white/80 transition-colors"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   {link.label}
@@ -602,7 +602,7 @@ export default function Home() {
               {[
                 "378 Cards", "7 Factions", "20 Rounds", "200 HP", "3 Compound Patterns", "Zero Mercy"
               ].map((stat, i) => (
-                <span key={i} className="text-[10px] tracking-[0.1em] uppercase text-white/20" style={{ fontFamily: "var(--font-heading)" }}>
+                <span key={i} className="text-[10px] tracking-[0.1em] uppercase text-white/40" style={{ fontFamily: "var(--font-heading)" }}>
                   {stat}
                 </span>
               ))}
@@ -611,26 +611,26 @@ export default function Home() {
             {/* Credits — organized in a clean grid */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-center">
               <div>
-                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Music</p>
-                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/45 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Music</p>
+                <div className="text-[9px] text-white/30 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
                   <p>"Dark City" by Muncheybobo</p>
                   <p>"Dark Ambient" by Alexandr Zhelanov</p>
                   <p>"Dark Ambient Loop 13" by MundoSound</p>
                 </div>
               </div>
               <div>
-                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Sound &amp; Icons</p>
-                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/45 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Sound &amp; Icons</p>
+                <div className="text-[9px] text-white/30 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
                   <p>Card Game Sounds (CC0)</p>
                   <p>JC Sounds Fantasy SFX (CC-BY 4.0)</p>
                   <p>Painterly Spell Icons by J.W. Bjerk (CC-BY 3.0)</p>
                 </div>
               </div>
               <div>
-                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Assets</p>
-                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/45 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Assets</p>
+                <div className="text-[9px] text-white/30 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
                   <p>All assets sourced from</p>
-                  <a href="https://opengameart.org" target="_blank" rel="noopener noreferrer" className="text-white/25 hover:text-white/40 underline transition-colors">OpenGameArt.org</a>
+                  <a href="https://opengameart.org" target="_blank" rel="noopener noreferrer" className="text-white/45 hover:text-white/60 underline transition-colors">OpenGameArt.org</a>
                   <p className="mt-1">Card art generated with AI</p>
                 </div>
               </div>
@@ -640,7 +640,7 @@ export default function Home() {
             <div className="flex flex-col items-center mb-8">
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-500/20" />
-                <p className="text-[9px] tracking-[0.2em] uppercase text-amber-200/30" style={{ fontFamily: "var(--font-heading)" }}>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-amber-200/55" style={{ fontFamily: "var(--font-heading)" }}>
                   Fuel the Inferno
                 </p>
                 <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-500/20" />
@@ -662,10 +662,10 @@ export default function Home() {
                 </div>
                 {/* Text */}
                 <div className="text-center sm:text-left">
-                  <p className="text-xs text-amber-200/60 group-hover:text-amber-200/80 transition-colors mb-1" style={{ fontFamily: "var(--font-heading)" }}>
+                  <p className="text-xs text-amber-200/80 group-hover:text-amber-200 transition-colors mb-1" style={{ fontFamily: "var(--font-heading)" }}>
                     Buy Me a Coffee
                   </p>
-                  <p className="text-[10px] text-white/20 group-hover:text-white/30 transition-colors leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                  <p className="text-[10px] text-white/40 group-hover:text-white/55 transition-colors leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                     If you enjoy the game, consider offering<br className="hidden sm:block" />
                     a sinful tribute to keep the fires burning.
                   </p>
@@ -683,7 +683,7 @@ export default function Home() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="text-[9px] tracking-[0.1em] uppercase text-white/15 hover:text-white/30 transition-colors"
+                  className="text-[9px] tracking-[0.1em] uppercase text-white/35 hover:text-white/55 transition-colors"
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   {link.label}
@@ -692,7 +692,7 @@ export default function Home() {
             </div>
 
             {/* Copyright */}
-            <p className="text-[8px] text-white/10 text-center" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-[8px] text-white/30 text-center" style={{ fontFamily: "var(--font-body)" }}>
               &copy; {new Date().getFullYear()} 7 Deadly Sins Card Game. Made with unholy devotion.
             </p>
           </div>
