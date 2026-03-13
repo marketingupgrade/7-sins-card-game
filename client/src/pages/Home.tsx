@@ -11,8 +11,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { useLocation } from "wouter";
-import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight } from "lucide-react";
+import { useLocation, Link } from "wouter";
+import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import GlitchTitle from "@/components/GlitchTitle";
@@ -431,6 +431,18 @@ export default function Home() {
                     <GraduationCap className="w-3.5 h-3.5" />
                     HOW TO PLAY
                   </motion.button>
+
+                  <Link href="/collection">
+                    <motion.div
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    >
+                      <BookOpen className="w-3.5 h-3.5" />
+                      CARD COLLECTION
+                    </motion.div>
+                  </Link>
 
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />

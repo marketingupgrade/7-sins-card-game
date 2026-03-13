@@ -692,7 +692,7 @@
 - [ ] Generate custom art for skip-queue cards
 - [ ] Re-run Monte Carlo balance validation with simultaneous resolution + skip-queue
 - [ ] Verify ≤1.5% max deviation still holds
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Bug Fixes (Round 22b)
 - [x] Fix game creation stuck at "Opening the cathedral doors..." — root cause: locked_plays column default was {} (object) not [] (array), causing .filter() TypeError. Fixed SQL default + added Array.isArray() safety checks in both engines.
@@ -908,4 +908,21 @@
 - [x] Update cardArtUrls.ts with all 378 CDN URLs
 - [x] Add skip-queue to tutorial/tooltips
 - [x] Run balance validation with skip-queue cards (all 192 tests pass)
+- [x] Push to GitHub
+
+## Balance Analysis Document
+- [x] Gather all simulation data, passive parameters, and card statistics
+- [x] Generate visualizations (win rate charts, deviation heatmaps, passive comparison)
+- [x] Write comprehensive deep-dive balance analysis document (empirical, academic style)
+
+## Card Collection / Gallery Page
+- [x] Build card gallery page with grid layout showing all 378 cards
+- [x] Add faction filter (all 7 sins)
+- [x] Add tier filter (common, rare, epic)
+- [x] Add effect type filter
+- [x] Add compound pattern filter (standard, aggressive, slowburn)
+- [x] Add skip-queue / priority filter
+- [x] Add search by card name
+- [x] Card detail modal with full stats, effects, compound tick preview, and faction passive
+- [x] Register route in App.tsx and add navigation link from Home page
 - [ ] Push to GitHub

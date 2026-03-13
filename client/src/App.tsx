@@ -22,6 +22,7 @@ const Home = lazy(() => import("./pages/Home"));
 const Lobby = lazy(() => import("./pages/Lobby"));
 const GameBoard = lazy(() => import("./pages/GameBoard"));
 const Profile = lazy(() => import("./pages/Profile"));
+const Collection = lazy(() => import("./pages/Collection"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -45,6 +46,7 @@ function Router() {
         <Route path="/" component={Home} />
         <Route path="/lobby/:gameId" component={Lobby} />
         <Route path="/game/:gameId" component={GameBoard} />
+        <Route path="/collection" component={Collection} />
         <Route path="/profile" component={Profile} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
