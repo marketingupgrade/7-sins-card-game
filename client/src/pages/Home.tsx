@@ -573,12 +573,15 @@ export default function Home() {
             {/* Navigation Links */}
             <div className="flex flex-wrap justify-center gap-6 mb-8">
               {[
-                { label: "Card Collection", href: "/collection" },
+                { label: "Home", href: "/" },
                 { label: "Balance Analysis", href: "/balance" },
-                { label: "Matchup Matrix", href: "/matchups" },
+                { label: "Brandbook", href: "/brandbook" },
+                { label: "Card Collection", href: "/collection" },
+                { label: "Deck Builder", href: "/deck-builder" },
                 { label: "Game Rules", href: "/rules" },
+                { label: "Lore", href: "/blog" },
+                { label: "Matchup Matrix", href: "/matchups" },
                 { label: "Patch Notes", href: "/changelog" },
-                { label: "Blog", href: "/blog" },
               ].map((link) => (
                 <Link
                   key={link.href}

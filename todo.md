@@ -943,7 +943,7 @@
 - [x] Ensure AAA quality dark gothic branding on all new pages
 - [x] Mobile responsiveness for menu and all new pages
 - [x] Wire up routes in App.tsx
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Database-Backed Discussion System
 - [x] Create discussion_comments table in drizzle schema (id, userId, userName, content, parentId, createdAt)
@@ -1144,3 +1144,63 @@
 - [x] Register /brandbook route in App.tsx
 - [x] Add Brandbook link to navigation
 - [x] Push to GitHub for deployment
+
+## Blog -> Lore Rename
+- [ ] Rename "Blog" to "Lore" in SigilMenu navigation
+- [ ] Rename "Blog" to "Lore" in footer links
+- [ ] Rename "Blog" to "Lore" on Blog listing page heading/meta
+- [ ] Rename "Blog" to "Lore" on BlogPost page breadcrumbs/meta
+- [ ] Rename "Blog" to "Lore" on Home page references
+- [ ] Keep /blog and /blog/:slug routes unchanged
+
+## Footer Navigation Update
+- [ ] Add all SigilMenu nav links to footer (Card Collection, Deck Builder, Balance Analysis, Matchup Matrix, Game Rules, Patch Notes, Lore, Brandbook)
+- [ ] Organize footer links into logical groups
+
+## Legal Pages Update
+- [ ] Rewrite Terms of Service for 7 Deadly Sins card game accuracy
+- [ ] Rewrite Privacy Policy with external regulator links and direct quotes
+- [ ] Rewrite Cookie Policy for actual cookies/storage used
+- [ ] No en dashes, no emojis in legal text
+
+## Deck Builder UI Bugs
+- [ ] Fix card effects not visible on deck builder cards (show damage/heal/shield/energy values)
+- [ ] Fix tally counter (0/30) overlapping music toggle and SigilMenu in top-right
+- [ ] Move deck stats into proper UI layout position (not overlapping global controls)
+
+## Blog Page Crash Fix
+- [x] Diagnose blog page tRPC crash from error stack trace
+- [x] Fix the blog router/query causing the crash (restored tRPC provider in main.tsx)
+
+## Blog Content Generation (50 SEO Posts)
+- [ ] Plan 50 SEO-critical blog topics for ranking (strategy, lore, guides, card game keywords)
+- [ ] Generate 50 blog posts using Anthropic Claude API
+- [ ] Seed 50 blog posts into database
+
+## Vercel Serverless Sitemap
+- [ ] Create Vercel API route for dynamic sitemap.xml
+- [ ] Add robots.txt rewrite to point to serverless sitemap
+- [ ] Update vercel.json with rewrites for /sitemap.xml
+- [x] Push to GitHub
+- [ ] Provide URL for Google Search Console submission
+
+## Static Sitemap
+- [x] Create static sitemap.xml in client/public with all pages and blog slugs
+- [x] Update robots.txt sitemap URL to www.7sinscardgame.com
+
+## Lobby/Blog tRPC Crash Fix (Production)
+- [ ] Ensure tRPC provider is in main.tsx (already done in dev, push to prod)
+
+## Nav Menu Subtitle
+- [x] Change nav subtitle to "How the overlords wished this game to be molded"
+
+## Apply Brandbook Sitewide
+- [ ] Apply gothic cathedral aesthetic consistently across all pages
+
+## Static Sitemap + Nav Updates
+- [x] Create static sitemap.xml in client/public
+- [x] Update robots.txt sitemap URL to www.7sinscardgame.com
+- [x] Reorder nav: Home first, then alphabetical
+- [x] Rename Blog to Lore (keep /blog slug)
+- [x] Change nav subtitle to "How the overlords wished this game to be molded"
+- [x] Push to GitHub

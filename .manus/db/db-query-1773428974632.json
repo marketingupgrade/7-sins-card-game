@@ -1,0 +1,238 @@
+{
+  "query": "SELECT slug, updatedAt FROM blog_posts WHERE published = 1 ORDER BY publishedAt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute SELECT slug, updatedAt FROM blog_posts WHERE published = 1 ORDER BY publishedAt DESC;",
+  "rows": [
+    {
+      "slug": "how-to-build-a-buffer-focused-deck",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "best-free-gothic-games-to-play-online-with-friends",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "best-free-fantasy-games-to-play-online-with-friends",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "best-free-deck-building-games-to-play-online-with-friends",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "the-social-benefits-of-playing-card-games-online",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "how-to-set-up-a-game-night-with-online-card-games",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "free-card-games-with-voice-chat",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "is-yu-gi-oh-really-free-to-play-honest-review",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "best-free-alternatives-to-magic-arena-in-2026",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "the-most-innovative-card-game-mechanics-of-2026",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "the-best-card-games-for-twitch-streaming",
+      "updatedAt": "2026-03-13 17:25:12"
+    },
+    {
+      "slug": "can-i-play-card-games-on-my-phone-browser",
+      "updatedAt": "2026-03-13 17:25:12"
+    },
+    {
+      "slug": "are-free-card-games-any-good",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "how-to-build-a-hybrid-focused-deck",
+      "updatedAt": "2026-03-13 17:25:12"
+    },
+    {
+      "slug": "best-hybrid-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "how-to-build-a-stealer-focused-deck",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "best-stealer-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:39"
+    },
+    {
+      "slug": "rainy-day-card-games-indoor-entertainment-guide",
+      "updatedAt": "2026-03-13 17:41:29"
+    },
+    {
+      "slug": "how-to-build-a-healer-focused-deck",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "best-buffer-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "how-to-build-a-debuffer-focused-deck",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "best-debuffer-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "christmas-card-game-marathon-holiday-gaming-guide",
+      "updatedAt": "2026-03-13 17:37:31"
+    },
+    {
+      "slug": "new-year-card-game-resolutions-improve-your-play-in-2026",
+      "updatedAt": "2026-03-13 17:38:11"
+    },
+    {
+      "slug": "summer-gaming-best-card-games-for-vacation",
+      "updatedAt": "2026-03-13 17:38:52"
+    },
+    {
+      "slug": "back-to-school-quick-card-games-between-classes",
+      "updatedAt": "2026-03-13 17:39:33"
+    },
+    {
+      "slug": "valentines-day-card-games-for-couples",
+      "updatedAt": "2026-03-13 17:40:15"
+    },
+    {
+      "slug": "friday-night-card-games-weekend-gaming-guide",
+      "updatedAt": "2026-03-13 17:40:54"
+    },
+    {
+      "slug": "best-healer-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "spring-break-card-game-tournament-ideas",
+      "updatedAt": "2026-03-13 17:42:14"
+    },
+    {
+      "slug": "end-of-year-best-card-games-released-this-year",
+      "updatedAt": "2026-03-13 17:42:53"
+    },
+    {
+      "slug": "best-damage-dealer-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:43:37"
+    },
+    {
+      "slug": "how-to-build-a-damage-dealer-focused-deck",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "best-tank-cards-across-all-factions",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "how-to-build-a-tank-focused-deck",
+      "updatedAt": "2026-03-13 17:09:38"
+    },
+    {
+      "slug": "how-to-beat-greed-players-when-using-gluttony",
+      "updatedAt": "2026-03-13 17:30:07"
+    },
+    {
+      "slug": "how-to-beat-sloth-players-when-using-gluttony",
+      "updatedAt": "2026-03-13 17:28:39"
+    },
+    {
+      "slug": "halloween-card-game-special-the-spookiest-decks",
+      "updatedAt": "2026-03-13 17:36:50"
+    },
+    {
+      "slug": "how-to-beat-gluttony-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:36:09"
+    },
+    {
+      "slug": "how-to-beat-envy-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:35:24"
+    },
+    {
+      "slug": "how-to-beat-sloth-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:33:55"
+    },
+    {
+      "slug": "how-to-beat-pride-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:33:06"
+    },
+    {
+      "slug": "how-to-beat-wrath-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:32:20"
+    },
+    {
+      "slug": "how-to-beat-lust-players-when-using-gluttony",
+      "updatedAt": "2026-03-13 17:31:36"
+    },
+    {
+      "slug": "how-to-beat-pride-players-when-using-gluttony",
+      "updatedAt": "2026-03-13 17:27:06"
+    },
+    {
+      "slug": "how-to-beat-greed-players-when-using-lust",
+      "updatedAt": "2026-03-13 17:34:41"
+    },
+    {
+      "slug": "wrath-lore-the-sin-behind-the-cards",
+      "updatedAt": "2026-03-13 17:09:37"
+    },
+    {
+      "slug": "how-to-beat-envy-players-when-using-gluttony",
+      "updatedAt": "2026-03-13 17:30:53"
+    },
+    {
+      "slug": "card-games-with-compound-effects-unique-mechanic-guide",
+      "updatedAt": "2026-03-13 17:09:37"
+    },
+    {
+      "slug": "how-buff-stacking-works-in-card-games",
+      "updatedAt": "2026-03-13 17:09:37"
+    },
+    {
+      "slug": "how-healing-mechanics-works-in-card-games",
+      "updatedAt": "2026-03-13 17:25:12"
+    },
+    {
+      "slug": "budget-greed-deck-win-with-common-cards",
+      "updatedAt": "2026-03-13 17:09:37"
+    },
+    {
+      "slug": "top-10-best-wrath-cards-ranked",
+      "updatedAt": "2026-03-13 17:25:12"
+    },
+    {
+      "slug": "how-to-play-the-wrath-faction-complete-guide",
+      "updatedAt": "2026-03-13 17:09:36"
+    },
+    {
+      "slug": "budget-wrath-deck-win-with-common-cards",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "best-wrath-deck-30-card-ranked-build",
+      "updatedAt": "2026-03-13 17:25:13"
+    },
+    {
+      "slug": "advanced-wrath-strategies-compound-effects-and-combos",
+      "updatedAt": "2026-03-13 17:25:13"
+    }
+  ],
+  "messages": [],
+  "stdout": "slug\tupdatedAt\nhow-to-build-a-buffer-focused-deck\t2026-03-13 17:09:39\nbest-free-gothic-games-to-play-online-with-friends\t2026-03-13 17:25:13\nbest-free-fantasy-games-to-play-online-with-friends\t2026-03-13 17:25:13\nbest-free-deck-building-games-to-play-online-with-friends\t2026-03-13 17:25:13\nthe-social-benefits-of-playing-card-games-online\t2026-03-13 17:25:13\nhow-to-set-up-a-game-night-with-online-card-games\t2026-03-13 17:25:13\nfree-card-games-with-voice-chat\t2026-03-13 17:09:39\nis-yu-gi-oh-really-free-to-play-honest-review\t2026-03-13 17:25:13\nbest-free-alternatives-to-magic-arena-in-2026\t2026-03-13 17:25:13\nthe-most-innovative-card-game-mechanics-of-2026\t2026-03-13 17:09:39\nthe-best-card-games-for-twitch-streaming\t2026-03-13 17:25:12\ncan-i-play-card-games-on-my-phone-browser\t2026-03-13 17:25:12\nare-free-card-games-any-good\t2026-03-13 17:09:39\nhow-to-build-a-hybrid-focused-deck\t2026-03-13 17:25:12\nbest-hybrid-cards-across-all-factions\t2026-03-13 17:09:39\nhow-to-build-a-stealer-focused-deck\t2026-03-13 17:09:39\nbest-stealer-cards-across-all-factions\t2026-03-13 17:09:39\nrainy-day-card-games-indoor-entertainment-guide\t2026-03-13 17:41:29\nhow-to-build-a-healer-focused-deck\t2026-03-13 17:09:38\nbest-buffer-cards-across-all-factions\t2026-03-13 17:09:38\nhow-to-build-a-debuffer-focused-deck\t2026-03-13 17:09:38\nbest-debuffer-cards-across-all-factions\t2026-03-13 17:09:38\nchristmas-card-game-marathon-holiday-gaming-guide\t2026-03-13 17:37:31\nnew-year-card-game-resolutions-improve-your-play-in-2026\t2026-03-13 17:38:11\nsummer-gaming-best-card-games-for-vacation\t2026-03-13 17:38:52\nback-to-school-quick-card-games-between-classes\t2026-03-13 17:39:33\nvalentines-day-card-games-for-couples\t2026-03-13 17:40:15\nfriday-night-card-games-weekend-gaming-guide\t2026-03-13 17:40:54\nbest-healer-cards-across-all-factions\t2026-03-13 17:09:38\nspring-break-card-game-tournament-ideas\t2026-03-13 17:42:14\nend-of-year-best-card-games-released-this-year\t2026-03-13 17:42:53\nbest-damage-dealer-cards-across-all-factions\t2026-03-13 17:43:37\nhow-to-build-a-damage-dealer-focused-deck\t2026-03-13 17:09:38\nbest-tank-cards-across-all-factions\t2026-03-13 17:09:38\nhow-to-build-a-tank-focused-deck\t2026-03-13 17:09:38\nhow-to-beat-greed-players-when-using-gluttony\t2026-03-13 17:30:07\nhow-to-beat-sloth-players-when-using-gluttony\t2026-03-13 17:28:39\nhalloween-card-game-special-the-spookiest-decks\t2026-03-13 17:36:50\nhow-to-beat-gluttony-players-when-using-lust\t2026-03-13 17:36:09\nhow-to-beat-envy-players-when-using-lust\t2026-03-13 17:35:24\nhow-to-beat-sloth-players-when-using-lust\t2026-03-13 17:33:55\nhow-to-beat-pride-players-when-using-lust\t2026-03-13 17:33:06\nhow-to-beat-wrath-players-when-using-lust\t2026-03-13 17:32:20\nhow-to-beat-lust-players-when-using-gluttony\t2026-03-13 17:31:36\nhow-to-beat-pride-players-when-using-gluttony\t2026-03-13 17:27:06\nhow-to-beat-greed-players-when-using-lust\t2026-03-13 17:34:41\nwrath-lore-the-sin-behind-the-cards\t2026-03-13 17:09:37\nhow-to-beat-envy-players-when-using-gluttony\t2026-03-13 17:30:53\ncard-games-with-compound-effects-unique-mechanic-guide\t2026-03-13 17:09:37\nhow-buff-stacking-works-in-card-games\t2026-03-13 17:09:37\nhow-healing-mechanics-works-in-card-games\t2026-03-13 17:25:12\nbudget-greed-deck-win-with-common-cards\t2026-03-13 17:09:37\ntop-10-best-wrath-cards-ranked\t2026-03-13 17:25:12\nhow-to-play-the-wrath-faction-complete-guide\t2026-03-13 17:09:36\nbudget-wrath-deck-win-with-common-cards\t2026-03-13 17:25:13\nbest-wrath-deck-30-card-ranked-build\t2026-03-13 17:25:13\nadvanced-wrath-strategies-compound-effects-and-combos\t2026-03-13 17:25:13\n",
+  "stderr": "",
+  "execution_time_ms": 1078
+}

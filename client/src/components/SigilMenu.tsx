@@ -26,7 +26,44 @@ interface MenuLink {
   description: string;
 }
 
+/**
+ * Navigation links — Home first, then alphabetical.
+ * "Lore" displays as the label but routes to /blog.
+ */
 const MENU_LINKS: MenuLink[] = [
+  {
+    label: "Home",
+    href: "/",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+    description: "Return to the cathedral entrance",
+  },
+  {
+    label: "Balance Analysis",
+    href: "/balance",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="M7 16l4-8 4 4 4-10" />
+      </svg>
+    ),
+    description: "Deep-dive into faction balance & methodology",
+  },
+  {
+    label: "Brandbook",
+    href: "/brandbook",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+      </svg>
+    ),
+    description: "How the overlords wished this game to be molded",
+  },
   {
     label: "Card Collection",
     href: "/collection",
@@ -55,15 +92,28 @@ const MENU_LINKS: MenuLink[] = [
     description: "Build custom 30-card decks for battle",
   },
   {
-    label: "Balance Analysis",
-    href: "/balance",
+    label: "Game Rules",
+    href: "/rules",
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 3v18h18" />
-        <path d="M7 16l4-8 4 4 4-10" />
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <path d="M8 7h8" />
+        <path d="M8 11h6" />
       </svg>
     ),
-    description: "Deep-dive into faction balance & methodology",
+    description: "Complete rules, mechanics & passive reference",
+  },
+  {
+    label: "Lore",
+    href: "/blog",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 20h9" />
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+      </svg>
+    ),
+    description: "Strategy guides, tips & card game insights",
   },
   {
     label: "Matchup Matrix",
@@ -79,19 +129,6 @@ const MENU_LINKS: MenuLink[] = [
     description: "7\u00D77 faction win-rate heatmap",
   },
   {
-    label: "Game Rules",
-    href: "/rules",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-        <path d="M8 7h8" />
-        <path d="M8 11h6" />
-      </svg>
-    ),
-    description: "Complete rules, mechanics & passive reference",
-  },
-  {
     label: "Patch Notes",
     href: "/changelog",
     icon: (
@@ -104,39 +141,6 @@ const MENU_LINKS: MenuLink[] = [
       </svg>
     ),
     description: "Version history & balance changes",
-  },
-  {
-    label: "Blog",
-    href: "/blog",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 20h9" />
-        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
-      </svg>
-    ),
-    description: "Strategy guides, tips & card game insights",
-  },
-  {
-    label: "Brandbook",
-    href: "/brandbook",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
-        <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
-      </svg>
-    ),
-    description: "AAA Premium Brand Identity Guide",
-  },
-  {
-    label: "Home",
-    href: "/",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-        <polyline points="9 22 9 12 15 12 15 22" />
-      </svg>
-    ),
-    description: "Return to the cathedral entrance",
   },
 ];
 

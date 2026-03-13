@@ -11,6 +11,7 @@ Allow: /matchups
 Allow: /rules
 Allow: /changelog
 Allow: /deck-builder
+Allow: /brandbook
 
 # Disallow internal/private routes
 Disallow: /api/
@@ -18,7 +19,7 @@ Disallow: /lobby/
 Disallow: /game/
 
 # Sitemap location
-Sitemap: https://sinscard-o77rchv9.manus.space/sitemap.xml
+Sitemap: https://www.7sinscardgame.com/sitemap.xml
 
 # Crawl-delay (be polite but allow frequent crawling)
 Crawl-delay: 1
