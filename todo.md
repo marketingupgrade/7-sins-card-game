@@ -1057,3 +1057,10 @@
 - [x] Wire account page into SigilMenu and routes
 - [x] Add Buy Me a Coffee widget styled to match gothic cathedral branding
 - [x] Generate gothic-themed QR code for BMC link (parchment bg, amber/crimson gradient dots, chalice icon)
+- [ ] Fix sign-in authentication (Discord/Google not working on Vercel deployment)
+- [x] Address Dependabot security vulnerabilities (axios, pnpm, fast-xml-parser, rollup, esbuild, dompurify, qs, lodash)
+- [x] Remove "Choose Your Damnation / 7 Factions. 378 Cards." faction showcase section from homepage
+- [x] Remove "The Ritual" steps section from homepage
+- [x] Simplify homepage to: hero title + sin carousel + action panel + sign-in prompt + footer only
+- [x] Add sign-in prompt with login/signup button and deck saving disclaimer below action panel
+- [x] Create 1600x400 BMC banner collage of all 7 sin faction portraits

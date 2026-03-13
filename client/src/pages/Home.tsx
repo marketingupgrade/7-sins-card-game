@@ -12,7 +12,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "wouter";
-import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
+import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn } from "lucide-react";
+import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import GlitchTitle from "@/components/GlitchTitle";
@@ -22,7 +23,6 @@ import type { SinType } from "@shared/gameTypes";
 import EmberField from "@/components/EmberField";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
-import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
 const lazyGameEngine = () => import("@/lib/gameEngine");
 // Dynamic imports for audio engines - only needed after user interaction
@@ -109,7 +109,8 @@ const SIN_HEROES: SinHeroData[] = [
 export default function Home() {
   const playerId = usePlayerId();
   const { startTutorial, hasCompleted: tutorialCompleted, isActive: tutorialActive, setCurrentPage } = useTutorial();
-  const factionUnlocks = useFactionUnlocks();
+  const factionUnlocks = useFactionUnlocks(); // kept for tutorial context
+  const { user: authUser, isLoading: authLoading } = useSupabaseAuth();
 
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);
   // Defer music init to first user interaction to avoid loading 6.6MB of OGG files on page load
@@ -533,121 +534,43 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── Bottom: Scroll indicator ─── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="pb-6 text-center shrink-0"
-        >
+        {/* ─── Sign-in Prompt ─── */}
+        {!authLoading && !authUser && (
           <motion.div
-            animate={{ y: [0, 6, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="text-white/20 text-xs"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1 }}
+            className="pb-8 pt-2 text-center shrink-0 px-4"
           >
-            <p className="text-[9px] tracking-[0.3em] uppercase mb-1" style={{ fontFamily: "var(--font-heading)" }}>
-              Scroll to explore
-            </p>
-            <span>&#x25BE;</span>
+            <div className="max-w-md mx-auto">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex-1 h-px bg-white/8" />
+                <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                  Claim your soul
+                </span>
+                <div className="flex-1 h-px bg-white/8" />
+              </div>
+              <p className="text-[11px] text-white/40 mb-3 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                Sign in to save your custom decks, track your match history, and unlock faction achievements.
+              </p>
+              <Link href="/login">
+                <motion.div
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all cursor-pointer text-[11px] tracking-wider"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  <LogIn className="w-3.5 h-3.5" />
+                  SIGN IN / REGISTER
+                </motion.div>
+              </Link>
+            </div>
           </motion.div>
-        </motion.div>
+        )}
       </div>
 
-      {/* ═══ BELOW THE FOLD — Game Info Sections ═══ */}
-      <div className="relative z-10 bg-gradient-to-b from-[#050508] via-[#0a0a12] to-[#050508]">
-
-        {/* ─── All 7 Sins Grid ─── */}
-        <section className="py-16 md:py-24 px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-10">
-              <p className="text-[10px] tracking-[0.4em] text-white/30 uppercase mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                Choose Your Damnation
-              </p>
-              <h2 className="text-2xl md:text-3xl font-black text-white/90 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                7 FACTIONS. 378 CARDS.
-              </h2>
-              <div className="flex items-center justify-center gap-2 mt-3">
-                <div className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
-                <div className="w-1 h-1 rotate-45 bg-white/15" />
-                <div className="h-px w-12 bg-gradient-to-l from-transparent to-white/15" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4" data-tutorial="faction-cards">
-              {SIN_HEROES.map((sin) => (
-                <motion.div
-                  key={sin.key}
-                  whileHover={{ scale: 1.03, y: -4 }}
-                  className={`glass-panel-${sin.key} rounded-xl p-3 text-center cursor-default relative overflow-hidden group`}
-                >
-                  {/* Portrait */}
-                  {FACTION_PORTRAITS[sin.key] && (
-                    <div className="w-full aspect-[3/4] rounded-lg overflow-hidden mb-2 relative">
-                      <img
-                        src={FACTION_PORTRAITS[sin.key]}
-                        alt={sin.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        width={369}
-                        height={492}
-                        loading="lazy"
-                        decoding="async"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute top-2 right-2">
-                        <img src={SIN_ARCHETYPE_ICONS[sin.key]} alt="" className="w-5 h-5 drop-shadow-lg" />
-                      </div>
-                    </div>
-                  )}
-                  <p
-                    className="text-[9px] tracking-[0.3em] uppercase opacity-40 mb-0.5"
-                    style={{ fontFamily: "var(--font-heading)", color: `var(--color-${sin.color})` }}
-                  >
-                    {sin.latin}
-                  </p>
-                  <h3
-                    className="text-sm font-bold tracking-wider mb-1"
-                    style={{ fontFamily: "var(--font-heading)", color: `var(--color-${sin.color})` }}
-                  >
-                    {sin.name}
-                  </h3>
-                  <p className="text-[10px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                    {sin.tagline}
-                  </p>
-                  <p
-                    className="text-[8px] mt-1.5 uppercase tracking-wider opacity-40"
-                    style={{ fontFamily: "var(--font-heading)", color: `var(--color-${sin.color})` }}
-                  >
-                    {sin.subtitle}
-                  </p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ─── How It Works ─── */}
-        <section className="py-12 md:py-16 px-4">
-          <div className="max-w-lg mx-auto text-center">
-            <p className="text-[10px] tracking-[0.3em] text-white/30 uppercase mb-6" style={{ fontFamily: "var(--font-heading)" }}>
-              The Ritual
-            </p>
-            <div className="flex gap-4 justify-center">
-              {[
-                { num: "1", label: "Pick a sin", color: "wrath" },
-                { num: "2", label: "Spend corruption", color: "candle" },
-                { num: "3", label: "Play compounds", color: "greed-glow" },
-                { num: "4", label: "Last sinner wins", color: "sloth" },
-              ].map((step) => (
-                <div key={step.num} className="text-center">
-                  <div className={`w-10 h-10 rounded-full bg-${step.color}/8 border border-${step.color}/15 flex items-center justify-center mx-auto mb-2`}>
-                    <span className={`text-sm font-bold text-${step.color}`} style={{ fontFamily: "var(--font-heading)" }}>{step.num}</span>
-                  </div>
-                  <p className="text-[10px] text-white/50" style={{ fontFamily: "var(--font-body)" }}>{step.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+      {/* ═══ Footer ═══ */}
+      <div className="relative z-10">
 
         {/* ─── Footer ─── */}
         <footer className="py-12 px-4 border-t border-white/5">
