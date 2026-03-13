@@ -999,3 +999,21 @@
 - [x] Fix card images cut off in collection grid view
 - [x] Fix white background visible on some card images (scale 1.12 + inset shadow vignette)
 - [x] Improve compound tick value display — clearer table with per-round damage, multiplier, cumulative total, and explanation
+
+## Homepage & Footer Cleanup
+- [x] Remove Compound Patterns section from homepage (now on Game Rules page)
+- [x] Remove The Reckoning banner from homepage
+- [x] Redesign footer credits section — clearer layout, better organized
+- [x] Add navigation links (Collection, Balance, Matchups, Rules) to footer
+
+## Turn Structure Icons Fix
+- [x] Replace small SVG icons in Turn Structure section with larger, more ornate gothic-themed SVGs
+
+## Legal Pages (Terms, Privacy, Cookies)
+- [x] Create Terms & Conditions page — no login, forever free, no tracking
+- [x] Create Privacy Policy page — no data collection, no cookies, no tracking
+- [x] Create Cookie Policy page — we don't use cookies, simple and honest
+- [x] Add Buy Me a Coffee donation link with sassy copy (placeholder URL)
+- [x] Add legal page links to footer
+- [x] Wire routes in App.tsx
+- [x] Add AI-generated artwork disclaimer/waiver to Terms — models used, IP liability protection for the maker

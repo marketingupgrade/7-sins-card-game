@@ -625,80 +625,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ─── Card Mechanics ─── */}
-        <section className="py-16 md:py-20 px-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="text-center mb-8">
-              <p className="text-[10px] tracking-[0.4em] text-white/30 uppercase mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                The Three Patterns of Sin
-              </p>
-              <h2 className="text-xl md:text-2xl font-black text-white/90 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                COMPOUND PATTERNS
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Standard */}
-              <div className="rounded-xl p-5 border border-white/8 bg-white/3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-sloth/10 border border-sloth/20 flex items-center justify-center">
-                    <img src={ICON_URLS.shield_generic} alt="" className="w-4 h-4 object-contain" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-sloth tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>STANDARD</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Steady Growth</p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Fibonacci scaling: 1, 1, 2, 3, 5, 8... Reliable growth that accelerates over time.
-                </p>
-              </div>
-
-              {/* Aggressive */}
-              <div className="rounded-xl p-5 border border-wrath/8 bg-wrath/3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-wrath/10 border border-wrath/20 flex items-center justify-center">
-                    <img src={ICON_URLS.damage_wrath} alt="" className="w-4 h-4 object-contain" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-wrath tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>AGGRESSIVE</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Front-loaded</p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Exponential scaling: 1, 2, 4, 8, 16... Devastating if left unchecked.
-                </p>
-              </div>
-
-              {/* Slowburn */}
-              <div className="rounded-xl p-5 border border-greed-glow/8 bg-greed-glow/3">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="w-8 h-8 rounded-lg bg-greed-glow/10 border border-greed-glow/20 flex items-center justify-center">
-                    <img src={ICON_URLS.buff_generic} alt="" className="w-4 h-4 object-contain" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-greed-glow tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>SLOWBURN</h3>
-                    <p className="text-[9px] text-white/40 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Steady Payoff</p>
-                  </div>
-                </div>
-                <p className="text-[11px] text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                  Linear scaling: 1, 1, 1, 1, 2, 2, 3... Minimal early, steady late. Patience rewarded.
-                </p>
-              </div>
-            </div>
-
-            {/* Round 16 Warning */}
-            <div className="mt-6 rounded-xl p-4 border border-wrath/15 bg-wrath/5 text-center">
-              <p className="text-[11px] text-wrath/80 font-bold uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                &#x26A0; Round 16: The Reckoning
-              </p>
-              <p className="text-[10px] text-white/40 mt-1" style={{ fontFamily: "var(--font-body)" }}>
-                All afflictions deal double damage from round 16 onward. End it fast, or be consumed.
-              </p>
-            </div>
-          </div>
-        </section>
-
         {/* ─── How It Works ─── */}
         <section className="py-12 md:py-16 px-4">
           <div className="max-w-lg mx-auto text-center">
@@ -724,14 +650,95 @@ export default function Home() {
         </section>
 
         {/* ─── Footer ─── */}
-        <footer className="py-8 px-4 text-center border-t border-white/5">
-          <p className="text-[9px] text-white/20 mb-3" style={{ fontFamily: "var(--font-body)" }}>
-            378 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
-          </p>
-          <div className="text-[8px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
-            <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>
-            <p>SFX: Card Game Sounds (CC0) &middot; JC Sounds Fantasy SFX Pack (CC-BY 4.0) &middot; Icons: Painterly Spell Icons by J. W. Bjerk (CC-BY 3.0)</p>
-            <p>All assets from <a href="https://opengameart.org" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/25 transition-colors">OpenGameArt.org</a></p>
+        <footer className="py-12 px-4 border-t border-white/5">
+          <div className="max-w-4xl mx-auto">
+            {/* Navigation Links */}
+            <div className="flex flex-wrap justify-center gap-6 mb-8">
+              {[
+                { label: "Card Collection", href: "/collection" },
+                { label: "Balance Analysis", href: "/balance" },
+                { label: "Matchup Matrix", href: "/matchups" },
+                { label: "Game Rules", href: "/rules" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-[11px] tracking-[0.15em] uppercase text-white/30 hover:text-white/60 transition-colors"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-white/10" />
+              <div className="w-1.5 h-1.5 rotate-45 bg-white/10" />
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-white/10" />
+            </div>
+
+            {/* Game Stats */}
+            <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-6">
+              {[
+                "378 Cards", "7 Factions", "20 Rounds", "200 HP", "3 Compound Patterns", "Zero Mercy"
+              ].map((stat, i) => (
+                <span key={i} className="text-[10px] tracking-[0.1em] uppercase text-white/20" style={{ fontFamily: "var(--font-heading)" }}>
+                  {stat}
+                </span>
+              ))}
+            </div>
+
+            {/* Credits — organized in a clean grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-center">
+              <div>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Music</p>
+                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                  <p>"Dark City" by Muncheybobo</p>
+                  <p>"Dark Ambient" by Alexandr Zhelanov</p>
+                  <p>"Dark Ambient Loop 13" by MundoSound</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Sound &amp; Icons</p>
+                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                  <p>Card Game Sounds (CC0)</p>
+                  <p>JC Sounds Fantasy SFX (CC-BY 4.0)</p>
+                  <p>Painterly Spell Icons by J.W. Bjerk (CC-BY 3.0)</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[9px] tracking-[0.2em] uppercase text-white/25 mb-1.5" style={{ fontFamily: "var(--font-heading)" }}>Assets</p>
+                <div className="text-[9px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
+                  <p>All assets sourced from</p>
+                  <a href="https://opengameart.org" target="_blank" rel="noopener noreferrer" className="text-white/25 hover:text-white/40 underline transition-colors">OpenGameArt.org</a>
+                  <p className="mt-1">Card art generated with AI</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Legal Links */}
+            <div className="flex flex-wrap justify-center gap-4 mb-4">
+              {[
+                { label: "Terms & Conditions", href: "/terms" },
+                { label: "Privacy Policy", href: "/privacy" },
+                { label: "Cookie Policy", href: "/cookies" },
+              ].map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-[9px] tracking-[0.1em] uppercase text-white/15 hover:text-white/30 transition-colors"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            {/* Copyright */}
+            <p className="text-[8px] text-white/10 text-center" style={{ fontFamily: "var(--font-body)" }}>
+              &copy; {new Date().getFullYear()} 7 Deadly Sins Card Game. Made with unholy devotion.
+            </p>
           </div>
         </footer>
       </div>

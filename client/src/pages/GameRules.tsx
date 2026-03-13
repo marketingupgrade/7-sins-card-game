@@ -470,19 +470,19 @@ export default function GameRules() {
               {[
                 {
                   phase: "Selection",
-                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#d4a574"}}><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h4" /><circle cx="16" cy="16" r="2" /></svg>),
+                  icon: (<svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="2" width="20" height="28" rx="3" stroke="#d4a574" strokeWidth="1.5" /><path d="M11 8h10M11 12h10M11 16h6" stroke="#d4a574" strokeWidth="1.2" strokeLinecap="round" /><circle cx="22" cy="24" r="3" stroke="#d4a574" strokeWidth="1.2" /><path d="M22 22v4M20 24h4" stroke="#d4a574" strokeWidth="1" strokeLinecap="round" /><path d="M6 6l-2-2M26 6l2-2" stroke="#d4a574" strokeWidth="0.8" opacity="0.5" /><rect x="9" y="5" width="14" height="1" rx="0.5" fill="#d4a574" opacity="0.2" /></svg>),
                   time: `${SELECTION_TIMER_SECONDS}s timer`,
                   description: "All players choose cards simultaneously. Select 0 or more cards from your hand (limited by energy). Cards are locked in but hidden from opponents.",
                 },
                 {
                   phase: "Resolution",
-                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#ef4444"}}><path d="M6 18L18 6M18 6h-6m6 0v6" /><path d="M18 18L6 6M6 6h6M6 6v6" /></svg>),
+                  icon: (<svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 4l8 8 8-8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M8 28l8-8 8 8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M4 8l8 8-8 8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><path d="M28 8l-8 8 8 8" stroke="#ef4444" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="16" r="3" stroke="#ef4444" strokeWidth="1.2" /><circle cx="16" cy="16" r="1" fill="#ef4444" /><path d="M16 6v4M16 22v4M6 16h4M22 16h4" stroke="#ef4444" strokeWidth="0.8" opacity="0.4" /></svg>),
                   time: "Automatic",
                   description: "Cards resolve one-by-one in priority order: (1) Skip-queue (priority) cards resolve first, (2) Lowest HP plays first (tiebreak: lowest seat index), (3) Within each player: lowest cost card first.",
                 },
                 {
                   phase: "Round End",
-                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#a78bfa"}}><path d="M21 12a9 9 0 11-6.22-8.56" /><path d="M21 3v5h-5" /></svg>),
+                  icon: (<svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="12" stroke="#a78bfa" strokeWidth="1.2" opacity="0.3" /><path d="M27 16a11 11 0 11-7.5-10.44" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" /><path d="M27 5v6h-6" stroke="#a78bfa" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /><circle cx="16" cy="16" r="2" stroke="#a78bfa" strokeWidth="1" /><path d="M16 10v4" stroke="#a78bfa" strokeWidth="1" strokeLinecap="round" /><path d="M16 16l4 3" stroke="#a78bfa" strokeWidth="1" strokeLinecap="round" /><circle cx="16" cy="16" r="0.8" fill="#a78bfa" /></svg>),
                   time: "Automatic",
                   description: "Compound effects tick (applying their next multiplier), energy refreshes (+1), new cards are drawn to refill hand, round counter advances. Then back to Selection.",
                 },
@@ -495,7 +495,7 @@ export default function GameRules() {
                     border: "1px solid rgba(255, 255, 255, 0.04)",
                   }}
                 >
-                  <div className="shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center text-lg sm:text-xl bg-white/[0.03]">
+                  <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg flex items-center justify-center bg-white/[0.03]">
                     {step.icon}
                   </div>
                   <div className="flex-1">
