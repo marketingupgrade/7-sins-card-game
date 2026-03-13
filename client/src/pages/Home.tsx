@@ -38,7 +38,6 @@ const getMusicEngine = async () => {
 };
 // Fire-and-forget sound play helper (non-blocking)
 const playSound = (name: string) => { getSoundEngine().then(se => se.play(name)).catch(() => {}); };
-import { MusicToggle } from "@/components/MusicToggle";
 
 /* ─── Sin Data ───────────────────────────────────────────────── */
 
@@ -232,10 +231,6 @@ export default function Home() {
       {/* Noise overlay */}
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />
 
-      {/* Music toggle */}
-      <div className="absolute top-4 right-4 z-30">
-        <MusicToggle />
-      </div>
 
       {/* ═══ HERO SECTION — Full viewport ═══ */}
       <div className="relative z-10 min-h-screen flex flex-col">

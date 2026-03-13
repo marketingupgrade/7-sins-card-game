@@ -919,3 +919,23 @@
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
 }
+
+
+/* ─── Prose Gothic — Typography for long-form content ────── */
+.prose-gothic {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.45);
+}
+.prose-gothic p {
+  margin-bottom: 1rem;
+}
+.prose-gothic strong {
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 600;
+}
+.prose-gothic h3 {
+  font-family: 'Cinzel', serif;
+  letter-spacing: 0.05em;
+}

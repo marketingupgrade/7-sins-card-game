@@ -933,3 +933,14 @@
 - [x] Update PASSIVE_INFO in gameTypes.ts (tooltips)
 - [x] Update tutorial passive descriptions
 - [ ] Push to GitHub
+
+## Themed Hamburger Menu & Balance Analysis Page
+- [x] Audit game assets for animated elements fitting dark gothic theme
+- [x] Build themed animated hamburger menu component (top-right, not blocking sound button)
+- [x] Move all non-game navigation into hamburger menu (Collection, Balance Analysis, etc.)
+- [x] Create Balance Analysis page with charts and data visualizations
+- [x] Add discussion/comments section to Balance Analysis page
+- [x] Ensure AAA quality dark gothic branding on all new pages
+- [x] Mobile responsiveness for menu and all new pages
+- [x] Wire up routes in App.tsx
+- [ ] Push to GitHub

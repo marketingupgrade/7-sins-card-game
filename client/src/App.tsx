@@ -1,18 +1,21 @@
 /**
  * App Root - Routes and theme configuration
- * Dark theme for cyberpunk aesthetic.
- * Routes: Home (lobby), Lobby (pre-game), GameBoard (gameplay)
+ * Dark theme for gothic cathedral aesthetic.
+ * Routes: Home, Lobby, GameBoard, Collection, BalanceAnalysis, Profile
  *
  * All page routes are lazy-loaded for optimal code splitting.
+ * SigilMenu provides global navigation overlay on non-game pages.
  */
 
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { lazy, Suspense } from "react";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useRoute } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { TutorialProvider } from "./contexts/TutorialContext";
+import SigilMenu from "./components/SigilMenu";
+import { MusicToggle } from "./components/MusicToggle";
 
 // Lazy-load TutorialOverlay to defer framer-motion from critical path
 const TutorialOverlay = lazy(() => import("./components/TutorialOverlay"));
@@ -23,6 +26,7 @@ const Lobby = lazy(() => import("./pages/Lobby"));
 const GameBoard = lazy(() => import("./pages/GameBoard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Collection = lazy(() => import("./pages/Collection"));
+const BalanceAnalysis = lazy(() => import("./pages/BalanceAnalysis"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -39,6 +43,25 @@ function PageLoader() {
   );
 }
 
+/**
+ * Global top-right controls bar — Music toggle + SigilMenu
+ * Hidden during active gameplay (game board) to avoid clutter.
+ */
+function GlobalControls() {
+  const [isGamePage] = useRoute("/game/:gameId");
+  const [isLobbyPage] = useRoute("/lobby/:gameId");
+
+  // Hide on game board (already has its own controls)
+  if (isGamePage || isLobbyPage) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-40 flex items-center gap-1">
+      <MusicToggle />
+      <SigilMenu />
+    </div>
+  );
+}
+
 function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -47,6 +70,7 @@ function Router() {
         <Route path="/lobby/:gameId" component={Lobby} />
         <Route path="/game/:gameId" component={GameBoard} />
         <Route path="/collection" component={Collection} />
+        <Route path="/balance" component={BalanceAnalysis} />
         <Route path="/profile" component={Profile} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
@@ -62,6 +86,7 @@ function App() {
         <TutorialProvider>
           <TooltipProvider>
             <Toaster />
+            <GlobalControls />
             <Router />
             <Suspense fallback={null}>
               <TutorialOverlay />
