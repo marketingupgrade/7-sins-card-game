@@ -26,6 +26,7 @@ import { useSupabaseAuth } from "@/contexts/AuthContext";
 
 // ─── Constants ──────────────────────────────────────────────
 const MAX_DECK_SIZE = 30;
+const GUEST_MAX_DECKS = 1;
 const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 
 const SIN_COLORS: Record<SinType, string> = {
@@ -296,7 +297,7 @@ export default function DeckBuilder() {
     if (user) {
       // Load from database via tRPC
       setIsLoadingDecks(true);
-      trpcQuery("deck.list", { userId: user.id })
+      trpcQuery("deck.list", { supabaseUserId: user.id })
         .then((decks: any[]) => {
           setSavedDecks(
             decks.map((d: any) => ({
@@ -395,9 +396,21 @@ export default function DeckBuilder() {
     setDeckCardIds((prev) => [...prev, ...toAdd]);
   }, [deckCardIds, factionCards]);
 
+  // Guest deck limit check
+  const isGuest = !user;
+  const guestAtDeckLimit = isGuest && !activeDeckId && savedDecks.length >= GUEST_MAX_DECKS;
+
   // Save deck
   const saveDeck = useCallback(async () => {
     if (!selectedFaction || deckCardIds.length === 0) return;
+
+    // Enforce guest deck limit (only for new decks, not edits)
+    if (!user && !activeDeckId && savedDecks.length >= GUEST_MAX_DECKS) {
+      setSaveMessage("Sign in to save more decks! Guests are limited to 1 deck.");
+      setTimeout(() => setSaveMessage(null), 4000);
+      return;
+    }
+
     setIsSaving(true);
     setSaveMessage(null);
 
@@ -415,10 +428,9 @@ export default function DeckBuilder() {
 
     try {
       if (user) {
-        // Save to database
-        await trpcMutate("deck.save", {
-          id: deck.id,
-          userId: user.id,
+        // Save to database via tRPC
+        await trpcMutate("deck.create", {
+          supabaseUserId: user.id,
           name: deck.name,
           faction: deck.faction,
           cardIds: JSON.stringify(deck.cardIds),
@@ -460,7 +472,7 @@ export default function DeckBuilder() {
       }
       if (user) {
         try {
-          await trpcMutate("deck.delete", { id: deckId, userId: user.id });
+          await trpcMutate("deck.delete", { deckId: parseInt(deckId, 10) || 0, supabaseUserId: user.id });
         } catch { /* localStorage already updated */ }
       }
     },
@@ -489,6 +501,18 @@ export default function DeckBuilder() {
               Choose your faction. Select {MAX_DECK_SIZE} cards from their {factionCards.length || 54}-card arsenal. Forge a deck that embodies your sin.
             </p>
           </div>
+
+          {/* Guest deck limit banner */}
+          {isGuest && (
+            <div className="mb-6 mx-auto max-w-lg p-3 rounded-lg border border-amber-500/20 bg-amber-500/5 text-center">
+              <p className="text-amber-200/60 text-xs" style={{ fontFamily: "var(--font-body)" }}>
+                {savedDecks.length >= GUEST_MAX_DECKS
+                  ? <>You've used your free deck slot. <a href="/login" className="text-amber-400 underline hover:text-amber-300">Sign in</a> to save unlimited decks.</>
+                  : <>Guests can save {GUEST_MAX_DECKS} deck. <a href="/login" className="text-amber-400 underline hover:text-amber-300">Sign in</a> for unlimited decks.</>
+                }
+              </p>
+            </div>
+          )}
 
           {/* Faction Grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 mb-12">
@@ -748,11 +772,16 @@ export default function DeckBuilder() {
               </button>
               <button
                 onClick={saveDeck}
-                disabled={isSaving || deckCardIds.length === 0}
-                className="px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border border-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                disabled={isSaving || deckCardIds.length === 0 || guestAtDeckLimit}
+                className={`px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                  guestAtDeckLimit
+                    ? "bg-white/5 text-white/30 border-white/10"
+                    : "bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border-amber-500/20"
+                }`}
                 style={{ fontFamily: "var(--font-heading)" }}
+                title={guestAtDeckLimit ? "Sign in to save more decks" : undefined}
               >
-                {isSaving ? "Saving..." : "Save"}
+                {isSaving ? "Saving..." : guestAtDeckLimit ? "Limit Reached" : "Save"}
               </button>
             </div>
           </div>

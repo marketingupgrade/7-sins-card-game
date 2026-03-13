@@ -1064,3 +1064,6 @@
 - [x] Simplify homepage to: hero title + sin carousel + action panel + sign-in prompt + footer only
 - [x] Add sign-in prompt with login/signup button and deck saving disclaimer below action panel
 - [x] Create 1600x400 BMC banner collage of all 7 sin faction portraits
+- [ ] Enable Discord and Google OAuth providers in Supabase dashboard
+- [x] Fix guest play flow (guests can play without sign-in)
+- [x] Limit guests to 1 saved deck, signed-in users get unlimited
