@@ -43,6 +43,8 @@ const Cookies = lazy(() => import("./pages/Cookies"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Account = lazy(() => import("./pages/Account"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Blog = lazy(() => import("./pages/Blog"));
+const BlogPost = lazy(() => import("./pages/BlogPost"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -98,6 +100,8 @@ function Router() {
         <Route path="/privacy" component={Privacy} />
         <Route path="/cookies" component={Cookies} />
         <Route path="/changelog" component={Changelog} />
+        <Route path="/blog" component={Blog} />
+        <Route path="/blog/:slug" component={BlogPost} />
         <Route path="/profile" component={Profile} />
         <Route path="/account" component={Account} />
         <Route path="/reset-password" component={ResetPassword} />

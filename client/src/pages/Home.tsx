@@ -578,6 +578,7 @@ export default function Home() {
                 { label: "Matchup Matrix", href: "/matchups" },
                 { label: "Game Rules", href: "/rules" },
                 { label: "Patch Notes", href: "/changelog" },
+                { label: "Blog", href: "/blog" },
               ].map((link) => (
                 <Link
                   key={link.href}

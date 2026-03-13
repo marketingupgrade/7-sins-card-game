@@ -1099,3 +1099,28 @@
 - [x] Add deck building utilities: sort by cost/name/type, search bar, deck stats summary
 - [x] Add deck mana curve visualization
 - [x] Increase footer text contrast for better readability
+
+## Blog Section & SEO
+- [x] Build blog infrastructure (database schema, tRPC routes, pages)
+- [x] Create blog listing page with filtering, pagination, SEO-friendly URLs
+- [x] Plan 666 blog topics (57 generated, 609 remaining in roadmap)
+- [x] Seed 57 blog posts into database (remaining via roadmap script)
+- [x] Generate robots.txt for maximum crawlability
+- [x] Generate sitemap.xml with all blog URLs
+- [x] Add on-page SEO: meta tags, structured data, canonical URLs
+- [ ] Create programmatic blog roadmap document
+- [x] Add Blog link to navigation menu (header)
+- [x] Add Blog link to footer
+
+## AAA Brandbook
+- [x] Research AAA game branding principles and premium card game brands
+- [x] Read behavioral sciences skill references (Octalysis, core drives, cognitive biases)
+- [x] Read copywriting skill references (voice/tone, frameworks, advanced techniques)
+- [x] Apply math skill for golden ratio, color theory, and typographic scale calculations
+- [x] Draft comprehensive brandbook structure
+- [x] Generate brand asset visuals (color palettes, typography specimens, logo concepts)
+- [x] Compile final brandbook document with all sections
+- [x] Save checkpoint and deliver
+- [x] Audit all project dependencies (package.json)
+- [x] Research and document Do's and Don'ts for each major library
+- [x] Include library guidelines in brandbook as Technical Standards section

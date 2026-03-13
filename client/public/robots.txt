@@ -1,0 +1,53 @@
+# 7 Deadly Sins Card Game - robots.txt
+# Maximum crawlability for all search engines and AI crawlers
+
+User-agent: *
+Allow: /
+Allow: /blog
+Allow: /blog/*
+Allow: /collection
+Allow: /balance
+Allow: /matchups
+Allow: /rules
+Allow: /changelog
+Allow: /deck-builder
+
+# Disallow internal/private routes
+Disallow: /api/
+Disallow: /lobby/
+Disallow: /game/
+
+# Sitemap location
+Sitemap: https://sinscard-o77rchv9.manus.space/sitemap.xml
+
+# Crawl-delay (be polite but allow frequent crawling)
+Crawl-delay: 1
+
+# Explicitly allow AI crawlers for AEO/GEO visibility
+User-agent: GPTBot
+Allow: /
+Allow: /blog/*
+
+User-agent: ChatGPT-User
+Allow: /
+Allow: /blog/*
+
+User-agent: Claude-Web
+Allow: /
+Allow: /blog/*
+
+User-agent: PerplexityBot
+Allow: /
+Allow: /blog/*
+
+User-agent: Applebot
+Allow: /
+Allow: /blog/*
+
+User-agent: Bingbot
+Allow: /
+Allow: /blog/*
+
+User-agent: Googlebot
+Allow: /
+Allow: /blog/*

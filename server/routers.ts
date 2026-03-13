@@ -38,6 +38,11 @@ import {
   deleteDeck,
   setActiveDeck,
   deleteAllUserData,
+  getBlogPosts,
+  getBlogPostBySlug,
+  getRelatedPosts,
+  getAllBlogSlugs,
+  getBlogCategoryCounts,
 } from "./db";
 
 export const appRouter = router({
@@ -230,6 +235,53 @@ export const appRouter = router({
           message: `Purged ${result.decksDeleted} decks and ${result.commentsDeleted} comments.`,
         };
       }),
+  }),
+
+  /** Blog — public SEO content */
+  blog: router({
+    /** List paginated blog posts with optional category filter and search */
+    list: publicProcedure
+      .input(
+        z.object({
+          page: z.number().int().positive().default(1),
+          limit: z.number().int().min(1).max(100).default(20),
+          category: z.string().max(64).optional(),
+          search: z.string().max(200).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return getBlogPosts(input);
+      }),
+
+    /** Get a single blog post by slug */
+    getBySlug: publicProcedure
+      .input(z.object({ slug: z.string().min(1).max(255) }))
+      .query(async ({ input }) => {
+        return getBlogPostBySlug(input.slug) ?? null;
+      }),
+
+    /** Get related posts (same category) */
+    related: publicProcedure
+      .input(
+        z.object({
+          category: z.string().min(1).max(64),
+          excludeSlug: z.string().min(1).max(255),
+          limit: z.number().int().min(1).max(10).default(5),
+        })
+      )
+      .query(async ({ input }) => {
+        return getRelatedPosts(input.category, input.excludeSlug, input.limit);
+      }),
+
+    /** Get category counts for sidebar */
+    categories: publicProcedure.query(async () => {
+      return getBlogCategoryCounts();
+    }),
+
+    /** Get all slugs for sitemap */
+    allSlugs: publicProcedure.query(async () => {
+      return getAllBlogSlugs();
+    }),
   }),
 
   game: router({

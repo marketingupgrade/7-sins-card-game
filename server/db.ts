@@ -1,6 +1,6 @@
 import { eq, desc, asc, isNull, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, discussionComments, InsertDiscussionComment, DiscussionComment, playerDecks, PlayerDeck, InsertPlayerDeck } from "../drizzle/schema";
+import { InsertUser, users, discussionComments, InsertDiscussionComment, DiscussionComment, playerDecks, PlayerDeck, InsertPlayerDeck, blogPosts, BlogPost, InsertBlogPost } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -244,6 +244,136 @@ export async function setActiveDeck(supabaseUserId: string, faction: string, dec
  *
  * Returns counts of deleted rows per table.
  */
+// ─── Blog Posts ───────────────────────────────────────────
+
+/**
+ * Fetch paginated blog posts. Supports category filtering and search.
+ */
+export async function getBlogPosts(opts: {
+  page?: number;
+  limit?: number;
+  category?: string;
+  search?: string;
+}): Promise<{ posts: BlogPost[]; total: number }> {
+  const db = await getDb();
+  if (!db) return { posts: [], total: 0 };
+
+  const page = opts.page ?? 1;
+  const limit = opts.limit ?? 20;
+  const offset = (page - 1) * limit;
+
+  const conditions = [eq(blogPosts.published, 1)];
+  if (opts.category) {
+    conditions.push(eq(blogPosts.category, opts.category));
+  }
+  if (opts.search) {
+    conditions.push(sql`${blogPosts.title} LIKE ${`%${opts.search}%`}`);
+  }
+
+  const where = conditions.length === 1 ? conditions[0] : and(...conditions);
+
+  const [posts, countResult] = await Promise.all([
+    db
+      .select()
+      .from(blogPosts)
+      .where(where)
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(blogPosts)
+      .where(where),
+  ]);
+
+  return { posts, total: Number(countResult[0]?.count ?? 0) };
+}
+
+/**
+ * Fetch a single blog post by slug.
+ */
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db
+    .select()
+    .from(blogPosts)
+    .where(and(eq(blogPosts.slug, slug), eq(blogPosts.published, 1)))
+    .limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Fetch related posts (same category, excluding current).
+ */
+export async function getRelatedPosts(category: string, excludeSlug: string, limit = 5): Promise<BlogPost[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(blogPosts)
+    .where(and(
+      eq(blogPosts.category, category),
+      eq(blogPosts.published, 1),
+      sql`${blogPosts.slug} != ${excludeSlug}`
+    ))
+    .orderBy(sql`RAND()`)
+    .limit(limit);
+}
+
+/**
+ * Get all published blog post slugs (for sitemap generation).
+ */
+export async function getAllBlogSlugs(): Promise<{ slug: string; updatedAt: Date }[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt })
+    .from(blogPosts)
+    .where(eq(blogPosts.published, 1))
+    .orderBy(desc(blogPosts.publishedAt));
+}
+
+/**
+ * Get blog category counts for sidebar/filtering.
+ */
+export async function getBlogCategoryCounts(): Promise<{ category: string; count: number }[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select({
+      category: blogPosts.category,
+      count: sql<number>`count(*)`,
+    })
+    .from(blogPosts)
+    .where(eq(blogPosts.published, 1))
+    .groupBy(blogPosts.category)
+    .orderBy(sql`count(*) DESC`);
+}
+
+/**
+ * Bulk insert blog posts (for seeding).
+ */
+export async function bulkInsertBlogPosts(
+  posts: Omit<InsertBlogPost, "id" | "createdAt" | "updatedAt">[]
+): Promise<number> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Insert in batches of 50 to avoid query size limits
+  let inserted = 0;
+  for (let i = 0; i < posts.length; i += 50) {
+    const batch = posts.slice(i, i + 50);
+    await db.insert(blogPosts).values(batch);
+    inserted += batch.length;
+  }
+  return inserted;
+}
+
 export async function deleteAllUserData(supabaseUserId: string): Promise<{
   decksDeleted: number;
   commentsDeleted: number;

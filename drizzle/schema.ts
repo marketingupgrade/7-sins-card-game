@@ -91,3 +91,37 @@ export const playerDecks = mysqlTable("player_decks", {
 
 export type PlayerDeck = typeof playerDecks.$inferSelect;
 export type InsertPlayerDeck = typeof playerDecks.$inferInsert;
+
+/**
+ * Blog posts for SEO content.
+ *
+ * Each post has a unique slug for SEO-friendly URLs, category for filtering,
+ * and full HTML content. Posts are pre-generated and seeded into the database.
+ */
+export const blogPosts = mysqlTable("blog_posts", {
+  id: int("id").autoincrement().primaryKey(),
+  /** URL-friendly slug (e.g. "how-to-play-7-deadly-sins") */
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  /** Post title */
+  title: varchar("title", { length: 300 }).notNull(),
+  /** SEO meta description */
+  metaDescription: varchar("metaDescription", { length: 320 }).notNull(),
+  /** Target keywords (comma-separated) */
+  keywords: text("keywords").notNull(),
+  /** Blog category slug (e.g. "game-guides", "comparisons") */
+  category: varchar("category", { length: 64 }).notNull(),
+  /** SEO priority: high, medium, low */
+  priority: mysqlEnum("priority", ["high", "medium", "low"]).default("medium").notNull(),
+  /** Full HTML content of the blog post */
+  content: text("content").notNull(),
+  /** Estimated reading time in minutes */
+  readingTime: int("readingTime").notNull().default(5),
+  /** Whether the post is published */
+  published: int("published").notNull().default(1),
+  publishedAt: timestamp("publishedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;

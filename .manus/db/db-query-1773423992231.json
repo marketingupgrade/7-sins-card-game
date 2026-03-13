@@ -1,0 +1,15 @@
+{
+  "query": "SELECT COUNT(*) as total, SUM(CASE WHEN content = 'This is a dummy content.' THEN 1 ELSE 0 END) as dummy, SUM(CASE WHEN content != 'This is a dummy content.' THEN 1 ELSE 0 END) as real_content FROM blog_posts",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute SELECT COUNT(*) as total, SUM(CASE WHEN content = 'This is a dummy content.' THEN 1 ELSE 0 END) as dummy, SUM(CASE WHEN content != 'This is a dummy content.' THEN 1 ELSE 0 END) as real_content FROM blog_posts",
+  "rows": [
+    {
+      "total": "57",
+      "dummy": "11",
+      "real_content": "46"
+    }
+  ],
+  "messages": [],
+  "stdout": "total\tdummy\treal_content\n57\t11\t46\n",
+  "stderr": "",
+  "execution_time_ms": 463
+}

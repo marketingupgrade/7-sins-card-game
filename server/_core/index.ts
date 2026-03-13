@@ -47,6 +47,56 @@ async function startServer() {
     }
     next();
   });
+  // Dynamic sitemap.xml
+  app.get("/sitemap.xml", async (_req, res) => {
+    try {
+      const { getAllBlogSlugs } = await import("../db");
+      const slugs = await getAllBlogSlugs();
+      const baseUrl = "https://sinscard-o77rchv9.manus.space";
+      
+      const staticPages = [
+        { loc: "/", priority: "1.0", changefreq: "weekly" },
+        { loc: "/blog", priority: "0.9", changefreq: "daily" },
+        { loc: "/collection", priority: "0.8", changefreq: "monthly" },
+        { loc: "/balance", priority: "0.7", changefreq: "monthly" },
+        { loc: "/matchups", priority: "0.7", changefreq: "monthly" },
+        { loc: "/rules", priority: "0.8", changefreq: "monthly" },
+        { loc: "/changelog", priority: "0.5", changefreq: "weekly" },
+        { loc: "/deck-builder", priority: "0.7", changefreq: "monthly" },
+      ];
+
+      let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n`;
+      
+      for (const page of staticPages) {
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}${page.loc}</loc>\n`;
+        xml += `    <changefreq>${page.changefreq}</changefreq>\n`;
+        xml += `    <priority>${page.priority}</priority>\n`;
+        xml += `  </url>\n`;
+      }
+      
+      for (const { slug, updatedAt } of slugs) {
+        const lastmod = updatedAt ? new Date(updatedAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+        xml += `  <url>\n`;
+        xml += `    <loc>${baseUrl}/blog/${slug}</loc>\n`;
+        xml += `    <lastmod>${lastmod}</lastmod>\n`;
+        xml += `    <changefreq>monthly</changefreq>\n`;
+        xml += `    <priority>0.6</priority>\n`;
+        xml += `  </url>\n`;
+      }
+      
+      xml += `</urlset>`;
+      
+      res.setHeader("Content-Type", "application/xml");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.send(xml);
+    } catch (err) {
+      console.error("Sitemap generation error:", err);
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Chat API with streaming and tool calling
