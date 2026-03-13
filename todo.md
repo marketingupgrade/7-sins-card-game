@@ -1017,3 +1017,11 @@
 - [x] Add legal page links to footer
 - [x] Wire routes in App.tsx
 - [x] Add AI-generated artwork disclaimer/waiver to Terms — models used, IP liability protection for the maker
+
+## Changelog / Patch Notes Page
+- [x] Create /changelog route and page
+- [x] Document version history with balance changes, new features, and bug fixes
+- [x] Gothic branding consistent with other pages
+- [x] Add to SigilMenu navigation
+- [x] Add to footer navigation
+- [x] Mobile responsive layout
