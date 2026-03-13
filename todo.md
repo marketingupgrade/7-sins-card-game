@@ -1025,3 +1025,33 @@
 - [x] Add to SigilMenu navigation
 - [x] Add to footer navigation
 - [x] Mobile responsive layout
+
+## Supabase Auth Integration
+- [ ] Set up Supabase Auth client configuration
+- [ ] Build login/signup page with Discord, Google, email, and phone options
+- [ ] Create AuthContext for managing user session state across the app
+- [ ] Add auth callback handler for OAuth redirects
+- [ ] Add user profile display in SigilMenu (avatar, name, logout)
+- [ ] Protected routes for authenticated features (deck builder)
+- [ ] Guest fallback — guests can still play but can't save decks to DB
+
+## Deck Builder System
+- [ ] Create decks table in Supabase (id, user_id, faction, name, card_ids, created_at, updated_at)
+- [ ] Build Deck Builder page with card browsing, filtering, and selection
+- [ ] 30-card deck limit with validation
+- [ ] Faction-locked deck building (pick faction first, then select cards)
+- [ ] Save/load decks to Supabase for logged-in users
+- [ ] localStorage fallback for guest deck building
+- [ ] Default deck option (all 54 cards) for players who skip deck building
+- [ ] Deck management — rename, duplicate, delete saved decks
+- [ ] Add Deck Builder to SigilMenu navigation
+- [x] Integrate deck selection into game creation flow
+- [ ] Mobile responsive deck builder UI
+
+## Account Management & Data Purge
+- [x] Build Account Management page (profile info, avatar, display name)
+- [x] Show saved decks on account page with edit/delete options
+- [x] Add "Purge All My Data" button that actually deletes everything (decks, comments, game history, auth account)
+- [x] Create tRPC user.purge procedure for cascading data deletion
+- [ ] Update Privacy Policy to reference the data purge feature
+- [x] Wire account page into SigilMenu and routes

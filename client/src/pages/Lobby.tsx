@@ -20,7 +20,8 @@ import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { chooseSin, startGame, getGameState } from "@/lib/gameEngine";
+import { chooseSin, startGame, getGameState, setCustomDeck } from "@/lib/gameEngine";
+import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
@@ -185,6 +186,8 @@ export default function Lobby() {
   const { displayedText, addMessage, addRandomLine } = useNarrator();
   const { setCurrentPage } = useTutorial();
   const factionUnlocks = useFactionUnlocks();
+  const [showDeckPicker, setShowDeckPicker] = useState(false);
+  const [selectedDeckName, setSelectedDeckName] = useState<string | null>(null);
 
   useEffect(() => { setCurrentPage("lobby"); }, [setCurrentPage]);
   useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
@@ -228,6 +231,35 @@ export default function Lobby() {
       await chooseSin(gameId, playerId, sin);
       addMessage(SIN_CONFIG[sin].quip, "dramatic");
       await loadState();
+      // Show deck picker after choosing sin
+      setShowDeckPicker(true);
+    } catch (err: any) { setError(err.message); }
+  };
+
+  // Load saved decks for the chosen faction from localStorage
+  // Uses the same key as DeckBuilder: "7sins_decks"
+  const getSavedDecks = (faction: string): { id: string; name: string; faction: SinType; cardIds: string[]; updatedAt: number }[] => {
+    try {
+      const raw = localStorage.getItem("7sins_decks");
+      if (!raw) return [];
+      const all = JSON.parse(raw) as { id: string; name: string; faction: SinType; cardIds: string[]; updatedAt: number }[];
+      return all.filter((d) => d.faction === faction);
+    } catch { return []; }
+  };
+
+  const handleSelectDeck = async (deckCardIds: string[] | null, deckName: string) => {
+    if (!gameId) return;
+    soundEngine.play("ui_click");
+    try {
+      await setCustomDeck(gameId, playerId, deckCardIds);
+      setSelectedDeckName(deckName);
+      setShowDeckPicker(false);
+      addMessage(
+        deckCardIds
+          ? `Deck "${deckName}" bound to your soul. ${deckCardIds.length} cards of damnation.`
+          : "Full arsenal selected. Every card at your disposal.",
+        "info"
+      );
     } catch (err: any) { setError(err.message); }
   };
 
@@ -613,6 +645,165 @@ export default function Lobby() {
                 );
               })}
             </div>
+          </motion.div>
+        )}
+
+        {/* ── DECK SELECTION — After faction choice ── */}
+        <AnimatePresence>
+          {showDeckPicker && myPlayer?.chosenSin && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="w-full max-w-lg mb-6"
+            >
+              <StonePanel glow className="p-5">
+                <div className="text-center mb-4">
+                  <p
+                    className="text-[10px] tracking-[0.3em] text-candle/50 uppercase mb-2"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    Bind Your Arsenal
+                  </p>
+                  <h3
+                    className="text-lg font-bold text-candle tracking-wider"
+                    style={{ fontFamily: "var(--font-display)" }}
+                  >
+                    CHOOSE YOUR DECK
+                  </h3>
+                  <p className="text-[10px] text-candle/35 mt-1" style={{ fontFamily: "var(--font-body)" }}>
+                    Select a custom 30-card deck or wield the full {ALL_CARDS.filter(c => c.sin === myPlayer.chosenSin).length}-card arsenal.
+                  </p>
+                </div>
+
+                {/* Default deck option */}
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => handleSelectDeck(null, "Full Arsenal")}
+                  className="w-full mb-3 p-3 rounded-lg border border-candle/20 bg-candle/5 hover:bg-candle/10 transition-all text-left group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-candle/10 border border-candle/15 flex items-center justify-center shrink-0">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-candle/60">
+                        <rect x="2" y="4" width="14" height="17" rx="2" />
+                        <path d="M8 4V2a1 1 0 0 1 1-1h10a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1h-2" />
+                      </svg>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-candle/80 group-hover:text-candle transition-colors" style={{ fontFamily: "var(--font-heading)" }}>
+                        Full Arsenal
+                      </p>
+                      <p className="text-[10px] text-candle/35">
+                        Use all {ALL_CARDS.filter(c => c.sin === myPlayer.chosenSin).length} cards — no restrictions, maximum chaos
+                      </p>
+                    </div>
+                    <div className="text-[9px] text-candle/30 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
+                      Default
+                    </div>
+                  </div>
+                </motion.button>
+
+                {/* Saved decks */}
+                {(() => {
+                  const decks = getSavedDecks(myPlayer.chosenSin);
+                  if (decks.length === 0) return (
+                    <div className="text-center py-3">
+                      <p className="text-[10px] text-candle/25 italic" style={{ fontFamily: "var(--font-body)" }}>
+                        No custom decks saved for {SIN_CONFIG[myPlayer.chosenSin as SinType].label}.
+                      </p>
+                      <p className="text-[9px] text-candle/15 mt-1">
+                        Visit the Deck Builder to forge your own 30-card deck.
+                      </p>
+                    </div>
+                  );
+                  return (
+                    <div className="space-y-2">
+                      <p className="text-[9px] tracking-[0.2em] text-candle/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                        Custom Decks
+                      </p>
+                      {decks.map((deck) => (
+                        <motion.button
+                          key={deck.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => handleSelectDeck(deck.cardIds, deck.name)}
+                          className="w-full p-3 rounded-lg border border-white/10 bg-white/3 hover:bg-white/5 hover:border-candle/20 transition-all text-left group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div
+                              className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0 border"
+                              style={{
+                                background: `var(--color-${SIN_CONFIG[myPlayer.chosenSin as SinType].color})10`,
+                                borderColor: `var(--color-${SIN_CONFIG[myPlayer.chosenSin as SinType].color})30`,
+                              }}
+                            >
+                              <img
+                                src={SIN_ARCHETYPE_ICONS[myPlayer.chosenSin as SinType]}
+                                alt=""
+                                className="w-5 h-5 object-contain"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-semibold text-candle/70 group-hover:text-candle/90 transition-colors truncate" style={{ fontFamily: "var(--font-heading)" }}>
+                                {deck.name}
+                              </p>
+                              <p className="text-[10px] text-candle/30">
+                                {deck.cardIds.length} cards
+                              </p>
+                            </div>
+                            <div className="text-[9px] text-candle/20 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
+                              Custom
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+                {/* Skip / dismiss */}
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => {
+                      setShowDeckPicker(false);
+                      addMessage("No deck chosen. The full arsenal shall serve.", "info");
+                    }}
+                    className="text-[10px] text-candle/25 hover:text-candle/50 transition-colors underline underline-offset-2"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    Skip — decide later
+                  </button>
+                </div>
+              </StonePanel>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Selected Deck Badge */}
+        {selectedDeckName && myPlayer?.chosenSin && !showDeckPicker && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="w-full max-w-lg mb-4"
+          >
+            <button
+              onClick={() => setShowDeckPicker(true)}
+              className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-candle/5 border border-candle/15 hover:border-candle/25 transition-all group"
+            >
+              <div className="flex items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-candle/40">
+                  <rect x="2" y="4" width="14" height="17" rx="2" />
+                  <path d="M8 4V2a1 1 0 0 1 1-1h10a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1h-2" />
+                </svg>
+                <span className="text-xs text-candle/60" style={{ fontFamily: "var(--font-heading)" }}>
+                  Deck: <span className="text-candle/80 font-semibold">{selectedDeckName}</span>
+                </span>
+              </div>
+              <span className="text-[9px] text-candle/25 group-hover:text-candle/50 transition-colors uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                Change
+              </span>
+            </button>
           </motion.div>
         )}
 

@@ -15,6 +15,13 @@
       "when": 1773389844177,
       "tag": "0001_gigantic_blur",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1773398632013,
+      "tag": "0002_charming_butterfly",
+      "breakpoints": true
     }
   ]
 }

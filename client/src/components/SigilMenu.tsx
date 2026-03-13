@@ -10,12 +10,14 @@
  * - Ember particle glow on hover
  * - Slide-in panel with gothic styling
  * - Faction-colored accent lines
+ * - User auth section (avatar, sign in/out)
  * - Mobile responsive
  */
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import { useSupabaseAuth } from "@/contexts/AuthContext";
 
 interface MenuLink {
   label: string;
@@ -37,6 +39,20 @@ const MENU_LINKS: MenuLink[] = [
       </svg>
     ),
     description: "Browse all 378 cards across 7 factions",
+  },
+  {
+    label: "Deck Builder",
+    href: "/deck-builder",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h6v6H4z" />
+        <path d="M14 4h6v6h-6z" />
+        <path d="M4 14h6v6H4z" />
+        <path d="M17 14v8" />
+        <path d="M13 18h8" />
+      </svg>
+    ),
+    description: "Build custom 30-card decks for battle",
   },
   {
     label: "Balance Analysis",
@@ -171,6 +187,81 @@ function SigilButton({ isOpen, onClick }: { isOpen: boolean; onClick: () => void
   );
 }
 
+/** User auth section at the top of the menu */
+function UserSection({ onClose }: { onClose: () => void }) {
+  const { user, displayName, avatarUrl, signOut, isLoading } = useSupabaseAuth();
+  const [, navigate] = useLocation();
+
+  if (isLoading) return null;
+
+  if (!user) {
+    return (
+      <div className="px-4 pb-3">
+        <Link
+          href="/login"
+          onClick={onClose}
+          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-amber-600/15 hover:bg-amber-600/25 border border-amber-500/20 text-amber-200/80 hover:text-amber-200 text-xs tracking-[0.15em] uppercase transition-all duration-200"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+            <circle cx="12" cy="7" r="4" />
+          </svg>
+          Sign In
+        </Link>
+        <p className="text-[9px] text-white/15 text-center mt-1.5">Save decks & track progress</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 pb-3">
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        {avatarUrl ? (
+          <img
+            src={avatarUrl}
+            alt=""
+            className="w-8 h-8 rounded-full border border-amber-500/20 object-cover shrink-0"
+          />
+        ) : (
+          <div className="w-8 h-8 rounded-full border border-amber-500/20 bg-amber-500/10 flex items-center justify-center shrink-0">
+            <span className="text-amber-200/60 text-xs font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+              {(displayName || "S")[0].toUpperCase()}
+            </span>
+          </div>
+        )}
+
+        {/* Name + sign out */}
+        <div className="min-w-0 flex-1">
+          <p className="text-sm text-amber-200/80 font-medium truncate" style={{ fontFamily: "var(--font-heading)" }}>
+            {displayName || "Sinner"}
+          </p>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/account"
+              onClick={onClose}
+              className="text-[10px] text-amber-200/40 hover:text-amber-200/70 transition-colors tracking-wider uppercase"
+            >
+              Account
+            </Link>
+            <button
+              onClick={async () => {
+                await signOut();
+                onClose();
+                navigate("/");
+              }}
+              className="text-[10px] text-white/25 hover:text-red-400/60 transition-colors tracking-wider uppercase"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function SigilMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const [location] = useLocation();
@@ -255,7 +346,7 @@ export default function SigilMenu() {
                 }}
               >
                 {/* Header ornament */}
-                <div className="px-5 pt-4 pb-3">
+                <div className="px-5 pt-4 pb-2">
                   <div className="flex items-center gap-2">
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
                     <svg width="12" height="12" viewBox="0 0 12 12" className="text-amber-500/40">
@@ -263,8 +354,18 @@ export default function SigilMenu() {
                     </svg>
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
                   </div>
+                </div>
+
+                {/* User auth section */}
+                <UserSection onClose={close} />
+
+                {/* Divider */}
+                <div className="mx-4 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+
+                {/* Navigation label */}
+                <div className="px-5 pt-2 pb-1">
                   <p
-                    className="text-[9px] tracking-[0.4em] text-amber-200/30 text-center mt-2 uppercase"
+                    className="text-[9px] tracking-[0.4em] text-amber-200/30 text-center uppercase"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     Navigation
@@ -272,7 +373,7 @@ export default function SigilMenu() {
                 </div>
 
                 {/* Links */}
-                <nav className="px-3 pb-3">
+                <nav className="px-3 pb-3 max-h-[50vh] overflow-y-auto">
                   {MENU_LINKS.map((link, i) => {
                     const isActive = location === link.href;
                     return (

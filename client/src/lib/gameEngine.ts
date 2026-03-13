@@ -165,6 +165,22 @@ export async function chooseSin(
   if (error) throw new Error(`Failed to choose sin: ${error.message}`);
 }
 
+// ─── Set Custom Deck ────────────────────────────────────────
+export async function setCustomDeck(
+  gameId: string,
+  playerId: string,
+  cardIds: string[] | null
+): Promise<void> {
+  const sb = getClientSupabase();
+  const { error } = await sb
+    .from("game_players")
+    .update({ custom_deck_ids: cardIds })
+    .eq("game_id", gameId)
+    .eq("player_id", playerId);
+
+  if (error) throw new Error(`Failed to set deck: ${error.message}`);
+}
+
 // ─── Start Game ──────────────────────────────────────────────
 export async function startGame(gameId: string): Promise<void> {
   const sb = getClientSupabase();
@@ -181,7 +197,10 @@ export async function startGame(gameId: string): Promise<void> {
   if (!allReady) throw new Error("All players must choose a sin");
 
   for (const player of players) {
-    const deckCards = getDeckForSin(player.chosen_sin as SinType);
+    // Use custom deck if player selected one, otherwise use full faction deck
+    const deckCards = (player.custom_deck_ids && Array.isArray(player.custom_deck_ids) && player.custom_deck_ids.length > 0)
+      ? player.custom_deck_ids as string[]
+      : getDeckForSin(player.chosen_sin as SinType);
     const shuffled = shuffleDeck(deckCards);
     const hand = shuffled.slice(0, HAND_SIZE);
     const remainingDeck = shuffled.slice(HAND_SIZE);

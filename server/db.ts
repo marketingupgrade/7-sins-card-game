@@ -1,6 +1,6 @@
 import { eq, desc, asc, isNull, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, discussionComments, InsertDiscussionComment, DiscussionComment } from "../drizzle/schema";
+import { InsertUser, users, discussionComments, InsertDiscussionComment, DiscussionComment, playerDecks, PlayerDeck, InsertPlayerDeck } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -150,4 +150,118 @@ export async function upvoteDiscussionComment(commentId: number): Promise<boolea
     .set({ upvotes: sql`${discussionComments.upvotes} + 1` })
     .where(eq(discussionComments.id, commentId));
   return true;
+}
+
+// ─── Player Decks ──────────────────────────────────────────
+
+/**
+ * Fetch all decks belonging to a Supabase user, newest first.
+ */
+export async function getDecksByUser(supabaseUserId: string): Promise<PlayerDeck[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(playerDecks)
+    .where(eq(playerDecks.supabaseUserId, supabaseUserId))
+    .orderBy(desc(playerDecks.updatedAt));
+}
+
+/**
+ * Fetch a single deck by ID. Returns undefined if not found.
+ */
+export async function getDeckById(deckId: number): Promise<PlayerDeck | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+
+  const result = await db.select().from(playerDecks).where(eq(playerDecks.id, deckId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Create a new deck. Returns the inserted deck's ID.
+ */
+export async function createDeck(
+  data: Omit<InsertPlayerDeck, "id" | "createdAt" | "updatedAt">
+): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(playerDecks).values(data);
+  return { id: Number(result[0].insertId) };
+}
+
+/**
+ * Update an existing deck's name, cardIds, or isActive status.
+ */
+export async function updateDeck(
+  deckId: number,
+  data: Partial<Pick<InsertPlayerDeck, "name" | "cardIds" | "isActive">>
+): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.update(playerDecks).set(data).where(eq(playerDecks.id, deckId));
+  return true;
+}
+
+/**
+ * Delete a deck by ID.
+ */
+export async function deleteDeck(deckId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.delete(playerDecks).where(eq(playerDecks.id, deckId));
+  return true;
+}
+
+/**
+ * Set a deck as active for a user+faction combo.
+ * Deactivates all other decks for the same user+faction first.
+ */
+export async function setActiveDeck(supabaseUserId: string, faction: string, deckId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  // Deactivate all decks for this user+faction
+  await db
+    .update(playerDecks)
+    .set({ isActive: 0 })
+    .where(and(eq(playerDecks.supabaseUserId, supabaseUserId), eq(playerDecks.faction, faction)));
+
+  // Activate the chosen deck
+  await db.update(playerDecks).set({ isActive: 1 }).where(eq(playerDecks.id, deckId));
+  return true;
+}
+
+/**
+ * Delete ALL data associated with a Supabase user.
+ * GDPR right to erasure — cascading delete across:
+ * - player_decks (custom decks)
+ * - discussion_comments (by guestId matching supabaseUserId)
+ *
+ * Returns counts of deleted rows per table.
+ */
+export async function deleteAllUserData(supabaseUserId: string): Promise<{
+  decksDeleted: number;
+  commentsDeleted: number;
+}> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Delete all decks
+  const deckResult = await db
+    .delete(playerDecks)
+    .where(eq(playerDecks.supabaseUserId, supabaseUserId));
+  const decksDeleted = (deckResult as any)[0]?.affectedRows ?? 0;
+
+  // Delete all comments by this user (using guestId which stores supabase user ID)
+  const commentResult = await db
+    .delete(discussionComments)
+    .where(eq(discussionComments.guestId, supabaseUserId));
+  const commentsDeleted = (commentResult as any)[0]?.affectedRows ?? 0;
+
+  return { decksDeleted, commentsDeleted };
 }

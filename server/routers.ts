@@ -31,6 +31,13 @@ import {
   createDiscussionComment,
   deleteDiscussionComment,
   upvoteDiscussionComment,
+  getDecksByUser,
+  getDeckById,
+  createDeck,
+  updateDeck,
+  deleteDeck,
+  setActiveDeck,
+  deleteAllUserData,
 } from "./db";
 
 export const appRouter = router({
@@ -99,6 +106,129 @@ export const appRouter = router({
       .input(z.object({ commentId: z.number().int().positive() }))
       .mutation(async ({ input }) => {
         return upvoteDiscussionComment(input.commentId);
+      }),
+  }),
+
+  /** Player deck management — CRUD for custom 30-card decks */
+  deck: router({
+    /** List all decks for a Supabase user */
+    list: publicProcedure
+      .input(z.object({ supabaseUserId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return getDecksByUser(input.supabaseUserId);
+      }),
+
+    /** Get a single deck by ID */
+    get: publicProcedure
+      .input(z.object({ deckId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        return getDeckById(input.deckId) ?? null;
+      }),
+
+    /** Create a new deck (30 cards from a single faction) */
+    create: publicProcedure
+      .input(
+        z.object({
+          supabaseUserId: z.string().min(1).max(64),
+          faction: z.string().min(1).max(32),
+          name: z.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+          cardIds: z.string().min(2), // JSON array string
+          isActive: z.number().int().min(0).max(1).default(0),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Validate cardIds is valid JSON array of 30 items
+        let parsed: string[];
+        try {
+          parsed = JSON.parse(input.cardIds);
+        } catch {
+          throw new Error("cardIds must be a valid JSON array");
+        }
+        if (!Array.isArray(parsed) || parsed.length !== 30) {
+          throw new Error("Deck must contain exactly 30 cards");
+        }
+        return createDeck(input);
+      }),
+
+    /** Update an existing deck */
+    update: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          supabaseUserId: z.string().min(1).max(64), // for ownership check
+          name: z.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")).optional(),
+          cardIds: z.string().min(2).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Verify ownership
+        const deck = await getDeckById(input.deckId);
+        if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
+          throw new Error("Deck not found or access denied");
+        }
+        if (input.cardIds) {
+          let parsed: string[];
+          try {
+            parsed = JSON.parse(input.cardIds);
+          } catch {
+            throw new Error("cardIds must be a valid JSON array");
+          }
+          if (!Array.isArray(parsed) || parsed.length !== 30) {
+            throw new Error("Deck must contain exactly 30 cards");
+          }
+        }
+        const updateData: Record<string, unknown> = {};
+        if (input.name) updateData.name = input.name;
+        if (input.cardIds) updateData.cardIds = input.cardIds;
+        return updateDeck(input.deckId, updateData);
+      }),
+
+    /** Delete a deck */
+    delete: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          supabaseUserId: z.string().min(1).max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const deck = await getDeckById(input.deckId);
+        if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
+          throw new Error("Deck not found or access denied");
+        }
+        return deleteDeck(input.deckId);
+      }),
+
+    /** Set a deck as the active deck for a user+faction */
+    setActive: publicProcedure
+      .input(
+        z.object({
+          supabaseUserId: z.string().min(1).max(64),
+          faction: z.string().min(1).max(32),
+          deckId: z.number().int().positive(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return setActiveDeck(input.supabaseUserId, input.faction, input.deckId);
+      }),
+  }),
+
+  /** User account management — data purge for GDPR compliance */
+  user: router({
+    /** Purge ALL user data — decks, comments, game history. Real deletion, not fake. */
+    purge: publicProcedure
+      .input(
+        z.object({
+          supabaseUserId: z.string().min(1).max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const result = await deleteAllUserData(input.supabaseUserId);
+        return {
+          success: true,
+          ...result,
+          message: `Purged ${result.decksDeleted} decks and ${result.commentsDeleted} comments.`,
+        };
       }),
   }),
 

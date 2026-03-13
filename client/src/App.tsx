@@ -1,7 +1,11 @@
 /**
  * App Root - Routes and theme configuration
  * Dark theme for gothic cathedral aesthetic.
- * Routes: Home, Lobby, GameBoard, Collection, BalanceAnalysis, MatchupMatrix, GameRules, Changelog, Terms, Privacy, Cookies, Profile
+ *
+ * Auth: Supabase Auth (Discord, Google, email, phone) via AuthProvider.
+ * Routes: Home, Login, AuthCallback, Lobby, GameBoard, Collection,
+ *         BalanceAnalysis, MatchupMatrix, GameRules, DeckBuilder,
+ *         Changelog, Terms, Privacy, Cookies, Profile
  *
  * All page routes are lazy-loaded for optimal code splitting.
  * SigilMenu provides global navigation overlay on non-game pages.
@@ -14,6 +18,7 @@ import { Route, Switch, useRoute } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { TutorialProvider } from "./contexts/TutorialContext";
+import { AuthProvider } from "./contexts/AuthContext";
 import SigilMenu from "./components/SigilMenu";
 import { MusicToggle } from "./components/MusicToggle";
 
@@ -22,6 +27,8 @@ const TutorialOverlay = lazy(() => import("./components/TutorialOverlay"));
 
 // Lazy-load all page routes for code splitting
 const Home = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Login"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Lobby = lazy(() => import("./pages/Lobby"));
 const GameBoard = lazy(() => import("./pages/GameBoard"));
 const Profile = lazy(() => import("./pages/Profile"));
@@ -29,10 +36,12 @@ const Collection = lazy(() => import("./pages/Collection"));
 const BalanceAnalysis = lazy(() => import("./pages/BalanceAnalysis"));
 const MatchupMatrix = lazy(() => import("./pages/MatchupMatrix"));
 const GameRules = lazy(() => import("./pages/GameRules"));
+const DeckBuilder = lazy(() => import("./pages/DeckBuilder"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Cookies = lazy(() => import("./pages/Cookies"));
 const Changelog = lazy(() => import("./pages/Changelog"));
+const Account = lazy(() => import("./pages/Account"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -51,14 +60,16 @@ function PageLoader() {
 
 /**
  * Global top-right controls bar — Music toggle + SigilMenu
- * Hidden during active gameplay (game board) to avoid clutter.
+ * Hidden during active gameplay (game board) and on login/auth pages.
  */
 function GlobalControls() {
   const [isGamePage] = useRoute("/game/:gameId");
   const [isLobbyPage] = useRoute("/lobby/:gameId");
+  const [isLoginPage] = useRoute("/login");
+  const [isAuthCallback] = useRoute("/auth/callback");
 
-  // Hide on game board (already has its own controls)
-  if (isGamePage || isLobbyPage) return null;
+  // Hide on game board, lobby, login, and auth callback
+  if (isGamePage || isLobbyPage || isLoginPage || isAuthCallback) return null;
 
   return (
     <div className="fixed top-4 right-4 z-40 flex items-center gap-1">
@@ -73,17 +84,21 @@ function Router() {
     <Suspense fallback={<PageLoader />}>
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/login" component={Login} />
+        <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/lobby/:gameId" component={Lobby} />
         <Route path="/game/:gameId" component={GameBoard} />
         <Route path="/collection" component={Collection} />
         <Route path="/balance" component={BalanceAnalysis} />
         <Route path="/matchups" component={MatchupMatrix} />
         <Route path="/rules" component={GameRules} />
+        <Route path="/deck-builder" component={DeckBuilder} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />
         <Route path="/cookies" component={Cookies} />
         <Route path="/changelog" component={Changelog} />
         <Route path="/profile" component={Profile} />
+        <Route path="/account" component={Account} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
@@ -95,16 +110,18 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="dark">
-        <TutorialProvider>
-          <TooltipProvider>
-            <Toaster />
-            <GlobalControls />
-            <Router />
-            <Suspense fallback={null}>
-              <TutorialOverlay />
-            </Suspense>
-          </TooltipProvider>
-        </TutorialProvider>
+        <AuthProvider>
+          <TutorialProvider>
+            <TooltipProvider>
+              <Toaster />
+              <GlobalControls />
+              <Router />
+              <Suspense fallback={null}>
+                <TutorialOverlay />
+              </Suspense>
+            </TooltipProvider>
+          </TutorialProvider>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
