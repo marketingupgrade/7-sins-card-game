@@ -188,6 +188,7 @@ export interface CardDefinition {
  */
 export const MAX_ENERGY = 7;
 export const ENERGY_PER_TURN = 1; // +1 energy gained per round
+export const CONSUME_ENERGY_REFUND = 1; // +1 energy when banishing a card (max 1 consume per turn)
 
 // v5 Passive constants (tuned via combined optimizer)
 export const WRATH_VENGEANCE_PCT = 0.634;
@@ -289,6 +290,8 @@ export interface PlayerState {
   lockedCards: LockedPlay[];
   /** Whether this player has confirmed their selection */
   hasLockedIn: boolean;
+  /** Whether this player has consumed (banished) a card this round */
+  consumedThisRound: boolean;
 }
 
 export interface ActiveEffect {

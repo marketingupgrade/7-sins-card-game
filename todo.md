@@ -1211,4 +1211,29 @@
 - [x] Show full compound scaling (5 → 10 → 20, not just 5 → 20)
 - [x] Show keyword (Volatile, etc.) instead of abbreviation (AGG)
 - [x] Show effect description text ("Deals direct damage to target HP")
+- [x] Push to GitHub
+
+## Pass Button Hint
+- [x] Highlight PASS button when no cards are affordable
+- [x] Add pulsing animation and hint text ("Your corruption runs dry...")
+- [x] Works on both desktop and mobile
+
+## Consume Mechanic (Banish for Energy)
+- [x] Add consumeCard function to game engine (banish card permanently, refund 1 energy)
+- [x] Max 1 consume per turn enforcement
+- [x] Add consume action to tRPC router
+- [x] Add CONSUME button to MobileCardZoom popup
+- [x] Add consume button to desktop card interaction
+- [x] Add consume action to battle log
+- [x] Add narrator quip for consume action
+- [x] Server-side consume validation with thematic error messages
+- [x] Reset consumed_this_round at round advance
 - [ ] Push to GitHub
+
+## Patch Notes Update
+- [x] Update changelog/patch notes with consume mechanic, pass hint, and brandbook
+
+## Blog Generation (666 Total)
+- [ ] Generate first 50 SEO-critical blog posts
+- [ ] Generate remaining posts to reach 666 total
+- [ ] Insert all posts into Manus DB

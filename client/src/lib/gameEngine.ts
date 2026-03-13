@@ -36,6 +36,7 @@ import {
   PRIDE_HUBRIS_MULT,
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
+  CONSUME_ENERGY_REFUND,
   getCompoundTickValue,
 } from "../../../shared/gameTypes";
 
@@ -238,7 +239,7 @@ export async function startGame(gameId: string): Promise<void> {
 
   // Reset locked_cards on all players
   for (const player of players) {
-    await sb.from("game_players").update({ locked_cards: [] }).eq("id", player.id);
+    await sb.from("game_players").update({ locked_cards: [], consumed_this_round: false }).eq("id", player.id);
   }
 
   await sb.from("game_log").insert({
@@ -370,6 +371,7 @@ export async function lockInCards(
       bonusEnergy: gp.bonus_energy ?? 0,
       lockedCards: [],
       hasLockedIn: true,
+      consumedThisRound: gp.consumed_this_round ?? false,
     }));
 
     // Transition to resolution phase
@@ -605,6 +607,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
       lockedCards: playerLocked.length > 0 ? playerLocked : gpLockedCards,
       // A player has locked in if locked_cards has content (real plays or [{pass:true}] sentinel)
       hasLockedIn: gpLockedCards.length > 0 || playerLocked.length > 0,
+      consumedThisRound: gp.consumed_this_round ?? false,
     };
   });
 
@@ -645,6 +648,76 @@ export async function getGameLog(gameId: string): Promise<any[]> {
     .eq("game_id", gameId)
     .order("timestamp", { ascending: true });
   return data || [];
+}
+
+// ─── Consume Card (Banish for Energy) ────────────────────────
+/**
+ * Consume (banish) a card from hand permanently.
+ * - Removes the card from the player's hand (it does NOT go to discard pile)
+ * - Refunds CONSUME_ENERGY_REFUND (1) energy, capped at MAX_ENERGY
+ * - Max 1 consume per turn (tracked via consumed_this_round column)
+ * - Can only be done during selection phase on your turn
+ */
+export async function consumeCard(
+  gameId: string,
+  playerId: string,
+  cardId: string
+): Promise<{ success: boolean; message: string }> {
+  const sb = getClientSupabase();
+
+  // Fetch game state
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game) return { success: false, message: "Game not found" };
+  if (game.turn_phase !== "selection") return { success: false, message: "Can only consume during selection phase" };
+
+  // Fetch player
+  const { data: player } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("player_id", playerId)
+    .single();
+  if (!player) return { success: false, message: "Player not found" };
+  if (!player.is_alive) return { success: false, message: "Dead players cannot consume" };
+  if (player.consumed_this_round) return { success: false, message: "Already consumed this round" };
+
+  // Validate card is in hand
+  const hand: string[] = player.hand || [];
+  if (!hand.includes(cardId)) return { success: false, message: "Card not in hand" };
+
+  // Remove card from hand (banished — not added to discard)
+  const newHand = hand.filter((id: string) => id !== cardId);
+
+  // Refund energy (capped at MAX_ENERGY)
+  const currentEnergy = player.current_energy ?? 0;
+  const newEnergy = Math.min(currentEnergy + CONSUME_ENERGY_REFUND, MAX_ENERGY);
+
+  // Update player: new hand, new energy, mark consumed
+  await sb.from("game_players").update({
+    hand: newHand,
+    current_energy: newEnergy,
+    consumed_this_round: true,
+  }).eq("id", player.id);
+
+  // Log the consume action
+  const card = getCardById(cardId);
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    player_id: player.id,
+    action_type: "consume",
+    action_data: {
+      cardId,
+      cardName: card?.name || cardId,
+      energyRefund: CONSUME_ENERGY_REFUND,
+      newEnergy,
+    },
+    round_number: game.current_round,
+  });
+
+  return {
+    success: true,
+    message: `Banished ${card?.name || "card"} to the void. +${CONSUME_ENERGY_REFUND} energy.`,
+  };
 }
 
 // ─── Helper: Resolve Targets (v4 targetMode) ────────────────
@@ -1140,7 +1213,7 @@ async function advanceRound(gameId: string): Promise<void> {
 
   // Reset locked cards on all players and transition back to selection
   for (const p of allPlayers) {
-    await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
+    await sb.from("game_players").update({ locked_cards: [], consumed_this_round: false }).eq("id", p.id);
   }
 
   await sb.from("games").update({

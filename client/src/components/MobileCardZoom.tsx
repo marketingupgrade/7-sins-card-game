@@ -1,11 +1,13 @@
 /**
  * MobileCardZoom — Full-screen card detail overlay for mobile
  *
- * Uses the same clear label format as the BattleLog CardPreviewPopup:
- * - Faction + Rarity + Keyword (e.g. "WRATH  COMMON  🔥 Volatile")
- * - Full compound scaling (e.g. "Hurt 5 → 10 → 20")
- * - Effect description text (e.g. "Deals direct damage to target HP")
- * - PLAY CARD button when it's your turn
+ * Follows the AAA Premium Brandbook:
+ * - Gothic cathedral aesthetic (dark stone bg, candlelight accents)
+ * - Narrator voice in Uncial Antiqua for flavor text
+ * - Contrarian copy: "BANISH TO THE VOID" not "consume"
+ * - Loss-framed hints: "Your corruption runs dry"
+ * - Fibonacci spacing (3, 5, 8, 13, 21px)
+ * - Void Purple for banish mechanic
  */
 import { motion, AnimatePresence } from "framer-motion";
 import { memo } from "react";
@@ -21,6 +23,10 @@ interface MobileCardZoomProps {
   canAfford: boolean;
   onPlay: () => void;
   onClose: () => void;
+  /** Whether consume is available (not yet consumed this round, selection phase) */
+  canConsume?: boolean;
+  /** Callback to consume/banish this card */
+  onConsume?: () => void;
 }
 
 /* ─── Readable effect names (same as BattleLog) ─────────── */
@@ -32,7 +38,7 @@ const EFFECT_NAMES: Record<string, string> = {
   energy_regen: "Sustain", draw_boost: "Insight", draw_reduction: "Fog",
 };
 
-/* ─── Effect descriptions (same as BattleLog) ────────────── */
+/* ─── Effect descriptions ────────────── */
 const EFFECT_DESCS: Record<string, string> = {
   damage: "Deals direct damage to target HP",
   self_damage: "Deals damage to yourself as a cost",
@@ -77,6 +83,8 @@ export const MobileCardZoom = memo(function MobileCardZoom({
   canAfford,
   onPlay,
   onClose,
+  canConsume = false,
+  onConsume,
 }: MobileCardZoomProps) {
   if (!card) return null;
 
@@ -95,54 +103,79 @@ export const MobileCardZoom = memo(function MobileCardZoom({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ padding: "21px" /* Fibonacci space-21 */ }}
           onClick={onClose}
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          {/* Backdrop — cathedral darkness */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "oklch(0.06 0.01 280 / 0.85)",
+              backdropFilter: "blur(8px)",
+            }}
+          />
 
-          {/* Card Container */}
+          {/* Card Container — gothic stone frame */}
           <motion.div
-            initial={{ scale: 0.85, y: 60 }}
+            initial={{ scale: 0.85, y: 55 /* Fibonacci space-55 */ }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.85, y: 60 }}
+            exit={{ scale: 0.85, y: 55 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="relative w-[300px] rounded-xl overflow-hidden"
             style={{
-              background: "oklch(0.12 0.02 280)",
-              border: `2px solid ${sinColor}50`,
-              boxShadow: `0 0 40px ${sinColor}20, 0 20px 60px oklch(0 0 0 / 0.6)`,
+              background: "oklch(0.13 0.015 70)", /* Cathedral stone */
+              border: `2px solid ${sinColor}40`,
+              boxShadow: `
+                0 0 34px ${sinColor}15,
+                0 21px 55px oklch(0 0 0 / 0.7),
+                inset 0 1px 0 oklch(0.25 0.02 70 / 0.3)
+              `, /* Fibonacci: 34, 21, 55 */
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Card Art */}
+            {/* Card Art — with candlelight vignette */}
             {artUrl && (
-              <div className="h-[200px] relative overflow-hidden">
+              <div className="relative overflow-hidden" style={{ height: "200px" }}>
                 <img
                   src={artUrl}
                   alt={card.name}
                   className="w-full h-full object-cover"
                   style={{ filter: "saturate(1.1) contrast(1.05)" }}
                 />
+                {/* Bottom fade into stone */}
                 <div
                   className="absolute inset-0 pointer-events-none"
-                  style={{ background: `linear-gradient(to bottom, transparent 40%, oklch(0.12 0.02 280) 100%)` }}
+                  style={{
+                    background: `linear-gradient(to bottom, transparent 40%, oklch(0.13 0.015 70) 100%)`,
+                  }}
+                />
+                {/* Subtle candlelight glow at top */}
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: `radial-gradient(ellipse at 50% 0%, oklch(0.75 0.15 85 / 0.08) 0%, transparent 60%)`,
+                  }}
                 />
               </div>
             )}
 
-            <div className="p-4 space-y-3">
+            {/* Content — Fibonacci padding: 13px */}
+            <div style={{ padding: "13px", display: "flex", flexDirection: "column", gap: "8px" }}>
               {/* Header: Name + Cost */}
               <div className="flex items-center justify-between">
                 <div>
                   <h3
-                    className="text-xl font-black text-candle leading-tight"
-                    style={{ fontFamily: "var(--font-heading)" }}
+                    className="text-xl font-black leading-tight"
+                    style={{
+                      fontFamily: "var(--font-heading)",
+                      color: "oklch(0.90 0.03 85)", /* Parchment */
+                    }}
                   >
                     {card.name}
                   </h3>
-                  {/* Faction + Rarity + Keyword — matching BattleLog format */}
-                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  {/* Faction + Rarity + Keyword */}
+                  <div className="flex items-center flex-wrap" style={{ gap: "5px", marginTop: "3px" }}>
                     {sinIcon && <img src={sinIcon} alt="" className="w-4 h-4" />}
                     <span
                       className="text-xs uppercase tracking-wider font-bold"
@@ -150,42 +183,58 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                     >
                       {card.sin}
                     </span>
-                    <span className="text-xs text-candle/50 uppercase font-semibold">
+                    <span
+                      className="text-xs uppercase font-semibold"
+                      style={{ color: "oklch(0.75 0.15 85 / 0.5)" /* Candle gold dim */ }}
+                    >
                       {card.tier}
                     </span>
-                    <span className="text-xs text-candle/50">
+                    <span
+                      className="text-xs"
+                      style={{ color: "oklch(0.75 0.15 85 / 0.4)" }}
+                    >
                       {PATTERN_LABELS[pattern] || pattern}
                     </span>
                   </div>
                 </div>
-                {/* Energy Cost */}
+                {/* Energy Cost — corruption orb */}
                 <div
                   className="w-11 h-11 rounded-full flex items-center justify-center text-lg font-black shrink-0"
                   style={{
                     fontFamily: "var(--font-heading)",
-                    background: canAfford ? `${sinColor}20` : "oklch(0.65 0.22 25 / 0.1)",
-                    color: canAfford ? sinColor : "oklch(0.65 0.22 25)",
-                    border: `2px solid ${canAfford ? `${sinColor}50` : "oklch(0.65 0.22 25 / 0.4)"}`,
-                    boxShadow: canAfford ? `0 0 12px ${sinColor}30` : "none",
+                    background: canAfford
+                      ? `${sinColor}15`
+                      : "oklch(0.50 0.20 25 / 0.08)", /* Blood crimson dim */
+                    color: canAfford ? sinColor : "oklch(0.50 0.20 25)",
+                    border: `2px solid ${canAfford ? `${sinColor}40` : "oklch(0.50 0.20 25 / 0.3)"}`,
+                    boxShadow: canAfford ? `0 0 13px ${sinColor}25` : "none", /* Fibonacci 13 */
                   }}
                 >
                   {card.cost}
                 </div>
               </div>
 
-              {/* Effects — matching BattleLog's clear format */}
-              <div className="space-y-2.5">
+              {/* Iron divider — gothic gate motif */}
+              <div
+                style={{
+                  height: "1px",
+                  background: `linear-gradient(to right, transparent, oklch(0.75 0.15 85 / 0.2), transparent)`,
+                }}
+              />
+
+              {/* Effects — clear format matching BattleLog */}
+              <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                 {card.effects.map((eff, i) => {
                   const iconUrl = getEffectIconUrl(eff.type, card.sin);
                   return (
-                    <div key={i} className="flex items-start gap-2.5">
+                    <div key={i} className="flex items-start" style={{ gap: "8px" }}>
                       {iconUrl ? (
-                        <img src={iconUrl} alt="" className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                        <img src={iconUrl} alt="" className="w-5 h-5 flex-shrink-0" style={{ marginTop: "2px" }} />
                       ) : (
-                        <span className="text-sm mt-0.5">{"\u2726"}</span>
+                        <span className="text-sm" style={{ marginTop: "2px", color: sinColor }}>{"\u2726"}</span>
                       )}
                       <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex items-center flex-wrap" style={{ gap: "5px" }}>
                           {/* Readable effect name */}
                           <span
                             className="text-sm font-bold"
@@ -194,7 +243,10 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                             {EFFECT_NAMES[eff.type] || eff.type.replace(/_/g, " ")}
                           </span>
                           {/* Full compound scaling: 5 → 10 → 20 */}
-                          <span className="text-sm font-black text-candle">
+                          <span
+                            className="text-sm font-black"
+                            style={{ color: "oklch(0.90 0.03 85)" /* Parchment */ }}
+                          >
                             {eff.duration > 1
                               ? `${getCompoundTickValue(eff.baseValue, pattern as CompoundPattern, 0)} \u2192 ${getCompoundTickValue(eff.baseValue, pattern as CompoundPattern, 1)} \u2192 ${getCompoundTickValue(eff.baseValue, pattern as CompoundPattern, eff.duration - 1)}`
                               : eff.baseValue
@@ -202,13 +254,22 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                           </span>
                           {/* Target mode */}
                           {eff.targetMode && eff.targetMode !== "single" && (
-                            <span className="text-[10px] text-candle/40 uppercase font-medium">
+                            <span
+                              className="text-[10px] uppercase font-medium"
+                              style={{ color: "oklch(0.75 0.15 85 / 0.35)" }}
+                            >
                               {eff.targetMode === "self" ? "(self)" : eff.targetMode === "aoe" ? "(all)" : eff.targetMode === "duo" ? "(\u00d72)" : `(${eff.targetMode})`}
                             </span>
                           )}
                         </div>
                         {/* Effect description */}
-                        <p className="text-[11px] text-candle/50 leading-snug mt-0.5">
+                        <p
+                          className="text-[11px] leading-snug"
+                          style={{
+                            color: "oklch(0.75 0.15 85 / 0.4)",
+                            marginTop: "2px",
+                          }}
+                        >
                           {EFFECT_DESCS[eff.type] || ""}
                         </p>
                       </div>
@@ -217,40 +278,90 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                 })}
               </div>
 
-              {/* Flavor text / description */}
+              {/* Flavor text — narrator voice in Uncial Antiqua */}
               <p
-                className="text-xs text-candle/40 italic leading-relaxed"
-                style={{ fontFamily: "var(--font-body)" }}
+                className="text-xs italic leading-relaxed"
+                style={{
+                  fontFamily: "var(--font-narrator, 'Uncial Antiqua', serif)",
+                  color: "oklch(0.75 0.15 85 / 0.35)", /* Dim candle gold */
+                }}
               >
                 {card.description}
               </p>
 
-              {/* Play Button */}
+              {/* Action Buttons */}
               {isPlayable && (
-                <button
-                  className="w-full py-3 rounded-lg text-base font-black uppercase tracking-wider transition-all"
-                  style={{
-                    fontFamily: "var(--font-heading)",
-                    background: canAfford
-                      ? `linear-gradient(135deg, ${sinColor}cc, ${sinColor}99)`
-                      : "oklch(0.2 0.01 70 / 0.5)",
-                    color: canAfford ? "oklch(0.95 0 0)" : "oklch(0.5 0 0)",
-                    border: canAfford ? `2px solid ${sinColor}80` : "2px solid oklch(0.3 0 0 / 0.3)",
-                    boxShadow: canAfford ? `0 0 20px ${sinColor}30` : "none",
-                    opacity: canAfford ? 1 : 0.5,
-                    cursor: canAfford ? "pointer" : "not-allowed",
-                  }}
-                  onClick={canAfford ? onPlay : undefined}
-                  disabled={!canAfford}
-                >
-                  {canAfford ? "PLAY CARD" : "NOT ENOUGH ENERGY"}
-                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                  {/* Play Button — branded with sin color */}
+                  <motion.button
+                    whileTap={{ scale: 0.96 }}
+                    className="w-full rounded-lg text-base font-black uppercase tracking-wider"
+                    style={{
+                      fontFamily: "var(--font-heading)",
+                      padding: "13px", /* Fibonacci */
+                      background: canAfford
+                        ? `linear-gradient(135deg, ${sinColor}cc, ${sinColor}88)`
+                        : "oklch(0.18 0.01 70 / 0.6)",
+                      color: canAfford
+                        ? "oklch(0.95 0 0)"
+                        : "oklch(0.45 0 0)",
+                      border: canAfford
+                        ? `2px solid ${sinColor}60`
+                        : "2px solid oklch(0.25 0 0 / 0.3)",
+                      boxShadow: canAfford
+                        ? `0 0 21px ${sinColor}25, inset 0 1px 0 ${sinColor}30` /* Fibonacci 21 */
+                        : "none",
+                      opacity: canAfford ? 1 : 0.5,
+                      cursor: canAfford ? "pointer" : "not-allowed",
+                    }}
+                    onClick={canAfford ? onPlay : undefined}
+                    disabled={!canAfford}
+                  >
+                    {/* Brandbook: contrarian copy */}
+                    {canAfford ? "UNLEASH" : "CORRUPTION INSUFFICIENT"}
+                  </motion.button>
+
+                  {/* Consume Button — BANISH TO THE VOID (Void Purple) */}
+                  {canConsume && onConsume && (
+                    <motion.button
+                      whileTap={{ scale: 0.96 }}
+                      className="w-full rounded-lg text-sm font-bold uppercase tracking-wider"
+                      style={{
+                        fontFamily: "var(--font-heading)",
+                        padding: "10px 13px", /* Fibonacci */
+                        background: "linear-gradient(135deg, oklch(0.22 0.12 300), oklch(0.16 0.10 300))",
+                        color: "oklch(0.78 0.08 300)",
+                        border: "1px solid oklch(0.35 0.15 300 / 0.4)",
+                        boxShadow: "0 0 13px oklch(0.30 0.15 300 / 0.2)", /* Fibonacci 13 */
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onConsume();
+                      }}
+                    >
+                      <span className="flex items-center justify-center" style={{ gap: "5px" }}>
+                        {/* Void icon */}
+                        <span style={{ fontSize: "14px" }}>{"\u2620"}</span>
+                        BANISH TO THE VOID
+                        <span className="text-[10px] opacity-60">(+1 energy)</span>
+                      </span>
+                    </motion.button>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Close hint */}
-            <div className="text-center pb-2.5">
-              <span className="text-[10px] text-candle/25">tap anywhere to close</span>
+            {/* Close hint — narrator voice */}
+            <div className="text-center" style={{ paddingBottom: "8px" }}>
+              <span
+                className="text-[10px]"
+                style={{
+                  fontFamily: "var(--font-narrator, 'Uncial Antiqua', serif)",
+                  color: "oklch(0.75 0.15 85 / 0.2)",
+                }}
+              >
+                tap anywhere to dismiss
+              </span>
             </div>
           </motion.div>
         </motion.div>

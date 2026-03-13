@@ -26,7 +26,7 @@ import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
-import { playCard, passTurn, lockInCards, getGameLog } from "@/lib/gameEngine";
+import { playCard, passTurn, lockInCards, getGameLog, consumeCard } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +34,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO, CONSUME_ENERGY_REFUND } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
@@ -100,6 +100,7 @@ export default function GameBoard() {
   const [selectedCards, setSelectedCards] = useState<Array<{ cardId: string; targetPlayerId?: string }>>([]);
   const [isLockingIn, setIsLockingIn] = useState(false);
   const [hasLockedIn, setHasLockedIn] = useState(false);
+  const [hasConsumedThisRound, setHasConsumedThisRound] = useState(false);
   const [showBalanceSheet, setShowBalanceSheet] = useState(false);
   const { setCurrentPage } = useTutorial();
 
@@ -305,6 +306,7 @@ export default function GameBoard() {
     if (turnPhase === "selection") {
       setHasLockedIn(false);
       setSelectedCards([]);
+      setHasConsumedThisRound(false); // Reset consume allowance each round
     }
   }, [turnPhase, gameState?.currentRound]);
 
@@ -403,6 +405,12 @@ export default function GameBoard() {
   const energyRemaining = useMemo(() => {
     return (myPlayer?.currentEnergy ?? 0) - selectedCardsEnergyCost;
   }, [myPlayer?.currentEnergy, selectedCardsEnergyCost]);
+
+  // Brandbook: detect when no cards are affordable to hint the PASS button
+  const canAffordAnyCard = useMemo(() => {
+    if (!myCards.length) return false;
+    return myCards.some((c) => c.cost <= energyRemaining);
+  }, [myCards, energyRemaining]);
 
   const toggleCardSelection = useCallback((cardId: string) => {
     setSelectedCards(prev => {
@@ -1218,13 +1226,44 @@ export default function GameBoard() {
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-base md:text-lg font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
+                  animate={!canAffordAnyCard && selectedCards.length === 0 ? {
+                    boxShadow: [
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2), inset 0 0 0 oklch(0.75 0.15 85 / 0)",
+                      "0 0 21px oklch(0.75 0.15 85 / 0.5), inset 0 0 8px oklch(0.75 0.15 85 / 0.1)",
+                      "0 0 8px oklch(0.75 0.15 85 / 0.2), inset 0 0 0 oklch(0.75 0.15 85 / 0)",
+                    ],
+                    borderColor: [
+                      "oklch(0.75 0.15 85 / 0.3)",
+                      "oklch(0.75 0.15 85 / 0.7)",
+                      "oklch(0.75 0.15 85 / 0.3)",
+                    ],
+                  } : {}}
+                  transition={!canAffordAnyCard && selectedCards.length === 0 ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
+                  className={`px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 text-base md:text-lg font-bold uppercase tracking-wide transition-all ${
+                    !canAffordAnyCard && selectedCards.length === 0
+                      ? "border-candle/50 text-candle"
+                      : "border-border/40 text-muted-foreground hover:border-border/60 hover:text-foreground"
+                  }`}
                   style={{ fontFamily: "var(--font-heading)" }}
                   onClick={handlePassLockIn}
                   disabled={isLockingIn}
                 >
-                  {isLockingIn ? "..." : "PASS"}
+                  {isLockingIn ? "..." : !canAffordAnyCard && selectedCards.length === 0 ? "PASS TURN" : "PASS"}
                 </motion.button>
+                {/* Brandbook narrator hint when corruption runs dry */}
+                {!canAffordAnyCard && selectedCards.length === 0 && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 5 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-xs text-center mt-1"
+                    style={{
+                      fontFamily: "var(--font-narrator, 'Uncial Antiqua', serif)",
+                      color: "oklch(0.75 0.15 85 / 0.45)",
+                    }}
+                  >
+                    Your corruption runs dry...
+                  </motion.p>
+                )}
               </div>
             </motion.div>
           )}
@@ -1377,6 +1416,25 @@ export default function GameBoard() {
               setMobileZoomCard(null);
             }}
             onClose={() => setMobileZoomCard(null)}
+            canConsume={isMyTurn && turnPhase === "selection" && !hasConsumedThisRound}
+            onConsume={async () => {
+              if (!gameId || !playerId || !mobileZoomCard) return;
+              try {
+                const result = await consumeCard(gameId, playerId, mobileZoomCard);
+                if (result.success) {
+                  setHasConsumedThisRound(true);
+                  addMessage(result.message, "action");
+                  addToActionFeed(`${myPlayer?.username} banished a card to the void`);
+                  soundEngine.play("dark_magic");
+                  setMobileZoomCard(null);
+                  refetch();
+                } else {
+                  addMessage(result.message, "info");
+                }
+              } catch (err: any) {
+                addMessage("Even the void rejects this offering.", "info");
+              }
+            }}
           />
         )}
       </div>

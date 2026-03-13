@@ -1,0 +1,46 @@
+{
+  "query": "SELECT 'total' as category, COUNT(*) as cnt FROM blog_posts WHERE published = 1 UNION ALL SELECT category, COUNT(*) FROM blog_posts WHERE published = 1 GROUP BY category ORDER BY cnt DESC;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute SELECT 'total' as category, COUNT(*) as cnt FROM blog_posts WHERE published = 1 UNION ALL SELECT category, COUNT(*) FROM blog_posts WHERE published = 1 GROUP BY category ORDER BY cnt DESC;",
+  "rows": [
+    {
+      "category": "total",
+      "cnt": "57"
+    },
+    {
+      "category": "faction-guides",
+      "cnt": "18"
+    },
+    {
+      "category": "game-guides",
+      "cnt": "14"
+    },
+    {
+      "category": "industry-culture",
+      "cnt": "11"
+    },
+    {
+      "category": "multiplayer-social",
+      "cnt": "5"
+    },
+    {
+      "category": "free-to-play",
+      "cnt": "3"
+    },
+    {
+      "category": "game-design",
+      "cnt": "3"
+    },
+    {
+      "category": "aeo-questions",
+      "cnt": "2"
+    },
+    {
+      "category": "seo-pillars",
+      "cnt": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "category\tcnt\ntotal\t57\nfaction-guides\t18\ngame-guides\t14\nindustry-culture\t11\nmultiplayer-social\t5\nfree-to-play\t3\ngame-design\t3\naeo-questions\t2\nseo-pillars\t1\n",
+  "stderr": "",
+  "execution_time_ms": 379
+}

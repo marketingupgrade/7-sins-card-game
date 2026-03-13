@@ -84,6 +84,41 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.3.0",
+    date: "March 2026",
+    title: "The Consume Rite",
+    summary: "Banish cards from your hand to fuel your corruption. A new strategic layer emerges from the void.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Added Consume mechanic: banish any card from your hand to gain +1 energy. Maximum 1 consume per round. The card is permanently removed from the game." },
+      { category: "feature", text: "Pass button now pulses with golden glow and displays 'PASS TURN' when no cards are affordable, with narrator hint: 'Your corruption runs dry...'" },
+      { category: "feature", text: "Card detail modal (MobileCardZoom) completely rewritten: now shows readable effect names (Hurt/Mend/Ward), full compound scaling chains, rarity labels, keyword badges, and effect descriptions" },
+      { category: "feature", text: "Server-side consume validation: prevents double-consume, dead player consume, and invalid card consume with thematic error messages" },
+      { category: "fix", text: "Consume flag (consumed_this_round) properly resets at round advance alongside locked cards" },
+      { category: "fix", text: "Game log now records consume actions with full card metadata for battle replay" },
+    ],
+  },
+  {
+    version: "5.2.0",
+    date: "March 2026",
+    title: "The Overlords' Codex",
+    summary: "AAA Premium Brandbook, navigation overhaul, SEO sitemap, and the Lore archives open their gates.",
+    changes: [
+      { category: "feature", text: "Added /brandbook page: 35-page AAA Premium Brandbook with 13 interactive sections, color swatches, faction profiles, Octalysis behavioral framework, and golden ratio mathematics" },
+      { category: "feature", text: "Blog renamed to 'Lore' in navigation (URL slug /blog preserved for SEO)" },
+      { category: "feature", text: "Navigation reordered: Home first, then alphabetical. Brandbook subtitle: 'How the overlords wished this game to be molded'" },
+      { category: "feature", text: "Static sitemap.xml with 57 blog posts + 12 static pages for Google Search Console" },
+      { category: "feature", text: "Added Buy Me a Coffee widget with custom gothic QR code in footer" },
+      { category: "feature", text: "Account Management page with profile card, saved decks, and GDPR-compliant data purge" },
+      { category: "feature", text: "Deck selection in lobby: choose a saved 30-card deck or use full arsenal after faction pick" },
+      { category: "feature", text: "Guest deck limit: 1 saved deck with sign-in upsell banner" },
+      { category: "feature", text: "Complete password reset flow with Supabase integration and branded email templates" },
+      { category: "fix", text: "Footer text contrast increased across all sections for WCAG readability" },
+      { category: "fix", text: "Simplified homepage layout with sign-in prompt for unauthenticated users" },
+      { category: "fix", text: "Fixed 12 Dependabot security vulnerabilities (axios, pnpm, fast-xml-parser, rollup, esbuild, dompurify, qs, lodash)" },
+    ],
+  },
+  {
     version: "5.1.0",
     date: "March 2026",
     title: "The Scholar's Update",

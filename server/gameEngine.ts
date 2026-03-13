@@ -35,6 +35,7 @@ import {
   PRIDE_HUBRIS_MULT,
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
+  CONSUME_ENERGY_REFUND,
   getCompoundTickValue,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
@@ -495,6 +496,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
       bonusEnergy: gp.bonus_energy ?? 0,
       lockedCards: playerLocked.length > 0 ? playerLocked : gpLockedCards,
       hasLockedIn: gpLockedCards.length > 0 || playerLocked.length > 0,
+      consumedThisRound: gp.consumed_this_round ?? false,
     };
   });
 
@@ -535,6 +537,76 @@ export async function getGameLog(gameId: string): Promise<any[]> {
     .eq("game_id", gameId)
     .order("timestamp", { ascending: true });
   return data || [];
+}
+
+/**
+ * Consume (Banish) a card from hand — permanently removes it from the game
+ * and refunds +1 energy. Max 1 consume per round per player.
+ * Brandbook: "Banished to the void. How... efficient."
+ */
+export async function consumeCard(
+  gameId: string,
+  playerId: string,
+  cardId: string
+): Promise<{ success: boolean; message: string }> {
+  const sb = getServerSupabase();
+
+  // Fetch game for round info
+  const { data: game } = await sb
+    .from("games")
+    .select("current_round")
+    .eq("id", gameId)
+    .single();
+
+  // Fetch player
+  const { data: gp, error } = await sb
+    .from("game_players")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("player_id", playerId)
+    .single();
+
+  if (error || !gp) return { success: false, message: "The void cannot find you." };
+  if (!gp.is_alive) return { success: false, message: "The dead cannot sacrifice." };
+  if (gp.consumed_this_round) return { success: false, message: "The void has had its fill this round." };
+
+  // Check card is in hand
+  const hand: string[] = gp.hand || [];
+  if (!hand.includes(cardId)) return { success: false, message: "That card has already slipped away." };
+
+  // Remove card from hand (permanently — not to discard)
+  const newHand = hand.filter((id: string) => id !== cardId);
+  const newEnergy = Math.min((gp.current_energy || 0) + CONSUME_ENERGY_REFUND, MAX_ENERGY);
+
+  await sb
+    .from("game_players")
+    .update({
+      hand: newHand,
+      current_energy: newEnergy,
+      consumed_this_round: true,
+    })
+    .eq("game_id", gameId)
+    .eq("player_id", playerId);
+
+  // Log the banishment
+  const card = getCardById(cardId);
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    round_number: game?.current_round || 1,
+    player_id: playerId,
+    action_type: "consume",
+    action_data: {
+      cardId,
+      cardName: card?.name || cardId,
+      energyRefund: CONSUME_ENERGY_REFUND,
+      newEnergy,
+    },
+  });
+
+  return {
+    success: true,
+    message: `Banished ${card?.name || "a card"} to the void. +${CONSUME_ENERGY_REFUND} energy.`,
+  };
 }
 
 // ─── Helper: Resolve Targets (v4 targetMode) ────────────────
@@ -996,7 +1068,7 @@ async function advanceRound(gameId: string): Promise<void> {
   }
 
   for (const p of allPlayers) {
-    await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
+    await sb.from("game_players").update({ locked_cards: [], consumed_this_round: false }).eq("id", p.id);
   }
 
   await sb.from("games").update({

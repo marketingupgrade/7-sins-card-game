@@ -24,6 +24,7 @@ import {
   joinGame,
   passTurn,
   playCard,
+  consumeCard,
   startGame,
 } from "./gameEngine";
 import {
@@ -349,6 +350,19 @@ export const appRouter = router({
         return { success: true };
       }),
 
+
+    /** Consume (banish) a card from hand for +1 energy. Max 1 per round. */
+    consume: publicProcedure
+      .input(
+        z.object({
+          gameId: z.string().uuid(),
+          playerId: z.string().min(1).max(64),
+          cardId: z.string().max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return consumeCard(input.gameId, input.playerId, input.cardId);
+      }),
 
     /** Get the full game state */
     getState: publicProcedure
