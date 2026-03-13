@@ -470,19 +470,19 @@ export default function GameRules() {
               {[
                 {
                   phase: "Selection",
-                  icon: "🎴",
+                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#d4a574"}}><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h4" /><circle cx="16" cy="16" r="2" /></svg>),
                   time: `${SELECTION_TIMER_SECONDS}s timer`,
                   description: "All players choose cards simultaneously. Select 0 or more cards from your hand (limited by energy). Cards are locked in but hidden from opponents.",
                 },
                 {
                   phase: "Resolution",
-                  icon: "⚔",
+                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#ef4444"}}><path d="M6 18L18 6M18 6h-6m6 0v6" /><path d="M18 18L6 6M6 6h6M6 6v6" /></svg>),
                   time: "Automatic",
                   description: "Cards resolve one-by-one in priority order: (1) Skip-queue (priority) cards resolve first, (2) Lowest HP plays first (tiebreak: lowest seat index), (3) Within each player: lowest cost card first.",
                 },
                 {
                   phase: "Round End",
-                  icon: "🔄",
+                  icon: (<svg viewBox="0 0 24 24" className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#a78bfa"}}><path d="M21 12a9 9 0 11-6.22-8.56" /><path d="M21 3v5h-5" /></svg>),
                   time: "Automatic",
                   description: "Compound effects tick (applying their next multiplier), energy refreshes (+1), new cards are drawn to refill hand, round counter advances. Then back to Selection.",
                 },
@@ -604,10 +604,10 @@ export default function GameRules() {
           <RuleSection id="targeting" number="VI" title="Target Modes">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
               {[
-                { mode: "Single", icon: "🎯", description: "Targets lowest-HP enemy (default)" },
-                { mode: "Duo", icon: "🎯🎯", description: "Targets 2 lowest-HP enemies" },
-                { mode: "AoE", icon: "💥", description: "Targets all enemies" },
-                { mode: "Self", icon: "🔄", description: "Targets the caster" },
+                { mode: "Single", icon: (<svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#ef4444"}}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg>), description: "Targets lowest-HP enemy (default)" },
+                { mode: "Duo", icon: (<div className="flex -space-x-2"><svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#ef4444"}}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg><svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#ef4444"}}><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" fill="currentColor" /></svg></div>), description: "Targets 2 lowest-HP enemies" },
+                { mode: "AoE", icon: (<svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#f59e0b"}}><path d="M12 2l2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z" /><circle cx="12" cy="12" r="3" /></svg>), description: "Targets all enemies" },
+                { mode: "Self", icon: (<svg viewBox="0 0 24 24" className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="1.5" style={{color:"#a78bfa"}}><path d="M21 12a9 9 0 11-6.22-8.56" /><path d="M21 3v5h-5" /></svg>), description: "Targets the caster" },
               ].map((t) => (
                 <div
                   key={t.mode}

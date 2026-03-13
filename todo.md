@@ -979,7 +979,7 @@
 ## Route & Menu Integration
 - [x] Add Matchup Matrix and Game Rules to SigilMenu
 - [x] Update App.tsx with new routes
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Balance Analysis Discussion Section Update
 - [x] Remove "Recommended Future Work" section from Discussion
@@ -989,3 +989,13 @@
 ## Collection Mobile Layout Fix
 - [x] Make filters collapsible on mobile (hidden by default, toggle button to show)
 - [x] Ensure cards are visible without excessive scrolling on mobile
+
+## Fix Emoji Icons with Themed Icons
+- [x] Replace emoji icons in Target Modes section (Game Rules page) with themed SVG icons
+- [x] Check if same emoji icons appear on card components and fix those too
+- [x] Ensure all icons match dark gothic aesthetic
+
+## Card Collection & Detail Fixes
+- [x] Fix card images cut off in collection grid view
+- [x] Fix white background visible on some card images (scale 1.12 + inset shadow vignette)
+- [x] Improve compound tick value display — clearer table with per-round damage, multiplier, cumulative total, and explanation

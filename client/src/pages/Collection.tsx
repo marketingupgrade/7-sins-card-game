@@ -109,14 +109,18 @@ const MiniCard = memo(function MiniCard({
       style={{ borderColor: `${sinColor}30` }}
     >
       {/* Art */}
-      <div className="relative aspect-square overflow-hidden bg-black/60">
+      <div className="relative aspect-[3/4] overflow-hidden bg-black">
         {artUrl ? (
-          <img
-            src={artUrl}
-            alt={card.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-            loading="lazy"
-          />
+          <>
+            <img
+              src={artUrl}
+              alt={card.name}
+              className="w-full h-full object-cover transition-transform duration-300 scale-[1.12] group-hover:scale-[1.22]"
+              loading="lazy"
+            />
+            {/* Inset shadow to feather any remaining white edges from source art */}
+            <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 12px 6px rgba(0,0,0,0.85)' }} />
+          </>
         ) : (
           <div
             className="w-full h-full flex items-center justify-center"
@@ -212,9 +216,12 @@ function CardDetailModal({
         style={{ borderColor: `${sinColor}40` }}
       >
         {/* Header with art */}
-        <div className="relative h-56 overflow-hidden">
+        <div className="relative h-56 overflow-hidden bg-black">
           {artUrl ? (
-            <img src={artUrl} alt={card.name} className="w-full h-full object-cover" />
+            <>
+              <img src={artUrl} alt={card.name} className="w-full h-full object-cover scale-[1.12]" />
+              <div className="absolute inset-0 pointer-events-none" style={{ boxShadow: 'inset 0 0 20px 10px rgba(0,0,0,0.85)' }} />
+            </>
           ) : (
             <div
               className="w-full h-full flex items-center justify-center"
@@ -333,40 +340,60 @@ function CardDetailModal({
           </div>
 
           {/* Compound tick preview */}
-          <div className="space-y-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">
-              Compound Tick Values (First Effect)
-            </h3>
-            <div className="flex items-end gap-1 h-12">
-              {Array.from({ length: card.effects[0]?.duration || 0 }, (_, i) => {
-                const val = getCompoundTickValue(
-                  card.effects[0]?.baseValue || 0,
-                  card.compoundPattern,
-                  i
-                );
-                const maxVal = getCompoundTickValue(
-                  card.effects[0]?.baseValue || 0,
-                  card.compoundPattern,
-                  (card.effects[0]?.duration || 1) - 1
-                );
-                const height = maxVal > 0 ? (val / maxVal) * 100 : 0;
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-                    <span className="text-[9px] text-white/40">{Math.round(val)}</span>
-                    <div
-                      className="w-full rounded-t"
-                      style={{
-                        height: `${Math.max(height, 8)}%`,
-                        background: `${PATTERN_COLORS[card.compoundPattern]}80`,
-                        minHeight: "3px",
-                      }}
-                    />
-                    <span className="text-[8px] text-white/30">t{i + 1}</span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {card.effects[0] && (() => {
+            const eff = card.effects[0];
+            const ticks = Array.from({ length: eff.duration }, (_, i) => ({
+              round: i + 1,
+              value: getCompoundTickValue(eff.baseValue, card.compoundPattern, i),
+            }));
+            const total = ticks.reduce((s, t) => s + t.value, 0);
+            const effectLabel = EFFECT_LABELS[eff.type] || eff.type;
+            return (
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">
+                  Damage Over Time — {effectLabel}
+                </h3>
+                {/* Timeline */}
+                <div className="flex items-stretch gap-0.5">
+                  {ticks.map((t, i) => {
+                    const maxVal = ticks[ticks.length - 1].value;
+                    const height = maxVal > 0 ? (t.value / maxVal) * 100 : 0;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center">
+                        <span className="text-[10px] font-semibold mb-0.5" style={{ color: PATTERN_COLORS[card.compoundPattern] }}>
+                          {t.value}
+                        </span>
+                        <div className="w-full flex-1 flex items-end" style={{ minHeight: "24px" }}>
+                          <div
+                            className="w-full rounded-t"
+                            style={{
+                              height: `${Math.max(height, 12)}%`,
+                              background: `${PATTERN_COLORS[card.compoundPattern]}60`,
+                              border: `1px solid ${PATTERN_COLORS[card.compoundPattern]}40`,
+                              minHeight: "4px",
+                            }}
+                          />
+                        </div>
+                        <span className="text-[9px] text-white/30 mt-0.5">R{t.round}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Summary */}
+                <div className="flex items-center justify-between text-[10px] px-1 pt-1 border-t border-white/5">
+                  <span className="text-white/35">
+                    {ticks.map(t => t.value).join(" → ")} per round
+                  </span>
+                  <span className="font-semibold" style={{ color: PATTERN_COLORS[card.compoundPattern] }}>
+                    Total: {total}
+                  </span>
+                </div>
+                <p className="text-[10px] text-white/30 leading-relaxed">
+                  This card ticks once per round for {eff.duration} rounds. Each round applies {effectLabel.toLowerCase()} equal to base value ({eff.baseValue}) × the <span style={{ color: PATTERN_COLORS[card.compoundPattern] }}>{PATTERN_LABELS[card.compoundPattern]}</span> multiplier for that round.
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Faction passive */}
           <div
