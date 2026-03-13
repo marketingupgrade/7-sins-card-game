@@ -45,6 +45,10 @@ interface AuthState {
   signInWithPhone: (phone: string) => Promise<{ error: string | null }>;
   /** Verify phone OTP */
   verifyPhoneOtp: (phone: string, token: string) => Promise<{ error: string | null }>;
+  /** Send password reset email */
+  resetPasswordForEmail: (email: string) => Promise<{ error: string | null }>;
+  /** Update password (after reset link clicked) */
+  updatePassword: (newPassword: string) => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -196,6 +200,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const resetPasswordForEmail = useCallback(async (email: string) => {
+    const supabase = getClientSupabase();
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    const supabase = getClientSupabase();
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return { error: error?.message ?? null };
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -211,6 +229,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUpWithEmail,
         signInWithPhone,
         verifyPhoneOtp,
+        resetPasswordForEmail,
+        updatePassword,
       }}
     >
       {children}

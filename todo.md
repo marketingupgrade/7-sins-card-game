@@ -1070,3 +1070,6 @@
 - [x] Redesign Login page: email sign-up as primary method
 - [x] Remove phone auth tab from Login page
 - [x] Show Discord, Google, Twitch as "coming soon" with disabled styling
+- [x] Add "Forgot password?" link to Login page sign-in view
+- [x] Add password reset email flow via Supabase resetPasswordForEmail
+- [x] Create ResetPassword page to set new password after clicking email link

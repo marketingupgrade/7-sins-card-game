@@ -13,7 +13,7 @@ import { useLocation, Link } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import EmberField from "@/components/EmberField";
 
-type EmailMode = "signin" | "signup";
+type EmailMode = "signin" | "signup" | "forgot";
 
 /** Discord brand icon */
 function DiscordIcon() {
@@ -51,6 +51,7 @@ export default function Login() {
     user,
     signInWithEmail,
     signUpWithEmail,
+    resetPasswordForEmail,
   } = useSupabaseAuth();
 
   const [emailMode, setEmailMode] = useState<EmailMode>("signup");
@@ -72,7 +73,11 @@ export default function Login() {
     setSuccess(null);
     setLoading(true);
 
-    if (emailMode === "signin") {
+    if (emailMode === "forgot") {
+      const { error: err } = await resetPasswordForEmail(email);
+      if (err) setError(err);
+      else setSuccess("Password reset link sent. Check your email.");
+    } else if (emailMode === "signin") {
       const { error: err } = await signInWithEmail(email, password);
       if (err) setError(err);
       else navigate("/");
@@ -157,20 +162,35 @@ export default function Login() {
                   className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/90 placeholder:text-white/20 text-sm focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
                 />
               </div>
-              <div>
-                <label className="block text-[10px] tracking-[0.2em] text-amber-200/40 uppercase mb-2" style={{ fontFamily: "var(--font-heading)" }}>
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  minLength={6}
-                  className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/90 placeholder:text-white/20 text-sm focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
-                />
-              </div>
+
+              {/* Password field — hidden in forgot mode */}
+              {emailMode !== "forgot" && (
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-[10px] tracking-[0.2em] text-amber-200/40 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                      Password
+                    </label>
+                    {emailMode === "signin" && (
+                      <button
+                        type="button"
+                        onClick={() => { setEmailMode("forgot"); setError(null); setSuccess(null); }}
+                        className="text-[10px] text-amber-400/40 hover:text-amber-400/70 transition-colors"
+                      >
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                    minLength={6}
+                    className="w-full px-4 py-3 rounded-lg bg-white/5 border border-white/10 text-white/90 placeholder:text-white/20 text-sm focus:outline-none focus:border-amber-500/40 focus:ring-1 focus:ring-amber-500/20 transition-all"
+                  />
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -178,22 +198,41 @@ export default function Login() {
                 className="w-full py-3 rounded-lg bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 text-amber-200 text-sm font-medium tracking-wider uppercase transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:scale-[1.01] active:scale-[0.99]"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                {loading ? "Processing..." : emailMode === "signin" ? "Sign In" : "Create Account"}
+                {loading
+                  ? "Processing..."
+                  : emailMode === "forgot"
+                    ? "Send Reset Link"
+                    : emailMode === "signin"
+                      ? "Sign In"
+                      : "Create Account"}
               </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setEmailMode(emailMode === "signin" ? "signup" : "signin");
-                  setError(null);
-                  setSuccess(null);
-                }}
-                className="w-full text-center text-xs text-white/30 hover:text-white/50 transition-colors"
-              >
-                {emailMode === "signin"
-                  ? "Don't have an account? Create one"
-                  : "Already have an account? Sign in"}
-              </button>
+              {/* Mode toggle links */}
+              <div className="flex flex-col items-center gap-1">
+                {emailMode === "forgot" ? (
+                  <button
+                    type="button"
+                    onClick={() => { setEmailMode("signin"); setError(null); setSuccess(null); }}
+                    className="text-center text-xs text-white/30 hover:text-white/50 transition-colors"
+                  >
+                    Back to sign in
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmailMode(emailMode === "signin" ? "signup" : "signin");
+                      setError(null);
+                      setSuccess(null);
+                    }}
+                    className="text-center text-xs text-white/30 hover:text-white/50 transition-colors"
+                  >
+                    {emailMode === "signin"
+                      ? "Don't have an account? Create one"
+                      : "Already have an account? Sign in"}
+                  </button>
+                )}
+              </div>
             </form>
 
             {/* Social providers — coming soon */}
