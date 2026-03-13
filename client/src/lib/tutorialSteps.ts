@@ -104,7 +104,7 @@ const LOBBY_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='sin-selection']",
     position: "top",
     title: "Choose Your Sin",
-    body: "Each sin has 50 unique compound cards and a passive ability. Wrath: VENGEANCE (reflect 63% damage). Sloth: ENDURANCE (shield from energy × hand). Greed: TAX (shields from damage ticks). Envy: JEALOUSY (amplify afflictions 10.6%). Pride: HUBRIS (×1.32 for highest-cost card). Lust: TEMPTATION (25% lifesteal on ticks). Gluttony: DEVOURER (energy from burned cards).",
+    body: "Each sin has 54 unique compound cards (including 4 priority cards) and a passive ability. Wrath: VENGEANCE (reflect 63% damage). Sloth: ENDURANCE (shield from energy × hand). Greed: TAX (shields from damage ticks). Envy: JEALOUSY (amplify afflictions 10.6%). Pride: HUBRIS (×1.32 for highest-cost card). Lust: TEMPTATION (25% lifesteal on ticks). Gluttony: DEVOURER (energy from burned cards).",
     quip: "Choose your fighter. I mean, your character flaw.",
   },
   {
@@ -173,6 +173,15 @@ const GAME_STEPS: TutorialStep[] = [
     title: "Compound Patterns \uD83D\uDCC8",
     body: "All cards compound over time. STANDARD: Fibonacci (1\u00D7, 1\u00D7, 2\u00D7 = 4\u00D7 total). AGGRESSIVE: doubles each tick (1\u00D7, 2\u00D7, 4\u00D7 = 7\u00D7 total). SLOWBURN: flat then ramps. Pay energy once, effects continue for free.",
     quip: "Patience is a virtue. Which is ironic for a game about sins.",
+  },
+  {
+    id: "game-priority-cards",
+    page: "game",
+    targetSelector: "[data-tutorial='card-hand']",
+    position: "top",
+    title: "Priority Cards \u26A1",
+    body: "Some cards have a yellow PRIORITY badge. These skip-queue cards resolve BEFORE all normal cards in the resolution phase. Use them for clutch heals, emergency shields, or to strike before your opponent can react.",
+    quip: "Cutting in line? In a game about sins? How appropriate.",
   },
   {
     id: "game-target",

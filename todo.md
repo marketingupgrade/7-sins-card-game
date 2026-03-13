@@ -848,7 +848,7 @@
 - [ ] Implement all new/revamped cards in cardData.ts
 - [ ] Run 50K Monte Carlo tournament simulation for balance assessment
 - [ ] Apply balance adjustments from simulation results (max 1.5% variance target)
-- [x] BUG FIX: Resolution card display not working on desktop
+- [ ] BUG FIX: Resolution card display not working on desktop
 - [ ] UI: Strategic UI improvements for better readability and decision-making
 - [x] Scale faction passives to fit 200 HP pool (currently tuned for smaller HP pool)
 - [x] Change Greed passive from AVARICE (+1 energy on steal) to TAX (3rd cycle compound DMG generates 10% as shield)
@@ -892,17 +892,20 @@
 - [x] Update tutorialSteps.ts with new passive descriptions
 - [x] Update all test files (game.test.ts, gameLogic.test.ts) for 350 cards
 - [x] All 192 tests passing
-- [ ] Generate artwork for 98 new cards (cards 37-50 per faction)
-
-## Artwork & Bug Fix Pass
-- [ ] Generate artwork for 98 new cards (cards 37-50 per faction)
-- [ ] Upload artwork to CDN and update cardArtUrls.ts
-- [x] BUG FIX: Resolution card display not working on desktop
-- [ ] Push to GitHub
-
-## Artwork & Bug Fix Pass
 - [x] Generate artwork for 98 new cards (cards 37-50 per faction)
-- [x] Convert all new artwork to 512x512 webp format
-- [x] Upload artwork to CDN and update cardArtUrls.ts
-- [x] BUG FIX: Resolution card display not working on desktop
+
+## Passive Tooltips & Skip-Queue Cards
+- [x] Add passive ability tooltip to player HUD during gameplay
+- [x] Show passive name, description, and current faction icon on hover/tap
+- [x] Ensure tooltip works on both desktop (hover) and mobile (tap)
+- [x] Design skip-queue card mechanic in game engine (resolve before normal queue)
+- [x] Add skip-queue flag to card data schema
+- [x] Create 28 skip-queue cards (4 per faction) with balanced stats
+- [x] Generate artwork for 28 skip-queue cards
+- [x] Convert all 126 new card artworks to 512x512 webp and upload to CDN (378 total entries)
+- [x] Update UI to visually distinguish skip-queue cards (border/badge)
+- [x] Update ResolutionReveal to show skip-queue cards resolving first (already implemented in engine)
+- [x] Update cardArtUrls.ts with all 378 CDN URLs
+- [x] Add skip-queue to tutorial/tooltips
+- [x] Run balance validation with skip-queue cards (all 192 tests pass)
 - [ ] Push to GitHub

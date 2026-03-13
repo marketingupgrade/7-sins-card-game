@@ -51,10 +51,6 @@ const EFFECT_VISUALS: Record<string, { icon: string; color: string; label: strin
   energy_block:        { icon: "🔇", color: "#6b7280", label: "EXHAUST" },
   affliction_amplify:  { icon: "☠️", color: "#dc2626", label: "INTENSIFY" },
   affliction_transfer: { icon: "↪️", color: "#f59e0b", label: "REDIRECT" },
-  discard_burn:        { icon: "🗑️", color: "#f97316", label: "BURN" },
-  energy_regen:        { icon: "🔄", color: "#eab308", label: "REGEN" },
-  draw_boost:          { icon: "📈", color: "#22c55e", label: "DRAW+" },
-  draw_reduction:      { icon: "📉", color: "#6b7280", label: "DRAW-" },
 };
 
 /* ─── Animation Phase ──────────────────────────────────────── */

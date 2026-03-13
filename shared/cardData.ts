@@ -334,6 +334,35 @@ export const WRATH_CARDS: CardDefinition[] = [
     effects: [{ type: "self_damage", baseValue: 13, duration: 2, targetMode: "self" }, { type: "damage", baseValue: 26, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 16, duration: 2, targetMode: "self" }],
     description: "The final expression of wrath — total annihilation",
   },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "wrath_51", name: "Flash Rage", sin: "wrath",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 9, duration: 2, targetMode: "single" }],
+    description: "Strike before they see it coming — pure fury, no delay.",
+    skipQueue: true,
+  },
+  {
+    id: "wrath_52", name: "Retribution Spike", sin: "wrath",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 12, duration: 2, targetMode: "single" }, { type: "self_damage", baseValue: 5, duration: 1, targetMode: "self" }],
+    description: "Pain dealt before pain received. The wrathful always strike first.",
+    skipQueue: true,
+  },
+  {
+    id: "wrath_53", name: "Berserker's Reflex", sin: "wrath",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }],
+    description: "Instinct, not thought. The body moves before the mind.",
+    skipQueue: true,
+  },
+  {
+    id: "wrath_54", name: "Preemptive Fury", sin: "wrath",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "Attack is the best defense — but a little armor doesn't hurt.",
+    skipQueue: true,
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
 // SLOTH — 50 cards
@@ -638,6 +667,35 @@ export const SLOTH_CARDS: CardDefinition[] = [
     cost: 5, tier: "epic", compoundPattern: "standard",
     effects: [{ type: "heal_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "In stillness, true power is conserved",
+  },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "sloth_51", name: "Drowsy Ward", sin: "sloth",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 8, duration: 3, targetMode: "self" }],
+    description: "A lazy barrier that somehow blocks everything.",
+    skipQueue: true,
+  },
+  {
+    id: "sloth_52", name: "Yawning Hex", sin: "sloth",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "energy_block", baseValue: 1, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    description: "Your yawn is contagious — and draining.",
+    skipQueue: true,
+  },
+  {
+    id: "sloth_53", name: "Torpor Snap", sin: "sloth",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "A flick of lethargy that dulls the mind before battle begins.",
+    skipQueue: true,
+  },
+  {
+    id: "sloth_54", name: "Idle Absorption", sin: "sloth",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 6, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    description: "Do nothing, gain everything. The slothful way.",
+    skipQueue: true,
   },
 ];
 // ═══════════════════════════════════════════════════════════════
@@ -944,6 +1002,35 @@ export const GREED_CARDS: CardDefinition[] = [
     effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 6, duration: 2, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "aoe" }],
     description: "The final audit reveals everything was already taken",
   },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "greed_51", name: "Quick Skim", sin: "greed",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "A pickpocket's reflex — your energy is now mine.",
+    skipQueue: true,
+  },
+  {
+    id: "greed_52", name: "Tax Collector's Rush", sin: "greed",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "shield_steal", baseValue: 6, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    description: "The taxman arrives before the battle — nothing escapes the ledger.",
+    skipQueue: true,
+  },
+  {
+    id: "greed_53", name: "Coin Flip", sin: "greed",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }],
+    description: "Heads you lose, tails I win. The coin was weighted.",
+    skipQueue: true,
+  },
+  {
+    id: "greed_54", name: "Advance Payment", sin: "greed",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "Collect interest before the debt is even owed.",
+    skipQueue: true,
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
 // ENVY — 50 cards
@@ -1248,6 +1335,35 @@ export const ENVY_CARDS: CardDefinition[] = [
     cost: 5, tier: "epic", compoundPattern: "standard",
     effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "In the end, envy consumes the envious most of all",
+  },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "envy_51", name: "Covetous Glance", sin: "envy",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }],
+    description: "A jealous look that makes every wound sting deeper.",
+    skipQueue: true,
+  },
+  {
+    id: "envy_52", name: "Stolen Moment", sin: "envy",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "heal_steal", baseValue: 6, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "What's yours is mine — especially your health.",
+    skipQueue: true,
+  },
+  {
+    id: "envy_53", name: "Spite Needle", sin: "envy",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }],
+    description: "A tiny prick of malice, delivered before you can blink.",
+    skipQueue: true,
+  },
+  {
+    id: "envy_54", name: "Mirror Snatch", sin: "envy",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }, { type: "damage", baseValue: 4, duration: 2, targetMode: "single" }],
+    description: "Your protection becomes my weapon.",
+    skipQueue: true,
   },
 ];
 // ═══════════════════════════════════════════════════════════════
@@ -1554,6 +1670,35 @@ export const PRIDE_CARDS: CardDefinition[] = [
     effects: [{ type: "heal_gain", baseValue: 7, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Pride goeth before destruction — but what a glorious fall",
   },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "pride_51", name: "Regal Decree", sin: "pride",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
+    description: "The king speaks first. Always.",
+    skipQueue: true,
+  },
+  {
+    id: "pride_52", name: "Imperious Strike", sin: "pride",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }],
+    description: "A blow delivered with absolute certainty of superiority.",
+    skipQueue: true,
+  },
+  {
+    id: "pride_53", name: "Dismissive Wave", sin: "pride",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    description: "You're not even worth my attention. But this shield is.",
+    skipQueue: true,
+  },
+  {
+    id: "pride_54", name: "First Among Equals", sin: "pride",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    description: "Pride demands the opening move — and the energy to back it up.",
+    skipQueue: true,
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
 // LUST — 50 cards
@@ -1859,6 +2004,35 @@ export const LUST_CARDS: CardDefinition[] = [
     effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "The ultimate seduction — life itself surrendered willingly",
   },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "lust_51", name: "Alluring Whisper", sin: "lust",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "A sweet nothing that cuts like a blade.",
+    skipQueue: true,
+  },
+  {
+    id: "lust_52", name: "Seductive Feint", sin: "lust",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "Draw them close, then take what you need.",
+    skipQueue: true,
+  },
+  {
+    id: "lust_53", name: "Heartstring Tug", sin: "lust",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }],
+    description: "A gentle pull that tears something vital.",
+    skipQueue: true,
+  },
+  {
+    id: "lust_54", name: "Passion's Edge", sin: "lust",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Desire sharpened to a point — it strikes before reason.",
+    skipQueue: true,
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
 // GLUTTONY — 50 cards
@@ -2163,6 +2337,35 @@ export const GLUTTONY_CARDS: CardDefinition[] = [
     cost: 4, tier: "epic", compoundPattern: "standard",
     effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 15, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 12, duration: 3, targetMode: "self" }],
     description: "The final course — everything that remains",
+  },
+  // ── Skip-Queue (Priority) Cards ──
+  {
+    id: "gluttony_51", name: "Voracious Snap", sin: "gluttony",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "discard_burn", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "Bite first, chew later. Their cards are the appetizer.",
+    skipQueue: true,
+  },
+  {
+    id: "gluttony_52", name: "Gulping Surge", sin: "gluttony",
+    cost: 2, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 8, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    description: "Consume everything in reach — health, energy, all of it.",
+    skipQueue: true,
+  },
+  {
+    id: "gluttony_53", name: "Nibble", sin: "gluttony",
+    cost: 0, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "discard_burn", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "Just a taste. But even a taste destroys.",
+    skipQueue: true,
+  },
+  {
+    id: "gluttony_54", name: "Hunger Pang", sin: "gluttony",
+    cost: 1, tier: "rare", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    description: "The hunger strikes before the feast begins.",
+    skipQueue: true,
   },
 ];
 

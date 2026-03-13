@@ -557,7 +557,7 @@ export default function Home() {
                 Choose Your Damnation
               </p>
               <h2 className="text-2xl md:text-3xl font-black text-white/90 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                7 FACTIONS. 350 CARDS.
+                7 FACTIONS. 378 CARDS.
               </h2>
               <div className="flex items-center justify-center gap-2 mt-3">
                 <div className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
@@ -719,7 +719,7 @@ export default function Home() {
         {/* ─── Footer ─── */}
         <footer className="py-8 px-4 text-center border-t border-white/5">
           <p className="text-[9px] text-white/20 mb-3" style={{ fontFamily: "var(--font-body)" }}>
-            350 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
+            378 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
           </p>
           <div className="text-[8px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
             <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>

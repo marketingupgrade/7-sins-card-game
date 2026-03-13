@@ -18,6 +18,7 @@
  */
 
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import GameCard from "@/components/GameCard";
 import CompoundBalanceSheet from "@/components/CompoundBalanceSheet";
 import EffectBadge from "@/components/EffectBadge";
@@ -33,7 +34,7 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO } from "@shared/gameTypes";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
@@ -905,18 +906,6 @@ export default function GameBoard() {
 
       {/* Arena Grid — Gothic Cathedral Interior */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
-        {/* Desktop Resolution Reveal — full-screen overlay above the grid */}
-        {isShowingResolution && cachedLockedPlays.length > 0 && (
-          <div className="hidden md:flex absolute inset-0 z-50 items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
-            <ResolutionReveal
-              lockedPlays={cachedLockedPlays}
-              players={cachedResolutionPlayers}
-              currentRound={gameState.currentRound}
-              isResolving={isShowingResolution}
-              onComplete={handleResolutionComplete}
-            />
-          </div>
-        )}
         <div className="hidden md:grid flex-1 grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] grid-rows-[auto_1fr_auto] gap-3 p-3">
           
           {/* NORTH */}
@@ -987,6 +976,16 @@ export default function GameBoard() {
 
           {/* CENTER — Ritual Circle + Resolution Reveal */}
           <div className="col-start-2 row-start-2 flex items-center justify-center relative">
+            {/* Resolution card reveal overlay */}
+            {isShowingResolution && cachedLockedPlays.length > 0 && (
+              <ResolutionReveal
+                lockedPlays={cachedLockedPlays}
+                players={cachedResolutionPlayers}
+                currentRound={gameState.currentRound}
+                isResolving={isShowingResolution}
+                onComplete={handleResolutionComplete}
+              />
+            )}
             <div className="text-center">
               <div className="w-28 h-28 mx-auto rounded-full border-2 border-candle/30 flex items-center justify-center mb-3 relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 30px oklch(0.75 0.12 70 / 0.1), inset 0 0 20px oklch(0.75 0.12 70 / 0.05)' }}>
                 {/* Rotating ritual ring */}
@@ -1624,13 +1623,38 @@ const PlayerPanel = memo(function PlayerPanel({
               )}
             </div>
             
-            {/* Sin name label */}
-            <span
-              className="text-xs font-medium uppercase tracking-wider opacity-60"
-              style={{ fontFamily: "var(--font-heading)", color: sinColor }}
-            >
-              {player.chosenSin || "unknown"}
-            </span>
+            {/* Sin name + Passive tooltip */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="text-xs font-medium uppercase tracking-wider opacity-60 cursor-help inline-flex items-center gap-1"
+                  style={{ fontFamily: "var(--font-heading)", color: sinColor }}
+                >
+                  {player.chosenSin || "unknown"}
+                  {player.chosenSin && PASSIVE_INFO[player.chosenSin as SinType] && (
+                    <span className="opacity-80 text-[10px]">ⓘ</span>
+                  )}
+                </span>
+              </TooltipTrigger>
+              {player.chosenSin && PASSIVE_INFO[player.chosenSin as SinType] && (
+                <TooltipContent
+                  side="bottom"
+                  sideOffset={4}
+                  className="max-w-[240px] p-3 rounded-lg border border-border/50"
+                  style={{ background: 'oklch(0.12 0.02 280 / 0.95)', backdropFilter: 'blur(12px)' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <span className="text-sm">{PASSIVE_INFO[player.chosenSin as SinType].icon}</span>
+                    <span className="text-xs font-black uppercase tracking-wider" style={{ color: sinColor, fontFamily: 'var(--font-heading)' }}>
+                      {PASSIVE_INFO[player.chosenSin as SinType].name}
+                    </span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                    {PASSIVE_INFO[player.chosenSin as SinType].description}
+                  </p>
+                </TooltipContent>
+              )}
+            </Tooltip>
 
             {player.isAlive && player.hasLockedIn && (
               <div className="flex items-center gap-1.5 mt-0.5">

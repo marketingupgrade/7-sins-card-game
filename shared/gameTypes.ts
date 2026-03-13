@@ -200,6 +200,17 @@ export const PRIDE_HUBRIS_MULT = 1.324;
 export const LUST_TEMPTATION_PCT = 0.25;
 export const GLUTTONY_DEVOURER_ENERGY = 1.585;
 
+// Passive info for UI tooltips
+export const PASSIVE_INFO: Record<SinType, { name: string; description: string; icon: string }> = {
+  wrath: { name: "VENGEANCE", description: "When taking damage, reflect 63% back to the attacker.", icon: "⚔" },
+  sloth: { name: "ENDURANCE", description: "Start of turn: gain shield equal to energy × hand size × 0.45 (cap 25).", icon: "🛡" },
+  greed: { name: "TAX", description: "On tick-2 of compound damage dealt, gain shield equal to 6.3% of damage.", icon: "💰" },
+  envy: { name: "JEALOUSY", description: "When dealing damage, amplify target's worst affliction by 10.6%.", icon: "👁" },
+  pride: { name: "HUBRIS", description: "If you played the highest-cost card this round (ties count), all effects get ×1.32.", icon: "👑" },
+  lust: { name: "TEMPTATION", description: "On compound tick damage dealt, heal 25% of damage as HP.", icon: "❤" },
+  gluttony: { name: "DEVOURER", description: "Each card burned via discard grants 1.6 energy.", icon: "🔥" },
+};
+
 // Legacy compat (old constants kept for any UI references)
 export const WRATH_FURY_BONUS_DAMAGE = 0;
 export const WRATH_FURY_HEAL = 0;
@@ -332,7 +343,7 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 20;
 export const STARTING_HP = 200;
 export const HAND_SIZE = 5;
-export const CARDS_PER_DECK = 50;
+export const CARDS_PER_DECK = 54;
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
 export const CATCHUP_HP_THRESHOLD = 80; // 40% of 200 HP
 

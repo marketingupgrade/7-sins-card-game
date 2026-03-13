@@ -273,6 +273,14 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
               {card.tier}
             </span>
           )}
+          {card.skipQueue && (
+            <span
+              className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-sm font-bold uppercase bg-amber-500/90 text-black tracking-wider animate-pulse"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              ⚡ PRIORITY
+            </span>
+          )}
         </div>
         {/* Energy Cost — large and prominent */}
         <div

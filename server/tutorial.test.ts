@@ -28,14 +28,14 @@ describe("Tutorial Step Definitions", () => {
   });
 
   it("should have a total of 19 steps across all pages", () => {
-    expect(TOTAL_STEPS).toBe(19);
-    expect(ALL_TUTORIAL_STEPS.length).toBe(19);
+    expect(TOTAL_STEPS).toBe(20);
+    expect(ALL_TUTORIAL_STEPS.length).toBe(20);
   });
 
-  it("should have 5 home steps, 5 lobby steps, and 9 game steps", () => {
+  it("should have 5 home steps, 5 lobby steps, and 10 game steps", () => {
     expect(TUTORIAL_STEPS.home.length).toBe(5);
     expect(TUTORIAL_STEPS.lobby.length).toBe(5);
-    expect(TUTORIAL_STEPS.game.length).toBe(9);
+    expect(TUTORIAL_STEPS.game.length).toBe(10);
   });
 
   it("should have unique IDs for all steps", () => {

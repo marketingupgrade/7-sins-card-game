@@ -8,10 +8,10 @@
  * - Affliction icons inline with tap-to-expand
  */
 import { motion } from "framer-motion";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { isBot } from "@/lib/botEngine";
-import { PlayerState, SinType, MAX_ENERGY, getCompoundTickValue, ActiveEffect } from "@shared/gameTypes";
+import { PlayerState, SinType, MAX_ENERGY, getCompoundTickValue, ActiveEffect, PASSIVE_INFO } from "@shared/gameTypes";
 import MobileAfflictionSheet from "./MobileAfflictionSheet";
 import { getSinCssVar } from "@/lib/sinColors";
 
@@ -59,6 +59,17 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
 
   const displayName = (player.username || "Player") + (playerIsBot ? " ⚙" : "");
 
+  // Passive tooltip on avatar long-press / tap
+  const [showPassive, setShowPassive] = useState(false);
+  const passiveTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const togglePassive = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    if (isTargetable) return; // don't interfere with targeting
+    e.stopPropagation();
+    setShowPassive(prev => !prev);
+    clearTimeout(passiveTimeout.current);
+    passiveTimeout.current = setTimeout(() => setShowPassive(false), 3000);
+  }, [isTargetable]);
+
   return (
     <motion.div
       data-player-id={player.id}
@@ -100,26 +111,50 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
         />
       )}
 
-      {/* Avatar */}
-      <div
-        className="w-8 h-8 rounded-full overflow-hidden border-2 flex-shrink-0"
-        style={{ borderColor: sinColor }}
-      >
-        <motion.img
-          src={FACTION_PORTRAITS[player.chosenSin as SinType]}
-          alt={player.chosenSin || ""}
-          className="w-full h-full object-cover"
-          loading="lazy"
-          animate={hpFlash ? { x: [-2, 2, -2, 0] } : {}}
-          transition={{ duration: 0.3 }}
-          style={{
-            filter: !player.isAlive
-              ? "grayscale(1) brightness(0.3)"
-              : hpFlash
-                ? "brightness(2) saturate(3)"
-                : "none",
-          }}
-        />
+      {/* Avatar + Passive tooltip */}
+      <div className="relative flex-shrink-0">
+        <div
+          className="w-8 h-8 rounded-full overflow-hidden border-2"
+          style={{ borderColor: sinColor }}
+          onClick={togglePassive}
+        >
+          <motion.img
+            src={FACTION_PORTRAITS[player.chosenSin as SinType]}
+            alt={player.chosenSin || ""}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            animate={hpFlash ? { x: [-2, 2, -2, 0] } : {}}
+            transition={{ duration: 0.3 }}
+            style={{
+              filter: !player.isAlive
+                ? "grayscale(1) brightness(0.3)"
+                : hpFlash
+                  ? "brightness(2) saturate(3)"
+                  : "none",
+            }}
+          />
+        </div>
+        {/* Passive popup */}
+        {showPassive && player.chosenSin && PASSIVE_INFO[player.chosenSin as SinType] && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.95 }}
+            className="absolute left-0 top-full mt-1 z-50 w-48 p-2 rounded-lg border border-border/50"
+            style={{ background: 'oklch(0.12 0.02 280 / 0.95)', backdropFilter: 'blur(12px)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-1 mb-0.5">
+              <span className="text-xs">{PASSIVE_INFO[player.chosenSin as SinType].icon}</span>
+              <span className="text-[10px] font-black uppercase tracking-wider" style={{ color: sinColor, fontFamily: 'var(--font-heading)' }}>
+                {PASSIVE_INFO[player.chosenSin as SinType].name}
+              </span>
+            </div>
+            <p className="text-[10px] leading-snug text-muted-foreground">
+              {PASSIVE_INFO[player.chosenSin as SinType].description}
+            </p>
+          </motion.div>
+        )}
       </div>
 
       {/* Name + HP bar stack */}

@@ -10,24 +10,24 @@ import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, PRIDE_CAR
 import { getCompoundTickValue, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK, CompoundPattern } from "../shared/gameTypes";
 
 describe("Card Data Integrity (v4)", () => {
-  it("has exactly 50 wrath cards", () => {
-    expect(WRATH_CARDS).toHaveLength(50);
+  it("has exactly 54 wrath cards", () => {
+    expect(WRATH_CARDS).toHaveLength(54);
   });
 
-  it("has exactly 50 sloth cards", () => {
-    expect(SLOTH_CARDS).toHaveLength(50);
+  it("has exactly 54 sloth cards", () => {
+    expect(SLOTH_CARDS).toHaveLength(54);
   });
 
-  it("has 350 total cards (7 sins x 50)", () => {
-    expect(ALL_CARDS).toHaveLength(350);
+  it("has 378 total cards (7 sins x 54)", () => {
+    expect(ALL_CARDS).toHaveLength(378);
   });
 
-  it("has exactly 50 greed cards", () => {
-    expect(GREED_CARDS).toHaveLength(50);
+  it("has exactly 54 greed cards", () => {
+    expect(GREED_CARDS).toHaveLength(54);
   });
 
-  it("has exactly 50 envy cards", () => {
-    expect(ENVY_CARDS).toHaveLength(50);
+  it("has exactly 54 envy cards", () => {
+    expect(ENVY_CARDS).toHaveLength(54);
   });
 
   it("all greed cards have sin=greed", () => {
@@ -111,7 +111,7 @@ describe("Card Data Integrity (v4)", () => {
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(350);
+    expect(Object.keys(CARD_MAP)).toHaveLength(378);
   });
 
   it("getCardById returns correct card", () => {
@@ -125,11 +125,11 @@ describe("Card Registry", () => {
     expect(getCardById("nonexistent")).toBeUndefined();
   });
 
-  it("getDeckForSin returns 50 card IDs for each sin", () => {
+  it("getDeckForSin returns 54 card IDs for each sin", () => {
     const sins = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"] as const;
     for (const sin of sins) {
       const deck = getDeckForSin(sin);
-      expect(deck).toHaveLength(50);
+      expect(deck).toHaveLength(54);
       deck.forEach((id) => {
         expect(id).toMatch(new RegExp(`^${sin}_`));
       });
@@ -196,8 +196,8 @@ describe("Game Constants (v4)", () => {
     expect(HAND_SIZE).toBe(5);
   });
 
-  it("CARDS_PER_DECK is 50", () => {
-    expect(CARDS_PER_DECK).toBe(50);
+  it("CARDS_PER_DECK is 54", () => {
+    expect(CARDS_PER_DECK).toBe(54);
   });
 });
 
