@@ -428,6 +428,7 @@ export default function Collection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<CardDefinition | null>(null);
   const [showPriorityOnly, setShowPriorityOnly] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Get all unique effect types present in cards
   const availableEffects = useMemo(() => {
@@ -541,9 +542,36 @@ export default function Collection() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Filter Section */}
-        <div className="space-y-4 mb-6">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:py-6">
+        {/* Mobile filter toggle */}
+        <div className="flex items-center justify-between mb-3 sm:mb-0">
+          <button
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="sm:hidden flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10
+                       text-xs font-semibold uppercase tracking-wider text-white/60 hover:bg-white/10 transition-all"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="4" y1="6" x2="20" y2="6" />
+              <line x1="8" y1="12" x2="20" y2="12" />
+              <line x1="12" y1="18" x2="20" y2="18" />
+            </svg>
+            Filters
+            {hasActiveFilters && (
+              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+            )}
+          </button>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="sm:hidden text-xs text-white/40 hover:text-white/70 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
+        </div>
+
+        {/* Filter Section — always visible on desktop, collapsible on mobile */}
+        <div className={`space-y-4 mb-4 sm:mb-6 ${filtersOpen ? 'block' : 'hidden'} sm:block`}>
           {/* Faction filter */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
@@ -551,7 +579,7 @@ export default function Collection() {
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                  className="hidden sm:inline text-xs text-white/40 hover:text-white/70 transition-colors"
                 >
                   Clear all filters
                 </button>
@@ -578,11 +606,11 @@ export default function Collection() {
           </div>
 
           {/* Second row: Tier + Pattern + Priority */}
-          <div className="flex flex-wrap gap-6">
+          <div className="flex flex-wrap gap-4 sm:gap-6">
             {/* Tier */}
             <div className="space-y-1.5">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">Tier</h3>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 <FilterPill
                   label="All"
                   active={selectedTier === "all"}
@@ -604,7 +632,7 @@ export default function Collection() {
             {/* Pattern */}
             <div className="space-y-1.5">
               <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">Pattern</h3>
-              <div className="flex gap-1.5">
+              <div className="flex flex-wrap gap-1.5">
                 <FilterPill
                   label="All"
                   active={selectedPattern === "all"}
@@ -658,41 +686,43 @@ export default function Collection() {
           </div>
         </div>
 
-        {/* Faction summary bar (when "all" selected) */}
+        {/* Faction summary bar (when "all" selected) — scrollable on mobile */}
         {selectedSin === "all" && !hasActiveFilters && (
-          <div className="grid grid-cols-7 gap-2 mb-6">
-            {SINS.map((sin) => {
-              const passive = PASSIVE_INFO[sin];
-              return (
-                <button
-                  key={sin}
-                  onClick={() => setSelectedSin(sin)}
-                  className={`p-3 rounded-lg border border-white/5 bg-gradient-to-br ${SIN_BG[sin]}
-                             hover:border-white/20 transition-all duration-200 group cursor-pointer`}
-                >
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <img src={SIN_ARCHETYPE_ICONS[sin]} alt={sin} className="w-4 h-4 opacity-60" />
-                    <span
-                      className="text-xs font-bold uppercase tracking-wider"
-                      style={{ color: SIN_COLORS[sin] }}
-                    >
-                      {sin}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-white/40 leading-tight">
-                    {passive.name}
-                  </p>
-                  <p className="text-[10px] text-white/25 mt-0.5">
-                    {stats.sinCounts[sin]} cards
-                  </p>
-                </button>
-              );
-            })}
+          <div className="mb-4 sm:mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex sm:grid sm:grid-cols-7 gap-2 overflow-x-auto pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-hide">
+              {SINS.map((sin) => {
+                const passive = PASSIVE_INFO[sin];
+                return (
+                  <button
+                    key={sin}
+                    onClick={() => setSelectedSin(sin)}
+                    className={`snap-start shrink-0 w-[110px] sm:w-auto p-2.5 sm:p-3 rounded-lg border border-white/5 bg-gradient-to-br ${SIN_BG[sin]}
+                               hover:border-white/20 transition-all duration-200 group cursor-pointer`}
+                  >
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <img src={SIN_ARCHETYPE_ICONS[sin]} alt={sin} className="w-4 h-4 opacity-60" />
+                      <span
+                        className="text-xs font-bold uppercase tracking-wider"
+                        style={{ color: SIN_COLORS[sin] }}
+                      >
+                        {sin}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-white/40 leading-tight">
+                      {passive.name}
+                    </p>
+                    <p className="text-[10px] text-white/25 mt-0.5">
+                      {stats.sinCounts[sin]} cards
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         )}
 
         {/* Card Grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
           <AnimatePresence mode="popLayout">
             {filteredCards.map((card) => (
               <MiniCard

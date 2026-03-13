@@ -5,6 +5,9 @@
  * All game procedures use publicProcedure since on Vercel
  * we don't have Manus OAuth. Players are identified by
  * a client-generated playerId passed in the request.
+ *
+ * Discussion router provides CRUD for threaded comments
+ * on the Balance Analysis and other pages.
  */
 
 import { COOKIE_NAME } from "@shared/const";
@@ -23,6 +26,12 @@ import {
   playCard,
   startGame,
 } from "./gameEngine";
+import {
+  getDiscussionComments,
+  createDiscussionComment,
+  deleteDiscussionComment,
+  upvoteDiscussionComment,
+} from "./db";
 
 export const appRouter = router({
   system: systemRouter,
@@ -34,6 +43,63 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+  }),
+
+  /** Discussion comments — threaded community discussion on analysis pages */
+  discussion: router({
+    /** List all comments for a page context (e.g. "balance") */
+    list: publicProcedure
+      .input(z.object({ pageContext: z.string().min(1).max(64).default("balance") }))
+      .query(async ({ input }) => {
+        return getDiscussionComments(input.pageContext);
+      }),
+
+    /** Create a new comment or reply */
+    create: publicProcedure
+      .input(
+        z.object({
+          pageContext: z.string().min(1).max(64).default("balance"),
+          section: z.string().max(64).optional(),
+          parentId: z.number().int().positive().optional(),
+          authorName: z
+            .string()
+            .min(1)
+            .max(100)
+            .transform((s) => s.replace(/[<>"'&]/g, "")),
+          guestId: z.string().max(64).optional(),
+          content: z
+            .string()
+            .min(1)
+            .max(2000)
+            .transform((s) => s.replace(/[<>"']/g, "")),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const result = await createDiscussionComment({
+          pageContext: input.pageContext,
+          section: input.section ?? null,
+          parentId: input.parentId ?? null,
+          userId: null, // Guest comments for now; wire to ctx.user when auth is active
+          authorName: input.authorName,
+          guestId: input.guestId ?? null,
+          content: input.content,
+        });
+        return result;
+      }),
+
+    /** Delete a comment (and its replies) */
+    delete: publicProcedure
+      .input(z.object({ commentId: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        return deleteDiscussionComment(input.commentId);
+      }),
+
+    /** Upvote a comment */
+    upvote: publicProcedure
+      .input(z.object({ commentId: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        return upvoteDiscussionComment(input.commentId);
+      }),
   }),
 
   game: router({

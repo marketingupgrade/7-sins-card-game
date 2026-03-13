@@ -1,7 +1,7 @@
 /**
  * App Root - Routes and theme configuration
  * Dark theme for gothic cathedral aesthetic.
- * Routes: Home, Lobby, GameBoard, Collection, BalanceAnalysis, Profile
+ * Routes: Home, Lobby, GameBoard, Collection, BalanceAnalysis, MatchupMatrix, GameRules, Profile
  *
  * All page routes are lazy-loaded for optimal code splitting.
  * SigilMenu provides global navigation overlay on non-game pages.
@@ -27,6 +27,8 @@ const GameBoard = lazy(() => import("./pages/GameBoard"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Collection = lazy(() => import("./pages/Collection"));
 const BalanceAnalysis = lazy(() => import("./pages/BalanceAnalysis"));
+const MatchupMatrix = lazy(() => import("./pages/MatchupMatrix"));
+const GameRules = lazy(() => import("./pages/GameRules"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -71,6 +73,8 @@ function Router() {
         <Route path="/game/:gameId" component={GameBoard} />
         <Route path="/collection" component={Collection} />
         <Route path="/balance" component={BalanceAnalysis} />
+        <Route path="/matchups" component={MatchupMatrix} />
+        <Route path="/rules" component={GameRules} />
         <Route path="/profile" component={Profile} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

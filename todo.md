@@ -932,7 +932,7 @@
 - [x] Update Home page passive explainers
 - [x] Update PASSIVE_INFO in gameTypes.ts (tooltips)
 - [x] Update tutorial passive descriptions
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Themed Hamburger Menu & Balance Analysis Page
 - [x] Audit game assets for animated elements fitting dark gothic theme
@@ -944,3 +944,48 @@
 - [x] Mobile responsiveness for menu and all new pages
 - [x] Wire up routes in App.tsx
 - [ ] Push to GitHub
+
+## Database-Backed Discussion System
+- [x] Create discussion_comments table in drizzle schema (id, userId, userName, content, parentId, createdAt)
+- [x] Push database migration
+- [x] Add tRPC procedures for listing, creating, and deleting comments
+- [x] Build threaded comment UI component with gothic branding
+- [x] Wire Discussion section on Balance Analysis page to database
+- [x] Support reply threading and nested comments
+- [x] Mobile responsive comment UI
+
+## Matchup Matrix Heatmap Page
+- [x] Create /matchups route and page
+- [x] Build 7x7 faction heatmap grid with win rate data
+- [x] Color-code cells (green=advantage, red=disadvantage, neutral=balanced)
+- [x] Add faction icons/badges to row/column headers
+- [x] Add hover tooltips with detailed matchup stats
+- [x] Add matchup analysis text sections
+- [x] Mobile responsive with horizontal scroll for matrix
+- [x] Add to SigilMenu navigation
+
+## Game Rules Reference Page
+- [x] Create /rules route and page
+- [x] Card mechanics section (energy, compound patterns, flat vs compounding)
+- [x] Passive ability details for all 7 factions
+- [x] Compound pattern reference (Standard, Aggressive, Slowburn)
+- [x] Skip-queue card mechanics explanation
+- [x] Round structure and turn order
+- [x] The Reckoning (round 16) mechanic
+- [x] Visual examples with card previews
+- [x] Mobile responsive layout
+- [x] Add to SigilMenu navigation
+
+## Route & Menu Integration
+- [x] Add Matchup Matrix and Game Rules to SigilMenu
+- [x] Update App.tsx with new routes
+- [ ] Push to GitHub
+
+## Balance Analysis Discussion Section Update
+- [x] Remove "Recommended Future Work" section from Discussion
+- [x] Remove "Implications for Game Design" section from Discussion
+- [x] Replace with a table of methods/techniques used to achieve the balance results
+
+## Collection Mobile Layout Fix
+- [x] Make filters collapsible on mobile (hidden by default, toggle button to show)
+- [x] Ensure cards are visible without excessive scrolling on mobile

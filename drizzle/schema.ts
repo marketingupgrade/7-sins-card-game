@@ -25,4 +25,37 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Discussion comments for the Balance Analysis page.
+ *
+ * Supports threaded replies via parentId (self-referencing FK).
+ * Each comment is tied to a page context (e.g. "balance") and optionally
+ * to a specific section within that page.
+ *
+ * Guest comments use guestName + guestId (client-generated UUID stored in localStorage).
+ * Authenticated comments use userId (FK to users table).
+ */
+export const discussionComments = mysqlTable("discussion_comments", {
+  id: int("id").autoincrement().primaryKey(),
+  /** Page context — which page this comment belongs to (e.g. "balance", "matchups") */
+  pageContext: varchar("pageContext", { length: 64 }).notNull().default("balance"),
+  /** Optional section anchor within the page (e.g. "passives", "methodology") */
+  section: varchar("section", { length: 64 }),
+  /** Self-referencing parent ID for threaded replies. NULL = top-level comment. */
+  parentId: int("parentId"),
+  /** FK to users.id — NULL for guest comments */
+  userId: int("userId"),
+  /** Display name for the commenter (guest or authenticated) */
+  authorName: varchar("authorName", { length: 100 }).notNull(),
+  /** Client-generated guest identifier (UUID in localStorage) for guest rate-limiting */
+  guestId: varchar("guestId", { length: 64 }),
+  /** The comment body (plain text, max ~2000 chars) */
+  content: text("content").notNull(),
+  /** Upvote count for community sorting */
+  upvotes: int("upvotes").notNull().default(0),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type DiscussionComment = typeof discussionComments.$inferSelect;
+export type InsertDiscussionComment = typeof discussionComments.$inferInsert;

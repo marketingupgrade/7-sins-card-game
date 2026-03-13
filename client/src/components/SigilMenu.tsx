@@ -50,6 +50,32 @@ const MENU_LINKS: MenuLink[] = [
     description: "Deep-dive into faction balance & methodology",
   },
   {
+    label: "Matchup Matrix",
+    href: "/matchups",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="3" width="7" height="7" />
+        <rect x="14" y="3" width="7" height="7" />
+        <rect x="3" y="14" width="7" height="7" />
+        <rect x="14" y="14" width="7" height="7" />
+      </svg>
+    ),
+    description: "7\u00D77 faction win-rate heatmap",
+  },
+  {
+    label: "Game Rules",
+    href: "/rules",
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        <path d="M8 7h8" />
+        <path d="M8 11h6" />
+      </svg>
+    ),
+    description: "Complete rules, mechanics & passive reference",
+  },
+  {
     label: "Home",
     href: "/",
     icon: (

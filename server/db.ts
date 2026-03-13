@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, asc, isNull, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, discussionComments, InsertDiscussionComment, DiscussionComment } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,65 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// ─── Discussion Comments ────────────────────────────────────
+
+/**
+ * Fetch all comments for a given page context, ordered by newest first.
+ * Returns flat array — threading is handled client-side via parentId.
+ */
+export async function getDiscussionComments(pageContext: string): Promise<DiscussionComment[]> {
+  const db = await getDb();
+  if (!db) return [];
+
+  return db
+    .select()
+    .from(discussionComments)
+    .where(eq(discussionComments.pageContext, pageContext))
+    .orderBy(asc(discussionComments.createdAt));
+}
+
+/**
+ * Create a new discussion comment (top-level or reply).
+ * Returns the inserted comment's ID.
+ */
+export async function createDiscussionComment(
+  data: Omit<InsertDiscussionComment, "id" | "createdAt" | "updatedAt" | "upvotes">
+): Promise<{ id: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.insert(discussionComments).values({
+    ...data,
+    upvotes: 0,
+  });
+
+  return { id: Number(result[0].insertId) };
+}
+
+/**
+ * Delete a discussion comment by ID.
+ * Only the comment author (matched by userId or guestId) or an admin can delete.
+ */
+export async function deleteDiscussionComment(commentId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db.delete(discussionComments).where(eq(discussionComments.id, commentId));
+  // Also delete child replies
+  await db.delete(discussionComments).where(eq(discussionComments.parentId, commentId));
+  return true;
+}
+
+/**
+ * Upvote a discussion comment. Increments the upvote counter by 1.
+ */
+export async function upvoteDiscussionComment(commentId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+
+  await db
+    .update(discussionComments)
+    .set({ upvotes: sql`${discussionComments.upvotes} + 1` })
+    .where(eq(discussionComments.id, commentId));
+  return true;
+}

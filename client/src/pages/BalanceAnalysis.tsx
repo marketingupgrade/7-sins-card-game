@@ -9,10 +9,13 @@
  * - Consistent dark gothic cathedral branding
  */
 
-import { useState, memo, useCallback } from "react";
+import { useState, memo, useCallback, lazy, Suspense } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import EmberField from "@/components/EmberField";
+
+/* Lazy-load the discussion thread to keep initial bundle lean */
+const DiscussionThread = lazy(() => import("@/components/DiscussionThread"));
 
 /* ─── Chart CDN URLs (webdev-persistent) ─────────────────────── */
 const CHARTS = {
@@ -721,27 +724,52 @@ export default function BalanceAnalysis() {
               <strong>5. 378 cards maintain balance.</strong> Expanding from 252 to 378 cards (including 28 skip-queue priority cards) did not destabilize the balance, suggesting the system is robust to card pool expansion.
             </p>
 
-            <h3 className="text-lg text-white/80 mb-3 mt-8" style={{ fontFamily: "var(--font-heading)" }}>Recommended Future Work</h3>
-            <p>
-              <strong>Skip-queue validation:</strong> Run a dedicated 100K+ game simulation with skip-queue cards enabled to verify they do not introduce faction-level imbalances.
+            <h3 className="text-lg text-white/80 mb-4 mt-8" style={{ fontFamily: "var(--font-heading)" }}>Methods &amp; Techniques</h3>
+            <p className="mb-4">
+              The following table summarizes the key methods, tools, and techniques used throughout the balancing process to achieve the final 1.41% maximum deviation.
             </p>
-            <p>
-              <strong>Matchup matrix:</strong> Compute pairwise faction win rates to identify any rock-paper-scissors dynamics that are hidden by the aggregate win rates.
-            </p>
-            <p>
-              <strong>Player skill modeling:</strong> The current simulation uses random card selection. Adding heuristic-based card selection (e.g., prioritizing damage when opponent HP is low) may reveal skill-dependent balance issues.
-            </p>
-            <p>
-              <strong>Meta-game evolution:</strong> As players discover optimal strategies, the effective balance may shift. Periodic re-validation with updated bot strategies is recommended.
-            </p>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-2.5 px-3 text-amber-200/70 text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Method</th>
+                    <th className="text-left py-2.5 px-3 text-amber-200/70 text-xs uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Purpose</th>
+                    <th className="text-left py-2.5 px-3 text-amber-200/70 text-xs uppercase tracking-wider hidden sm:table-cell" style={{ fontFamily: "var(--font-heading)" }}>Scale</th>
+                    <th className="text-left py-2.5 px-3 text-amber-200/70 text-xs uppercase tracking-wider hidden md:table-cell" style={{ fontFamily: "var(--font-heading)" }}>Impact</th>
+                  </tr>
+                </thead>
+                <tbody className="text-white/55">
+                  {[
+                    ["Monte Carlo Simulation", "Random game sampling for win rate estimation", "500K games", "Core measurement tool; \u00b10.36% confidence interval"],
+                    ["Combined Optimizer", "Simultaneous tuning of all 7 passive parameters", "15K iterations", "Reduced deviation from 6.2% to 1.23%"],
+                    ["Gradient-Free Search", "Nelder-Mead simplex for passive parameter space", "7-dimensional", "Navigated non-convex landscape without derivatives"],
+                    ["Card Value Normalization", "Standardized base values across tiers and costs", "378 cards", "Eliminated card-level variance as confounding factor"],
+                    ["Compound Tick Analysis", "Modeled exponential scaling across 3 patterns", "10-tick depth", "Identified multiplicative passive interactions"],
+                    ["Binomial Confidence Testing", "Statistical validation of win rate significance", "57K games/faction", "Confirmed deviations are real, not noise"],
+                    ["Ablation Studies", "Isolated passive vs. card contributions to balance", "5 versions", "Proved passives dominate over card stats"],
+                    ["Cross-Validation", "Independent 100K-game verification of final parameters", "100K games", "Final v5 grade: PERFECT (1.41%)"],
+                  ].map((row, i) => (
+                    <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
+                      <td className="py-2.5 px-3 font-semibold text-white/70" style={{ fontFamily: "var(--font-heading)", fontSize: "0.8rem" }}>{row[0]}</td>
+                      <td className="py-2.5 px-3">{row[1]}</td>
+                      <td className="py-2.5 px-3 hidden sm:table-cell text-amber-200/40 font-mono text-xs">{row[2]}</td>
+                      <td className="py-2.5 px-3 hidden md:table-cell text-white/40 text-xs">{row[3]}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-            <h3 className="text-lg text-white/80 mb-3 mt-8" style={{ fontFamily: "var(--font-heading)" }}>Implications for Game Design</h3>
-            <p>
-              The balancing journey of this game offers several broader lessons for card game designers. First, <strong>passive abilities are not flavor text</strong> — they are the primary driver of faction power and must be treated as tunable parameters from the outset. Second, <strong>compound mechanics amplify imbalances</strong> — any percentage-based effect in a compound system creates exponential scaling that linear adjustments cannot address. Third, <strong>multi-faction balance is an interdependent optimization problem</strong> — adjusting one faction's power level affects all other factions' relative positions, making isolated tuning ineffective.
-            </p>
-            <p>
-              The success of the combined optimizer suggests that future card games with complex passive systems should invest in automated balancing tools early in development, rather than relying on manual playtesting alone. The 1.41% maximum deviation achieved here would be nearly impossible to reach through human intuition alone, given the 7-faction, 378-card, compound-ticking design space.
-            </p>
+            {/* ── Community Discussion (database-backed) ── */}
+            <div className="mt-10 pt-8 border-t border-white/5">
+              <Suspense fallback={
+                <div className="flex items-center justify-center py-8">
+                  <div className="w-6 h-6 border-2 border-amber-500/20 border-t-amber-500/60 rounded-full animate-spin" />
+                </div>
+              }>
+                <DiscussionThread pageContext="balance" />
+              </Suspense>
+            </div>
           </div>
         </Section>
 
