@@ -848,7 +848,7 @@
 - [ ] Implement all new/revamped cards in cardData.ts
 - [ ] Run 50K Monte Carlo tournament simulation for balance assessment
 - [ ] Apply balance adjustments from simulation results (max 1.5% variance target)
-- [ ] BUG FIX: Resolution card display not working on desktop
+- [x] BUG FIX: Resolution card display not working on desktop
 - [ ] UI: Strategic UI improvements for better readability and decision-making
 - [x] Scale faction passives to fit 200 HP pool (currently tuned for smaller HP pool)
 - [x] Change Greed passive from AVARICE (+1 energy on steal) to TAX (3rd cycle compound DMG generates 10% as shield)
@@ -893,3 +893,16 @@
 - [x] Update all test files (game.test.ts, gameLogic.test.ts) for 350 cards
 - [x] All 192 tests passing
 - [ ] Generate artwork for 98 new cards (cards 37-50 per faction)
+
+## Artwork & Bug Fix Pass
+- [ ] Generate artwork for 98 new cards (cards 37-50 per faction)
+- [ ] Upload artwork to CDN and update cardArtUrls.ts
+- [x] BUG FIX: Resolution card display not working on desktop
+- [ ] Push to GitHub
+
+## Artwork & Bug Fix Pass
+- [x] Generate artwork for 98 new cards (cards 37-50 per faction)
+- [x] Convert all new artwork to 512x512 webp format
+- [x] Upload artwork to CDN and update cardArtUrls.ts
+- [x] BUG FIX: Resolution card display not working on desktop
+- [ ] Push to GitHub

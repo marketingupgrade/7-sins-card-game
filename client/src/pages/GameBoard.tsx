@@ -905,6 +905,18 @@ export default function GameBoard() {
 
       {/* Arena Grid — Gothic Cathedral Interior */}
       <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+        {/* Desktop Resolution Reveal — full-screen overlay above the grid */}
+        {isShowingResolution && cachedLockedPlays.length > 0 && (
+          <div className="hidden md:flex absolute inset-0 z-50 items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
+            <ResolutionReveal
+              lockedPlays={cachedLockedPlays}
+              players={cachedResolutionPlayers}
+              currentRound={gameState.currentRound}
+              isResolving={isShowingResolution}
+              onComplete={handleResolutionComplete}
+            />
+          </div>
+        )}
         <div className="hidden md:grid flex-1 grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] grid-rows-[auto_1fr_auto] gap-3 p-3">
           
           {/* NORTH */}
@@ -975,16 +987,6 @@ export default function GameBoard() {
 
           {/* CENTER — Ritual Circle + Resolution Reveal */}
           <div className="col-start-2 row-start-2 flex items-center justify-center relative">
-            {/* Resolution card reveal overlay */}
-            {isShowingResolution && cachedLockedPlays.length > 0 && (
-              <ResolutionReveal
-                lockedPlays={cachedLockedPlays}
-                players={cachedResolutionPlayers}
-                currentRound={gameState.currentRound}
-                isResolving={isShowingResolution}
-                onComplete={handleResolutionComplete}
-              />
-            )}
             <div className="text-center">
               <div className="w-28 h-28 mx-auto rounded-full border-2 border-candle/30 flex items-center justify-center mb-3 relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 30px oklch(0.75 0.12 70 / 0.1), inset 0 0 20px oklch(0.75 0.12 70 / 0.05)' }}>
                 {/* Rotating ritual ring */}
