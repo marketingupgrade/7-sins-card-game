@@ -1204,3 +1204,11 @@
 - [x] Rename Blog to Lore (keep /blog slug)
 - [x] Change nav subtitle to "How the overlords wished this game to be molded"
 - [x] Push to GitHub
+
+## In-Hand Card Detail Modal Fix (Mobile)
+- [x] Match in-hand card detail modal labels to Battle Log format
+- [x] Show rarity label (COMMON/RARE/EPIC)
+- [x] Show full compound scaling (5 → 10 → 20, not just 5 → 20)
+- [x] Show keyword (Volatile, etc.) instead of abbreviation (AGG)
+- [x] Show effect description text ("Deals direct damage to target HP")
+- [ ] Push to GitHub
