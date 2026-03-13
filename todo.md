@@ -1055,3 +1055,5 @@
 - [x] Create tRPC user.purge procedure for cascading data deletion
 - [ ] Update Privacy Policy to reference the data purge feature
 - [x] Wire account page into SigilMenu and routes
+- [x] Add Buy Me a Coffee widget styled to match gothic cathedral branding
+- [x] Generate gothic-themed QR code for BMC link (parchment bg, amber/crimson gradient dots, chalice icon)

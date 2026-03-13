@@ -718,6 +718,43 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Buy Me a Coffee */}
+            <div className="flex flex-col items-center mb-8">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-500/20" />
+                <p className="text-[9px] tracking-[0.2em] uppercase text-amber-200/30" style={{ fontFamily: "var(--font-heading)" }}>
+                  Fuel the Inferno
+                </p>
+                <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-500/20" />
+              </div>
+              <a
+                href="https://www.buymeacoffee.com/jojovh"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex flex-col sm:flex-row items-center gap-4 px-5 py-4 rounded-xl border border-amber-500/10 bg-gradient-to-br from-amber-900/10 to-transparent hover:border-amber-500/25 hover:from-amber-900/20 transition-all duration-300"
+              >
+                {/* QR Code */}
+                <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-amber-500/15 group-hover:border-amber-500/30 transition-colors shadow-lg shadow-amber-900/10">
+                  <img
+                    src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/bmc-qr-gothic-500_fc4d04dd.png"
+                    alt="Scan to buy me a coffee"
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+                {/* Text */}
+                <div className="text-center sm:text-left">
+                  <p className="text-xs text-amber-200/60 group-hover:text-amber-200/80 transition-colors mb-1" style={{ fontFamily: "var(--font-heading)" }}>
+                    Buy Me a Coffee
+                  </p>
+                  <p className="text-[10px] text-white/20 group-hover:text-white/30 transition-colors leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                    If you enjoy the game, consider offering<br className="hidden sm:block" />
+                    a sinful tribute to keep the fires burning.
+                  </p>
+                </div>
+              </a>
+            </div>
+
             {/* Legal Links */}
             <div className="flex flex-wrap justify-center gap-4 mb-4">
               {[
