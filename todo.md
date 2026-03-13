@@ -1073,3 +1073,4 @@
 - [x] Add "Forgot password?" link to Login page sign-in view
 - [x] Add password reset email flow via Supabase resetPasswordForEmail
 - [x] Create ResetPassword page to set new password after clicking email link
+- [x] Move sign-in/register section above Join Game button in homepage action panel

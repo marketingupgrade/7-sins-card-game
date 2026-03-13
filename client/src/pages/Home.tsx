@@ -440,6 +440,33 @@ export default function Home() {
                     </motion.div>
                   </Link>
 
+                  {/* Sign-in Prompt (inline) */}
+                  {!authLoading && !authUser && (
+                    <div className="my-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="flex-1 h-px bg-white/8" />
+                        <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                          Claim your soul
+                        </span>
+                        <div className="flex-1 h-px bg-white/8" />
+                      </div>
+                      <p className="text-[10px] text-white/40 mb-2 leading-relaxed text-center" style={{ fontFamily: "var(--font-body)" }}>
+                        Sign in to save your custom decks, track your match history, and unlock faction achievements.
+                      </p>
+                      <Link href="/login">
+                        <motion.div
+                          whileHover={{ scale: 1.02, y: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-amber-500/30 text-amber-200/70 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          <LogIn className="w-3.5 h-3.5" />
+                          SIGN IN / REGISTER
+                        </motion.div>
+                      </Link>
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />
                     <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
@@ -534,39 +561,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* ─── Sign-in Prompt ─── */}
-        {!authLoading && !authUser && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1 }}
-            className="pb-8 pt-2 text-center shrink-0 px-4"
-          >
-            <div className="max-w-md mx-auto">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="flex-1 h-px bg-white/8" />
-                <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                  Claim your soul
-                </span>
-                <div className="flex-1 h-px bg-white/8" />
-              </div>
-              <p className="text-[11px] text-white/40 mb-3 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                Sign in to save your custom decks, track your match history, and unlock faction achievements.
-              </p>
-              <Link href="/login">
-                <motion.div
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all cursor-pointer text-[11px] tracking-wider"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  <LogIn className="w-3.5 h-3.5" />
-                  SIGN IN / REGISTER
-                </motion.div>
-              </Link>
-            </div>
-          </motion.div>
-        )}
+
       </div>
 
       {/* ═══ Footer ═══ */}
