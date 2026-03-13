@@ -48,7 +48,7 @@ const EVENT_TO_SFX: Record<GameSoundEvent, SfxName> = {
   dark_magic: "dark_magic",
   energy_drain: "energy_drain",
   error: "error",
-  ui_hover: "tap",
+  ui_hover: "draw",
   ui_click: "playcard",
   game_start: "shuffle",
   teleport: "teleport_in",
@@ -157,11 +157,16 @@ class SoundEngine {
     const url = SFX_URLS[sfxName];
     if (!url) return;
 
+    // Softer volume for hover events
+    const vol = event === 'ui_hover' ? this.settings.volume * 0.25 : this.settings.volume;
+
     // Try cached audio first
     let audio = this.audioCache.get(sfxName);
     if (audio) {
       audio.currentTime = 0;
-      audio.volume = this.settings.volume;
+      audio.volume = vol;
+      // Slightly randomize playback rate for hover to avoid repetitive feel
+      if (event === 'ui_hover') audio.playbackRate = 0.7 + Math.random() * 0.2;
       audio.play().catch(() => {
         /* user hasn't interacted yet */
       });
@@ -170,7 +175,8 @@ class SoundEngine {
 
     // Create new audio element for non-cached sounds
     audio = new Audio(url);
-    audio.volume = this.settings.volume;
+    audio.volume = vol;
+    if (event === 'ui_hover') audio.playbackRate = 0.7 + Math.random() * 0.2;
     audio.play().catch(() => {
       /* user hasn't interacted yet */
     });

@@ -1076,3 +1076,25 @@
 - [x] Move sign-in/register section above Join Game button in homepage action panel
 - [x] Create branded email templates for Supabase auth (confirmation, password reset, magic link)
 - [x] Fix Supabase Site URL redirect (was localhost:3000, now 7sinscardgame.com)
+
+## Readability & Deck Limit Fixes
+- [x] Increase font sizes globally across homepage, lobby, and gameplay for better readability
+- [x] Fix deck selection pitch in lobby — guests get random deck, sign up to create/save custom decks
+- [x] Enforce 30-card deck limit in gameplay — random 30-card subset if no custom deck selected (remove Full Arsenal option)
+- [x] Replace card hover sound with soft page-turn/card-shuffle sound
+- [x] Fix cards being cut off in the hand area during gameplay
+- [x] Fix 3-round compound effects (1x, 1x, 2x Fibonacci ticking) — verified logic is correct, cards have duration 3+
+- [x] Fix per-card targeting — each locked card should allow individual target selection, not share one target
+- [x] Add battle log card preview — hover (desktop) or click (mobile) on card names shows full card popup
+- [x] Card effect tooltips — hover on effect names (Hurt, Drain, etc.) on cards in hand shows explanation
+- [x] Show locked-in cards after lock-in — cards remain visible but dimmed (isPlayable=false after lock-in)
+- [x] Make cards much more readable — bigger fonts, clearer effects, better contrast on GameCard
+- [x] Fix white-background card art images — CSS zoom (scale 1.15) to fill frames and hide white borders
+
+## Deck Builder Overhaul
+- [x] Make card grid much smaller — show more cards at once, not giant full-screen cards
+- [x] Show card effect details on hover/click — full effect breakdown with values
+- [x] Add functional filters: effect type (Damage, Heal, Shield, Steal, etc.), cost range, compound pattern
+- [x] Fix selection number overlay visibility — make badge more prominent
+- [x] Add deck building utilities: sort by cost/name/type, search bar, deck stats summary
+- [x] Add deck mana curve visualization

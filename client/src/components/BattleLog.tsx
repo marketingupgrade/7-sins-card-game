@@ -7,11 +7,13 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useRef, useEffect } from "react";
+import { useMemo, useRef, useEffect, useState, useCallback } from "react";
 import { CARD_MAP } from "@shared/cardData";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
-import type { SinType, PlayerState } from "@shared/gameTypes";
+import type { SinType, PlayerState, CardDefinition } from "@shared/gameTypes";
+import { getCompoundTickValue } from "@shared/gameTypes";
+import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 
 /* ─── Effect Visual Config ─────────────────────────────────── */
 const EFFECT_VISUALS: Record<string, { icon: string; color: string; label: string }> = {
@@ -270,6 +272,7 @@ function CardPlayEntry({
   const cardArt = entry.action_data.cardId ? CARD_ART_URLS[entry.action_data.cardId] : null;
   const casterSin = (caster?.chosenSin || card?.sin || "wrath") as SinType;
   const sinColor = SIN_COLORS[casterSin] || "#ef4444";
+  const [previewCard, setPreviewCard] = useState<CardDefinition | null>(null);
 
   // Parse effect descriptions
   const effects = useMemo(() => {
@@ -323,8 +326,14 @@ function CardPlayEntry({
           </span>
           <span className="text-candle/30">played</span>
 
-          {/* Card mini thumbnail + name */}
-          <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: `${sinColor}15` }}>
+          {/* Card mini thumbnail + name — click/hover to preview */}
+          <div
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer hover:ring-1 hover:ring-candle/30 transition-all"
+            style={{ background: `${sinColor}15` }}
+            onClick={(e) => { e.stopPropagation(); if (card) setPreviewCard(card); }}
+            onMouseEnter={() => { if (card && window.innerWidth >= 768) setPreviewCard(card); }}
+            onMouseLeave={() => { if (window.innerWidth >= 768) setPreviewCard(null); }}
+          >
             {cardArt && (
               <img
                 src={cardArt}
@@ -401,6 +410,145 @@ function CardPlayEntry({
           {card.cost}
         </div>
       )}
+
+      {/* Card Preview Popup */}
+      <AnimatePresence>
+        {previewCard && (
+          <CardPreviewPopup card={previewCard} onClose={() => setPreviewCard(null)} />
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+}
+
+/* ─── Card Preview Popup ──────────────────────────────────── */
+const EFFECT_NAMES: Record<string, string> = {
+  damage: "Hurt", self_damage: "Backlash", heal_gain: "Mend", heal_steal: "Siphon Life",
+  shield_gain: "Ward", shield_steal: "Crack Ward", energy_gain: "Recharge", energy_steal: "Drain",
+  heal_block: "Cursed", shield_block: "Shatter", energy_block: "Exhaust",
+  affliction_amplify: "Intensify", affliction_transfer: "Redirect", discard_burn: "Devour",
+  energy_regen: "Sustain", draw_boost: "Insight", draw_reduction: "Fog",
+};
+
+const EFFECT_DESCS: Record<string, string> = {
+  damage: "Deals direct damage to target HP",
+  self_damage: "Deals damage to yourself as a cost",
+  heal_gain: "Restores your HP",
+  heal_steal: "Steals HP from target, healing you",
+  shield_gain: "Adds protective shield to yourself",
+  shield_steal: "Steals shield from the target",
+  energy_gain: "Restores your corruption energy",
+  energy_steal: "Steals energy from the target",
+  heal_block: "Prevents target from healing",
+  shield_block: "Prevents target from gaining shield",
+  energy_block: "Prevents target from gaining energy",
+  affliction_amplify: "Amplifies all active afflictions",
+  affliction_transfer: "Transfers your afflictions to target",
+  discard_burn: "Forces target to discard cards",
+  energy_regen: "Regenerates energy over multiple rounds",
+  draw_boost: "Draw extra cards next round",
+  draw_reduction: "Target draws fewer cards next round",
+};
+
+const PATTERN_LABELS: Record<string, string> = {
+  standard: "◆ Steady", aggressive: "🔥 Volatile", slowburn: "⌛ Patient",
+};
+
+function CardPreviewPopup({ card, onClose }: { card: CardDefinition; onClose: () => void }) {
+  const art = CARD_ART_URLS[card.id];
+  const sinColor = SIN_COLORS[card.sin] || "#ef4444";
+  const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
+      transition={{ duration: 0.15 }}
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/70" />
+      <div
+        className="relative w-[280px] rounded-xl overflow-hidden"
+        style={{
+          background: "oklch(0.12 0.02 280)",
+          border: `2px solid ${sinColor}50`,
+          boxShadow: `0 0 40px ${sinColor}20`,
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Card Art */}
+        {art && (
+          <div className="h-[180px] relative overflow-hidden">
+            <img src={art} alt={card.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 50%, oklch(0.12 0.02 280) 100%)` }} />
+          </div>
+        )}
+
+        <div className="p-4 space-y-3">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-black text-candle" style={{ fontFamily: "var(--font-heading)" }}>{card.name}</h3>
+              <div className="flex items-center gap-2 mt-0.5">
+                {sinIcon && <img src={sinIcon} alt="" className="w-4 h-4" />}
+                <span className="text-xs uppercase tracking-wider font-bold" style={{ color: sinColor }}>{card.sin}</span>
+                <span className="text-xs text-candle/40 uppercase">{card.tier}</span>
+                <span className="text-xs text-candle/40">{PATTERN_LABELS[card.compoundPattern] || card.compoundPattern}</span>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-full flex items-center justify-center text-lg font-black" style={{
+              background: `${sinColor}20`, color: sinColor, border: `2px solid ${sinColor}50`,
+            }}>
+              {card.cost}
+            </div>
+          </div>
+
+          {/* Effects */}
+          <div className="space-y-2">
+            {card.effects.map((eff, i) => {
+              const iconUrl = getEffectIconUrl(eff.type, card.sin);
+              return (
+                <div key={i} className="flex items-start gap-2">
+                  {iconUrl ? (
+                    <img src={iconUrl} alt="" className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <span className="text-sm mt-0.5">✦</span>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold" style={{ color: sinColor }}>
+                        {EFFECT_NAMES[eff.type] || eff.type}
+                      </span>
+                      <span className="text-sm font-black text-candle">
+                        {eff.duration > 1
+                          ? `${getCompoundTickValue(eff.baseValue, card.compoundPattern, 0)} → ${getCompoundTickValue(eff.baseValue, card.compoundPattern, 1)} → ${getCompoundTickValue(eff.baseValue, card.compoundPattern, eff.duration - 1)}`
+                          : eff.baseValue
+                        }
+                      </span>
+                      {eff.targetMode && eff.targetMode !== "single" && (
+                        <span className="text-[10px] text-candle/40 uppercase">{eff.targetMode}</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-candle/50 leading-snug">{EFFECT_DESCS[eff.type] || ""}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Description */}
+          <p className="text-xs text-candle/40 italic leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+            {card.description}
+          </p>
+        </div>
+
+        {/* Close hint */}
+        <div className="text-center pb-2">
+          <span className="text-[10px] text-candle/25">tap anywhere to close</span>
+        </div>
+      </div>
     </motion.div>
   );
 }

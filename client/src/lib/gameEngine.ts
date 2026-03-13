@@ -25,6 +25,7 @@ import {
   STARTING_HP,
   STARTING_ENERGY,
   ROUND_16_DOUBLING,
+  CARDS_PER_DECK,
   TurnPhase,
   WRATH_VENGEANCE_PCT,
   SLOTH_ENDURANCE_MULT,
@@ -197,10 +198,12 @@ export async function startGame(gameId: string): Promise<void> {
   if (!allReady) throw new Error("All players must choose a sin");
 
   for (const player of players) {
-    // Use custom deck if player selected one, otherwise use full faction deck
-    const deckCards = (player.custom_deck_ids && Array.isArray(player.custom_deck_ids) && player.custom_deck_ids.length > 0)
-      ? player.custom_deck_ids as string[]
-      : getDeckForSin(player.chosen_sin as SinType);
+    // Use custom deck if player selected one, otherwise pick random 30 from full 54-card faction pool
+    const fullDeck = getDeckForSin(player.chosen_sin as SinType);
+    const customDeckIds = player.custom_deck_ids;
+    const deckCards = (customDeckIds && Array.isArray(customDeckIds) && customDeckIds.length > 0)
+      ? customDeckIds as string[]
+      : shuffleDeck(fullDeck).slice(0, CARDS_PER_DECK);
     const shuffled = shuffleDeck(deckCards);
     const hand = shuffled.slice(0, HAND_SIZE);
     const remainingDeck = shuffled.slice(HAND_SIZE);

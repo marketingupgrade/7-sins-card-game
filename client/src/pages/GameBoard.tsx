@@ -641,15 +641,24 @@ export default function GameBoard() {
   }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch, myPlayer, gameState, addToActionFeed]);
 
   const handleSelectTarget = useCallback((targetId: string) => {
-    // In simultaneous mode, clicking a target assigns it to the last selected card
+    // In simultaneous mode, clicking a target assigns it to the first card that still needs a target
     if (selectedCards.length === 0) return;
-    const lastSelection = selectedCards[selectedCards.length - 1];
-    const card = CARD_MAP[lastSelection.cardId];
-    if (!card) return;
-    const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
-    if (needsTarget) {
+    // Find the first selected card that needs a target but doesn't have one yet
+    const needsTargetIdx = selectedCards.findIndex(s => {
+      const card = CARD_MAP[s.cardId];
+      if (!card) return false;
+      const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
+      return needsTarget && !s.targetPlayerId;
+    });
+    if (needsTargetIdx >= 0) {
       setSelectedCards(prev => prev.map((s, i) =>
-        i === prev.length - 1 ? { ...s, targetPlayerId: targetId } : s
+        i === needsTargetIdx ? { ...s, targetPlayerId: targetId } : s
+      ));
+    } else {
+      // All cards have targets — re-assign the last one
+      const lastIdx = selectedCards.length - 1;
+      setSelectedCards(prev => prev.map((s, i) =>
+        i === lastIdx ? { ...s, targetPlayerId: targetId } : s
       ));
     }
     setSelectedTarget(targetId);
@@ -832,7 +841,7 @@ export default function GameBoard() {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-4 md:w-5 h-4 md:h-5 opacity-60" />
-            <span className="text-sm md:text-lg font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+            <span className="text-base md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
               <span className="hidden md:inline">Round </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>
           </div>
@@ -846,7 +855,7 @@ export default function GameBoard() {
               className="flex items-center gap-2"
             >
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-red-500" />
-              <span className="text-xs md:text-sm font-bold text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm md:text-base font-bold text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
                 RESOLVING...
               </span>
             </motion.div>
@@ -857,7 +866,7 @@ export default function GameBoard() {
               className="flex items-center gap-2"
             >
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-greed-glow" />
-              <span className="text-xs md:text-sm font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm md:text-base font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
                 SELECT YOUR CARDS
               </span>
             </motion.div>
@@ -868,14 +877,14 @@ export default function GameBoard() {
               className="flex items-center gap-2"
             >
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-candle/60" />
-              <span className="text-xs md:text-sm font-bold text-candle/80" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm md:text-base font-bold text-candle/80" style={{ fontFamily: "var(--font-heading)" }}>
                 LOCKED IN — WAITING...
               </span>
             </motion.div>
           ) : (
             <div className="flex items-center gap-2">
               <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-muted-foreground/40" />
-              <span className="text-xs md:text-sm text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm md:text-base text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
                 Waiting for players...
               </span>
             </div>
@@ -905,7 +914,7 @@ export default function GameBoard() {
       </div>
 
       {/* Arena Grid — Gothic Cathedral Interior */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-hidden">
+      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
         <div className="hidden md:grid flex-1 grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] grid-rows-[auto_1fr_auto] gap-3 p-3">
           
           {/* NORTH */}
@@ -999,12 +1008,12 @@ export default function GameBoard() {
                   <p className="text-3xl font-black text-candle" style={{ fontFamily: "var(--font-heading)", textShadow: '0 0 10px oklch(0.75 0.12 70 / 0.4)' }}>
                     {gameState.currentRound}
                   </p>
-                  <p className="text-xs text-candle/40 uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-heading)" }}>
+                  <p className="text-sm text-candle/40 uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-heading)" }}>
                     of {MAX_ROUNDS}
                   </p>
                 </div>
               </div>
-              <p className="text-sm text-candle/50 font-medium" style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>
+              <p className="text-base text-candle/50 font-medium" style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>
                 {alivePlayers.length} players alive
               </p>
             </div>
@@ -1173,7 +1182,7 @@ export default function GameBoard() {
               className="flex flex-col items-center gap-1.5 py-2"
             >
               {selectedCards.length > 0 && (
-                <div className="text-xs md:text-sm text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                <div className="text-sm md:text-base text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
                   {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} selected {"\u00B7"} {energyRemaining} energy left
                 </div>
               )}
@@ -1190,7 +1199,7 @@ export default function GameBoard() {
                     ] : "none",
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="px-5 md:px-10 py-2.5 md:py-3 rounded-lg text-sm md:text-base font-black uppercase tracking-wider disabled:opacity-50"
+                  className="px-5 md:px-10 py-2.5 md:py-3 rounded-lg text-base md:text-lg font-black uppercase tracking-wider disabled:opacity-50"
                   style={{
                     fontFamily: "var(--font-heading)",
                     background: selectedCards.length > 0
@@ -1209,7 +1218,7 @@ export default function GameBoard() {
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-sm md:text-base font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
+                  className="px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 border-border/40 text-muted-foreground text-base md:text-lg font-bold uppercase tracking-wide hover:border-border/60 hover:text-foreground transition-all"
                   style={{ fontFamily: "var(--font-heading)" }}
                   onClick={handlePassLockIn}
                   disabled={isLockingIn}
@@ -1223,7 +1232,7 @@ export default function GameBoard() {
             <motion.p
               animate={{ opacity: [0.4, 0.8, 0.4] }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="text-center text-sm text-muted-foreground/60 py-2"
+              className="text-center text-base text-muted-foreground/60 py-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
               {(turnPhase === "resolution" || isShowingResolution)
@@ -1236,9 +1245,9 @@ export default function GameBoard() {
         </div>
 
         {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
-        <div data-tutorial="card-hand" className="px-2 md:px-4 pb-3 md:pb-4 shrink-0">
+        <div data-tutorial="card-hand" className="px-2 md:px-4 pb-4 md:pb-6 shrink-0 overflow-visible">
           {/* Desktop hand */}
-          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-4 pt-2 scrollbar-thin">
+          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-6 pt-4 scrollbar-thin" style={{ minHeight: '220px' }}>
             {myPlayer && (
               <DeckPile
                 sin={(myPlayer.chosenSin as SinType) || "wrath"}
@@ -1615,7 +1624,7 @@ const PlayerPanel = memo(function PlayerPanel({
               </span>
               {isMe && (
                 <span 
-                  className="text-candle/70 ml-1 text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-full"
+                  className="text-candle/70 ml-1 text-sm font-bold flex-shrink-0 px-1.5 py-0.5 rounded-full"
                   style={{ background: 'oklch(0.75 0.12 70 / 0.12)', border: '1px solid oklch(0.75 0.12 70 / 0.2)' }}
                 >
                   YOU
@@ -1627,7 +1636,7 @@ const PlayerPanel = memo(function PlayerPanel({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span
-                  className="text-xs font-medium uppercase tracking-wider opacity-60 cursor-help inline-flex items-center gap-1"
+                  className="text-sm font-medium uppercase tracking-wider opacity-60 cursor-help inline-flex items-center gap-1"
                   style={{ fontFamily: "var(--font-heading)", color: sinColor }}
                 >
                   {player.chosenSin || "unknown"}
@@ -1645,11 +1654,11 @@ const PlayerPanel = memo(function PlayerPanel({
                 >
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className="text-sm">{PASSIVE_INFO[player.chosenSin as SinType].icon}</span>
-                    <span className="text-xs font-black uppercase tracking-wider" style={{ color: sinColor, fontFamily: 'var(--font-heading)' }}>
+                    <span className="text-sm font-black uppercase tracking-wider" style={{ color: sinColor, fontFamily: 'var(--font-heading)' }}>
                       {PASSIVE_INFO[player.chosenSin as SinType].name}
                     </span>
                   </div>
-                  <p className="text-[11px] leading-relaxed text-muted-foreground">
+                  <p className="text-sm leading-relaxed text-muted-foreground">
                     {PASSIVE_INFO[player.chosenSin as SinType].description}
                   </p>
                 </TooltipContent>
@@ -1659,7 +1668,7 @@ const PlayerPanel = memo(function PlayerPanel({
             {player.isAlive && player.hasLockedIn && (
               <div className="flex items-center gap-1.5 mt-0.5">
                 <div className="w-2 h-2 rounded-full bg-candle/80" />
-                <span className="text-[10px] text-candle/70 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                <span className="text-xs text-candle/70 font-bold uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                   Locked In
                 </span>
               </div>
@@ -1687,7 +1696,7 @@ const PlayerPanel = memo(function PlayerPanel({
             )}
             {/* HP text inside the bar */}
             <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-sm font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" style={{ fontFamily: "var(--font-heading)" }}>
                 {player.currentHp}/{player.maxHp}
                 {shieldValue > 0 && <span className="text-cyan-300 ml-1">+{shieldValue}</span>}
               </span>
@@ -1718,7 +1727,7 @@ const PlayerPanel = memo(function PlayerPanel({
             ))}
             {!isHovered && hiddenEffectsCount > 0 && (
               <div className="inline-flex items-center px-1.5 py-0.5 rounded-md border border-border/30 bg-background/20">
-                <span className="text-xs text-muted-foreground font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                <span className="text-sm text-muted-foreground font-bold" style={{ fontFamily: "var(--font-heading)" }}>
                   +{hiddenEffectsCount}
                 </span>
               </div>

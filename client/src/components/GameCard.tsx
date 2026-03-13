@@ -72,6 +72,26 @@ const effectDisplayNames: Record<string, string> = {
   draw_reduction: "Fog",
 };
 
+const effectDescriptions: Record<string, string> = {
+  damage: "Deals direct damage to target HP",
+  self_damage: "Deals damage to yourself as a cost",
+  heal_gain: "Restores your HP",
+  heal_steal: "Steals HP from target, healing you",
+  shield_gain: "Adds protective shield to yourself",
+  shield_steal: "Steals shield from the target",
+  energy_gain: "Restores your corruption energy",
+  energy_steal: "Steals energy from the target",
+  heal_block: "Prevents target from healing",
+  shield_block: "Prevents target from gaining shield",
+  energy_block: "Prevents target from gaining energy",
+  affliction_amplify: "Amplifies all active afflictions",
+  affliction_transfer: "Transfers your afflictions to target",
+  discard_burn: "Forces target to discard cards",
+  energy_regen: "Regenerates energy over multiple rounds",
+  draw_boost: "Draw extra cards next round",
+  draw_reduction: "Target draws fewer cards next round",
+};
+
 const targetDisplayNames: Record<string, string> = {
   self: "you",
   aoe: "everyone",
@@ -219,7 +239,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       }}
       onClick={actuallyPlayable ? onClick : undefined}
       className={`
-        relative w-[180px] sm:w-[200px] h-[270px] sm:h-[300px] rounded-xl overflow-hidden select-none
+        relative w-[200px] sm:w-[220px] h-[300px] sm:h-[340px] rounded-xl overflow-hidden select-none
         ${cfg.cardClass}
         ${tier.border} ${tier.glow}
         ${isSelected ? cfg.glowClass : ""}
@@ -249,25 +269,25 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       <div className="relative px-3 pt-2.5 pb-1.5 flex items-center justify-between">
         <div className="flex items-center gap-1.5">
           {/* Sin archetype icon (spell icon, not Lucide) */}
-          <img src={sinIcon} alt={card.sin} className="w-5 h-5 object-contain drop-shadow-sm" loading="lazy" />
+          <img src={sinIcon} alt={card.sin} className="w-6 h-6 object-contain drop-shadow-sm" loading="lazy" />
           {/* Compound Pattern Badge with Tooltip */}
           <Tooltip>
             <TooltipTrigger asChild>
               <span
-                className="text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase badge-compound cursor-help"
+                className="text-xs sm:text-sm px-2 py-0.5 rounded-sm font-bold uppercase badge-compound cursor-help"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {pattern.label}
               </span>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-[220px] bg-[#1a1520] border border-white/10 text-white/90 p-3">
-              <p className="font-bold text-xs mb-1" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{pattern.title}</p>
-              <p className="text-[10px] text-white/60 leading-relaxed">{pattern.desc}</p>
+              <p className="font-bold text-sm mb-1" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{pattern.title}</p>
+              <p className="text-xs text-white/60 leading-relaxed">{pattern.desc}</p>
             </TooltipContent>
           </Tooltip>
           {card.tier !== "common" && (
             <span
-              className={`text-[10px] sm:text-[11px] px-2 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}
+              className={`text-xs sm:text-sm px-2 py-0.5 rounded-sm font-bold uppercase ${tier.badge}`}
               style={{ fontFamily: "var(--font-heading)" }}
             >
               {card.tier}
@@ -275,7 +295,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
           )}
           {card.skipQueue && (
             <span
-              className="text-[9px] sm:text-[10px] px-1.5 py-0.5 rounded-sm font-bold uppercase bg-amber-500/90 text-black tracking-wider animate-pulse"
+              className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded-sm font-bold uppercase bg-amber-500/90 text-black tracking-wider animate-pulse"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               ⚡ PRIORITY
@@ -284,7 +304,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         </div>
         {/* Energy Cost — large and prominent */}
         <div
-          className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-base sm:text-lg font-black border-2 ${
+          className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center text-lg sm:text-xl font-black border-2 ${
             !canAfford
               ? "border-destructive/60 text-destructive bg-destructive/10"
               : ""
@@ -305,7 +325,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       {/* Card Art Area — unique AI-generated art per card */}
       <SinShaderOverlay sin={card.sin} isHovered={isHovered}>
       <div
-        className="mx-2.5 h-[90px] sm:h-[100px] rounded-lg relative overflow-hidden"
+        className="mx-2.5 h-[100px] sm:h-[115px] rounded-lg relative overflow-hidden"
         style={{ background: `linear-gradient(135deg, color-mix(in oklch, var(--color-${cfg.color}) 15%, transparent), transparent)` }}
       >
         {CARD_ART_URLS[card.id] ? (
@@ -313,7 +333,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
             src={CARD_ART_URLS[card.id]}
             alt={card.name}
             className="absolute inset-0 w-full h-full object-cover"
-            style={{ filter: `saturate(1.1) contrast(1.05)` }}
+            style={{ filter: `saturate(1.1) contrast(1.05)`, transform: 'scale(1.15)', transformOrigin: 'center center' }}
             loading="lazy"
           />
         ) : (
@@ -346,7 +366,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       {/* Card Name — large, bold, with text shadow for contrast */}
       <div className="px-3 py-1.5">
         <h4
-          className="text-[15px] sm:text-[17px] font-black text-foreground leading-tight truncate"
+          className="text-lg sm:text-xl font-black text-foreground leading-tight truncate"
           style={{
             fontFamily: "var(--font-heading)",
             textShadow: "0 1px 4px rgba(0,0,0,0.8), 0 0 8px rgba(0,0,0,0.4)",
@@ -362,18 +382,25 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
           const color = effectColors[effect.type] || "text-muted-foreground";
           const iconUrl = getEffectIconUrl(effect.type, card.sin);
           return (
-            <div key={i} className="flex items-center gap-2 text-[12px] sm:text-[13px]">
+            <div key={i} className="flex items-center gap-2 text-sm sm:text-[15px]">
               {iconUrl ? (
-                <img src={iconUrl} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm" loading="lazy" />
+                <img src={iconUrl} alt={effect.type} className="w-5 h-5 object-contain flex-shrink-0 drop-shadow-sm" loading="lazy" />
               ) : (
-                <img src={sinIcon} alt={effect.type} className="w-4 h-4 object-contain flex-shrink-0 drop-shadow-sm opacity-60" loading="lazy" />
+                <img src={sinIcon} alt={effect.type} className="w-5 h-5 object-contain flex-shrink-0 drop-shadow-sm opacity-60" loading="lazy" />
               )}
-              <span
-                className="text-foreground/80 font-semibold"
-                style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-              >
-                {effectDisplayNames[effect.type] || effect.type}
-              </span>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span
+                    className="text-foreground/80 font-semibold cursor-help"
+                    style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+                  >
+                    {effectDisplayNames[effect.type] || effect.type}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[200px] bg-[#1a1520] border border-white/10 text-white/90 p-2">
+                  <p className="text-xs leading-relaxed">{effectDescriptions[effect.type] || effect.type}</p>
+                </TooltipContent>
+              </Tooltip>
               <span
                 className={`font-black ${color}`}
                 title={`Ticks: ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 0)} -> ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 1)} -> ${getCompoundTickValue(effect.baseValue, card.compoundPattern, 2)}`}
@@ -382,7 +409,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
                 {effect.duration > 1 ? `${getCompoundTickValue(effect.baseValue, card.compoundPattern, 0)}→${getCompoundTickValue(effect.baseValue, card.compoundPattern, effect.duration - 1)}` : effect.baseValue}
               </span>
               {effect.targetMode && effect.targetMode !== "single" && (
-                <span className="text-foreground/50 font-medium text-[10px] sm:text-[11px]">
+                <span className="text-foreground/50 font-medium text-xs sm:text-sm">
                   {targetDisplayNames[effect.targetMode] || effect.targetMode}
                 </span>
               )}
@@ -394,7 +421,7 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
       {/* Description — flavor text */}
       <div className="absolute bottom-2 left-3 right-3">
         <p
-          className="text-[10px] sm:text-[11px] text-foreground/60 italic leading-tight line-clamp-2"
+          className="text-xs sm:text-sm text-foreground/60 italic leading-tight line-clamp-2"
           style={{
             fontFamily: "var(--font-body)",
             textShadow: "0 1px 4px rgba(0,0,0,0.8)",

@@ -244,7 +244,7 @@ export default function Home() {
           className="pt-6 md:pt-10 text-center shrink-0"
         >
           <p
-            className="text-[9px] md:text-[10px] tracking-[0.5em] text-white/30 uppercase mb-2"
+            className="text-[11px] md:text-xs tracking-[0.5em] text-white/30 uppercase mb-2"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             Enter the Cathedral
@@ -308,7 +308,7 @@ export default function Home() {
                     {/* Latin name overlay on portrait */}
                     <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
                       <p
-                        className="text-[10px] md:text-xs tracking-[0.4em] uppercase mb-1 opacity-60"
+                        className="text-xs md:text-sm tracking-[0.4em] uppercase mb-1 opacity-60"
                         style={{
                           fontFamily: "var(--font-heading)",
                           color: `var(--color-${currentSin.color})`,
@@ -350,19 +350,19 @@ export default function Home() {
                   className="mb-6 md:mb-8"
                 >
                   <p
-                    className="text-[10px] md:text-xs tracking-[0.3em] uppercase mb-2 opacity-50"
+                    className="text-xs md:text-sm tracking-[0.3em] uppercase mb-2 opacity-50"
                     style={{ fontFamily: "var(--font-heading)", color: `var(--color-${currentSin.color})` }}
                   >
                     {currentSin.subtitle}
                   </p>
                   <p
-                    className="text-base md:text-lg text-white/80 leading-relaxed mb-3"
+                    className="text-lg md:text-xl text-white/80 leading-relaxed mb-3"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     {currentSin.tagline}
                   </p>
                   <div
-                    className="inline-block rounded-lg px-3 py-1.5 text-[10px] md:text-xs tracking-wider border"
+                    className="inline-block rounded-lg px-3 py-1.5 text-xs md:text-sm tracking-wider border"
                     style={{
                       fontFamily: "var(--font-heading)",
                       color: `var(--color-${currentSin.color})`,
@@ -380,7 +380,7 @@ export default function Home() {
                 {/* Username */}
                 <div className="mb-5">
                   <label
-                    className="block text-[10px] tracking-[0.2em] text-white/40 uppercase mb-2"
+                    className="block text-xs tracking-[0.2em] text-white/40 uppercase mb-2"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     Your Sinful Name
@@ -391,7 +391,7 @@ export default function Home() {
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="What do they call you, sinner?"
                     maxLength={20}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/20 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-all"
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-base text-white placeholder:text-white/20 focus:outline-none focus:border-white/25 focus:ring-1 focus:ring-white/10 transition-all"
                     style={{ fontFamily: "var(--font-body)" }}
                   />
                 </div>
@@ -404,7 +404,7 @@ export default function Home() {
                     whileTap={{ scale: 0.98 }}
                     onClick={handleCreate}
                     disabled={isCreating}
-                    className="w-full rounded-xl py-3.5 px-6 text-sm font-bold tracking-wider disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
+                    className="w-full rounded-xl py-3.5 px-6 text-base font-bold tracking-wider disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
                     style={{
                       fontFamily: "var(--font-heading)",
                       background: `linear-gradient(135deg, var(--color-${currentSin.color}), color-mix(in oklch, var(--color-${currentSin.color}) 60%, black))`,
@@ -421,7 +421,7 @@ export default function Home() {
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => startTutorial("home")}
-                    className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-white/10 text-white/50 hover:bg-white/5 hover:border-white/20 transition-all flex items-center justify-center gap-2"
+                    className="w-full rounded-xl py-2.5 px-6 text-sm border border-white/10 text-white/50 hover:bg-white/5 hover:border-white/20 transition-all flex items-center justify-center gap-2"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     <GraduationCap className="w-3.5 h-3.5" />
@@ -432,7 +432,7 @@ export default function Home() {
                     <motion.div
                       whileHover={{ scale: 1.02, y: -1 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full rounded-xl py-2.5 px-6 text-sm border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
                       style={{ fontFamily: "var(--font-heading)" }}
                     >
                       <BookOpen className="w-3.5 h-3.5" />
@@ -445,19 +445,19 @@ export default function Home() {
                     <div className="my-1">
                       <div className="flex items-center gap-3 mb-2">
                         <div className="flex-1 h-px bg-white/8" />
-                        <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                        <span className="text-xs tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                           Claim your soul
                         </span>
                         <div className="flex-1 h-px bg-white/8" />
                       </div>
-                      <p className="text-[10px] text-white/40 mb-2 leading-relaxed text-center" style={{ fontFamily: "var(--font-body)" }}>
+                      <p className="text-xs text-white/40 mb-2 leading-relaxed text-center" style={{ fontFamily: "var(--font-body)" }}>
                         Sign in to save your custom decks, track your match history, and unlock faction achievements.
                       </p>
                       <Link href="/login">
                         <motion.div
                           whileHover={{ scale: 1.02, y: -1 }}
                           whileTap={{ scale: 0.98 }}
-                          className="w-full rounded-xl py-2.5 px-6 text-[11px] border border-amber-500/30 text-amber-200/70 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full rounded-xl py-2.5 px-6 text-sm border border-amber-500/30 text-amber-200/70 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           <LogIn className="w-3.5 h-3.5" />
@@ -469,7 +469,7 @@ export default function Home() {
 
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />
-                    <span className="text-[9px] tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                    <span className="text-xs tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                       or join another's penance
                     </span>
                     <div className="flex-1 h-px bg-white/8" />
@@ -483,7 +483,7 @@ export default function Home() {
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
                         onClick={() => setShowJoinPanel(true)}
-                        className="w-full rounded-xl py-3.5 px-6 text-sm font-bold tracking-wider flex items-center justify-center gap-2 border border-white/10 text-white/70 hover:bg-white/5 transition-all"
+                        className="w-full rounded-xl py-3.5 px-6 text-base font-bold tracking-wider flex items-center justify-center gap-2 border border-white/10 text-white/70 hover:bg-white/5 transition-all"
                         style={{ fontFamily: "var(--font-heading)" }}
                       >
                         <Users className="w-4 h-4" />
@@ -512,7 +512,7 @@ export default function Home() {
                             whileTap={{ scale: 0.98 }}
                             onClick={handleJoin}
                             disabled={isJoining}
-                            className="flex-1 rounded-xl py-3 px-4 text-sm font-bold tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 border border-white/15 text-white/80 hover:bg-white/5 transition-all"
+                            className="flex-1 rounded-xl py-3 px-4 text-base font-bold tracking-wider disabled:opacity-50 flex items-center justify-center gap-2 border border-white/15 text-white/80 hover:bg-white/5 transition-all"
                             style={{ fontFamily: "var(--font-heading)" }}
                           >
                             {isJoining ? "ENTERING..." : "ENTER THE CATHEDRAL"}
@@ -550,7 +550,7 @@ export default function Home() {
               </div>
 
               {/* Bottom info */}
-              <div className="flex items-center justify-center gap-4 mt-4 text-[10px] tracking-[0.1em] text-white/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+              <div className="flex items-center justify-center gap-4 mt-4 text-xs tracking-[0.1em] text-white/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> 2-4</span>
                 <span className="text-white/10">&middot;</span>
                 <span className="flex items-center gap-1"><img src={ICON_URLS.energy_generic} alt="" className="w-3 h-3 object-contain" /> Real-time</span>

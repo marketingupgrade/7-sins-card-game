@@ -343,7 +343,8 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 20;
 export const STARTING_HP = 200;
 export const HAND_SIZE = 5;
-export const CARDS_PER_DECK = 54;
+export const CARDS_PER_DECK = 30;
+export const MAX_FACTION_CARDS = 54;
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
 export const CATCHUP_HP_THRESHOLD = 80; // 40% of 200 HP
 

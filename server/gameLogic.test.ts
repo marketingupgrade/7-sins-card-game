@@ -196,8 +196,8 @@ describe("Game Constants (v4)", () => {
     expect(HAND_SIZE).toBe(5);
   });
 
-  it("CARDS_PER_DECK is 54", () => {
-    expect(CARDS_PER_DECK).toBe(54);
+  it("CARDS_PER_DECK is 30 (deck size limit)", () => {
+    expect(CARDS_PER_DECK).toBe(30);
   });
 });
 

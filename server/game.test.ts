@@ -100,20 +100,20 @@ describe("Compound Patterns (v4)", () => {
 });
 
 describe("Card Data Integrity (v4)", () => {
-  it("has exactly 54 wrath cards", () => {
-    expect(WRATH_CARDS).toHaveLength(CARDS_PER_DECK);
+  it("has exactly 54 wrath cards in the full pool", () => {
+    expect(WRATH_CARDS).toHaveLength(54);
   });
 
-  it("has exactly 54 sloth cards", () => {
-    expect(SLOTH_CARDS).toHaveLength(CARDS_PER_DECK);
+  it("has exactly 54 sloth cards in the full pool", () => {
+    expect(SLOTH_CARDS).toHaveLength(54);
   });
 
-  it("has exactly 54 cards per faction", () => {
-    expect(GREED_CARDS).toHaveLength(CARDS_PER_DECK);
-    expect(ENVY_CARDS).toHaveLength(CARDS_PER_DECK);
-    expect(PRIDE_CARDS).toHaveLength(CARDS_PER_DECK);
-    expect(LUST_CARDS).toHaveLength(CARDS_PER_DECK);
-    expect(GLUTTONY_CARDS).toHaveLength(CARDS_PER_DECK);
+  it("has exactly 54 cards per faction in the full pool", () => {
+    expect(GREED_CARDS).toHaveLength(54);
+    expect(ENVY_CARDS).toHaveLength(54);
+    expect(PRIDE_CARDS).toHaveLength(54);
+    expect(LUST_CARDS).toHaveLength(54);
+    expect(GLUTTONY_CARDS).toHaveLength(54);
   });
 
   it("has 378 total cards (7 sins x 54)", () => {
@@ -210,7 +210,7 @@ describe("Card Registry", () => {
     expect(getCardById("nonexistent")).toBeUndefined();
   });
 
-  it("getDeckForSin returns 54 card IDs for each sin", () => {
+  it("getDeckForSin returns 54 card IDs for each sin (full pool)", () => {
     const sins = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"] as const;
     for (const sin of sins) {
       const deck = getDeckForSin(sin);
@@ -273,8 +273,8 @@ describe("Game Constants (v4)", () => {
     expect(HAND_SIZE).toBe(5);
   });
 
-  it("CARDS_PER_DECK is 54", () => {
-    expect(CARDS_PER_DECK).toBe(54);
+  it("CARDS_PER_DECK is 30 (deck size limit)", () => {
+    expect(CARDS_PER_DECK).toBe(30);
   });
 
   it("ROUND_16_DOUBLING is 16", () => {

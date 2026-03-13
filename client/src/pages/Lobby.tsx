@@ -20,6 +20,7 @@ import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { chooseSin, startGame, getGameState, setCustomDeck } from "@/lib/gameEngine";
 import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
@@ -177,6 +178,7 @@ function StonePanel({ children, className = "", glow = false }: { children: Reac
 export default function Lobby() {
   const { gameId } = useParams<{ gameId: string }>();
   const playerId = usePlayerId();
+  const { user } = useAuth();
   const [, setLocation] = useLocation();
   const [state, setState] = useState<GameState | null>(null);
   const [copied, setCopied] = useState(false);
@@ -257,7 +259,7 @@ export default function Lobby() {
       addMessage(
         deckCardIds
           ? `Deck "${deckName}" bound to your soul. ${deckCardIds.length} cards of damnation.`
-          : "Full arsenal selected. Every card at your disposal.",
+          : "Random 30 selected. Fate decides your hand.",
         "info"
       );
     } catch (err: any) { setError(err.message); }
@@ -327,7 +329,7 @@ export default function Lobby() {
           animate={{ opacity: 1, x: 0 }}
           whileHover={{ x: -3 }}
           onClick={() => setLocation("/")}
-          className="self-start mb-4 flex items-center gap-1.5 text-xs text-candle/50 hover:text-candle/80 transition-colors"
+          className="self-start mb-4 flex items-center gap-1.5 text-sm text-candle/50 hover:text-candle/80 transition-colors"
           style={{ fontFamily: "var(--font-heading)" }}
         >
           <ArrowLeft className="w-3.5 h-3.5" />
@@ -342,7 +344,7 @@ export default function Lobby() {
         >
           <OrnamentDivider className="mb-3" />
           <p
-            className="text-[10px] tracking-[0.4em] text-candle/50 uppercase mb-2"
+            className="text-xs tracking-[0.4em] text-candle/50 uppercase mb-2"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             The Congregation Assembles
@@ -353,7 +355,7 @@ export default function Lobby() {
           >
             SANCTUM
           </h1>
-          <p className="text-[9px] text-candle/30 mt-1 tracking-[0.2em] uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+          <p className="text-xs text-candle/30 mt-1 tracking-[0.2em] uppercase" style={{ fontFamily: "var(--font-heading)" }}>
             Where sinners gather before judgment
           </p>
           <OrnamentDivider className="mt-3" />
@@ -369,7 +371,7 @@ export default function Lobby() {
         >
           <StonePanel glow className="p-6 text-center">
             <p
-              className="text-[10px] tracking-[0.3em] text-candle/50 uppercase mb-3"
+              className="text-xs tracking-[0.3em] text-candle/50 uppercase mb-3"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               Ritual Summoning Code
@@ -401,7 +403,7 @@ export default function Lobby() {
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </motion.button>
             </div>
-            <p className="text-[9px] text-candle/40 mt-3" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-xs text-candle/40 mt-3" style={{ fontFamily: "var(--font-body)" }}>
               {copied ? "Inscribed to your clipboard. Go summon the worthy." : "Share this inscription to summon others to the ritual."}
             </p>
           </StonePanel>
@@ -416,7 +418,7 @@ export default function Lobby() {
         >
           <div className="flex items-center justify-between mb-3">
             <h2
-              className="text-xs tracking-[0.25em] text-candle/60 uppercase flex items-center gap-2"
+              className="text-sm tracking-[0.25em] text-candle/60 uppercase flex items-center gap-2"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               <Users className="w-3.5 h-3.5" />
@@ -429,8 +431,8 @@ export default function Lobby() {
                 whileTap={{ scale: 0.95 }}
                 onClick={handleAddBot}
                 disabled={isAddingBot}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                  bg-candle/8 border border-candle/20 text-candle/80 text-xs
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                  bg-candle/8 border border-candle/20 text-candle/80 text-sm
                   hover:bg-candle/15 hover:border-candle/30 transition-all disabled:opacity-50"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
@@ -466,7 +468,7 @@ export default function Lobby() {
                         {i === 0 && <Crown className="w-3.5 h-3.5 text-candle" />}
                         {playerIsBot && <Bot className="w-3.5 h-3.5 text-candle/40" />}
                         <span
-                          className="text-sm font-bold text-foreground/90 truncate flex-1"
+                          className="text-base font-bold text-foreground/90 truncate flex-1"
                           style={{ fontFamily: "var(--font-heading)" }}
                         >
                           {player.username || `Sinner ${i + 1}`}
@@ -480,18 +482,18 @@ export default function Lobby() {
                           </div>
                           <div>
                             <span
-                              className={`text-xs uppercase tracking-wider font-bold text-${sinCfg.color}`}
+                              className={`text-sm uppercase tracking-wider font-bold text-${sinCfg.color}`}
                               style={{ fontFamily: "var(--font-heading)" }}
                             >
                               {sinCfg.latin}
                             </span>
-                            <p className="text-[8px] text-candle/40" style={{ fontFamily: "var(--font-body)" }}>
+                            <p className="text-xs text-candle/40" style={{ fontFamily: "var(--font-body)" }}>
                               {sinCfg.subtitle}
                             </p>
                           </div>
                         </div>
                       ) : (
-                        <span className="text-xs text-candle/40 italic" style={{ fontFamily: "var(--font-body)" }}>
+                        <span className="text-sm text-candle/40 italic" style={{ fontFamily: "var(--font-body)" }}>
                           {player.id === playerId ? "Awaiting your confession..." : "Contemplating their sins..."}
                         </span>
                       )}
@@ -513,7 +515,7 @@ export default function Lobby() {
                 <div className="w-8 h-8 rounded-full border border-candle/10 flex items-center justify-center">
                   <img src={ICON_URLS.debuff_wrath} alt="" className="w-4 h-4 object-contain opacity-15" />
                 </div>
-                <span className="text-[10px] text-candle/30 italic" style={{ fontFamily: "var(--font-body)" }}>
+                <span className="text-xs text-candle/30 italic" style={{ fontFamily: "var(--font-body)" }}>
                   Empty pew...
                 </span>
               </motion.div>
@@ -532,12 +534,12 @@ export default function Lobby() {
           >
             <OrnamentDivider className="mb-4" />
             <h2
-              className="text-xs tracking-[0.3em] text-candle/60 uppercase mb-1 text-center"
+              className="text-sm tracking-[0.3em] text-candle/60 uppercase mb-1 text-center"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               Choose Your Sin
             </h2>
-            <p className="text-[9px] text-candle/35 text-center mb-5" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-xs text-candle/35 text-center mb-5" style={{ fontFamily: "var(--font-body)" }}>
               {factionUnlocks.isUnlocked
                 ? "Kneel before the altar. All four paths lead to damnation."
                 : `Complete ${factionUnlocks.gamesRemaining} more ritual${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
@@ -565,7 +567,7 @@ export default function Lobby() {
                           style={{ fontFamily: "var(--font-display)" }}>
                           {cfg.label}
                         </h3>
-                        <p className="text-[10px] text-candle/30 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                        <p className="text-xs text-candle/30 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                           Sealed — {factionUnlocks.gamesRemaining} rituals remain
                         </p>
                         <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-candle/10 overflow-hidden">
@@ -576,7 +578,7 @@ export default function Lobby() {
                             className="h-full rounded-full bg-gradient-to-r from-candle/40 to-candle/60"
                           />
                         </div>
-                        <p className="text-[8px] text-candle/30 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                        <p className="text-[10px] text-candle/30 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
                           {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD} RITUALS
                         </p>
                       </div>
@@ -614,7 +616,7 @@ export default function Lobby() {
 
                         {/* Latin name overlay */}
                         <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-[9px] tracking-[0.3em] text-candle/50 uppercase mb-0.5"
+                          <p className="text-xs tracking-[0.3em] text-candle/50 uppercase mb-0.5"
                             style={{ fontFamily: "var(--font-heading)" }}>
                             {cfg.latin}
                           </p>
@@ -627,12 +629,12 @@ export default function Lobby() {
 
                       {/* Description */}
                       <div className="p-3 pt-2">
-                        <p className="text-[10px] text-foreground/60 leading-relaxed mb-2"
+                        <p className="text-xs text-foreground/60 leading-relaxed mb-2"
                           style={{ fontFamily: "var(--font-body)" }}>
                           {cfg.desc}
                         </p>
                         <div className="flex items-center justify-between">
-                          <span className="text-[8px] text-candle/40 uppercase tracking-[0.2em]"
+                          <span className="text-[10px] text-candle/40 uppercase tracking-[0.2em]"
                             style={{ fontFamily: "var(--font-heading)" }}>
                             {cfg.subtitle}
                           </span>
@@ -660,7 +662,7 @@ export default function Lobby() {
               <StonePanel glow className="p-5">
                 <div className="text-center mb-4">
                   <p
-                    className="text-[10px] tracking-[0.3em] text-candle/50 uppercase mb-2"
+                    className="text-xs tracking-[0.3em] text-candle/50 uppercase mb-2"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     Bind Your Arsenal
@@ -671,8 +673,8 @@ export default function Lobby() {
                   >
                     CHOOSE YOUR DECK
                   </h3>
-                  <p className="text-[10px] text-candle/35 mt-1" style={{ fontFamily: "var(--font-body)" }}>
-                    Select a custom 30-card deck or wield the full {ALL_CARDS.filter(c => c.sin === myPlayer.chosenSin).length}-card arsenal.
+                  <p className="text-sm text-candle/35 mt-1" style={{ fontFamily: "var(--font-body)" }}>
+                    {user ? "Select a saved deck or play with a random 30-card draw." : "Playing as guest — you'll get a random 30-card deck. Sign up to build and save custom decks."}
                   </p>
                 </div>
 
@@ -680,7 +682,7 @@ export default function Lobby() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => handleSelectDeck(null, "Full Arsenal")}
+                  onClick={() => handleSelectDeck(null, "Random 30")}
                   className="w-full mb-3 p-3 rounded-lg border border-candle/20 bg-candle/5 hover:bg-candle/10 transition-all text-left group"
                 >
                   <div className="flex items-center gap-3">
@@ -692,13 +694,13 @@ export default function Lobby() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-candle/80 group-hover:text-candle transition-colors" style={{ fontFamily: "var(--font-heading)" }}>
-                        Full Arsenal
+                        Random 30
                       </p>
-                      <p className="text-[10px] text-candle/35">
-                        Use all {ALL_CARDS.filter(c => c.sin === myPlayer.chosenSin).length} cards — no restrictions, maximum chaos
+                      <p className="text-xs text-candle/35">
+                        30 random cards drawn from your faction — a fresh mix every game
                       </p>
                     </div>
-                    <div className="text-[9px] text-candle/30 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
+                    <div className="text-xs text-candle/30 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
                       Default
                     </div>
                   </div>
@@ -709,17 +711,17 @@ export default function Lobby() {
                   const decks = getSavedDecks(myPlayer.chosenSin);
                   if (decks.length === 0) return (
                     <div className="text-center py-3">
-                      <p className="text-[10px] text-candle/25 italic" style={{ fontFamily: "var(--font-body)" }}>
+                      <p className="text-xs text-candle/25 italic" style={{ fontFamily: "var(--font-body)" }}>
                         No custom decks saved for {SIN_CONFIG[myPlayer.chosenSin as SinType].label}.
                       </p>
-                      <p className="text-[9px] text-candle/15 mt-1">
-                        Visit the Deck Builder to forge your own 30-card deck.
+                      <p className="text-xs text-candle/15 mt-1">
+                        {user ? "Visit the Deck Builder to forge your own 30-card deck." : "Create an account to build and save custom decks."}
                       </p>
                     </div>
                   );
                   return (
                     <div className="space-y-2">
-                      <p className="text-[9px] tracking-[0.2em] text-candle/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
+                        <p className="text-xs tracking-[0.2em] text-candle/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                         Custom Decks
                       </p>
                       {decks.map((deck) => (
@@ -748,11 +750,11 @@ export default function Lobby() {
                               <p className="text-sm font-semibold text-candle/70 group-hover:text-candle/90 transition-colors truncate" style={{ fontFamily: "var(--font-heading)" }}>
                                 {deck.name}
                               </p>
-                              <p className="text-[10px] text-candle/30">
+                              <p className="text-xs text-candle/30">
                                 {deck.cardIds.length} cards
                               </p>
                             </div>
-                            <div className="text-[9px] text-candle/20 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
+                            <div className="text-xs text-candle/20 uppercase tracking-wider shrink-0" style={{ fontFamily: "var(--font-heading)" }}>
                               Custom
                             </div>
                           </div>
@@ -767,9 +769,9 @@ export default function Lobby() {
                   <button
                     onClick={() => {
                       setShowDeckPicker(false);
-                      addMessage("No deck chosen. The full arsenal shall serve.", "info");
+                      addMessage("No deck chosen. A random 30-card draw shall serve.", "info");
                     }}
-                    className="text-[10px] text-candle/25 hover:text-candle/50 transition-colors underline underline-offset-2"
+                    className="text-xs text-candle/25 hover:text-candle/50 transition-colors underline underline-offset-2"
                     style={{ fontFamily: "var(--font-body)" }}
                   >
                     Skip — decide later
@@ -796,11 +798,11 @@ export default function Lobby() {
                   <rect x="2" y="4" width="14" height="17" rx="2" />
                   <path d="M8 4V2a1 1 0 0 1 1-1h10a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1h-2" />
                 </svg>
-                <span className="text-xs text-candle/60" style={{ fontFamily: "var(--font-heading)" }}>
+                <span className="text-sm text-candle/60" style={{ fontFamily: "var(--font-heading)" }}>
                   Deck: <span className="text-candle/80 font-semibold">{selectedDeckName}</span>
                 </span>
               </div>
-              <span className="text-[9px] text-candle/25 group-hover:text-candle/50 transition-colors uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+              <span className="text-xs text-candle/25 group-hover:text-candle/50 transition-colors uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                 Change
               </span>
             </button>
@@ -854,7 +856,7 @@ export default function Lobby() {
                 {isStarting ? "COMMENCING RITUAL..." : "BEGIN THE JUDGMENT"}
               </span>
             </motion.button>
-            <p className="text-[9px] text-candle/30 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
+            <p className="text-xs text-candle/30 text-center mt-2" style={{ fontFamily: "var(--font-body)" }}>
               No absolution. No mercy. No escape.
             </p>
           </motion.div>
