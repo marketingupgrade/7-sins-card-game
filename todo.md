@@ -1067,3 +1067,6 @@
 - [ ] Enable Discord and Google OAuth providers in Supabase dashboard
 - [x] Fix guest play flow (guests can play without sign-in)
 - [x] Limit guests to 1 saved deck, signed-in users get unlimited
+- [x] Redesign Login page: email sign-up as primary method
+- [x] Remove phone auth tab from Login page
+- [x] Show Discord, Google, Twitch as "coming soon" with disabled styling
