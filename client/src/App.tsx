@@ -5,7 +5,7 @@
  * Auth: Supabase Auth (Discord, Google, email, phone) via AuthProvider.
  * Routes: Home, Login, AuthCallback, Lobby, GameBoard, Collection,
  *         BalanceAnalysis, MatchupMatrix, GameRules, DeckBuilder,
- *         Changelog, Terms, Privacy, Cookies, Profile
+ *         Changelog, Terms, Privacy, Cookies, Profile, Brandbook
  *
  * All page routes are lazy-loaded for optimal code splitting.
  * SigilMenu provides global navigation overlay on non-game pages.
@@ -45,6 +45,7 @@ const Account = lazy(() => import("./pages/Account"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
+const Brandbook = lazy(() => import("./pages/Brandbook"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -105,6 +106,7 @@ function Router() {
         <Route path="/profile" component={Profile} />
         <Route path="/account" component={Account} />
         <Route path="/reset-password" component={ResetPassword} />
+        <Route path="/brandbook" component={Brandbook} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>
