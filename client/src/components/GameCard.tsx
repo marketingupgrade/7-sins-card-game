@@ -46,6 +46,10 @@ const effectColors: Record<string, string> = {
   energy_block: "text-sloth",
   affliction_amplify: "text-envy",
   affliction_transfer: "text-pride",
+  discard_burn: "text-gluttony",
+  energy_regen: "text-candle",
+  draw_boost: "text-pride",
+  draw_reduction: "text-sloth",
 };
 
 const effectDisplayNames: Record<string, string> = {
@@ -62,6 +66,10 @@ const effectDisplayNames: Record<string, string> = {
   energy_block: "Exhaust",
   affliction_amplify: "Intensify",
   affliction_transfer: "Redirect",
+  discard_burn: "Devour",
+  energy_regen: "Sustain",
+  draw_boost: "Insight",
+  draw_reduction: "Fog",
 };
 
 const targetDisplayNames: Record<string, string> = {

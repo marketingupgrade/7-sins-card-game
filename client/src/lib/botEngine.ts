@@ -18,6 +18,8 @@ import {
   MAX_ENERGY,
   type CardDefinition,
   type CardEffect,
+  type LockedPlay,
+  type PlayerState,
 } from "../../../shared/gameTypes";
 import { lockInCards } from "./gameEngine";
 
@@ -290,6 +292,8 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
   cardName?: string;
   narratorQuip?: string;
   cardsPlayed?: number;
+  resolvedPlays?: LockedPlay[];
+  resolutionPlayers?: PlayerState[];
 }> {
   const sb = getClientSupabase();
 
@@ -358,6 +362,8 @@ export async function botPlayTurn(gameId: string, botId: string): Promise<{
       cardName: lastCardName,
       narratorQuip: result.narratorQuip,
       cardsPlayed: selections.length,
+      resolvedPlays: result.resolvedPlays,
+      resolutionPlayers: result.resolutionPlayers,
     };
   } catch (err) {
     console.error("Bot lock-in failed:", err);

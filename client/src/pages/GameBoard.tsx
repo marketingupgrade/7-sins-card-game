@@ -70,6 +70,7 @@ import MobilePlayerBar from "@/components/MobilePlayerBar";
 import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
+import BattleLog from "@/components/BattleLog";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { getSinHexColor, getSinCssVar } from "@/lib/sinColors";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
@@ -247,6 +248,21 @@ export default function GameBoard() {
       ];
       addMessage(quips[Math.floor(Math.random() * quips.length)], "action");
     },
+    onResolutionTriggered: (plays, players) => {
+      // A bot's lock-in triggered resolution — start the animation
+      if (plays.length > 0 && players.length > 0 && !isShowingResolution) {
+        setCachedLockedPlays(plays);
+        setCachedResolutionPlayers(players);
+        setIsShowingResolution(true);
+        if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+        const maxDuration = Math.max(8000, plays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
+        resolutionTimerRef.current = setTimeout(() => {
+          setIsShowingResolution(false);
+          setCachedLockedPlays([]);
+          setCachedResolutionPlayers([]);
+        }, maxDuration);
+      }
+    },
     onRefetch: refetch,
   });
 
@@ -304,15 +320,19 @@ export default function GameBoard() {
     return { north: others[1], east: others[2], west: others[0] };
   }, [gameState, playerId]);
 
+  // Fetch game log — always fetch on round changes so badge count is accurate,
+  // and poll every 3s when the panel is open
   useEffect(() => {
-    if (!showLog || !gameId) return;
+    if (!gameId) return;
     const fetchLog = async () => {
       try { const log = await getGameLog(gameId); setLogEntries(log); } catch {}
     };
     fetchLog();
-    const interval = setInterval(fetchLog, 3000);
-    return () => clearInterval(interval);
-  }, [showLog, gameId]);
+    if (showLog) {
+      const interval = setInterval(fetchLog, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [showLog, gameId, gameState?.currentRound]);
 
   // YOUR TURN banner trigger
   useEffect(() => {
@@ -415,6 +435,25 @@ export default function GameBoard() {
       setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
+
+      // If resolution was triggered, start animation from returned data
+      // (the DB is already resolved by now, so we can't rely on polling)
+      console.log('[GAMEBOARD DEBUG] lockInCards result:', { resolvedPlays: result.resolvedPlays?.length, resolutionPlayers: result.resolutionPlayers?.length });
+      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
+        console.log('[GAMEBOARD DEBUG] TRIGGERING RESOLUTION ANIMATION with', result.resolvedPlays.length, 'plays');
+        setCachedLockedPlays(result.resolvedPlays);
+        setCachedResolutionPlayers(result.resolutionPlayers);
+        setIsShowingResolution(true);
+        // Safety fallback timer
+        if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+        const maxDuration = Math.max(8000, result.resolvedPlays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
+        resolutionTimerRef.current = setTimeout(() => {
+          setIsShowingResolution(false);
+          setCachedLockedPlays([]);
+          setCachedResolutionPlayers([]);
+        }, maxDuration);
+      }
+
       refetch();
     } catch (err: any) {
       addMessage(err.message || "Lock-in failed", "info");
@@ -428,13 +467,28 @@ export default function GameBoard() {
     setIsLockingIn(true);
     try {
       soundEngine.play("turn_pass");
-      await lockInCards(gameId, playerId, []);
+      const result = await lockInCards(gameId, playerId, []);
       setHasLockedIn(true);
       addMessage("Choosing to do nothing? Bold strategy.", "action");
       addToActionFeed(`${myPlayer?.username} passed (locked in 0 cards)`);
       setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
+
+      // If resolution was triggered (all others already locked in), start animation
+      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
+        setCachedLockedPlays(result.resolvedPlays);
+        setCachedResolutionPlayers(result.resolutionPlayers);
+        setIsShowingResolution(true);
+        if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+        const maxDuration = Math.max(8000, result.resolvedPlays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
+        resolutionTimerRef.current = setTimeout(() => {
+          setIsShowingResolution(false);
+          setCachedLockedPlays([]);
+          setCachedResolutionPlayers([]);
+        }, maxDuration);
+      }
+
       refetch();
     } catch (err: any) {
       addMessage(err.message || "Pass failed", "info");
@@ -828,6 +882,22 @@ export default function GameBoard() {
         </div>
 
         <div className="flex items-center gap-1.5 md:gap-3">
+          <button
+            onClick={() => setShowLog(!showLog)}
+            className="relative p-1.5 md:p-2 rounded-lg transition-all hover:bg-candle/10 group"
+            title="Battle Log"
+          >
+            <img
+              src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg"
+              alt="Battle Log"
+              className="w-4 md:w-5 h-4 md:h-5 opacity-60 group-hover:opacity-90 transition-opacity"
+            />
+            {logEntries.filter(e => e.action_type === 'play_card').length > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center" style={{ background: 'oklch(0.55 0.22 25)', color: 'white' }}>
+                {logEntries.filter(e => e.action_type === 'play_card').length}
+              </span>
+            )}
+          </button>
           <SoundToggle />
           <MusicToggle />
         </div>
@@ -1372,6 +1442,15 @@ export default function GameBoard() {
         isOpen={showBalanceSheet}
         onClose={() => setShowBalanceSheet(false)}
       />
+
+    {/* Battle Log Panel */}
+    <BattleLog
+      isOpen={showLog}
+      onClose={() => setShowLog(false)}
+      logEntries={logEntries}
+      players={gameState.players}
+      currentRound={gameState.currentRound}
+    />
     </div>
     </ScreenShake>
   );

@@ -104,7 +104,7 @@ const LOBBY_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='sin-selection']",
     position: "top",
     title: "Choose Your Sin",
-    body: "Each sin has 36 unique compound cards and a passive ability. Wrath has FURY (+1 dmg), Sloth has ENDURANCE (+2 shield/round), Greed has AVARICE (+1 energy on 0-cost cards), Envy has JEALOUSY (reflect 50% dmg), Pride has HUBRIS (+1 self-buffs), Lust has CHARM (redirect 30%), Gluttony has DEVOUR (heal on play).",
+    body: "Each sin has 50 unique compound cards and a passive ability. Wrath: VENGEANCE (reflect 63% damage). Sloth: ENDURANCE (shield from energy × hand). Greed: TAX (shields from damage ticks). Envy: JEALOUSY (amplify afflictions 10.6%). Pride: HUBRIS (×1.32 for highest-cost card). Lust: TEMPTATION (25% lifesteal on ticks). Gluttony: DEVOURER (energy from burned cards).",
     quip: "Choose your fighter. I mean, your character flaw.",
   },
   {

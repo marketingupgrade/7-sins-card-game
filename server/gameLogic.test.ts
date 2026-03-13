@@ -10,24 +10,24 @@ import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, PRIDE_CAR
 import { getCompoundTickValue, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK, CompoundPattern } from "../shared/gameTypes";
 
 describe("Card Data Integrity (v4)", () => {
-  it("has exactly 36 wrath cards", () => {
-    expect(WRATH_CARDS).toHaveLength(36);
+  it("has exactly 50 wrath cards", () => {
+    expect(WRATH_CARDS).toHaveLength(50);
   });
 
-  it("has exactly 36 sloth cards", () => {
-    expect(SLOTH_CARDS).toHaveLength(36);
+  it("has exactly 50 sloth cards", () => {
+    expect(SLOTH_CARDS).toHaveLength(50);
   });
 
-  it("has 252 total cards (7 sins x 36)", () => {
-    expect(ALL_CARDS).toHaveLength(252);
+  it("has 350 total cards (7 sins x 50)", () => {
+    expect(ALL_CARDS).toHaveLength(350);
   });
 
-  it("has exactly 36 greed cards", () => {
-    expect(GREED_CARDS).toHaveLength(36);
+  it("has exactly 50 greed cards", () => {
+    expect(GREED_CARDS).toHaveLength(50);
   });
 
-  it("has exactly 36 envy cards", () => {
-    expect(ENVY_CARDS).toHaveLength(36);
+  it("has exactly 50 envy cards", () => {
+    expect(ENVY_CARDS).toHaveLength(50);
   });
 
   it("all greed cards have sin=greed", () => {
@@ -96,6 +96,7 @@ describe("Card Data Integrity (v4)", () => {
       "damage", "self_damage", "heal_gain", "heal_steal", "heal_block",
       "shield_gain", "shield_steal", "shield_block", "energy_gain",
       "energy_steal", "energy_block", "affliction_amplify", "affliction_transfer",
+      "discard_burn", "energy_regen", "draw_boost", "draw_reduction",
     ];
     ALL_CARDS.forEach((card) => {
       card.effects.forEach((effect) => {
@@ -110,13 +111,13 @@ describe("Card Data Integrity (v4)", () => {
 
 describe("Card Registry", () => {
   it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(252);
+    expect(Object.keys(CARD_MAP)).toHaveLength(350);
   });
 
   it("getCardById returns correct card", () => {
     const card = getCardById("wrath_01");
     expect(card).toBeDefined();
-    expect(card?.name).toBe("Rage Spark");
+    expect(card?.name).toBe("Fury Swipe");
     expect(card?.sin).toBe("wrath");
   });
 
@@ -124,11 +125,11 @@ describe("Card Registry", () => {
     expect(getCardById("nonexistent")).toBeUndefined();
   });
 
-  it("getDeckForSin returns 36 card IDs for each sin", () => {
+  it("getDeckForSin returns 50 card IDs for each sin", () => {
     const sins = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"] as const;
     for (const sin of sins) {
       const deck = getDeckForSin(sin);
-      expect(deck).toHaveLength(36);
+      expect(deck).toHaveLength(50);
       deck.forEach((id) => {
         expect(id).toMatch(new RegExp(`^${sin}_`));
       });
@@ -195,17 +196,17 @@ describe("Game Constants (v4)", () => {
     expect(HAND_SIZE).toBe(5);
   });
 
-  it("CARDS_PER_DECK is 36", () => {
-    expect(CARDS_PER_DECK).toBe(36);
+  it("CARDS_PER_DECK is 50", () => {
+    expect(CARDS_PER_DECK).toBe(50);
   });
 });
 
 describe("Card Balance Sanity Checks (v4)", () => {
-  it("no card has base damage above 10", () => {
+  it("no card has base damage above 30", () => {
     ALL_CARDS.forEach((card) => {
       card.effects.forEach((effect) => {
         if (effect.type === "damage") {
-          expect(effect.baseValue).toBeLessThanOrEqual(10);
+          expect(effect.baseValue).toBeLessThanOrEqual(30);
         }
       });
     });

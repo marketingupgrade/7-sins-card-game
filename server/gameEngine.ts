@@ -25,14 +25,15 @@ import {
   STARTING_ENERGY,
   ROUND_16_DOUBLING,
   TurnPhase,
-  WRATH_FURY_BONUS_DAMAGE,
-  WRATH_FURY_HEAL,
-  SLOTH_ENDURANCE_SHIELD,
-  GREED_AVARICE_ENERGY,
-  ENVY_JEALOUSY_AMPLIFY,
-  PRIDE_HUBRIS_SHIELD,
-  LUST_TEMPTATION_HEAL,
-  GLUTTONY_DEVOUR_ENERGY,
+  WRATH_VENGEANCE_PCT,
+  SLOTH_ENDURANCE_MULT,
+  SLOTH_ENDURANCE_CAP,
+  GREED_TAX_PCT,
+  GREED_TAX_TICK,
+  ENVY_JEALOUSY_PCT,
+  PRIDE_HUBRIS_MULT,
+  LUST_TEMPTATION_PCT,
+  GLUTTONY_DEVOURER_ENERGY,
   getCompoundTickValue,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
@@ -365,30 +366,9 @@ async function resolveLockedPlays(gameId: string): Promise<void> {
     let newEnergy = Math.max(0, currentEnergy - card.cost);
     const sin = freshPlayer.chosen_sin as SinType;
 
-    if (sin === "pride" && card.cost === 0) {
-      await sb.from("active_effects").insert({
-        game_id: gameId,
-        target_player_id: freshPlayer.id,
-        source_player_id: freshPlayer.id,
-        effect_type: "shield_gain",
-        base_value: PRIDE_HUBRIS_SHIELD,
-        applied_at_round: game.current_round,
-        duration_rounds: 1,
-        card_id: play.cardId,
-      });
-    }
-
-    if (sin === "gluttony") {
-      const hasAoE = card.effects.some((e) => e.targetMode === "aoe");
-      if (hasAoE) newEnergy = Math.min(newEnergy + GLUTTONY_DEVOUR_ENERGY, MAX_ENERGY);
-    }
-
-    if (sin === "greed") {
-      const hasSteal = card.effects.some((e) =>
-        ["heal_steal", "shield_steal", "energy_steal"].includes(e.type)
-      );
-      if (hasSteal) newEnergy = Math.min(newEnergy + GREED_AVARICE_ENERGY, MAX_ENERGY);
-    }
+    // v5 passives: most are triggered in applyInstantEffect/resolveActiveEffects
+    // PRIDE HUBRIS, SLOTH ENDURANCE, GREED TAX, LUST TEMPTATION, WRATH VENGEANCE
+    // are all handled in their respective trigger points
 
     const hand: string[] = freshPlayer.hand || [];
     const newHand = hand.filter((id: string) => id !== play.cardId);
@@ -408,21 +388,9 @@ async function resolveLockedPlays(gameId: string): Promise<void> {
       for (const target of targets) {
         await applyInstantEffect(effect.type, firstTickValue, target, gameId, freshPlayer.player_id);
 
-        if (sin === "wrath" && effect.type === "self_damage") {
-          const enemies = currentPlayers.filter((p: any) => p.is_alive && p.player_id !== play.playerId);
-          const lowestEnemy = enemies.sort((a: any, b: any) => a.current_hp - b.current_hp)[0];
-          if (lowestEnemy) {
-            await applyInstantEffect("damage", WRATH_FURY_BONUS_DAMAGE, lowestEnemy, gameId, freshPlayer.player_id);
-          }
-          await applyInstantEffect("heal_gain", WRATH_FURY_HEAL, freshPlayer, gameId, freshPlayer.player_id);
-        }
-
-        if (sin === "lust" && effect.type === "damage" && effect.targetMode === "single") {
-          await applyInstantEffect("heal_gain", LUST_TEMPTATION_HEAL, freshPlayer, gameId, freshPlayer.player_id);
-        }
-
+        // ENVY JEALOUSY (v5): When dealing damage, amplify target's worst affliction by 10.6%
         if (sin === "envy" && effect.type === "damage" && target.player_id !== play.playerId) {
-          await amplifyWorstAffliction(gameId, target.id, ENVY_JEALOUSY_AMPLIFY);
+          await amplifyWorstAfflictionPct(gameId, target.id, ENVY_JEALOUSY_PCT);
         }
 
         if (effect.duration > 1) {
@@ -643,19 +611,23 @@ async function applyInstantEffect(
         target.current_hp = newHp;
         target.is_alive = isAlive;
 
-        // SLOTH ENDURANCE: taking compound damage grants +1 shield
-        if (target.chosen_sin === "sloth" && target.is_alive && sourcePlayerId !== target.player_id) {
-          if (gameId) {
-            await sb.from("active_effects").insert({
-              game_id: gameId,
-              target_player_id: target.id,
-              source_player_id: target.id,
-              effect_type: "shield_gain",
-              base_value: SLOTH_ENDURANCE_SHIELD,
-              applied_at_round: 0,
-              duration_rounds: 1,
-              card_id: "sloth-endurance",
-            });
+        // WRATH VENGEANCE (v5): When taking damage, reflect 63.4% back to attacker
+        if (target.chosen_sin === "wrath" && target.is_alive && sourcePlayerId && sourcePlayerId !== target.player_id) {
+          const reflectDmg = Math.round(remainingDamage * WRATH_VENGEANCE_PCT);
+          if (reflectDmg > 0 && gameId) {
+            const { data: attacker } = await sb
+              .from("game_players")
+              .select("*")
+              .eq("player_id", sourcePlayerId)
+              .eq("game_id", gameId)
+              .single();
+            if (attacker && attacker.is_alive) {
+              const newAttackerHp = Math.max(0, attacker.current_hp - reflectDmg);
+              const attackerAlive = newAttackerHp > 0;
+              await sb.from("game_players")
+                .update({ current_hp: newAttackerHp, is_alive: attackerAlive })
+                .eq("id", attacker.id);
+            }
           }
         }
       }
@@ -809,6 +781,56 @@ async function applyInstantEffect(
       }
       break;
     }
+    case "discard_burn": {
+      const discard: string[] = target.discard_pile || [];
+      const burnCount = Math.min(roundedValue, discard.length);
+      if (burnCount > 0) {
+        const newDiscard = discard.slice(burnCount);
+        await sb.from("game_players").update({ discard_pile: newDiscard }).eq("id", target.id);
+        target.discard_pile = newDiscard;
+        // GLUTTONY DEVOURER (v5): Each card burned grants 1.585 energy to source
+        if (sourcePlayerId && gameId) {
+          const { data: sourcePlayer } = await sb
+            .from("game_players")
+            .select("*")
+            .eq("player_id", sourcePlayerId)
+            .eq("game_id", gameId)
+            .single();
+          if (sourcePlayer && sourcePlayer.chosen_sin === "gluttony") {
+            const energyGain = Math.round(burnCount * GLUTTONY_DEVOURER_ENERGY);
+            const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + energyGain, MAX_ENERGY);
+            await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
+          }
+        }
+      }
+      break;
+    }
+    case "energy_regen": {
+      const currentEnergy = target.current_energy ?? 0;
+      const newEnergy = Math.min(currentEnergy + roundedValue, MAX_ENERGY);
+      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
+      target.current_energy = newEnergy;
+      break;
+    }
+    case "draw_boost": {
+      for (let i = 0; i < roundedValue; i++) {
+        await drawCard(target);
+      }
+      break;
+    }
+    case "draw_reduction": {
+      const hand: string[] = target.hand || [];
+      const discardCount = Math.min(roundedValue, hand.length);
+      if (discardCount > 0) {
+        const discarded = hand.splice(0, discardCount);
+        const discard: string[] = target.discard_pile || [];
+        discard.push(...discarded);
+        await sb.from("game_players").update({ hand, discard_pile: discard }).eq("id", target.id);
+        target.hand = hand;
+        target.discard_pile = discard;
+      }
+      break;
+    }
   }
 }
 
@@ -826,6 +848,25 @@ async function amplifyWorstAffliction(gameId: string, targetId: string, amount: 
     const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
     await sb.from("active_effects")
       .update({ base_value: worst.base_value + amount })
+      .eq("id", worst.id);
+  }
+}
+
+// ─── Helper: Amplify Worst Affliction (percentage) ────────────
+async function amplifyWorstAfflictionPct(gameId: string, targetId: string, pct: number): Promise<void> {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb
+    .from("active_effects")
+    .select("*")
+    .eq("game_id", gameId)
+    .eq("target_player_id", targetId)
+    .in("effect_type", ["damage", "self_damage"]);
+
+  if (effects && effects.length > 0) {
+    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
+    const newValue = Math.round(worst.base_value * (1 + pct));
+    await sb.from("active_effects")
+      .update({ base_value: newValue })
       .eq("id", worst.id);
   }
 }
@@ -925,6 +966,24 @@ async function advanceRound(gameId: string): Promise<void> {
       .eq("id", p.id)
       .single();
     if (freshPlayer && freshPlayer.is_alive) {
+      // SLOTH ENDURANCE (v5): Start of turn, gain shield = energy × handSize × 0.45 (cap 25)
+      if (freshPlayer.chosen_sin === "sloth") {
+        const energy = freshPlayer.current_energy ?? 0;
+        const handSize = (freshPlayer.hand || []).length;
+        const shieldVal = Math.min(Math.round(energy * handSize * SLOTH_ENDURANCE_MULT), SLOTH_ENDURANCE_CAP);
+        if (shieldVal > 0) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: freshPlayer.id,
+            source_player_id: freshPlayer.id,
+            effect_type: "shield_gain",
+            base_value: shieldVal,
+            applied_at_round: newRound,
+            duration_rounds: 1,
+            card_id: "sloth-endurance-v5",
+          });
+        }
+      }
       await refreshPlayerEnergy(freshPlayer);
       await drawCard(freshPlayer);
     }
@@ -1022,6 +1081,47 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
 
     const tickValue = getCompoundTickValue(effect.base_value, pattern, tick);
     await applyInstantEffect(effect.effect_type, tickValue, target, gameId, effect.source_player_id);
+
+    // LUST TEMPTATION (v5): On compound tick damage dealt, heal source 25% of damage
+    if (["damage"].includes(effect.effect_type) && effect.source_player_id) {
+      const { data: sourcePlayer } = await sb
+        .from("game_players")
+        .select("*")
+        .eq("player_id", effect.source_player_id)
+        .eq("game_id", gameId)
+        .single();
+      if (sourcePlayer && sourcePlayer.chosen_sin === "lust" && sourcePlayer.is_alive) {
+        const healAmt = Math.round(tickValue * LUST_TEMPTATION_PCT);
+        if (healAmt > 0) {
+          await applyInstantEffect("heal_gain", healAmt, sourcePlayer, gameId, effect.source_player_id);
+        }
+      }
+    }
+
+    // GREED TAX (v5): On tick-2 of compound damage dealt, source gains shield = 6.3% of damage
+    if (["damage"].includes(effect.effect_type) && tick === GREED_TAX_TICK && effect.source_player_id) {
+      const { data: sourcePlayer } = await sb
+        .from("game_players")
+        .select("*")
+        .eq("player_id", effect.source_player_id)
+        .eq("game_id", gameId)
+        .single();
+      if (sourcePlayer && sourcePlayer.chosen_sin === "greed" && sourcePlayer.is_alive) {
+        const shieldAmt = Math.round(tickValue * GREED_TAX_PCT);
+        if (shieldAmt > 0) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: sourcePlayer.id,
+            source_player_id: sourcePlayer.id,
+            effect_type: "shield_gain",
+            base_value: shieldAmt,
+            applied_at_round: currentRound,
+            duration_rounds: 1,
+            card_id: "greed-tax-v5",
+          });
+        }
+      }
+    }
 
     const nextTick = tick + 1;
     if (nextTick >= effect.duration_rounds) {

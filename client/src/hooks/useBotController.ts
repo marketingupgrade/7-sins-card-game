@@ -3,11 +3,12 @@
  *
  * Fixed: No longer spams duplicate "X cards locked" messages per bot.
  * Now shows individual bot names locking in, with one summary at the end.
+ * v2: Passes resolvedPlays/resolutionPlayers back when a bot triggers resolution.
  */
 
 import { useCallback, useEffect, useRef } from "react";
 import { botPlayTurn, isBot } from "@/lib/botEngine";
-import type { GameState } from "@shared/gameTypes";
+import type { GameState, LockedPlay, PlayerState } from "@shared/gameTypes";
 
 interface BotControllerOptions {
   gameState: GameState | null;
@@ -19,10 +20,11 @@ interface BotControllerOptions {
     cardsPlayed?: number;
   }) => void;
   onAllBotsLocked?: (summary: { totalBots: number; totalCards: number }) => void;
+  onResolutionTriggered?: (plays: LockedPlay[], players: PlayerState[]) => void;
   onRefetch: () => void;
 }
 
-export function useBotController({ gameState, onBotAction, onAllBotsLocked, onRefetch }: BotControllerOptions) {
+export function useBotController({ gameState, onBotAction, onAllBotsLocked, onResolutionTriggered, onRefetch }: BotControllerOptions) {
   const isProcessingRef = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastProcessedRoundRef = useRef<number>(-1);
@@ -67,6 +69,11 @@ export function useBotController({ gameState, onBotAction, onAllBotsLocked, onRe
               narratorQuip: undefined,
             });
           }
+
+          // If this bot's lock-in triggered resolution, pass the data up
+          if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers && onResolutionTriggered) {
+            onResolutionTriggered(result.resolvedPlays, result.resolutionPlayers);
+          }
         } catch (err) {
           console.error(`Bot ${bot.id} lock-in failed:`, err);
         }
@@ -85,7 +92,7 @@ export function useBotController({ gameState, onBotAction, onAllBotsLocked, onRe
     } finally {
       isProcessingRef.current = false;
     }
-  }, [gameState, onBotAction, onAllBotsLocked, onRefetch]);
+  }, [gameState, onBotAction, onAllBotsLocked, onResolutionTriggered, onRefetch]);
 
   // Watch for selection phase to trigger bot lock-ins
   useEffect(() => {

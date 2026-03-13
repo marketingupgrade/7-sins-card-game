@@ -131,6 +131,38 @@ const EFFECT_CONFIG: Record<string, {
     borderColor: "border-pride/30",
     glowColor: "shadow-pride/20",
   },
+  discard_burn: {
+    iconUrl: ICON_URLS.debuff_wrath,
+    label: "Burn",
+    color: "text-gluttony",
+    bgColor: "bg-gluttony/15",
+    borderColor: "border-gluttony/30",
+    glowColor: "shadow-gluttony/20",
+  },
+  energy_regen: {
+    iconUrl: ICON_URLS.energy_generic,
+    label: "Regen",
+    color: "text-candle",
+    bgColor: "bg-candle/15",
+    borderColor: "border-candle/30",
+    glowColor: "shadow-candle/20",
+  },
+  draw_boost: {
+    iconUrl: ICON_URLS.shield_generic,
+    label: "Draw+",
+    color: "text-pride",
+    bgColor: "bg-pride/15",
+    borderColor: "border-pride/30",
+    glowColor: "shadow-pride/20",
+  },
+  draw_reduction: {
+    iconUrl: ICON_URLS.debuff_wrath,
+    label: "Draw-",
+    color: "text-sloth",
+    bgColor: "bg-sloth/15",
+    borderColor: "border-sloth/30",
+    glowColor: "shadow-sloth/20",
+  },
 };
 
 const PATTERN_LABELS: Record<CompoundPattern, string> = {

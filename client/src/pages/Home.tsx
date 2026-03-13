@@ -57,49 +57,49 @@ const SIN_HEROES: SinHeroData[] = [
   {
     key: "wrath", name: "WRATH", latin: "IRA", subtitle: "The Destroyer",
     tagline: "Burn bright. Burn fast. Burn everything.",
-    desc: "Fury: Self-damage triggers 3 bonus damage to target + 2 HP heal.",
+    desc: "Vengeance: Reflect 63% of incoming damage back to the attacker.",
     color: "wrath",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-wrath-opt_37c4a2c3.webp",
   },
   {
     key: "sloth", name: "SLOTH", latin: "ACEDIA", subtitle: "The Enduring",
     tagline: "Why rush? Everything dies eventually.",
-    desc: "Endurance: Taking affliction damage grants +1 shield.",
+    desc: "Endurance: Gain shield each turn based on energy × hand size.",
     color: "sloth",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-sloth-opt_ace8da83.webp",
   },
   {
     key: "greed", name: "GREED", latin: "AVARITIA", subtitle: "The Collector",
     tagline: "Everything has a price. Yours is higher.",
-    desc: "Avarice: Steal effects grant +1 bonus energy.",
+    desc: "Tax: Compound damage ticks generate protective shields.",
     color: "greed",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-greed-opt_1340cd4c.webp",
   },
   {
     key: "envy", name: "ENVY", latin: "INVIDIA", subtitle: "The Mimic",
     tagline: "If I can't have it, neither can you.",
-    desc: "Jealousy: Damage cards increase target's worst affliction by 1.",
+    desc: "Jealousy: Damage amplifies target's worst affliction by 10.6%.",
     color: "envy",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-envy-opt_37a0b39f.webp",
   },
   {
     key: "pride", name: "PRIDE", latin: "SUPERBIA", subtitle: "The Exalted",
     tagline: "Kneel. Or be made to.",
-    desc: "Hubris: 0-cost cards grant +1 shield. Elegance through efficiency.",
+    desc: "Hubris: Highest-cost card gets ×1.32 effect multiplier.",
     color: "pride",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-pride-opt_7b43ac54.webp",
   },
   {
     key: "lust", name: "LUST", latin: "LUXURIA", subtitle: "The Temptress",
     tagline: "Come closer. It only hurts at first.",
-    desc: "Temptation: Damage cards heal you for 1 HP. Desire sustains.",
+    desc: "Temptation: Compound damage ticks heal you for 25% of damage.",
     color: "lust",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-lust-opt_cdcc85ed.webp",
   },
   {
     key: "gluttony", name: "GLUTTONY", latin: "GULA", subtitle: "The Devourer",
     tagline: "More. Always more. Never enough.",
-    desc: "Devour: AoE effects grant +1 bonus energy. Hunger feeds itself.",
+    desc: "Devourer: Each card burned grants 1.6 energy. Hunger feeds itself.",
     color: "gluttony",
     heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-gluttony-opt_d349da8c.webp",
   },
@@ -557,7 +557,7 @@ export default function Home() {
                 Choose Your Damnation
               </p>
               <h2 className="text-2xl md:text-3xl font-black text-white/90 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-                7 FACTIONS. 252 CARDS.
+                7 FACTIONS. 350 CARDS.
               </h2>
               <div className="flex items-center justify-center gap-2 mt-3">
                 <div className="h-px w-12 bg-gradient-to-r from-transparent to-white/15" />
@@ -719,7 +719,7 @@ export default function Home() {
         {/* ─── Footer ─── */}
         <footer className="py-8 px-4 text-center border-t border-white/5">
           <p className="text-[9px] text-white/20 mb-3" style={{ fontFamily: "var(--font-body)" }}>
-            252 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
+            350 cards &middot; 7 factions &middot; 20 rounds &middot; 200 HP &middot; 3 compound patterns &middot; Zero mercy
           </p>
           <div className="text-[8px] text-white/15 space-y-0.5" style={{ fontFamily: "var(--font-body)" }}>
             <p>Music: "Dark City" by Muncheybobo &middot; "Dark Ambient" by Alexandr Zhelanov &middot; "Dark Ambient Loop 13" by MundoSound</p>

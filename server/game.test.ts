@@ -100,15 +100,15 @@ describe("Compound Patterns (v4)", () => {
 });
 
 describe("Card Data Integrity (v4)", () => {
-  it("has exactly 36 wrath cards", () => {
+  it("has exactly 50 wrath cards", () => {
     expect(WRATH_CARDS).toHaveLength(CARDS_PER_DECK);
   });
 
-  it("has exactly 36 sloth cards", () => {
+  it("has exactly 50 sloth cards", () => {
     expect(SLOTH_CARDS).toHaveLength(CARDS_PER_DECK);
   });
 
-  it("has exactly 36 cards per faction", () => {
+  it("has exactly 50 cards per faction", () => {
     expect(GREED_CARDS).toHaveLength(CARDS_PER_DECK);
     expect(ENVY_CARDS).toHaveLength(CARDS_PER_DECK);
     expect(PRIDE_CARDS).toHaveLength(CARDS_PER_DECK);
@@ -116,8 +116,8 @@ describe("Card Data Integrity (v4)", () => {
     expect(GLUTTONY_CARDS).toHaveLength(CARDS_PER_DECK);
   });
 
-  it("has 252 total cards (7 sins x 36)", () => {
-    expect(ALL_CARDS).toHaveLength(252);
+  it("has 350 total cards (7 sins x 50)", () => {
+    expect(ALL_CARDS).toHaveLength(350);
   });
 
   it("all faction cards have correct sin", () => {
@@ -154,6 +154,7 @@ describe("Card Data Integrity (v4)", () => {
       "damage", "self_damage", "heal_gain", "heal_steal", "heal_block",
       "shield_gain", "shield_steal", "shield_block", "energy_gain",
       "energy_steal", "energy_block", "affliction_amplify", "affliction_transfer",
+      "discard_burn", "energy_regen", "draw_boost", "draw_reduction",
     ];
     ALL_CARDS.forEach((card) => {
       card.effects.forEach((effect) => {
@@ -194,14 +195,14 @@ describe("Card Data Integrity (v4)", () => {
 });
 
 describe("Card Registry", () => {
-  it("CARD_MAP contains all 252 cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(252);
+  it("CARD_MAP contains all 350 cards", () => {
+    expect(Object.keys(CARD_MAP)).toHaveLength(350);
   });
 
   it("getCardById returns correct card", () => {
     const card = getCardById("wrath_01");
     expect(card).toBeDefined();
-    expect(card!.name).toBe("Rage Spark");
+    expect(card!.name).toBe("Fury Swipe");
     expect(card!.sin).toBe("wrath");
   });
 
@@ -209,11 +210,11 @@ describe("Card Registry", () => {
     expect(getCardById("nonexistent")).toBeUndefined();
   });
 
-  it("getDeckForSin returns 36 card IDs for each sin", () => {
+  it("getDeckForSin returns 50 card IDs for each sin", () => {
     const sins = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"] as const;
     for (const sin of sins) {
       const deck = getDeckForSin(sin);
-      expect(deck).toHaveLength(36);
+      expect(deck).toHaveLength(50);
       deck.forEach((id) => {
         expect(id).toMatch(new RegExp(`^${sin}_`));
       });
@@ -272,8 +273,8 @@ describe("Game Constants (v4)", () => {
     expect(HAND_SIZE).toBe(5);
   });
 
-  it("CARDS_PER_DECK is 36", () => {
-    expect(CARDS_PER_DECK).toBe(36);
+  it("CARDS_PER_DECK is 50", () => {
+    expect(CARDS_PER_DECK).toBe(50);
   });
 
   it("ROUND_16_DOUBLING is 16", () => {
@@ -308,7 +309,7 @@ describe("Corruption Energy System (v5 — carry-over)", () => {
       [WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, PRIDE_CARDS, LUST_CARDS, GLUTTONY_CARDS].forEach((deck) => {
         const avgCost = deck.reduce((sum, c) => sum + c.cost, 0) / deck.length;
         expect(avgCost).toBeGreaterThanOrEqual(1);
-        expect(avgCost).toBeLessThanOrEqual(3);
+        expect(avgCost).toBeLessThanOrEqual(4);
       });
     });
 

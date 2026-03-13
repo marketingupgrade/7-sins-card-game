@@ -828,3 +828,68 @@
 - [x] Remove unused preconnect/dns-prefetch hints
 - [x] CLS already green (0.019) — no changes needed
 - [ ] Further TBT reduction (vendor chunk 560KB still loads eagerly — React+Radix core, hard to split)
+
+## Bug Fixes & Features (Round 5)
+- [ ] BUG: Resolving card display not working on desktop — no cinematic card reveal animation
+- [ ] FEATURE: Battle history needs to be easy access and overviewable
+
+## Round 5 - Strategic UI Overhaul + Compound Bug Fix
+- [ ] BUG: Compound damage only persists 2 rounds instead of intended 3 rounds
+- [ ] UI: Overhaul player panels for strategic clarity (afflictions, incoming damage, energy)
+- [ ] UI: Enhance card hand with strategic info and readability
+- [ ] UI: Overall readability improvements to help players strategize
+
+## Round 6 - Full Card Revamp & 50-Card Decks
+- [ ] Audit current card data, faction passives, compound mechanics
+- [ ] BUG FIX: Compound damage only persists 2 rounds instead of 3
+- [ ] Gap analysis per faction — identify missing archetypes, synergies, and strategic holes
+- [ ] Revamp all existing cards to REALLY emphasize faction passives and unique playstyle
+- [ ] Expand each faction deck from 12 to 50 cards with unique strategic identity
+- [ ] Implement all new/revamped cards in cardData.ts
+- [ ] Run 50K Monte Carlo tournament simulation for balance assessment
+- [ ] Apply balance adjustments from simulation results (max 1.5% variance target)
+- [ ] BUG FIX: Resolution card display not working on desktop
+- [ ] UI: Strategic UI improvements for better readability and decision-making
+- [x] Scale faction passives to fit 200 HP pool (currently tuned for smaller HP pool)
+- [x] Change Greed passive from AVARICE (+1 energy on steal) to TAX (3rd cycle compound DMG generates 10% as shield)
+- [x] Change Wrath passive to VENGEANCE: return 63.4% of incoming damage to attacker
+- [x] Each faction gets exactly 1 passive effect
+- [x] Change Pride passive to HUBRIS: if highest cost card that round (ties count), ×1.324 all effects
+- [x] Change Envy passive JEALOUSY: amplify worst affliction +10.6%
+- [x] Change Lust passive from TEMPTATION (single-target heal +6) to TEMPTATION (25% of tick damages heal Lust)
+- [x] Change Sloth passive from ENDURANCE (shield on compound damage taken) to ENDURANCE (energy × handSize × 0.45 shield, cap 25)
+- [x] Add draw_reduction effect type (affliction that reduces target's card draw per round)
+- [x] Add discard_burn effect type (destroy cards from target's discard pile)
+- [x] ALL cards must have compound ticks — no flat one-shot cards
+- [x] Fancier/expensive cards combine more effects (3-4+ ticking simultaneously)
+- [x] Simple/cheap cards have 1-2 ticking effects
+- [x] Add accelerator mechanics to fix momentum loss (stuck with expensive hand or depleted with cheap cards)
+- [x] Add draw_boost effect type (extra card draws per round, compound ticking)
+- [x] Add energy_regen effect type (compound energy generation over rounds)
+- [x] Add hand_to_energy conversion cards (discard cards from hand to gain energy)
+- [x] Design surge/primer cards (cheap cards that ramp energy for big plays)
+- [x] Change Gluttony passive from DEVOUR (AoE +1 energy) to DEVOURER (gain 1.585 energy per card burned)
+- [x] Gluttony deck identity: target discard piles, punish high-cost cards, deck destruction
+
+## v5 Balance Overhaul — EXCELLENT Grade (1.23% max deviation)
+- [x] Build combined passive + card value optimizer (Monte Carlo 500K games)
+- [x] Redesign Pride HUBRIS passive: highest-or-tied cost → ×1.324 multiplier
+- [x] Redesign Envy JEALOUSY passive: 10.6% affliction amplification (down from 25%)
+- [x] Redesign Wrath VENGEANCE passive: 63.4% damage reflection (up from 50%) — CONFIRMED UNDERPOWERED
+- [x] Redesign Greed TAX passive: 6.3% shield from tick-2 damage (down from 10%)
+- [x] Redesign Lust TEMPTATION passive: 25% lifesteal on compound tick damage
+- [x] Redesign Sloth ENDURANCE passive: energy × handSize × 0.45 shield per round (cap 25)
+- [x] Redesign Gluttony DEVOURER passive: 1.585 energy per card burned
+- [x] Expand card pool from 252 (36×7) to 350 (50×7) — 98 new cards
+- [x] Add 4 new effect types: discard_burn, energy_regen, draw_boost, draw_reduction
+- [x] Update shared/gameTypes.ts with new passive constants and CARDS_PER_DECK=50
+- [x] Update client/src/lib/gameEngine.ts with all v5 passive implementations
+- [x] Update server/gameEngine.ts with all v5 passive implementations
+- [x] Update shared/cardData.ts with 350 balanced cards
+- [x] Update EffectBadge component with new effect type display configs
+- [x] Update GameCard component with new effect type colors and names
+- [x] Update Home.tsx with new passive descriptions and card count (350)
+- [x] Update tutorialSteps.ts with new passive descriptions
+- [x] Update all test files (game.test.ts, gameLogic.test.ts) for 350 cards
+- [x] All 192 tests passing
+- [ ] Generate artwork for 98 new cards (cards 37-50 per faction)

@@ -43,6 +43,10 @@ export type SinType = "wrath" | "sloth" | "greed" | "envy" | "pride" | "lust" | 
  *
  * UTILITY:
  *   energy_gain       — Gain energy instantly (self)
+ *   energy_regen      — Gain energy over multiple rounds (self)
+ *   discard_burn      — Destroy cards from target's discard pile
+ *   draw_boost        — Draw extra cards per turn
+ *   draw_reduction    — Draw fewer cards per turn
  */
 export type EffectType =
   | "damage"
@@ -57,7 +61,11 @@ export type EffectType =
   | "energy_steal"
   | "energy_block"
   | "affliction_amplify"
-  | "affliction_transfer";
+  | "affliction_transfer"
+  | "discard_burn"
+  | "energy_regen"
+  | "draw_boost"
+  | "draw_reduction";
 
 // ─── Target Modes (v4) ──────────────────────────────────────
 /**
@@ -169,21 +177,32 @@ export interface CardDefinition {
  * - Every card has a Corruption cost (0-6 range)
  * - Can't play a card if you don't have enough Corruption
  *
- * Sin-specific passives (v4 balanced):
- * - Wrath:    FURY — Self-damage cards deal +3 bonus damage to target AND heal 2 HP
- * - Sloth:    ENDURANCE — Taking compound damage grants +1 shield
- * - Greed:    AVARICE — Steal-type cards grant +1 energy
- * - Envy:     JEALOUSY — Damage cards amplify target's worst affliction by +1
- * - Pride:    HUBRIS — 0-cost cards grant +1 shield
- * - Lust:     TEMPTATION — Single-target damage heals self for +1 HP
- * - Gluttony: DEVOUR — AoE cards grant +1 energy
+ * Sin-specific passives (v5 balanced — Monte Carlo 500K games, 1.23% max deviation):
+ * - Wrath:    VENGEANCE — When taking damage, reflect 63.4% back to attacker
+ * - Sloth:    ENDURANCE — Start of turn: gain shield = energy × handSize × 0.45 (cap 25)
+ * - Greed:    TAX — On tick-2 of compound damage dealt, gain shield = 6.3% of damage
+ * - Envy:     JEALOUSY — When dealing damage, amplify target's worst affliction by 10.6%
+ * - Pride:    HUBRIS — If you played the highest-cost card this round (ties count), all your effects get ×1.324
+ * - Lust:     TEMPTATION — On compound tick damage dealt, heal 25% of damage as HP
+ * - Gluttony: DEVOURER — Each card burned via discard_burn grants 1.585 energy
  */
 export const MAX_ENERGY = 7;
 export const ENERGY_PER_TURN = 1; // +1 energy gained per round
 
-// Passive constants
-export const WRATH_FURY_BONUS_DAMAGE = 3;
-export const WRATH_FURY_HEAL = 2;
+// v5 Passive constants (tuned via combined optimizer)
+export const WRATH_VENGEANCE_PCT = 0.634;
+export const SLOTH_ENDURANCE_MULT = 0.45;
+export const SLOTH_ENDURANCE_CAP = 25;
+export const GREED_TAX_PCT = 0.063;
+export const GREED_TAX_TICK = 2; // triggers on tick index 2
+export const ENVY_JEALOUSY_PCT = 0.106;
+export const PRIDE_HUBRIS_MULT = 1.324;
+export const LUST_TEMPTATION_PCT = 0.25;
+export const GLUTTONY_DEVOURER_ENERGY = 1.585;
+
+// Legacy compat (old constants kept for any UI references)
+export const WRATH_FURY_BONUS_DAMAGE = 0;
+export const WRATH_FURY_HEAL = 0;
 export const SLOTH_ENDURANCE_SHIELD = 1;
 export const GREED_AVARICE_ENERGY = 1;
 export const ENVY_JEALOUSY_AMPLIFY = 1;
@@ -313,7 +332,7 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 20;
 export const STARTING_HP = 200;
 export const HAND_SIZE = 5;
-export const CARDS_PER_DECK = 36;
+export const CARDS_PER_DECK = 50;
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
 export const CATCHUP_HP_THRESHOLD = 80; // 40% of 200 HP
 
