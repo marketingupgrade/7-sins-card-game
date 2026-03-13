@@ -202,13 +202,13 @@ export const GLUTTONY_DEVOURER_ENERGY = 1.585;
 
 // Passive info for UI tooltips
 export const PASSIVE_INFO: Record<SinType, { name: string; description: string; icon: string }> = {
-  wrath: { name: "VENGEANCE", description: "When taking damage, reflect 63% back to the attacker.", icon: "⚔" },
-  sloth: { name: "ENDURANCE", description: "Start of turn: gain shield equal to energy × hand size × 0.45 (cap 25).", icon: "🛡" },
-  greed: { name: "TAX", description: "On tick-2 of compound damage dealt, gain shield equal to 6.3% of damage.", icon: "💰" },
-  envy: { name: "JEALOUSY", description: "When dealing damage, amplify target's worst affliction by 10.6%.", icon: "👁" },
-  pride: { name: "HUBRIS", description: "If you played the highest-cost card this round (ties count), all effects get ×1.32.", icon: "👑" },
-  lust: { name: "TEMPTATION", description: "On compound tick damage dealt, heal 25% of damage as HP.", icon: "❤" },
-  gluttony: { name: "DEVOURER", description: "Each card burned via discard grants 1.6 energy.", icon: "🔥" },
+  wrath: { name: "VENGEANCE", description: "Strike me and feel the wound twice. Reflects damage back to the attacker.", icon: "⚔" },
+  sloth: { name: "ENDURANCE", description: "Patience is armor. Generates shield each turn from stored energy and cards in hand.", icon: "🛡" },
+  greed: { name: "TAX", description: "Every wound you deal fills my coffers. Damage ticks generate protective shields.", icon: "💰" },
+  envy: { name: "JEALOUSY", description: "Your suffering looks good on you. Dealing damage deepens the target's worst affliction.", icon: "👁" },
+  pride: { name: "HUBRIS", description: "Assert dominance. Playing the most expensive card amplifies all your effects.", icon: "👑" },
+  lust: { name: "TEMPTATION", description: "Your pain is my pleasure. Damage over time heals you as it hurts them.", icon: "❤" },
+  gluttony: { name: "DEVOURER", description: "Consume their arsenal. Destroying enemy cards feeds your energy.", icon: "🔥" },
 };
 
 // Legacy compat (old constants kept for any UI references)

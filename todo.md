@@ -925,4 +925,11 @@
 - [x] Add search by card name
 - [x] Card detail modal with full stats, effects, compound tick preview, and faction passive
 - [x] Register route in App.tsx and add navigation link from Home page
+- [x] Push to GitHub
+
+## Passive Description Rewrite (Thematic Voice)
+- [x] Rewrite all 7 passive descriptions from technical to evocative/thematic
+- [x] Update Home page passive explainers
+- [x] Update PASSIVE_INFO in gameTypes.ts (tooltips)
+- [x] Update tutorial passive descriptions
 - [ ] Push to GitHub

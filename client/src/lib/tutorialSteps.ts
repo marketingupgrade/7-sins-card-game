@@ -64,7 +64,7 @@ const HOME_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='faction-cards']",
     position: "top",
     title: "Seven Sin Factions",
-    body: "Each faction has a unique playstyle and passive ability. Wrath hits hard (FURY), Sloth outlasts (ENDURANCE), Greed hoards (AVARICE), Envy reflects (JEALOUSY), Pride self-buffs (HUBRIS), Lust redirects (CHARM), and Gluttony sustains (DEVOUR). Choose wisely.",
+    body: "Each faction has a unique playstyle and passive ability. Wrath punishes attackers, Sloth outlasts everyone, Greed profits from pain, Envy deepens suffering, Pride rewards dominance, Lust feeds on damage, and Gluttony devours everything. Choose wisely.",
     quip: "They're all terrible. Pick the one that matches your personality.",
   },
   {
@@ -104,7 +104,7 @@ const LOBBY_STEPS: TutorialStep[] = [
     targetSelector: "[data-tutorial='sin-selection']",
     position: "top",
     title: "Choose Your Sin",
-    body: "Each sin has 54 unique compound cards (including 4 priority cards) and a passive ability. Wrath: VENGEANCE (reflect 63% damage). Sloth: ENDURANCE (shield from energy × hand). Greed: TAX (shields from damage ticks). Envy: JEALOUSY (amplify afflictions 10.6%). Pride: HUBRIS (×1.32 for highest-cost card). Lust: TEMPTATION (25% lifesteal on ticks). Gluttony: DEVOURER (energy from burned cards).",
+    body: "Each sin has 54 unique compound cards (including 4 priority cards) and a passive ability. Wrath reflects damage back. Sloth builds armor from patience. Greed turns pain into shields. Envy worsens afflictions. Pride rewards the boldest play. Lust heals from the suffering it causes. Gluttony feeds on destroyed cards.",
     quip: "Choose your fighter. I mean, your character flaw.",
   },
   {
