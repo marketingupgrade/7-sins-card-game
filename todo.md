@@ -1074,3 +1074,5 @@
 - [x] Add password reset email flow via Supabase resetPasswordForEmail
 - [x] Create ResetPassword page to set new password after clicking email link
 - [x] Move sign-in/register section above Join Game button in homepage action panel
+- [x] Create branded email templates for Supabase auth (confirmation, password reset, magic link)
+- [x] Fix Supabase Site URL redirect (was localhost:3000, now 7sinscardgame.com)
