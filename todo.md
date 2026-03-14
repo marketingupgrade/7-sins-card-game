@@ -1266,14 +1266,14 @@
 ## Bug: Comments Section on Balance Analysis
 - [ ] Investigate why comments section doesn't work
 - [ ] Fix the issue
-- [ ] Push to GitHub
+- [x] Push to GitHub
 - [x] Add sinners@7sinscardgame.com as contact email in Terms, Privacy, and Cookie pages
 
 ## Account Deletion Flow
 - [ ] Add delete account tRPC procedure (purge user, decks, comments, game data)
 - [ ] Add delete account UI in account settings page
 - [ ] Confirmation dialog with gothic theming
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Code Cleanup
 - [x] Remove seed-blogs.mjs, migrate-simultaneous.mjs, and scratch note files
@@ -1291,7 +1291,7 @@
 - [x] Investigated AOE resolution logic — damage IS applied to all enemies correctly (3x DMG badges confirm)
 - [x] Fix was in BattleLog display: now shows "ALL ENEMIES" for AOE, "2 ENEMIES" for duo
 - [x] ResolutionReveal animation already showed AOE correctly
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Logo Design & Implementation
 - [x] Search for gothic gaming-themed 7S assets (none suitable)
@@ -1305,7 +1305,7 @@
 - [x] Added logo showcase + usage guidelines to Brandbook Visual Identity section
 - [x] Updated Brandbook TOC to "Visual Identity & Logo"
 - [x] Uploaded logo to brandbook
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Blog Post Generation (666 Target)
 - [x] Generated 609 new blog posts using OpenAI API (mythology, lore, PvP card game SEO)
@@ -1320,21 +1320,45 @@
 - [x] Home page: WebSite schema with SearchAction, VideoGame schema (free, PvP, browser)
 - [x] Home page: Meta description targeting "free PvP online card game"
 - [x] Content renderer: Detects HTML vs markdown and styles both with gothic theme
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## OG Banner Image
 - [x] Generated 1200x630 OG banner (7S logo + gothic cathedral + demonic cards + ember particles)
 - [x] Uploaded to CDN via webdev static assets
 - [x] Updated index.html OG and Twitter meta tags with banner URL
 - [x] Changed Twitter card to summary_large_image for large preview
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Blog Search Enhancement
 - [x] Blog search already existed with debounced input and URL params
 - [x] Enhanced search to match title + metaDescription + keywords (not just title)
 - [x] URL syncs with search query (?q=) for SearchAction schema support
 - [x] Blog content renderer fixed: strips code fences, removes duplicate h1, fixes empty links
-- [ ] Push to GitHub
+- [x] Push to GitHub
 - [x] RSS feed endpoint (/rss.xml) with latest blog posts
 - [x] Featured images for all 665 blog posts (reuse existing card art/spell icons)
 - [x] Update blog post OG meta tags to use individual featured images
+
+## Comments Fix + Account Deletion + Blog SEO Audit
+- [ ] Fix comments/discussion section on Balance Analysis page
+- [ ] Add delete account tRPC procedure (purge user, decks, comments, game data)
+- [ ] Add delete account UI in account settings with gothic confirmation dialog
+- [ ] Audit all 665 blog posts for SEO/AEO/GEO optimization gaps
+- [ ] Implement blog visibility improvements (missing schema, meta, structured data)
+- [ ] Write vitest tests for new features
+- [ ] Push to GitHub
+
+## Comments Fix + Account Deletion + Blog SEO Audit
+- [ ] Fix comments/discussion section on Balance Analysis page
+- [ ] Add delete account tRPC procedure (purge user, decks, comments, game data)
+- [ ] Add delete account UI in account settings with gothic confirmation dialog
+- [ ] Audit all 665 blog posts for SEO/AEO/GEO optimization gaps
+- [ ] Implement blog visibility improvements (missing schema, meta, structured data)
+- [ ] Write vitest tests for new features
+- [ ] Push to GitHub
+
+## Production Bug Fixes
+- [ ] Fix blog posts not loading on production /blog page (empty list)
+- [ ] Fix comments not posting on production Balance Analysis page
+- [ ] Build account deletion tRPC procedure and UI
+- [ ] Full blog SEO/AEO/GEO audit and optimization using skills
