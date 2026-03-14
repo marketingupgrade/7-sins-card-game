@@ -1398,3 +1398,25 @@
 - [x] Never show raw technical errors to users in frontend (13 handlers fixed across 6 files)
 - [x] Replace "error loading dynamically imported module" with user-friendly message
 - [x] Add console.error logging + user-friendly themed messages in all catch blocks
+
+## Create Game Module Loading Fix
+- [ ] Fix gameEngine module not loading on Vercel deployment (dynamic import fails)
+- [ ] Ensure game creation works end-to-end on www.7sinscardgame.com
+
+## RSS Feed & Directory Submissions
+- [x] Verify game creation works on production (www.7sinscardgame.com) — lobby loads, code generated, factions visible
+- [ ] Generate/verify RSS feed on production
+- [ ] Submit RSS feed to all 99+ directories from user's list
+- [ ] Compile submission results report
+- [ ] Ensure deck builder fix is deployed to production (Vercel)
+- [ ] Identify all bad card images across 7 factions (hands, white space, AI artifacts)
+- [ ] Regenerate broken card images with AI image generation
+- [ ] Upload new images to Supabase Storage
+
+## Deck Builder Layout Redesign
+- [ ] Redesign deck builder to 50/50 split: card grid (left) + dynamic deck insights panel (right)
+- [ ] Dynamic insights panel: mana curve, effect distribution, tier breakdown, synergy analysis, deck strength score
+
+## Deck Saving Verification
+- [ ] Triple-check that logged-in users can save decks to Supabase
+- [ ] Verify saved decks persist and load correctly after page refresh
