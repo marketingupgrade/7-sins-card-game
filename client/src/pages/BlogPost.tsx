@@ -24,9 +24,30 @@ const CATEGORY_LABELS: Record<string, string> = {
   "industry-culture": "Culture & News",
 };
 
-/** Simple markdown-to-HTML renderer for blog content */
-function renderMarkdown(md: string): string {
-  let html = md
+/** Render blog content — detects HTML vs markdown and styles accordingly */
+function renderContent(content: string): string {
+  // Detect if content is already HTML (from OpenAI-generated posts)
+  const isHtml = content.trim().startsWith("<");
+
+  if (isHtml) {
+    // Style existing HTML tags with gothic theme classes
+    return content
+      .replace(/<h1([^>]*)>/gi, '<h1$1 class="text-3xl font-[Cinzel] text-amber-200 mt-10 mb-4 tracking-wide">')
+      .replace(/<h2([^>]*)>/gi, '<h2$1 class="text-2xl font-[Cinzel] text-amber-200 mt-10 mb-4 tracking-wide">')
+      .replace(/<h3([^>]*)>/gi, '<h3$1 class="text-xl font-[Cinzel] text-amber-200 mt-8 mb-3 tracking-wide">')
+      .replace(/<p([^>]*)>/gi, '<p$1 class="text-amber-200/55 leading-relaxed mb-4">')
+      .replace(/<strong([^>]*)>/gi, '<strong$1 class="text-amber-200 font-semibold">')
+      .replace(/<em([^>]*)>/gi, '<em$1 class="text-amber-300/70">')
+      .replace(/<a ([^>]*href="\/[^"]*")/gi, '<a class="text-amber-400 hover:text-amber-300 underline underline-offset-2" $1')
+      .replace(/<a ([^>]*href="https?:\/\/[^"]*")/gi, '<a class="text-amber-400 hover:text-amber-300 underline underline-offset-2" target="_blank" rel="noopener noreferrer" $1')
+      .replace(/<ul([^>]*)>/gi, '<ul$1 class="mb-4 space-y-1 list-disc list-inside text-amber-200/60">')
+      .replace(/<ol([^>]*)>/gi, '<ol$1 class="mb-4 space-y-1 list-decimal list-inside text-amber-200/60">')
+      .replace(/<li([^>]*)>/gi, '<li$1 class="ml-4 pl-2 text-amber-200/60">')
+      .replace(/<blockquote([^>]*)>/gi, '<blockquote$1 class="border-l-2 border-amber-700/50 pl-4 italic text-amber-200/40 my-4">');
+  }
+
+  // Markdown rendering for older posts
+  let html = content
     // Headers
     .replace(/^### (.+)$/gm, '<h3 class="text-xl font-[Cinzel] text-amber-200 mt-8 mb-3 tracking-wide">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-[Cinzel] text-amber-200 mt-10 mb-4 tracking-wide">$1</h2>')
@@ -69,26 +90,51 @@ export default function BlogPost() {
   // Update document title and meta for SEO
   useEffect(() => {
     if (post) {
+      const baseUrl = "https://www.7sinscardgame.com";
+      const postUrl = `${baseUrl}/blog/${post.slug}`;
       document.title = `${post.title} | 7 Deadly Sins Card Game Blog`;
-      // Update meta description
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement("meta");
-        metaDesc.setAttribute("name", "description");
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute("content", post.metaDescription || "");
 
-      // Update meta keywords
-      let metaKeywords = document.querySelector('meta[name="keywords"]');
-      if (!metaKeywords) {
-        metaKeywords = document.createElement("meta");
-        metaKeywords.setAttribute("name", "keywords");
-        document.head.appendChild(metaKeywords);
-      }
-      metaKeywords.setAttribute("content", post.keywords || "");
+      // Helper to set or create a meta tag
+      const setMeta = (attr: string, key: string, value: string) => {
+        let el = document.querySelector(`meta[${attr}="${key}"]`);
+        if (!el) {
+          el = document.createElement("meta");
+          el.setAttribute(attr, key);
+          document.head.appendChild(el);
+        }
+        el.setAttribute("content", value);
+      };
 
-      // Add structured data (Article schema)
+      // Standard meta
+      setMeta("name", "description", post.metaDescription || "");
+      setMeta("name", "keywords", post.keywords || "");
+      setMeta("name", "author", "7 Deadly Sins Card Game");
+
+      // Canonical URL
+      let canonical = document.querySelector('link[rel="canonical"]');
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.setAttribute("rel", "canonical");
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute("href", postUrl);
+
+      // Open Graph meta tags
+      setMeta("property", "og:title", post.title);
+      setMeta("property", "og:description", post.metaDescription || "");
+      setMeta("property", "og:url", postUrl);
+      setMeta("property", "og:type", "article");
+      setMeta("property", "og:site_name", "7 Deadly Sins Card Game");
+      setMeta("property", "article:published_time", post.publishedAt ? new Date(post.publishedAt).toISOString() : "");
+      setMeta("property", "article:modified_time", post.updatedAt ? new Date(post.updatedAt).toISOString() : "");
+      setMeta("property", "article:section", CATEGORY_LABELS[post.category] || post.category);
+
+      // Twitter Card meta tags
+      setMeta("name", "twitter:card", "summary_large_image");
+      setMeta("name", "twitter:title", post.title);
+      setMeta("name", "twitter:description", post.metaDescription || "");
+
+      // Article schema + BreadcrumbList
       let scriptTag = document.querySelector('script[data-blog-schema]');
       if (!scriptTag) {
         scriptTag = document.createElement("script");
@@ -96,39 +142,117 @@ export default function BlogPost() {
         scriptTag.setAttribute("data-blog-schema", "true");
         document.head.appendChild(scriptTag);
       }
-      scriptTag.textContent = JSON.stringify({
-        "@context": "https://schema.org",
-        "@type": "Article",
-        headline: post.title,
-        description: post.metaDescription,
-        keywords: post.keywords,
-        datePublished: post.publishedAt,
-        dateModified: post.updatedAt,
-        author: {
-          "@type": "Organization",
-          name: "7 Deadly Sins Card Game",
+
+      const schemas: object[] = [
+        // Article schema
+        {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: post.title,
+          description: post.metaDescription,
+          keywords: post.keywords,
+          datePublished: post.publishedAt ? new Date(post.publishedAt).toISOString() : undefined,
+          dateModified: post.updatedAt ? new Date(post.updatedAt).toISOString() : undefined,
+          author: {
+            "@type": "Organization",
+            name: "7 Deadly Sins Card Game",
+            url: baseUrl,
+          },
+          publisher: {
+            "@type": "Organization",
+            name: "7 Deadly Sins Card Game",
+            url: baseUrl,
+          },
+          mainEntityOfPage: {
+            "@type": "WebPage",
+            "@id": postUrl,
+          },
+          articleSection: CATEGORY_LABELS[post.category] || post.category,
+          inLanguage: "en",
+          isAccessibleForFree: true,
         },
-        publisher: {
-          "@type": "Organization",
-          name: "7 Deadly Sins Card Game",
+        // BreadcrumbList schema
+        {
+          "@context": "https://schema.org",
+          "@type": "BreadcrumbList",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              name: "Home",
+              item: baseUrl,
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: "Blog",
+              item: `${baseUrl}/blog`,
+            },
+            {
+              "@type": "ListItem",
+              position: 3,
+              name: CATEGORY_LABELS[post.category] || post.category,
+              item: `${baseUrl}/blog?category=${post.category}`,
+            },
+            {
+              "@type": "ListItem",
+              position: 4,
+              name: post.title,
+              item: postUrl,
+            },
+          ],
         },
-        mainEntityOfPage: {
-          "@type": "WebPage",
-          "@id": `${window.location.origin}/blog/${post.slug}`,
-        },
-      });
+      ];
+
+      // Add FAQPage schema for AEO-question category posts
+      if (post.category === "aeo-questions" && post.content) {
+        const faqItems: { question: string; answer: string }[] = [];
+        // Extract Q&A from h2/h3 headings followed by paragraphs
+        const headingRegex = /<h[23][^>]*>(.+?)<\/h[23]>/gi;
+        const contentStr = post.content;
+        let match;
+        while ((match = headingRegex.exec(contentStr)) !== null) {
+          const question = match[1].replace(/<[^>]+>/g, "").trim();
+          const afterHeading = contentStr.slice(match.index + match[0].length);
+          const nextTag = afterHeading.match(/<p[^>]*>(.+?)<\/p>/i);
+          if (nextTag && question.includes("?")) {
+            faqItems.push({
+              question,
+              answer: nextTag[1].replace(/<[^>]+>/g, "").trim(),
+            });
+          }
+        }
+        if (faqItems.length > 0) {
+          schemas.push({
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            mainEntity: faqItems.map((faq) => ({
+              "@type": "Question",
+              name: faq.question,
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: faq.answer,
+              },
+            })),
+          });
+        }
+      }
+
+      scriptTag.textContent = JSON.stringify(schemas);
 
       return () => {
-        // Cleanup schema on unmount
+        // Cleanup schema and dynamic meta on unmount
         const schema = document.querySelector('script[data-blog-schema]');
         if (schema) schema.remove();
+        const canonicalEl = document.querySelector('link[rel="canonical"]');
+        if (canonicalEl) canonicalEl.remove();
       };
     }
   }, [post]);
 
   const renderedContent = useMemo(() => {
     if (!post?.content) return "";
-    return renderMarkdown(post.content);
+    return renderContent(post.content);
   }, [post?.content]);
 
   if (isLoading) {

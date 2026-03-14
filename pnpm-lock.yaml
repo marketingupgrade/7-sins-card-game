@@ -207,7 +207,7 @@ importers:
         specifier: ^12.35.2
         version: 12.35.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       mysql2:
-        specifier: ^3.15.0
+        specifier: ^3.16.1
         version: 3.16.1
       nanoid:
         specifier: ^5.1.5

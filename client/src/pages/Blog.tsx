@@ -60,12 +60,82 @@ export default function Blog() {
 
   const totalPages = data ? Math.ceil(data.total / POSTS_PER_PAGE) : 0;
 
-  // Update document title for SEO
+  // Update document title, meta, and schema for SEO
   useEffect(() => {
+    const baseUrl = "https://www.7sinscardgame.com";
     const title = category
       ? `${CATEGORY_LABELS[category] || category} - 7 Deadly Sins Blog`
       : "Blog - 7 Deadly Sins Card Game";
+    const description = category
+      ? `Browse ${CATEGORY_LABELS[category] || category} articles about the 7 Deadly Sins Card Game. Free PvP strategy guides, dark fantasy lore, and mythology.`
+      : "Explore the Cathedral Chronicles — strategy guides, dark fantasy lore, mythology, and tips for the free PvP card game 7 Deadly Sins.";
     document.title = title;
+
+    // Helper to set or create a meta tag
+    const setMeta = (attr: string, key: string, value: string) => {
+      let el = document.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) {
+        el = document.createElement("meta");
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
+      }
+      el.setAttribute("content", value);
+    };
+
+    setMeta("name", "description", description);
+    setMeta("property", "og:title", title);
+    setMeta("property", "og:description", description);
+    setMeta("property", "og:url", category ? `${baseUrl}/blog?category=${category}` : `${baseUrl}/blog`);
+    setMeta("property", "og:type", "website");
+    setMeta("property", "og:site_name", "7 Deadly Sins Card Game");
+    setMeta("name", "twitter:card", "summary");
+    setMeta("name", "twitter:title", title);
+    setMeta("name", "twitter:description", description);
+
+    // Canonical URL
+    let canonical = document.querySelector('link[rel="canonical"]');
+    if (!canonical) {
+      canonical = document.createElement("link");
+      canonical.setAttribute("rel", "canonical");
+      document.head.appendChild(canonical);
+    }
+    canonical.setAttribute("href", category ? `${baseUrl}/blog?category=${category}` : `${baseUrl}/blog`);
+
+    // CollectionPage + BreadcrumbList schema
+    let scriptTag = document.querySelector('script[data-blog-list-schema]');
+    if (!scriptTag) {
+      scriptTag = document.createElement("script");
+      scriptTag.setAttribute("type", "application/ld+json");
+      scriptTag.setAttribute("data-blog-list-schema", "true");
+      document.head.appendChild(scriptTag);
+    }
+    scriptTag.textContent = JSON.stringify([
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: title,
+        description,
+        url: category ? `${baseUrl}/blog?category=${category}` : `${baseUrl}/blog`,
+        isPartOf: { "@type": "WebSite", name: "7 Deadly Sins Card Game", url: baseUrl },
+        inLanguage: "en",
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: baseUrl },
+          { "@type": "ListItem", position: 2, name: "Blog", item: `${baseUrl}/blog` },
+          ...(category ? [{ "@type": "ListItem", position: 3, name: CATEGORY_LABELS[category] || category, item: `${baseUrl}/blog?category=${category}` }] : []),
+        ],
+      },
+    ]);
+
+    return () => {
+      const schema = document.querySelector('script[data-blog-list-schema]');
+      if (schema) schema.remove();
+      const canonicalEl = document.querySelector('link[rel="canonical"]');
+      if (canonicalEl) canonicalEl.remove();
+    };
   }, [category]);
 
   return (

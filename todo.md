@@ -1306,3 +1306,18 @@
 - [x] Updated Brandbook TOC to "Visual Identity & Logo"
 - [x] Uploaded logo to brandbook
 - [ ] Push to GitHub
+
+## Blog Post Generation (666 Target)
+- [x] Generated 609 new blog posts using OpenAI API (mythology, lore, PvP card game SEO)
+- [x] Inserted 608 posts into database (665 total, 1 encoding issue)
+- [x] Posts cover: faction guides, game guides, comparisons, dark fantasy lore, free-to-play, multiplayer, AEO questions
+- [ ] Insert final missing post (envy-in-video-games-a-history-of-the-sin)
+
+## SEO Schema Markup & Meta Tags
+- [x] BlogPost page: Article JSON-LD, canonical URL, OG/Twitter meta, BreadcrumbList schema
+- [x] BlogPost page: FAQ schema for AEO-question category posts
+- [x] Blog listing page: CollectionPage schema, canonical URL, OG/Twitter meta, BreadcrumbList
+- [x] Home page: WebSite schema with SearchAction, VideoGame schema (free, PvP, browser)
+- [x] Home page: Meta description targeting "free PvP online card game"
+- [x] Content renderer: Detects HTML vs markdown and styles both with gothic theme
+- [ ] Push to GitHub

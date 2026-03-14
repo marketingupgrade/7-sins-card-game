@@ -113,6 +113,69 @@ export default function Home() {
   const { user: authUser, isLoading: authLoading } = useSupabaseAuth();
 
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);
+
+  // SEO: WebSite + VideoGame schema for rich search results
+  useEffect(() => {
+    const baseUrl = "https://www.7sinscardgame.com";
+    document.title = "7 Deadly Sins Card Game \u2014 Free PvP Online Card Game";
+
+    // Meta description
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement("meta");
+      metaDesc.setAttribute("name", "description");
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute("content", "Play the 7 Deadly Sins Card Game free online. A dark fantasy PvP card game inspired by mythology, demonology, and the seven deadly sins. No download required.");
+
+    let scriptTag = document.querySelector('script[data-home-schema]');
+    if (!scriptTag) {
+      scriptTag = document.createElement("script");
+      scriptTag.setAttribute("type", "application/ld+json");
+      scriptTag.setAttribute("data-home-schema", "true");
+      document.head.appendChild(scriptTag);
+    }
+    scriptTag.textContent = JSON.stringify([
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        name: "7 Deadly Sins Card Game",
+        url: baseUrl,
+        description: "A free PvP online card game inspired by mythology, demonology, and the seven deadly sins.",
+        potentialAction: {
+          "@type": "SearchAction",
+          target: { "@type": "EntryPoint", urlTemplate: `${baseUrl}/blog?q={search_term_string}` },
+          "query-input": "required name=search_term_string",
+        },
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoGame",
+        name: "7 Deadly Sins Card Game",
+        description: "A free-to-play dark fantasy PvP card game where players command decks built around the seven deadly sins. Battle online with cards inspired by global mythology, demonology, and folklore.",
+        url: baseUrl,
+        genre: ["Card Game", "Strategy", "Dark Fantasy", "PvP"],
+        gamePlatform: "Web Browser",
+        applicationCategory: "Game",
+        operatingSystem: "Any",
+        offers: {
+          "@type": "Offer",
+          price: "0",
+          priceCurrency: "USD",
+          availability: "https://schema.org/InStock",
+        },
+        numberOfPlayers: { "@type": "QuantitativeValue", minValue: 2, maxValue: 4 },
+        playMode: ["MultiPlayer", "CoOp"],
+        inLanguage: "en",
+        isAccessibleForFree: true,
+      },
+    ]);
+
+    return () => {
+      const schema = document.querySelector('script[data-home-schema]');
+      if (schema) schema.remove();
+    };
+  }, []);
   // Defer music init to first user interaction to avoid loading 6.6MB of OGG files on page load
   useEffect(() => {
     const initMusic = async () => {
