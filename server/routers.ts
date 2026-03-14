@@ -10,8 +10,8 @@
  * on the Balance Analysis and other pages.
  */
 
-import { COOKIE_NAME } from "@shared/const";
-import { SinType } from "@shared/gameTypes";
+import { COOKIE_NAME } from "../shared/const";
+import { SinType } from "../shared/gameTypes";
 import { z } from "zod";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
