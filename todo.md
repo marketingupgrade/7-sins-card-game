@@ -1395,6 +1395,6 @@
 - [x] Push updated URLs to GitHub (+ 37 additional assets: fonts, icons, portraits, music, OG images)
 
 ## Technical Error Messages Bug
-- [ ] Never show raw technical errors to users in frontend
-- [ ] Replace "error loading dynamically imported module" with user-friendly message
-- [ ] Add global error boundary to catch and display friendly error messages
+- [x] Never show raw technical errors to users in frontend (13 handlers fixed across 6 files)
+- [x] Replace "error loading dynamically imported module" with user-friendly message
+- [x] Add console.error logging + user-friendly themed messages in all catch blocks
