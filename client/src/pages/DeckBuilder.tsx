@@ -11,6 +11,7 @@
  */
 
 import { useState, useMemo, useCallback, useEffect, useRef, memo, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_CARDS } from "@shared/cardData";
@@ -119,78 +120,111 @@ const targetDisplayNames: Record<string, string> = {
   single: "Single Target",
 };
 
-// ─── Themed Dropdown ───────────────────────────────────────
-function ThemedDropdown({
+// ─── Portal Dropdown (escapes overflow containers) ─────────
+function PortalDropdown({
   value,
   options,
   onChange,
+  icon,
   className = "",
 }: {
   value: string;
-  options: { value: string; label: string }[];
+  options: { value: string; label: string; icon?: ReactNode }[];
   onChange: (value: string) => void;
+  icon?: ReactNode;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
   const selectedLabel = options.find((o) => o.value === value)?.label || value;
 
+  // Position the menu below the trigger
   useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    if (open && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPos({ top: rect.bottom + 6, left: rect.left });
     }
-    if (open) document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      const t = e.target as Node;
+      if (triggerRef.current?.contains(t) || menuRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    function handleScroll() { setOpen(false); }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [open]);
+
+  const isActive = value !== "all" && value !== "cost-asc";
+
   return (
-    <div ref={ref} className={`relative shrink-0 ${className}`}>
+    <div className={`shrink-0 ${className}`}>
       <button
+        ref={triggerRef}
         onClick={() => setOpen(!open)}
-        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold tracking-wide uppercase transition-all duration-200 border backdrop-blur-sm ${
           open
-            ? "bg-amber-500/15 text-amber-200/80 border-amber-500/20"
-            : "bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white/70"
+            ? "bg-amber-500/15 text-amber-200 border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+            : isActive
+              ? "bg-amber-500/10 text-amber-200/80 border-amber-500/20 shadow-[0_0_8px_rgba(245,158,11,0.1)]"
+              : "bg-white/[0.04] text-white/50 border-white/[0.08] hover:bg-white/[0.08] hover:text-white/70 hover:border-white/15"
         }`}
       >
-        <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedLabel}</span>
+        {icon && <span className="opacity-70">{icon}</span>}
+        <span className="truncate max-w-[90px] sm:max-w-[130px]">{selectedLabel}</span>
         <svg
           width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-          className={`transition-transform ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         >
           <polyline points="2 4 6 8 10 4" />
         </svg>
       </button>
-      <AnimatePresence>
-        {open && (
+      {open && createPortal(
+        <AnimatePresence>
           <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            ref={menuRef}
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.95 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full left-0 mt-1 z-50 min-w-[160px] rounded-lg border border-amber-500/15 bg-[#0d0d0d] shadow-xl shadow-black/60 overflow-hidden"
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            className="fixed z-[9999] min-w-[180px] rounded-xl border border-amber-500/15 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-hidden"
+            style={{ top: pos.top, left: pos.left }}
           >
-            {options.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-xs font-medium transition-all flex items-center justify-between gap-3 ${
-                  opt.value === value
-                    ? "bg-amber-500/10 text-amber-200/90"
-                    : "text-white/50 hover:bg-white/5 hover:text-white/70"
-                }`}
-              >
-                <span>{opt.label}</span>
-                {opt.value === value && (
-                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <polyline points="2 6 5 9 10 3" />
-                  </svg>
-                )}
-              </button>
-            ))}
+            <div className="py-1">
+              {options.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => { onChange(opt.value); setOpen(false); }}
+                  className={`w-full text-left px-3.5 py-2.5 text-xs font-medium transition-all duration-150 flex items-center gap-2.5 ${
+                    opt.value === value
+                      ? "bg-amber-500/12 text-amber-200"
+                      : "text-white/45 hover:bg-white/[0.06] hover:text-white/75"
+                  }`}
+                >
+                  {opt.icon && <span className="w-4 h-4 flex items-center justify-center opacity-60">{opt.icon}</span>}
+                  <span className="flex-1">{opt.label}</span>
+                  {opt.value === value && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-amber-400">
+                      <polyline points="2 6 5 9 10 3" />
+                    </svg>
+                  )}
+                </button>
+              ))}
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }
@@ -975,121 +1009,52 @@ export default function DeckBuilder() {
       />
 
       <div className="relative z-10 flex flex-col h-screen">
-        {/* ─── Top Bar ─────────────────────────────────────── */}
-        <div className="shrink-0 px-3 sm:px-6 py-3 border-b border-white/5 bg-black/40 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
+        {/* ─── Top Bar (Premium AAA) ────────────────────────── */}
+        <div className="shrink-0 border-b border-white/[0.06] bg-black/50 backdrop-blur-md">
+          {/* Row 1: Navigation + Deck Identity + Actions */}
+          <div className="px-3 sm:px-5 py-2.5 flex items-center gap-3">
             {/* Back button */}
             <button
               onClick={() => { setSelectedFaction(null); clearDeck(); }}
-              className="shrink-0 flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-white/40 hover:text-amber-200/70 hover:bg-white/5 transition-all text-sm"
+              className="shrink-0 flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-white/35 hover:text-amber-200/70 hover:bg-white/5 transition-all duration-200 text-sm"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
               </svg>
-              <span className="hidden sm:inline">Factions</span>
+              <span className="hidden sm:inline text-xs tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)" }}>Factions</span>
             </button>
 
+            {/* Divider */}
+            <div className="w-px h-5 bg-white/[0.06] hidden sm:block" />
+
             {/* Faction badge */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full overflow-hidden border" style={{ borderColor: `${sinColor}40` }}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-full overflow-hidden border-2 shadow-lg" style={{ borderColor: `${sinColor}50`, boxShadow: `0 0 12px ${sinColor}20` }}>
                 <img src={SIN_ARCHETYPE_ICONS[selectedFaction]} alt="" className="w-full h-full object-cover" />
               </div>
-              <h2 className="text-base font-bold tracking-wider" style={{ fontFamily: "var(--font-heading)", color: sinColor }}>
-                {SIN_LABELS[selectedFaction]}
-              </h2>
-            </div>
-
-            {/* Deck name input */}
-            <input
-              type="text"
-              value={deckName}
-              onChange={(e) => setDeckName(e.target.value)}
-              className="hidden sm:block ml-4 px-3 py-1.5 bg-transparent border border-white/10 rounded-lg text-sm text-white/70 focus:border-amber-500/30 focus:outline-none w-44"
-              style={{ fontFamily: "var(--font-heading)" }}
-              placeholder="Deck name..."
-            />
-
-            {/* Spacer */}
-            <div className="flex-1" />
-
-            {/* Deck counter */}
-            <div className="flex items-center gap-2">
-              <div
-                className={`px-3 py-1.5 rounded-lg text-base font-bold tracking-wider ${
-                  isFull ? "bg-green-500/15 text-green-400" : "bg-white/5 text-white/50"
-                }`}
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                {deckCardIds.length}/{MAX_DECK_SIZE}
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-base font-bold tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)", color: sinColor }}>
+                  {SIN_LABELS[selectedFaction]}
+                </h2>
               </div>
-
-              {/* Mobile deck panel toggle */}
-              <button
-                onClick={() => setShowDeckPanel(!showDeckPanel)}
-                className="lg:hidden px-3 py-1.5 rounded-lg bg-amber-500/10 text-amber-200/70 text-sm font-medium"
-              >
-                {showDeckPanel ? "Cards" : "Deck"}
-              </button>
             </div>
-          </div>
 
-          {/* Mobile deck name */}
-          <input
-            type="text"
-            value={deckName}
-            onChange={(e) => setDeckName(e.target.value)}
-            className="sm:hidden mt-2 w-full px-3 py-1.5 bg-transparent border border-white/10 rounded-lg text-sm text-white/70 focus:border-amber-500/30 focus:outline-none"
-            style={{ fontFamily: "var(--font-heading)" }}
-            placeholder="Deck name..."
-          />
-
-          {/* Filters Row */}
-          <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-1 scrollbar-hide">
-            {/* Search */}
-            <div className="relative shrink-0">
-              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="11" cy="11" r="8" />
-                <line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
+            {/* Deck name + counter inline */}
+            <div className="flex items-center gap-2 ml-2">
               <input
                 type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search cards..."
-                className="pl-8 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-sm text-white/60 focus:border-amber-500/20 focus:outline-none w-36 sm:w-44"
+                value={deckName}
+                onChange={(e) => setDeckName(e.target.value)}
+                className="px-2.5 py-1 bg-transparent border-b border-white/10 text-sm text-white/70 focus:border-amber-500/30 focus:outline-none w-32 sm:w-40 transition-colors"
+                style={{ fontFamily: "var(--font-heading)" }}
+                placeholder="Deck name..."
               />
+              <span className={`text-sm font-bold tracking-wide whitespace-nowrap ${
+                isFull ? "text-green-400" : "text-white/60"
+              }`} style={{ fontFamily: "var(--font-heading)" }}>
+                {deckCardIds.length}<span className="text-white/20 font-normal">/</span><span className="text-white/30 font-normal">{MAX_DECK_SIZE}</span>
+              </span>
             </div>
-
-            {/* Tier filters */}
-            <div className="flex items-center gap-1 shrink-0">
-              {(["all", "common", "rare", "epic"] as const).map((tier) => (
-                <button
-                  key={tier}
-                  onClick={() => setTierFilter(tier)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-medium uppercase tracking-wider transition-all ${
-                    tierFilter === tier
-                      ? "bg-amber-500/15 text-amber-200/80 border border-amber-500/20"
-                      : "bg-white/5 text-white/30 border border-transparent hover:bg-white/10"
-                  }`}
-                >
-                  {tier === "all" ? "All" : tier}
-                </button>
-              ))}
-            </div>
-
-            {/* Effect filter */}
-            <ThemedDropdown
-              value={effectFilter}
-              options={EFFECT_FILTER_OPTIONS}
-              onChange={setEffectFilter}
-            />
-
-            {/* Sort */}
-            <ThemedDropdown
-              value={sortBy}
-              options={SORT_OPTIONS}
-              onChange={setSortBy}
-            />
 
             {/* Spacer */}
             <div className="flex-1" />
@@ -1099,44 +1064,158 @@ export default function DeckBuilder() {
               <button
                 onClick={autoFill}
                 disabled={isFull}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/5 text-white/30 hover:bg-white/10 hover:text-white/50 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-white/35 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/55 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
               >
                 Auto-fill
               </button>
               <button
                 onClick={clearDeck}
                 disabled={deckCardIds.length === 0}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/10 text-red-400/40 hover:bg-red-500/20 hover:text-red-400/70 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/[0.06] text-red-400/40 border border-red-500/[0.08] hover:bg-red-500/15 hover:text-red-400/70 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
               >
                 Clear
               </button>
               <button
                 onClick={saveDeck}
                 disabled={isSaving || deckCardIds.length === 0 || guestAtDeckLimit}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed ${
                   guestAtDeckLimit
                     ? "bg-white/5 text-white/30 border-white/10"
-                    : "bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border-amber-500/20"
+                    : "bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
                 }`}
                 style={{ fontFamily: "var(--font-heading)" }}
                 title={guestAtDeckLimit ? "Sign in to save more decks" : undefined}
               >
                 {isSaving ? "Saving..." : guestAtDeckLimit ? "Limit Reached" : "Save"}
               </button>
+
+              {/* Mobile deck panel toggle */}
+              <button
+                onClick={() => setShowDeckPanel(!showDeckPanel)}
+                className={`lg:hidden px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all duration-200 ${
+                  showDeckPanel
+                    ? "bg-amber-500/15 text-amber-200 border-amber-500/25"
+                    : "bg-white/[0.04] text-white/50 border-white/[0.08] hover:bg-white/[0.08]"
+                }`}
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {showDeckPanel ? "Cards" : "Deck"}
+              </button>
             </div>
+          </div>
+
+          {/* Row 2: Premium Filter Bar */}
+          <div className="px-3 sm:px-5 py-2 border-t border-white/[0.04] flex items-center gap-2">
+            {/* Search */}
+            <div className="relative shrink-0">
+              <svg className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/20" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search..."
+                className="pl-8 pr-3 py-2 bg-white/[0.03] border border-white/[0.06] rounded-lg text-xs text-white/60 focus:border-amber-500/25 focus:bg-white/[0.05] focus:outline-none w-28 sm:w-36 transition-all duration-200 placeholder:text-white/20"
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-white/[0.06] mx-0.5" />
+
+            {/* Tier filter chips */}
+            <div className="flex items-center gap-1 shrink-0">
+              {(["all", "common", "rare", "epic"] as const).map((tier) => {
+                const isSelected = tierFilter === tier;
+                const chipColor = tier === "all" ? "#d4a574" : TIER_COLORS[tier];
+                return (
+                  <button
+                    key={tier}
+                    onClick={() => setTierFilter(tier)}
+                    className={`relative px-2.5 py-1.5 rounded-lg text-[11px] font-semibold uppercase tracking-wider transition-all duration-200 border ${
+                      isSelected
+                        ? "text-white/90 border-current/20"
+                        : "bg-white/[0.03] text-white/30 border-transparent hover:bg-white/[0.06] hover:text-white/50"
+                    }`}
+                    style={isSelected ? {
+                      background: `${chipColor}18`,
+                      color: chipColor,
+                      borderColor: `${chipColor}30`,
+                      boxShadow: `0 0 10px ${chipColor}15`,
+                    } : undefined}
+                  >
+                    {tier === "all" ? "All" : tier}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-5 bg-white/[0.06] mx-0.5 hidden sm:block" />
+
+            {/* Effect filter dropdown */}
+            <PortalDropdown
+              value={effectFilter}
+              options={EFFECT_FILTER_OPTIONS}
+              onChange={setEffectFilter}
+              icon={
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              }
+            />
+
+            {/* Sort dropdown */}
+            <PortalDropdown
+              value={sortBy}
+              options={SORT_OPTIONS}
+              onChange={setSortBy}
+              icon={
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="4" y1="6" x2="20" y2="6" />
+                  <line x1="4" y1="12" x2="16" y2="12" />
+                  <line x1="4" y1="18" x2="12" y2="18" />
+                </svg>
+              }
+            />
+
+            {/* Spacer */}
+            <div className="flex-1" />
+
+            {/* Active filter count badge */}
+            {(tierFilter !== "all" || effectFilter !== "all" || searchQuery.trim()) && (
+              <button
+                onClick={() => { setTierFilter("all"); setEffectFilter("all"); setSearchQuery(""); }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-amber-500/10 text-amber-200/60 border border-amber-500/15 hover:bg-amber-500/20 hover:text-amber-200 transition-all duration-200"
+              >
+                <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="3" x2="9" y2="9" />
+                  <line x1="9" y1="3" x2="3" y2="9" />
+                </svg>
+                Clear filters
+              </button>
+            )}
+
+            {/* Card count */}
+            <span className="text-[10px] text-white/25 font-medium tracking-wide shrink-0 hidden sm:block">
+              {filteredCards.length} card{filteredCards.length !== 1 ? "s" : ""}
+            </span>
           </div>
 
           {/* Save message */}
           <AnimatePresence>
             {saveMessage && (
-              <motion.p
-                initial={{ opacity: 0, y: -5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className={`text-xs mt-1 ${saveMessage.includes("failed") ? "text-red-400/70" : "text-green-400/70"}`}
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden"
               >
-                {saveMessage}
-              </motion.p>
+                <p className={`text-xs px-5 py-1.5 ${saveMessage.includes("failed") ? "text-red-400/70 bg-red-500/5" : "text-green-400/70 bg-green-500/5"}`}>
+                  {saveMessage}
+                </p>
+              </motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -1145,13 +1224,6 @@ export default function DeckBuilder() {
         <div className="flex-1 flex overflow-hidden">
           {/* Card Browser (left/main) */}
           <div className={`flex-1 overflow-y-auto p-3 sm:p-4 ${showDeckPanel ? "hidden lg:block" : ""}`}>
-            {/* Card count */}
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-white/30">
-                {filteredCards.length} card{filteredCards.length !== 1 ? "s" : ""} shown
-                {deckCardIds.length > 0 && ` · ${deckCardIds.length} in deck`}
-              </p>
-            </div>
 
             {filteredCards.length === 0 ? (
               <div className="flex items-center justify-center h-40">
