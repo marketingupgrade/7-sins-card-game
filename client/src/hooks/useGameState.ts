@@ -24,7 +24,8 @@ export function useGameState(gameId: string | null) {
       setGameState(state);
       setError(null);
     } catch (err: any) {
-      setError(err.message);
+      console.error("[GameState]", err);
+      setError("Failed to load game state. Please refresh.");
     } finally {
       setIsLoading(false);
     }

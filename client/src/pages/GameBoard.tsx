@@ -463,7 +463,8 @@ export default function GameBoard() {
 
       refetch();
     } catch (err: any) {
-      addMessage(err.message || "Lock-in failed", "info");
+      console.error("[LockIn]", err);
+      addMessage("Lock-in failed. Try again.", "info");
     } finally {
       setIsLockingIn(false);
     }
@@ -498,7 +499,8 @@ export default function GameBoard() {
 
       refetch();
     } catch (err: any) {
-      addMessage(err.message || "Pass failed", "info");
+      console.error("[PassLockIn]", err);
+      addMessage("Pass failed. Try again.", "info");
     } finally {
       setIsLockingIn(false);
     }
@@ -640,7 +642,8 @@ export default function GameBoard() {
       setSelectedTarget(null);
       refetch();
     } catch (err: any) {
-      addMessage(err.message, "info");
+      console.error("[PlayCard]", err);
+      addMessage("Could not play that card. Try again.", "info");
     } finally {
       setIsPlayingCard(false);
     }
@@ -684,7 +687,8 @@ export default function GameBoard() {
       setSelectedCard(null);
       refetch();
     } catch (err: any) {
-      addMessage(err.message, "info");
+      console.error("[Pass]", err);
+      addMessage("Could not pass. Try again.", "info");
     } finally {
       setIsPassing(false);
     }

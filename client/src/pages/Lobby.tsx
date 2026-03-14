@@ -204,7 +204,7 @@ export default function Lobby() {
       const gs = await getGameState(gameId);
       setState(gs);
       if (gs.status === "active") setLocation(`/game/${gameId}`);
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) { console.error("[LoadState]", err); setError("Failed to load the lobby. Please refresh the page."); }
   }, [gameId, setLocation]);
 
   useEffect(() => { loadState(); }, [loadState]);
@@ -235,7 +235,7 @@ export default function Lobby() {
       await loadState();
       // Show deck picker after choosing sin
       setShowDeckPicker(true);
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) { console.error("[ChooseSin]", err); setError("Could not pledge your sin. Please try again."); }
   };
 
   // Load saved decks for the chosen faction from localStorage
@@ -262,7 +262,7 @@ export default function Lobby() {
           : "Random 30 selected. Fate decides your hand.",
         "info"
       );
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) { console.error("[SelectDeck]", err); setError("Could not bind your deck. Please try again."); }
   };
 
   const handleAddBot = async () => {
@@ -274,7 +274,7 @@ export default function Lobby() {
       const chosenSin = await botChooseSin(gameId, botId);
       addMessage(`${botName} materializes from the shadows and pledges to ${chosenSin}.`, "info");
       await loadState();
-    } catch (err: any) { setError(err.message); }
+    } catch (err: any) { console.error("[AddBot]", err); setError("The shadows refuse to answer. Try summoning again."); }
     finally { setIsAddingBot(false); }
   };
 
@@ -283,7 +283,7 @@ export default function Lobby() {
     setIsStarting(true);
     soundEngine.play("game_start");
     try { await startGame(gameId); setLocation(`/game/${gameId}`); }
-    catch (err: any) { setError(err.message); }
+    catch (err: any) { console.error("[StartGame]", err); setError("The ritual failed to begin. Please try again."); }
     finally { setIsStarting(false); }
   };
 

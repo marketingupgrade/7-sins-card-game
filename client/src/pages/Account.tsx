@@ -274,7 +274,8 @@ export default function Account() {
       // 5. Redirect to home after a brief delay
       setTimeout(() => navigate("/"), 3000);
     } catch (err: any) {
-      setPurgeResult(`Purge failed: ${err.message}. Please try again or contact support.`);
+      console.error("[Purge]", err);
+      setPurgeResult("Purge failed. Please try again or contact support.");
     } finally {
       setIsPurging(false);
       setShowPurgeDialog(false);

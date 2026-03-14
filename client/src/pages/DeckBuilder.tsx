@@ -816,7 +816,8 @@ export default function DeckBuilder() {
       setActiveDeckId(deck.id);
       setSaveMessage("Deck saved!");
     } catch (err: any) {
-      setSaveMessage(`Save failed: ${err.message}`);
+      console.error("[SaveDeck]", err);
+      setSaveMessage("Save failed. Please try again.");
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);

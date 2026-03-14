@@ -254,7 +254,8 @@ export default function Home() {
       const result = await createGame(playerId, username.trim());
       setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
-      setError(err.message || "The cathedral rejects your offering.");
+      console.error("[CreateGame]", err);
+      setError("The cathedral rejects your offering. Please try again.");
     } finally { setIsCreating(false); }
   };
 
@@ -269,7 +270,15 @@ export default function Home() {
       const result = await joinGame(roomCode.trim().toUpperCase(), playerId, username.trim());
       setLocation(`/lobby/${result.gameId}`);
     } catch (err: any) {
-      setError(err.message || "Invalid code. The cathedral doors remain sealed.");
+      console.error("[JoinGame]", err);
+      const msg = err?.message?.toLowerCase?.() || "";
+      if (msg.includes("not found") || msg.includes("invalid")) {
+        setError("Invalid code. The cathedral doors remain sealed.");
+      } else if (msg.includes("full")) {
+        setError("This penance is full. Seek another congregation.");
+      } else {
+        setError("The cathedral doors remain sealed. Please try again.");
+      }
     } finally { setIsJoining(false); }
   };
 

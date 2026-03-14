@@ -1393,3 +1393,8 @@
 - [x] Migrate all 378 card art images from Manus CloudFront CDN to Supabase Storage (card-art bucket)
 - [x] Update cardArtUrls.ts with new Supabase Storage URLs (378 URLs updated)
 - [x] Push updated URLs to GitHub (+ 37 additional assets: fonts, icons, portraits, music, OG images)
+
+## Technical Error Messages Bug
+- [ ] Never show raw technical errors to users in frontend
+- [ ] Replace "error loading dynamically imported module" with user-friendly message
+- [ ] Add global error boundary to catch and display friendly error messages

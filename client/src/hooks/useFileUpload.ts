@@ -146,7 +146,7 @@ export function useFileUpload({
               ? {
                   ...f,
                   status: "error" as const,
-                  error: err instanceof Error ? err.message : "Upload failed",
+                  error: "Upload failed. Please try again.",
                 }
               : f
           )
