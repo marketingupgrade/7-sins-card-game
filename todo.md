@@ -1371,8 +1371,8 @@
 - [x] Expand short meta descriptions to 150-160 chars (364 posts)
 - [x] Add internal links to 431 posts (Wikipedia-style linking)
 - [x] Add external links to 431 posts (authority signals)
-- [ ] Add FAQ schema markup to BlogPost frontend
-- [ ] Add BreadcrumbList schema to BlogPost frontend
-- [ ] Update sitemap to include all blog posts from Supabase
-- [ ] Update api/_source.ts to query Supabase instead of TiDB
-- [ ] Rebuild Vercel bundle and push to GitHub
+- [x] Add FAQ schema markup to BlogPost frontend (already implemented - auto-extracts FAQ from question headings)
+- [x] Add BreadcrumbList schema to BlogPost frontend (already implemented - 4-level breadcrumb)
+- [x] Update sitemap to include all 466 blog posts from Supabase (was 57, now 478 total URLs with lastmod dates)
+- [x] Update api/_source.ts to query Supabase instead of TiDB (created server/db-supabase.ts, 0 mysql2/drizzle refs)
+- [x] Rebuild Vercel bundle and push to GitHub (api/index.mjs now fully Supabase-native)
