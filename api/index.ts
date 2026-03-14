@@ -1,24 +1,11 @@
 /**
  * Vercel Serverless Function Entry Point
- * 
- * This file creates and exports the Express app for Vercel's serverless runtime.
- * It mirrors the setup in server/_core/index.ts but WITHOUT calling app.listen()
- * since Vercel handles the HTTP layer.
- * 
- * Local development still uses server/_core/index.ts with app.listen().
  */
-
 import "dotenv/config";
 import express from "express";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "../server/_core/oauth";
-import { registerChatRoutes } from "../server/_core/chat";
-import { appRouter } from "../server/routers";
-import { createContext } from "../server/_core/context";
 
 const app = express();
 
-// Body parser with larger size limit for file uploads
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
@@ -30,6 +17,41 @@ app.use((_req, res, next) => {
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
+});
+
+// Diagnostic endpoint to identify which module fails
+app.get("/api/diag", async (_req, res) => {
+  const results: Record<string, string> = {};
+  const modules = [
+    "../shared/const",
+    "../shared/gameTypes",
+    "../shared/cardData",
+    "../shared/_core/errors",
+    "../drizzle/schema",
+    "../server/_core/env",
+    "../server/_core/cookies",
+    "../server/_core/trpc",
+    "../server/_core/context",
+    "../server/_core/sdk",
+    "../server/_core/notification",
+    "../server/_core/systemRouter",
+    "../server/_core/oauth",
+    "../server/_core/chat",
+    "../server/supabaseServer",
+    "../server/storage",
+    "../server/db",
+    "../server/gameEngine",
+    "../server/routers",
+  ];
+  for (const mod of modules) {
+    try {
+      await import(mod);
+      results[mod] = "OK";
+    } catch (e: any) {
+      results[mod] = `FAIL: ${e.code || ""} ${e.message}`;
+    }
+  }
+  res.json(results);
 });
 
 // Dynamic sitemap.xml
@@ -98,7 +120,7 @@ app.get("/rss.xml", async (_req, res) => {
     rss += `<channel>\n`;
     rss += `  <title>7 Deadly Sins Card Game - Lore &amp; Strategy</title>\n`;
     rss += `  <link>${baseUrl}/blog</link>\n`;
-    rss += `  <description>Dark fantasy lore, strategy guides, and mythology from the world of the 7 Deadly Sins Card Game. Free PvP card game infused with Dante, Buddhist, Norse, Japanese, and Celtic sin traditions.</description>\n`;
+    rss += `  <description>Dark fantasy lore, strategy guides, and mythology from the world of the 7 Deadly Sins Card Game.</description>\n`;
     rss += `  <language>en-us</language>\n`;
     rss += `  <lastBuildDate>${now}</lastBuildDate>\n`;
     rss += `  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />\n`;
@@ -138,20 +160,34 @@ app.get("/rss.xml", async (_req, res) => {
   }
 });
 
-// OAuth callback under /api/oauth/callback
-registerOAuthRoutes(app);
+// Lazy-load all heavy modules to isolate the error
+let initialized = false;
+app.use(async (req, res, next) => {
+  if (!initialized) {
+    try {
+      const { registerOAuthRoutes } = await import("../server/_core/oauth");
+      const { registerChatRoutes } = await import("../server/_core/chat");
+      const { appRouter } = await import("../server/routers");
+      const { createContext } = await import("../server/_core/context");
+      const { createExpressMiddleware } = await import("@trpc/server/adapters/express");
 
-// Chat API with streaming and tool calling
-registerChatRoutes(app);
+      registerOAuthRoutes(app);
+      registerChatRoutes(app);
+      app.use(
+        "/api/trpc",
+        createExpressMiddleware({
+          router: appRouter,
+          createContext,
+        })
+      );
+      initialized = true;
+    } catch (e: any) {
+      console.error("Failed to initialize:", e);
+      res.status(500).json({ error: "Init failed", message: e.message, code: e.code, stack: e.stack?.split("\n").slice(0, 5) });
+      return;
+    }
+  }
+  next();
+});
 
-// tRPC API
-app.use(
-  "/api/trpc",
-  createExpressMiddleware({
-    router: appRouter,
-    createContext,
-  })
-);
-
-// Export the Express app for Vercel serverless
 export default app;
