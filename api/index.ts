@@ -9,7 +9,7 @@
  */
 
 import "dotenv/config";
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "../server/_core/oauth";
 import { registerChatRoutes } from "../server/_core/chat";
@@ -23,7 +23,7 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 // Security headers
-app.use((_req: Request, res: Response, next: NextFunction) => {
+app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -33,7 +33,7 @@ app.use((_req: Request, res: Response, next: NextFunction) => {
 });
 
 // Dynamic sitemap.xml
-app.get("/sitemap.xml", async (_req: Request, res: Response) => {
+app.get("/sitemap.xml", async (_req, res) => {
   try {
     const { getAllBlogSlugs } = await import("../server/db");
     const slugs = await getAllBlogSlugs();
@@ -84,7 +84,7 @@ app.get("/sitemap.xml", async (_req: Request, res: Response) => {
 });
 
 // RSS feed
-app.get("/rss.xml", async (_req: Request, res: Response) => {
+app.get("/rss.xml", async (_req, res) => {
   try {
     const { getRecentBlogPosts } = await import("../server/db");
     const posts = await getRecentBlogPosts(50);
