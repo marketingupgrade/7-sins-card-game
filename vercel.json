@@ -7,7 +7,7 @@
   "functions": {
     "api/index.ts": {
       "maxDuration": 30,
-      "includeFiles": "shared/**"
+      "includeFiles": "server/**,shared/**,drizzle/**,storage/**"
     }
   },
   "rewrites": [
