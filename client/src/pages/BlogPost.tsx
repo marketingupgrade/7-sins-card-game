@@ -230,8 +230,8 @@ export default function BlogPost() {
         },
       ];
 
-      // Add FAQPage schema for AEO-question category posts
-      if (post.category === "aeo-questions" && post.content) {
+      // Add FAQPage schema for ALL posts that contain FAQ-like headings (questions)
+      if (post.content) {
         const faqItems: { question: string; answer: string }[] = [];
         // Extract Q&A from h2/h3 headings followed by paragraphs
         const headingRegex = /<h[23][^>]*>(.+?)<\/h[23]>/gi;

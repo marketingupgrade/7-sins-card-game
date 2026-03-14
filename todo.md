@@ -1362,3 +1362,17 @@
 - [ ] Fix comments not posting on production Balance Analysis page
 - [ ] Build account deletion tRPC procedure and UI
 - [ ] Full blog SEO/AEO/GEO audit and optimization using skills
+
+## SEO/AEO/GEO AAA Optimization
+- [x] Strip code fences from 123 posts (rendering bug)
+- [x] Remove em dashes from 405 posts (brand violation)
+- [x] Remove en dashes from 35 posts (brand violation)
+- [x] Remove emoji from 2 posts (brand violation)
+- [x] Expand short meta descriptions to 150-160 chars (364 posts)
+- [x] Add internal links to 431 posts (Wikipedia-style linking)
+- [x] Add external links to 431 posts (authority signals)
+- [ ] Add FAQ schema markup to BlogPost frontend
+- [ ] Add BreadcrumbList schema to BlogPost frontend
+- [ ] Update sitemap to include all blog posts from Supabase
+- [ ] Update api/_source.ts to query Supabase instead of TiDB
+- [ ] Rebuild Vercel bundle and push to GitHub

@@ -10,300 +10,238 @@ var AXIOS_TIMEOUT_MS = 3e4;
 var UNAUTHED_ERR_MSG = "Please login (10001)";
 var NOT_ADMIN_ERR_MSG = "You do not have required permission (10002)";
 
-// server/db.ts
-import { eq, desc, asc, and, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-
-// drizzle/schema.ts
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
-var users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
-  id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
-  name: text("name"),
-  email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull()
-});
-var discussionComments = mysqlTable("discussion_comments", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Page context — which page this comment belongs to (e.g. "balance", "matchups") */
-  pageContext: varchar("pageContext", { length: 64 }).notNull().default("balance"),
-  /** Optional section anchor within the page (e.g. "passives", "methodology") */
-  section: varchar("section", { length: 64 }),
-  /** Self-referencing parent ID for threaded replies. NULL = top-level comment. */
-  parentId: int("parentId"),
-  /** FK to users.id — NULL for guest comments */
-  userId: int("userId"),
-  /** Display name for the commenter (guest or authenticated) */
-  authorName: varchar("authorName", { length: 100 }).notNull(),
-  /** Client-generated guest identifier (UUID in localStorage) for guest rate-limiting */
-  guestId: varchar("guestId", { length: 64 }),
-  /** The comment body (plain text, max ~2000 chars) */
-  content: text("content").notNull(),
-  /** Upvote count for community sorting */
-  upvotes: int("upvotes").notNull().default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
-});
-var playerDecks = mysqlTable("player_decks", {
-  id: int("id").autoincrement().primaryKey(),
-  /** Supabase Auth user UUID — owner of this deck */
-  supabaseUserId: varchar("supabaseUserId", { length: 64 }).notNull(),
-  /** Faction this deck belongs to (e.g. "Wrath", "Sloth") */
-  faction: varchar("faction", { length: 32 }).notNull(),
-  /** Player-chosen deck name (e.g. "Burn Rush", "Control Wrath") */
-  name: varchar("name", { length: 100 }).notNull(),
-  /** JSON array of 30 card IDs from the faction's pool */
-  cardIds: text("cardIds").notNull(),
-  /** Whether this is the player's active/default deck for this faction */
-  isActive: int("isActive").notNull().default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
-});
-var blogPosts = mysqlTable("blog_posts", {
-  id: int("id").autoincrement().primaryKey(),
-  /** URL-friendly slug (e.g. "how-to-play-7-deadly-sins") */
-  slug: varchar("slug", { length: 255 }).notNull().unique(),
-  /** Post title */
-  title: varchar("title", { length: 300 }).notNull(),
-  /** SEO meta description */
-  metaDescription: varchar("metaDescription", { length: 320 }).notNull(),
-  /** Target keywords (comma-separated) */
-  keywords: text("keywords").notNull(),
-  /** Blog category slug (e.g. "game-guides", "comparisons") */
-  category: varchar("category", { length: 64 }).notNull(),
-  /** SEO priority: high, medium, low */
-  priority: mysqlEnum("priority", ["high", "medium", "low"]).default("medium").notNull(),
-  /** Full HTML content of the blog post */
-  content: text("content").notNull(),
-  /** Featured image URL (card art from the game) */
-  featuredImage: varchar("featuredImage", { length: 500 }),
-  /** Estimated reading time in minutes */
-  readingTime: int("readingTime").notNull().default(5),
-  /** Whether the post is published */
-  published: int("published").notNull().default(1),
-  publishedAt: timestamp("publishedAt").defaultNow().notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull()
-});
-
-// server/_core/env.ts
-var ENV = {
-  appId: process.env.VITE_APP_ID ?? "",
-  cookieSecret: process.env.JWT_SECRET ?? "",
-  databaseUrl: process.env.DATABASE_URL ?? "",
-  oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
-  ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
-  isProduction: process.env.NODE_ENV === "production",
-  forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
-  forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? ""
-};
-
-// server/db.ts
-var _db = null;
-async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
-    try {
-      _db = drizzle(process.env.DATABASE_URL);
-    } catch (error) {
-      console.warn("[Database] Failed to connect:", error);
-      _db = null;
-    }
+// server/db-supabase.ts
+import { createClient } from "@supabase/supabase-js";
+var _supabase = null;
+function getSupabase() {
+  if (_supabase) return _supabase;
+  const url = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    console.warn("[Supabase] Missing VITE_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
+    return null;
   }
-  return _db;
+  _supabase = createClient(url, key);
+  return _supabase;
 }
-async function upsertUser(user) {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
-  try {
-    const values = {
-      openId: user.openId
-    };
-    const updateSet = {};
-    const textFields = ["name", "email", "loginMethod"];
-    const assignNullable = (field) => {
-      const value = user[field];
-      if (value === void 0) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-    textFields.forEach(assignNullable);
-    if (user.lastSignedIn !== void 0) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== void 0) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = "admin";
-      updateSet.role = "admin";
-    }
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = /* @__PURE__ */ new Date();
-    }
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = /* @__PURE__ */ new Date();
-    }
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+function mapBlogPost(row) {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    metaDescription: row.meta_description,
+    keywords: row.keywords,
+    category: row.category,
+    priority: row.priority,
+    content: row.content,
+    featuredImage: row.featured_image,
+    readingTime: row.reading_time,
+    published: row.published,
+    publishedAt: new Date(row.published_at),
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at)
+  };
 }
-async function getUserByOpenId(openId) {
-  const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return void 0;
-  }
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-  return result.length > 0 ? result[0] : void 0;
+function mapComment(row) {
+  return {
+    id: row.id,
+    pageContext: row.page_context,
+    section: row.section,
+    parentId: row.parent_id,
+    userId: row.user_id,
+    authorName: row.author_name,
+    guestId: row.guest_id,
+    content: row.content,
+    upvotes: row.upvotes,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at)
+  };
 }
-async function getDiscussionComments(pageContext) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(discussionComments).where(eq(discussionComments.pageContext, pageContext)).orderBy(asc(discussionComments.createdAt));
-}
-async function createDiscussionComment(data) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(discussionComments).values({
-    ...data,
-    upvotes: 0
-  });
-  return { id: Number(result[0].insertId) };
-}
-async function deleteDiscussionComment(commentId) {
-  const db = await getDb();
-  if (!db) return false;
-  await db.delete(discussionComments).where(eq(discussionComments.id, commentId));
-  await db.delete(discussionComments).where(eq(discussionComments.parentId, commentId));
-  return true;
-}
-async function upvoteDiscussionComment(commentId) {
-  const db = await getDb();
-  if (!db) return false;
-  await db.update(discussionComments).set({ upvotes: sql`${discussionComments.upvotes} + 1` }).where(eq(discussionComments.id, commentId));
-  return true;
-}
-async function getDecksByUser(supabaseUserId) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(playerDecks).where(eq(playerDecks.supabaseUserId, supabaseUserId)).orderBy(desc(playerDecks.updatedAt));
-}
-async function getDeckById(deckId) {
-  const db = await getDb();
-  if (!db) return void 0;
-  const result = await db.select().from(playerDecks).where(eq(playerDecks.id, deckId)).limit(1);
-  return result.length > 0 ? result[0] : void 0;
-}
-async function createDeck(data) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const result = await db.insert(playerDecks).values(data);
-  return { id: Number(result[0].insertId) };
-}
-async function updateDeck(deckId, data) {
-  const db = await getDb();
-  if (!db) return false;
-  await db.update(playerDecks).set(data).where(eq(playerDecks.id, deckId));
-  return true;
-}
-async function deleteDeck(deckId) {
-  const db = await getDb();
-  if (!db) return false;
-  await db.delete(playerDecks).where(eq(playerDecks.id, deckId));
-  return true;
-}
-async function setActiveDeck(supabaseUserId, faction, deckId) {
-  const db = await getDb();
-  if (!db) return false;
-  await db.update(playerDecks).set({ isActive: 0 }).where(and(eq(playerDecks.supabaseUserId, supabaseUserId), eq(playerDecks.faction, faction)));
-  await db.update(playerDecks).set({ isActive: 1 }).where(eq(playerDecks.id, deckId));
-  return true;
+function mapDeck(row) {
+  return {
+    id: row.id,
+    supabaseUserId: row.supabase_user_id,
+    faction: row.faction,
+    name: row.name,
+    cardIds: row.card_ids,
+    isActive: row.is_active,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at)
+  };
 }
 async function getBlogPosts(opts) {
-  const db = await getDb();
-  if (!db) return { posts: [], total: 0 };
+  const sb = getSupabase();
+  if (!sb) return { posts: [], total: 0 };
   const page = opts.page ?? 1;
   const limit = opts.limit ?? 20;
   const offset = (page - 1) * limit;
-  const conditions = [eq(blogPosts.published, 1)];
+  let query = sb.from("blog_posts").select("*", { count: "exact" }).eq("published", 1).order("published_at", { ascending: false }).range(offset, offset + limit - 1);
   if (opts.category) {
-    conditions.push(eq(blogPosts.category, opts.category));
+    query = query.eq("category", opts.category);
   }
   if (opts.search) {
-    const term = `%${opts.search}%`;
-    conditions.push(
-      sql`(${blogPosts.title} LIKE ${term} OR ${blogPosts.metaDescription} LIKE ${term} OR ${blogPosts.keywords} LIKE ${term})`
+    query = query.or(
+      `title.ilike.%${opts.search}%,meta_description.ilike.%${opts.search}%,keywords.ilike.%${opts.search}%`
     );
   }
-  const where = conditions.length === 1 ? conditions[0] : and(...conditions);
-  const [posts, countResult] = await Promise.all([
-    db.select().from(blogPosts).where(where).orderBy(desc(blogPosts.publishedAt)).limit(limit).offset(offset),
-    db.select({ count: sql`count(*)` }).from(blogPosts).where(where)
-  ]);
-  return { posts, total: Number(countResult[0]?.count ?? 0) };
+  const { data, count, error } = await query;
+  if (error) {
+    console.error("[Supabase] getBlogPosts error:", error);
+    return { posts: [], total: 0 };
+  }
+  return {
+    posts: (data || []).map(mapBlogPost),
+    total: count ?? 0
+  };
 }
 async function getBlogPostBySlug(slug) {
-  const db = await getDb();
-  if (!db) return void 0;
-  const result = await db.select().from(blogPosts).where(and(eq(blogPosts.slug, slug), eq(blogPosts.published, 1))).limit(1);
-  return result.length > 0 ? result[0] : void 0;
+  const sb = getSupabase();
+  if (!sb) return void 0;
+  const { data, error } = await sb.from("blog_posts").select("*").eq("slug", slug).eq("published", 1).limit(1).single();
+  if (error || !data) return void 0;
+  return mapBlogPost(data);
 }
 async function getRelatedPosts(category, excludeSlug, limit = 5) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(blogPosts).where(and(
-    eq(blogPosts.category, category),
-    eq(blogPosts.published, 1),
-    sql`${blogPosts.slug} != ${excludeSlug}`
-  )).orderBy(sql`RAND()`).limit(limit);
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("blog_posts").select("*").eq("category", category).eq("published", 1).neq("slug", excludeSlug).limit(limit);
+  if (error || !data) return [];
+  return data.map(mapBlogPost);
 }
 async function getAllBlogSlugs() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt }).from(blogPosts).where(eq(blogPosts.published, 1)).orderBy(desc(blogPosts.publishedAt));
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("blog_posts").select("slug, updated_at").eq("published", 1).order("published_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((row) => ({
+    slug: row.slug,
+    updatedAt: new Date(row.updated_at)
+  }));
 }
 async function getRecentBlogPosts(limit = 50) {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select().from(blogPosts).where(eq(blogPosts.published, 1)).orderBy(desc(blogPosts.publishedAt)).limit(limit);
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("blog_posts").select("*").eq("published", 1).order("published_at", { ascending: false }).limit(limit);
+  if (error || !data) return [];
+  return data.map(mapBlogPost);
 }
 async function getBlogCategoryCounts() {
-  const db = await getDb();
-  if (!db) return [];
-  return db.select({
-    category: blogPosts.category,
-    count: sql`count(*)`
-  }).from(blogPosts).where(eq(blogPosts.published, 1)).groupBy(blogPosts.category).orderBy(sql`count(*) DESC`);
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("blog_posts").select("category").eq("published", 1);
+  if (error || !data) return [];
+  const counts = {};
+  for (const row of data) {
+    counts[row.category] = (counts[row.category] || 0) + 1;
+  }
+  return Object.entries(counts).map(([category, count]) => ({ category, count })).sort((a, b) => b.count - a.count);
+}
+async function getDiscussionComments(pageContext) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("discussion_comments").select("*").eq("page_context", pageContext).order("created_at", { ascending: true });
+  if (error || !data) return [];
+  return data.map(mapComment);
+}
+async function createDiscussionComment(input) {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Database not available");
+  const { data, error } = await sb.from("discussion_comments").insert({
+    page_context: input.pageContext,
+    section: input.section,
+    parent_id: input.parentId,
+    user_id: input.userId,
+    author_name: input.authorName,
+    guest_id: input.guestId,
+    content: input.content,
+    upvotes: 0
+  }).select("id").single();
+  if (error || !data) throw new Error("Failed to create comment: " + (error?.message || "unknown"));
+  return { id: data.id };
+}
+async function deleteDiscussionComment(commentId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  await sb.from("discussion_comments").delete().eq("parent_id", commentId);
+  await sb.from("discussion_comments").delete().eq("id", commentId);
+  return true;
+}
+async function upvoteDiscussionComment(commentId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { data: current } = await sb.from("discussion_comments").select("upvotes").eq("id", commentId).single();
+  if (!current) return false;
+  await sb.from("discussion_comments").update({ upvotes: (current.upvotes || 0) + 1 }).eq("id", commentId);
+  return true;
+}
+async function getDecksByUser(supabaseUserId) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("player_decks").select("*").eq("supabase_user_id", supabaseUserId).order("updated_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map(mapDeck);
+}
+async function getDeckById(deckId) {
+  const sb = getSupabase();
+  if (!sb) return void 0;
+  const { data, error } = await sb.from("player_decks").select("*").eq("id", deckId).limit(1).single();
+  if (error || !data) return void 0;
+  return mapDeck(data);
+}
+async function createDeck(input) {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Database not available");
+  const { data, error } = await sb.from("player_decks").insert({
+    supabase_user_id: input.supabaseUserId,
+    faction: input.faction,
+    name: input.name,
+    card_ids: input.cardIds,
+    is_active: input.isActive ?? 0
+  }).select("id").single();
+  if (error || !data) throw new Error("Failed to create deck: " + (error?.message || "unknown"));
+  return { id: data.id };
+}
+async function updateDeck(deckId, data) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const updateObj = {};
+  if (data.name !== void 0) updateObj.name = data.name;
+  if (data.cardIds !== void 0) updateObj.card_ids = data.cardIds;
+  if (data.isActive !== void 0) updateObj.is_active = data.isActive;
+  updateObj.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+  await sb.from("player_decks").update(updateObj).eq("id", deckId);
+  return true;
+}
+async function deleteDeck(deckId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  await sb.from("player_decks").delete().eq("id", deckId);
+  return true;
+}
+async function setActiveDeck(supabaseUserId, faction, deckId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  await sb.from("player_decks").update({ is_active: 0, updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("supabase_user_id", supabaseUserId).eq("faction", faction);
+  await sb.from("player_decks").update({ is_active: 1, updated_at: (/* @__PURE__ */ new Date()).toISOString() }).eq("id", deckId);
+  return true;
 }
 async function deleteAllUserData(supabaseUserId) {
-  const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  const deckResult = await db.delete(playerDecks).where(eq(playerDecks.supabaseUserId, supabaseUserId));
-  const decksDeleted = deckResult[0]?.affectedRows ?? 0;
-  const commentResult = await db.delete(discussionComments).where(eq(discussionComments.guestId, supabaseUserId));
-  const commentsDeleted = commentResult[0]?.affectedRows ?? 0;
-  return { decksDeleted, commentsDeleted };
+  const sb = getSupabase();
+  if (!sb) throw new Error("Database not available");
+  const { count: deckCount } = await sb.from("player_decks").select("*", { count: "exact", head: true }).eq("supabase_user_id", supabaseUserId);
+  await sb.from("player_decks").delete().eq("supabase_user_id", supabaseUserId);
+  const { count: commentCount } = await sb.from("discussion_comments").select("*", { count: "exact", head: true }).eq("guest_id", supabaseUserId);
+  await sb.from("discussion_comments").delete().eq("guest_id", supabaseUserId);
+  return {
+    decksDeleted: deckCount ?? 0,
+    commentsDeleted: commentCount ?? 0
+  };
+}
+async function upsertUser(_user) {
+  return;
+}
+async function getUserByOpenId(_openId) {
+  return void 0;
 }
 
 // server/_core/cookies.ts
@@ -337,6 +275,20 @@ var ForbiddenError = (msg) => new HttpError(403, msg);
 import axios from "axios";
 import { parse as parseCookieHeader } from "cookie";
 import { SignJWT, jwtVerify } from "jose";
+
+// server/_core/env.ts
+var ENV = {
+  appId: process.env.VITE_APP_ID ?? "",
+  cookieSecret: process.env.JWT_SECRET ?? "",
+  databaseUrl: process.env.DATABASE_URL ?? "",
+  oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
+  ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
+  isProduction: process.env.NODE_ENV === "production",
+  forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
+  forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? ""
+};
+
+// server/_core/sdk.ts
 var isNonEmptyString = (value) => typeof value === "string" && value.length > 0;
 var EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
 var GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
@@ -4761,7 +4713,7 @@ var CARDS_PER_DECK = 30;
 var ROUND_16_DOUBLING = 16;
 
 // server/supabaseServer.ts
-import { createClient } from "@supabase/supabase-js";
+import { createClient as createClient2 } from "@supabase/supabase-js";
 var _serverSupabase = null;
 function getServerSupabase() {
   if (_serverSupabase) return _serverSupabase;
@@ -4770,7 +4722,7 @@ function getServerSupabase() {
   if (!url || !serviceKey) {
     throw new Error("Missing server Supabase env vars (VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)");
   }
-  _serverSupabase = createClient(url, serviceKey, {
+  _serverSupabase = createClient2(url, serviceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
@@ -5932,7 +5884,7 @@ app.get("/rss.xml", async (_req, res) => {
     for (const post of posts) {
       const pubDate = post.publishedAt ? new Date(post.publishedAt).toUTCString() : now;
       const postUrl = `${baseUrl}/blog/${post.slug}`;
-      const desc2 = (post.metaDescription || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const desc = (post.metaDescription || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const title = (post.title || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       rss += `  <item>
 `;
@@ -5944,7 +5896,7 @@ app.get("/rss.xml", async (_req, res) => {
 `;
       rss += `    <pubDate>${pubDate}</pubDate>
 `;
-      rss += `    <description>${desc2}</description>
+      rss += `    <description>${desc}</description>
 `;
       rss += `    <category>${post.category}</category>
 `;

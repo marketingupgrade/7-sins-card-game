@@ -44,7 +44,7 @@ import {
   getRelatedPosts,
   getAllBlogSlugs,
   getBlogCategoryCounts,
-} from "./db";
+} from "./db-supabase";
 
 export const appRouter = router({
   system: systemRouter,

@@ -1,9 +1,12 @@
 /**
- * Vercel Serverless Function Source
- * 
+ * Vercel Serverless Function Source (Supabase Edition)
+ *
  * This file is the editable source. During build, esbuild bundles it into
  * api/index.mjs which Vercel uses as the serverless function entry point.
- * This avoids Vercel's inability to resolve parent directory imports at runtime.
+ *
+ * KEY CHANGE: Uses server/db-supabase.ts instead of server/db.ts
+ * to query Supabase Postgres directly via @supabase/supabase-js,
+ * eliminating the dependency on Manus TiDB / Drizzle ORM / mysql2.
  */
 import "dotenv/config";
 import express from "express";
@@ -12,7 +15,7 @@ import { registerOAuthRoutes } from "../server/_core/oauth";
 import { registerChatRoutes } from "../server/_core/chat";
 import { appRouter } from "../server/routers";
 import { createContext } from "../server/_core/context";
-import { getAllBlogSlugs, getRecentBlogPosts } from "../server/db";
+import { getAllBlogSlugs, getRecentBlogPosts } from "../server/db-supabase";
 
 const app = express();
 
@@ -133,7 +136,7 @@ app.get("/rss.xml", async (_req, res) => {
   }
 });
 
-// OAuth routes
+// OAuth routes (kept for backward compat, no-ops on Vercel with Supabase Auth)
 registerOAuthRoutes(app);
 
 // Chat routes
