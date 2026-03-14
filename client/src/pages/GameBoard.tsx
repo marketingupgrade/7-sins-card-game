@@ -447,9 +447,7 @@ export default function GameBoard() {
 
       // If resolution was triggered, start animation from returned data
       // (the DB is already resolved by now, so we can't rely on polling)
-      console.log('[GAMEBOARD DEBUG] lockInCards result:', { resolvedPlays: result.resolvedPlays?.length, resolutionPlayers: result.resolutionPlayers?.length });
       if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
-        console.log('[GAMEBOARD DEBUG] TRIGGERING RESOLUTION ANIMATION with', result.resolvedPlays.length, 'plays');
         setCachedLockedPlays(result.resolvedPlays);
         setCachedResolutionPlayers(result.resolutionPlayers);
         setIsShowingResolution(true);

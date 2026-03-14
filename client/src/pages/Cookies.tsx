@@ -218,6 +218,19 @@ export default function Cookies() {
             </div>
           </section>
 
+          {/* Contact */}
+          <section>
+            <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              VII. CONTACT
+            </h2>
+            <div className="text-sm text-white/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+              <p>
+                Questions about cookies or data storage? Reach out at{" "}
+                <a href="mailto:sinners@7sinscardgame.com" className="text-amber-400/60 hover:text-amber-400 underline">sinners@7sinscardgame.com</a>.
+              </p>
+            </div>
+          </section>
+
         </div>
 
         {/* Footer nav */}

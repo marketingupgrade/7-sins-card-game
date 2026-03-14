@@ -274,6 +274,11 @@ function CardPlayEntry({
   const sinColor = SIN_COLORS[casterSin] || "#ef4444";
   const [previewCard, setPreviewCard] = useState<CardDefinition | null>(null);
 
+  // Detect AOE/duo cards to show proper target label
+  const hasAoe = card?.effects.some(e => e.targetMode === "aoe");
+  const hasDuo = card?.effects.some(e => e.targetMode === "duo");
+  const isSelfOnly = card?.effects.every(e => e.targetMode === "self");
+
   // Parse effect descriptions
   const effects = useMemo(() => {
     if (!entry.action_data.effects) return [];
@@ -347,7 +352,38 @@ function CardPlayEntry({
             </span>
           </div>
 
-          {target && target.id !== caster?.id && (
+          {/* Target label: AOE → "ALL ENEMIES", duo → "2 ENEMIES", self-only → nothing, single → target name */}
+          {hasAoe ? (
+            <>
+              <span className="text-candle/30">on</span>
+              <span
+                className="font-semibold text-[10px] px-1.5 py-0.5 rounded"
+                style={{
+                  background: "oklch(0.75 0.12 70 / 0.12)",
+                  color: "oklch(0.85 0.12 70)",
+                  border: "1px solid oklch(0.75 0.12 70 / 0.25)",
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                ALL ENEMIES
+              </span>
+            </>
+          ) : hasDuo ? (
+            <>
+              <span className="text-candle/30">on</span>
+              <span
+                className="font-semibold text-[10px] px-1.5 py-0.5 rounded"
+                style={{
+                  background: "oklch(0.75 0.12 70 / 0.12)",
+                  color: "oklch(0.85 0.12 70)",
+                  border: "1px solid oklch(0.75 0.12 70 / 0.25)",
+                  fontFamily: "var(--font-heading)",
+                }}
+              >
+                2 ENEMIES
+              </span>
+            </>
+          ) : !isSelfOnly && target && target.id !== caster?.id ? (
             <>
               <span className="text-candle/30">on</span>
               <span
@@ -360,7 +396,7 @@ function CardPlayEntry({
                 {target.username}
               </span>
             </>
-          )}
+          ) : null}
         </div>
 
         {/* Effect Badges */}

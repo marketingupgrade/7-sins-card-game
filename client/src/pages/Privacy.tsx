@@ -276,7 +276,7 @@ export default function Privacy() {
                 This game is not directed at children under 13. We do not knowingly collect personal data from
                 children under 13. The dark gothic theme and strategic complexity are designed for older audiences.
                 If you believe a child under 13 has provided personal data through account creation, please contact
-                us and we will promptly delete it.
+                us at{" "}<a href="mailto:sinners@7sinscardgame.com" className="text-amber-400/60 hover:text-amber-400 underline">sinners@7sinscardgame.com</a>{" "}and we will promptly delete it.
               </p>
             </div>
           </section>
@@ -313,8 +313,9 @@ export default function Privacy() {
                 </li>
               </ul>
               <p>
-                To exercise these rights, contact us through the discussion section or via the contact methods
-                provided on the site. We will respond within 30 days.
+                To exercise these rights, contact us at{" "}
+                <a href="mailto:sinners@7sinscardgame.com" className="text-amber-400/60 hover:text-amber-400 underline">sinners@7sinscardgame.com</a>.
+                We will respond within 30 days.
               </p>
             </div>
           </section>
@@ -327,7 +328,9 @@ export default function Privacy() {
             <div className="text-sm text-white/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
               <p>
                 If you have questions about this privacy policy or want to exercise your data rights,
-                reach out through the discussion section on the Balance Analysis page. We read everything.
+                reach out at{" "}
+                <a href="mailto:sinners@7sinscardgame.com" className="text-amber-400/60 hover:text-amber-400 underline">sinners@7sinscardgame.com</a>.
+                We read everything.
               </p>
             </div>
           </section>

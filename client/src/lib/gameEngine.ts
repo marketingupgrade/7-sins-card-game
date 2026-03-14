@@ -345,13 +345,7 @@ export async function lockInCards(
   let resolvedPlays: LockedPlay[] | undefined;
   let resolutionPlayers: PlayerState[] | undefined;
 
-  console.log('[RESOLUTION DEBUG] allConfirmed:', allConfirmed, 'alivePlayers:', alivePlayers.length, 'allLocked:', allLocked.length);
-  alivePlayers.forEach((p: any) => {
-    console.log('[RESOLUTION DEBUG] player:', p.player_id?.slice(0,8), 'locked_cards:', JSON.stringify(p.locked_cards)?.slice(0,100));
-  });
-
   if (allConfirmed) {
-    console.log('[RESOLUTION DEBUG] ALL CONFIRMED - triggering resolution with', allLocked.length, 'plays');
     // Snapshot the locked plays + player states for the animation
     resolvedPlays = [...allLocked];
     resolutionPlayers = (allPlayers || []).map((gp: any) => ({

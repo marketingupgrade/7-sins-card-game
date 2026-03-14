@@ -52,7 +52,7 @@ async function startServer() {
     try {
       const { getAllBlogSlugs } = await import("../db");
       const slugs = await getAllBlogSlugs();
-      const baseUrl = "https://sinscard-o77rchv9.manus.space";
+      const baseUrl = "https://www.7sinscardgame.com";
       
       const staticPages = [
         { loc: "/", priority: "1.0", changefreq: "weekly" },

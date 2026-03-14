@@ -15,6 +15,7 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
+import { getClientSupabase } from "../../../shared/supabaseClient";
 import { ALL_CARDS } from "@shared/cardData";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import type { SinType, CardDefinition } from "@shared/gameTypes";
@@ -245,10 +246,15 @@ export default function Account() {
     setPurgeResult(null);
 
     try {
-      // 1. Delete server-side data (decks, comments)
+      // 1. Delete server-side data (decks, comments) via tRPC
       const result = await trpcMutate("user.purge", { supabaseUserId: user.id });
 
-      // 2. Clear all localStorage data
+      // 2. Delete Supabase player record and game history
+      const sb = getClientSupabase();
+      await sb.from("game_players").delete().eq("player_id", user.id);
+      await sb.from("players").delete().eq("id", user.id);
+
+      // 3. Clear all localStorage data
       localStorage.removeItem("7sins_decks");
       localStorage.removeItem("7sins_profile_stats");
       localStorage.removeItem("7sins_player_id");
@@ -258,14 +264,14 @@ export default function Account() {
       localStorage.removeItem("7sins_faction_unlocked");
       localStorage.removeItem("7sins_guest_id");
 
-      // 3. Sign out (this clears the Supabase session)
+      // 4. Sign out (this clears the Supabase session)
       await signOut();
 
       setPurgeResult(
         `Data purged successfully. ${(result as any).decksDeleted || 0} decks and ${(result as any).commentsDeleted || 0} comments deleted.`
       );
 
-      // 4. Redirect to home after a brief delay
+      // 5. Redirect to home after a brief delay
       setTimeout(() => navigate("/"), 3000);
     } catch (err: any) {
       setPurgeResult(`Purge failed: ${err.message}. Please try again or contact support.`);

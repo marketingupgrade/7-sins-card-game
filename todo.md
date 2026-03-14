@@ -1248,7 +1248,7 @@
 - [x] Update Terms & Conditions to accurately reflect the game (accounts, OAuth, Supabase, AI art)
 - [x] Update Privacy Policy with actual data handling practices (Manus OAuth, Supabase, analytics)
 - [x] Update Cookie Policy with real cookie/storage usage (session JWT, localStorage inventory)
-- [ ] Push to GitHub (Vercel)
+- [x] Push to GitHub (Vercel)
 
 ## Deck Builder UI Fixes
 - [x] Fix card effects visibility (increased font size, contrast, and padding)
@@ -1260,5 +1260,35 @@
 - [x] Update Terms & Conditions to accurately reflect the game (accounts, OAuth, Supabase, AI art)
 - [x] Update Privacy Policy with actual data handling practices (Manus OAuth, Supabase, analytics)
 - [x] Update Cookie Policy with real cookie/storage usage (session JWT, localStorage inventory)
-- [ ] Push to GitHub
+- [x] Push to GitHub
 - [x] Replace native <select> dropdowns with themed custom dropdowns (effect filter, sort)
+
+## Bug: Comments Section on Balance Analysis
+- [ ] Investigate why comments section doesn't work
+- [ ] Fix the issue
+- [ ] Push to GitHub
+- [x] Add sinners@7sinscardgame.com as contact email in Terms, Privacy, and Cookie pages
+
+## Account Deletion Flow
+- [ ] Add delete account tRPC procedure (purge user, decks, comments, game data)
+- [ ] Add delete account UI in account settings page
+- [ ] Confirmation dialog with gothic theming
+- [ ] Push to GitHub
+
+## Code Cleanup
+- [x] Remove seed-blogs.mjs, migrate-simultaneous.mjs, and scratch note files
+- [x] Fix sitemap baseUrl from manus.space to www.7sinscardgame.com
+- [x] Remove debug console.log statements from client code
+- [ ] Add documentation comments to key files
+- [ ] Clean up duplicate todo sections
+
+## Vercel Serverless Fix
+- [x] Create api/index.ts serverless entry point for Express
+- [x] Update vercel.json with functions config and API rewrites
+- [x] Fix comments section (API routes now routed to serverless function)
+
+## Bug: AOE Cards Not Hitting All Enemies
+- [x] Investigated AOE resolution logic — damage IS applied to all enemies correctly (3x DMG badges confirm)
+- [x] Fix was in BattleLog display: now shows "ALL ENEMIES" for AOE, "2 ENEMIES" for duo
+- [x] ResolutionReveal animation already showed AOE correctly
+- [ ] Push to GitHub

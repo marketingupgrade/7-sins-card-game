@@ -130,8 +130,9 @@ export default function Terms() {
                   <strong className="text-white/60">Limitation of Liability:</strong> If any generated image unintentionally resembles
                   existing copyrighted material, trademarks, or the likeness of any real person, this is purely coincidental and
                   not the result of deliberate reproduction. The creator assumes no liability for such resemblances. If you believe
-                  any artwork infringes on your intellectual property rights, please contact us and we will promptly review and
-                  remove the content in question.
+                  any artwork infringes on your intellectual property rights, please contact us at{" "}
+                  <a href="mailto:sinners@7sinscardgame.com" className="text-amber-400/60 hover:text-amber-400 underline">sinners@7sinscardgame.com</a>
+                  {" "}and we will promptly review and remove the content in question.
                 </p>
                 <p>
                   <strong className="text-white/60">No Warranty of Originality:</strong> Due to the nature of AI image generation,
