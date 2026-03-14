@@ -371,13 +371,15 @@ export default function SigilMenu() {
                   `,
                 }}
               >
-                {/* Header ornament */}
+                {/* Header with 7S logo */}
                 <div className="px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-3">
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
-                    <svg width="12" height="12" viewBox="0 0 12 12" className="text-amber-500/40">
-                      <path d="M6 0L7.5 4.5L12 6L7.5 7.5L6 12L4.5 7.5L0 6L4.5 4.5Z" fill="currentColor" />
-                    </svg>
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+                      alt="7S"
+                      className="w-8 h-8 opacity-70"
+                    />
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/30 to-transparent" />
                   </div>
                 </div>

@@ -594,11 +594,15 @@ export default function Home() {
               ))}
             </div>
 
-            {/* Divider */}
+            {/* Logo divider */}
             <div className="flex items-center justify-center gap-3 mb-8">
-              <div className="h-px w-16 bg-gradient-to-r from-transparent to-white/10" />
-              <div className="w-1.5 h-1.5 rotate-45 bg-white/10" />
-              <div className="h-px w-16 bg-gradient-to-l from-transparent to-white/10" />
+              <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-500/20" />
+              <img
+                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+                alt="7S"
+                className="w-10 h-10 opacity-40"
+              />
+              <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-500/20" />
             </div>
 
             {/* Game Stats */}

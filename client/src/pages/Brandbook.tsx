@@ -158,7 +158,7 @@ const TOC_SECTIONS = [
   { id: "brand-essence", num: "01", title: "Brand Essence" },
   { id: "positioning-pyramid", num: "02", title: "Positioning Pyramid" },
   { id: "competitive-positioning", num: "03", title: "Competitive Positioning" },
-  { id: "visual-identity", num: "04", title: "Visual Identity" },
+  { id: "visual-identity", num: "04", title: "Visual Identity & Logo" },
   { id: "faction-colors", num: "05", title: "Faction Colors" },
   { id: "typography", num: "06", title: "Typography" },
   { id: "golden-ratio", num: "07", title: "Golden Ratio" },
@@ -490,6 +490,11 @@ export default function Brandbook() {
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#d4a854]/20 to-transparent" />
 
         <div className="relative z-10">
+          <img
+            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+            alt="7S"
+            className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 opacity-80"
+          />
           <p className="font-[Cinzel] text-[#d4a854]/60 text-xs tracking-[0.5em] uppercase mb-6">
             AAA Premium Brandbook
           </p>
@@ -614,7 +619,73 @@ export default function Brandbook() {
         {/* ── 04. Visual Identity System ───────────────────────── */}
         <SectionHeader num="04" title="Visual Identity System" id="visual-identity" />
 
-        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Design Philosophy: The Gothic Cathedral</h3>
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Brand Logo: The 7S Sigil</h3>
+        <BodyText>
+          The 7S monogram is the game's primary brand mark. It combines the numeral 7 and the letter S into a unified
+          gothic sigil, framed within a cathedral arch. The intertwined letterforms evoke medieval illuminated manuscripts
+          and stained glass windows. The gold-on-black palette follows the Candlelight + Cathedral Stone foundation.
+        </BodyText>
+
+        <div className="my-8 flex flex-col items-center gap-6">
+          <div className="flex items-center gap-8">
+            {/* Dark background version */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-32 h-32 rounded-xl bg-[#0a0908] border border-[#332a22] flex items-center justify-center p-4">
+                <img
+                  src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+                  alt="7S Logo — Dark"
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <span className="text-[10px] tracking-[0.2em] uppercase text-white/40 font-[Cinzel]">On Dark</span>
+            </div>
+            {/* Favicon version */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-32 h-32 rounded-xl bg-[#0a0908] border border-[#332a22] flex items-center justify-center">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      alt="192px"
+                      className="w-10 h-10"
+                    />
+                  </div>
+                  <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      alt="32px"
+                      className="w-6 h-6"
+                    />
+                  </div>
+                  <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      alt="16px"
+                      className="w-4 h-4"
+                    />
+                  </div>
+                  <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
+                    <img
+                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      alt="48px"
+                      className="w-8 h-8"
+                    />
+                  </div>
+                </div>
+              </div>
+              <span className="text-[10px] tracking-[0.2em] uppercase text-white/40 font-[Cinzel]">Favicon Sizes</span>
+            </div>
+          </div>
+          <div className="p-4 rounded-lg border border-[#d4a854]/20 bg-[#d4a854]/5 max-w-lg">
+            <p className="font-[Cinzel] text-[#d4a854] text-sm mb-2">Usage Guidelines</p>
+            <p className="font-['Cormorant_Garamond'] text-[#c8c0b0] text-sm leading-relaxed">
+              Always use the logo on dark backgrounds (#0a0908 to #1a1520). Minimum clear space: 25% of logo width on all sides.
+              Never place on light backgrounds, rotate, stretch, or add effects. The logo should breathe.
+            </p>
+          </div>
+        </div>
+
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mt-10 mb-4">Design Philosophy: The Gothic Cathedral</h3>
         <BodyText>
           The visual identity of <em>7 Deadly Sins</em> is built on the metaphor of a Gothic cathedral.
           This is not arbitrary. The Gothic cathedral is the single most powerful architectural expression of the

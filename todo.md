@@ -1292,3 +1292,17 @@
 - [x] Fix was in BattleLog display: now shows "ALL ENEMIES" for AOE, "2 ENEMIES" for duo
 - [x] ResolutionReveal animation already showed AOE correctly
 - [ ] Push to GitHub
+
+## Logo Design & Implementation
+- [x] Search for gothic gaming-themed 7S assets (none suitable)
+- [x] Generated 3 logo options, V3 (gothic arch monogram) selected
+- [x] Created favicon (ICO + PNG at 180, 192, 512px) and uploaded to CDN
+- [x] Added favicon, apple-touch-icon to index.html
+- [x] Added Open Graph and Twitter Card meta tags with logo
+- [x] Added logo to SigilMenu panel header
+- [x] Added logo to Login and ResetPassword pages
+- [x] Added logo to Home page footer divider
+- [x] Added logo showcase + usage guidelines to Brandbook Visual Identity section
+- [x] Updated Brandbook TOC to "Visual Identity & Logo"
+- [x] Uploaded logo to brandbook
+- [ ] Push to GitHub
