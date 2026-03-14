@@ -1,7 +1,10 @@
 /**
  * Privacy Policy Page
  * 
- * Honest, no-BS privacy policy. We don't collect anything.
+ * Accurate privacy policy reflecting:
+ * - Manus OAuth login, Supabase DB, user accounts
+ * - Minimal analytics (Umami), session cookies
+ * - No third-party tracking, no ad networks
  * Dark gothic branding, mobile responsive.
  */
 
@@ -50,9 +53,10 @@ export default function Privacy() {
                 TL;DR
               </h2>
               <p className="text-sm text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                We don't collect your data. We don't track you. We don't use analytics. We don't set tracking cookies.
-                We don't sell anything because there's nothing to sell. This is the shortest privacy policy you'll ever read
-                that actually means what it says.
+                If you play as a guest, we store almost nothing — just a temporary player ID in your browser.
+                If you sign in with Manus, we store your user ID, name, and email to manage your account and saved decks.
+                We use privacy-friendly analytics (no personal tracking). We don't sell data. We don't use ad networks.
+                We don't use Google Analytics or Facebook Pixel.
               </p>
             </div>
           </section>
@@ -64,9 +68,61 @@ export default function Privacy() {
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                <strong className="text-white/60">Nothing.</strong> Seriously. No email addresses. No names. No IP logging.
-                No device fingerprinting. No behavioral tracking. No analytics scripts. No pixels. No beacons.
-                No third-party trackers of any kind.
+                <strong className="text-white/60">Guest players (no account):</strong> We do not collect personal data from
+                guest players. Your browser stores a temporary player ID and preferences (username, sound settings) in
+                localStorage. This data never leaves your device.
+              </p>
+              <p>
+                <strong className="text-white/60">Signed-in users (Manus OAuth):</strong> When you sign in, we receive and
+                store the following from your Manus account:
+              </p>
+              <ul className="list-none space-y-2 ml-2">
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Manus User ID (open_id):</strong> A unique identifier from Manus OAuth</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Display name:</strong> Your Manus account display name</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Email address:</strong> Used for account identification only</span>
+                </li>
+              </ul>
+              <p>
+                This data is stored in our Supabase (PostgreSQL) database and is used solely to manage your account,
+                associate your saved decks, and display your name in-game.
+              </p>
+            </div>
+          </section>
+
+          {/* Game Data */}
+          <section>
+            <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              II. GAME DATA
+            </h2>
+            <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
+              <p>
+                When you play games (signed in), the following is stored server-side:
+              </p>
+              <ul className="list-none space-y-2 ml-2">
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Saved decks:</strong> Your custom deck configurations (card selections, deck names, faction choices)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Game logs:</strong> Match actions (card plays, passes, consumes) for game state management during active matches</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Game results:</strong> Win/loss records associated with your account</span>
+                </li>
+              </ul>
+              <p>
+                Guest game data is stored temporarily in Supabase during the active match and is not permanently
+                associated with any identity.
               </p>
             </div>
           </section>
@@ -74,30 +130,71 @@ export default function Privacy() {
           {/* Local Storage */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              II. LOCAL BROWSER STORAGE
+              III. LOCAL BROWSER STORAGE
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                The game stores a small amount of data in your browser's local storage to make the game work.
-                This includes:
+                The game stores data in your browser's localStorage for functionality:
               </p>
               <ul className="list-none space-y-2 ml-2">
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Player ID:</strong> A randomly generated identifier so the game knows which seat is yours during a match. This is generated locally in your browser and never sent to any server for tracking purposes.</span>
+                  <span><strong className="text-white/60">Player ID:</strong> A randomly generated identifier for game sessions</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Username:</strong> The display name you choose for in-game sessions. Stored locally so you don't have to re-enter it every time.</span>
+                  <span><strong className="text-white/60">Username:</strong> Your chosen display name</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Sound/Music preferences:</strong> Whether you've muted the music or sound effects.</span>
+                  <span><strong className="text-white/60">Sound/music preferences:</strong> Mute states for audio</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Guest deck data:</strong> If not signed in, one saved deck is stored locally</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Tutorial progress:</strong> Which tutorial steps you've completed</span>
                 </li>
               </ul>
               <p>
-                All of this stays on your device. You can clear it anytime by clearing your browser data.
-                We never access, transmit, or store this information on our servers.
+                All localStorage data stays on your device. You can clear it anytime via your browser settings.
+              </p>
+            </div>
+          </section>
+
+          {/* Analytics */}
+          <section>
+            <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              IV. ANALYTICS
+            </h2>
+            <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
+              <p>
+                We use <strong className="text-white/60">privacy-friendly, cookie-free analytics</strong> to understand
+                basic usage patterns (page views, visitor counts). This analytics service:
+              </p>
+              <ul className="list-none space-y-2 ml-2">
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span>Does <strong className="text-white/60">not</strong> use cookies or set any tracking identifiers</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span>Does <strong className="text-white/60">not</strong> collect personal data or IP addresses</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span>Does <strong className="text-white/60">not</strong> track users across websites</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span>Is compliant with GDPR, CCPA, and PECR without requiring consent</span>
+                </li>
+              </ul>
+              <p>
+                We do <strong className="text-white/60">not</strong> use Google Analytics, Facebook Pixel, Hotjar, Mixpanel,
+                or any other invasive analytics or tracking service.
               </p>
             </div>
           </section>
@@ -105,17 +202,16 @@ export default function Privacy() {
           {/* Discussion Comments */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              III. DISCUSSION COMMENTS
+              V. DISCUSSION COMMENTS
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                The Balance Analysis page has a discussion section where you can post comments. When you post a comment,
-                the following is stored on our server:
+                The Balance Analysis page has a discussion section. When you post a comment, the following is stored:
               </p>
               <ul className="list-none space-y-2 ml-2">
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span>The display name you chose (which can be anything — we don't verify it)</span>
+                  <span>Your display name (from your account or chosen as guest)</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
@@ -127,7 +223,6 @@ export default function Privacy() {
                 </li>
               </ul>
               <p>
-                No email, no IP address, no account information is stored alongside comments.
                 Comments are public and visible to all visitors.
               </p>
             </div>
@@ -136,22 +231,37 @@ export default function Privacy() {
           {/* Third Parties */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              IV. THIRD PARTIES
+              VI. THIRD-PARTY SERVICES
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                We do not share data with third parties because we do not collect data from you.
-                We do not use Google Analytics, Facebook Pixel, Hotjar, Mixpanel, or any other
-                analytics or tracking service. Not now. Not in the future.
+                The game uses the following third-party services:
               </p>
+              <ul className="list-none space-y-2 ml-2">
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Manus OAuth:</strong> For user authentication. Governed by Manus's privacy policy.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Supabase:</strong> For database hosting and real-time multiplayer. Data is stored in Supabase's infrastructure.</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Vercel:</strong> For application hosting. Standard server logs may be processed per{" "}
+                    <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">
+                      Vercel's Privacy Policy
+                    </a>.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Google Fonts:</strong> For typography (Cinzel, EB Garamond). Google may log font requests per their privacy policy.</span>
+                </li>
+              </ul>
               <p>
-                The game is hosted on <strong className="text-white/60">Vercel</strong>, which may process standard
-                server logs (IP addresses in access logs) as part of their hosting infrastructure. This is standard
-                web hosting behavior and is governed by{" "}
-                <a href="https://vercel.com/legal/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">
-                  Vercel's Privacy Policy
-                </a>.
-                We do not access or use these logs.
+                We do not share your data with advertising networks, data brokers, or any other third parties
+                beyond those listed above.
               </p>
             </div>
           </section>
@@ -159,13 +269,14 @@ export default function Privacy() {
           {/* Children */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              V. CHILDREN'S PRIVACY
+              VII. CHILDREN'S PRIVACY
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                Since we don't collect any personal data from anyone, we also don't collect data from children.
-                The game is free to play for all ages, though the dark gothic theme and card game complexity
-                may be more suitable for older players.
+                This game is not directed at children under 13. We do not knowingly collect personal data from
+                children under 13. The dark gothic theme and strategic complexity are designed for older audiences.
+                If you believe a child under 13 has provided personal data through account creation, please contact
+                us and we will promptly delete it.
               </p>
             </div>
           </section>
@@ -173,7 +284,7 @@ export default function Privacy() {
           {/* Your Rights */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              VI. YOUR RIGHTS
+              VIII. YOUR RIGHTS
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
@@ -185,12 +296,25 @@ export default function Privacy() {
                 <a href="https://oag.ca.gov/privacy/ccpa" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">
                   California Consumer Privacy Act (CCPA)
                 </a>,
-                you have the right to access, correct, delete, and port your personal data.
-                Since we don't collect any personal data, there's nothing to access, correct, delete, or port.
+                you have the right to:
               </p>
+              <ul className="list-none space-y-2 ml-2">
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Access</strong> your personal data (account info, saved decks, game history)</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Delete</strong> your account and all associated data</span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-white/20 shrink-0">&mdash;</span>
+                  <span><strong className="text-white/60">Export</strong> your data in a portable format</span>
+                </li>
+              </ul>
               <p>
-                If you've posted a discussion comment and want it removed, you can delete it yourself using the
-                delete button on your comment, or contact us and we'll handle it.
+                To exercise these rights, contact us through the discussion section or via the contact methods
+                provided on the site. We will respond within 30 days.
               </p>
             </div>
           </section>
@@ -198,13 +322,12 @@ export default function Privacy() {
           {/* Contact */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              VII. CONTACT
+              IX. CONTACT
             </h2>
             <div className="text-sm text-white/40 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                If you have questions about this privacy policy (though we're not sure what you'd ask — we literally
-                collect nothing), feel free to reach out through the discussion section on the Balance Analysis page.
-                We read everything.
+                If you have questions about this privacy policy or want to exercise your data rights,
+                reach out through the discussion section on the Balance Analysis page. We read everything.
               </p>
             </div>
           </section>

@@ -10,7 +10,7 @@
  * - Dark gothic cathedral branding
  */
 
-import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, memo, type ReactNode } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_CARDS } from "@shared/cardData";
@@ -118,6 +118,82 @@ const targetDisplayNames: Record<string, string> = {
   duo: "2 Targets",
   single: "Single Target",
 };
+
+// ─── Themed Dropdown ───────────────────────────────────────
+function ThemedDropdown({
+  value,
+  options,
+  onChange,
+  className = "",
+}: {
+  value: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selectedLabel = options.find((o) => o.value === value)?.label || value;
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    if (open) document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  return (
+    <div ref={ref} className={`relative shrink-0 ${className}`}>
+      <button
+        onClick={() => setOpen(!open)}
+        className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all border ${
+          open
+            ? "bg-amber-500/15 text-amber-200/80 border-amber-500/20"
+            : "bg-white/5 text-white/50 border-white/10 hover:bg-white/10 hover:text-white/70"
+        }`}
+      >
+        <span className="truncate max-w-[80px] sm:max-w-[120px]">{selectedLabel}</span>
+        <svg
+          width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+          className={`transition-transform ${open ? "rotate-180" : ""}`}
+        >
+          <polyline points="2 4 6 8 10 4" />
+        </svg>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -4, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -4, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full left-0 mt-1 z-50 min-w-[160px] rounded-lg border border-amber-500/15 bg-[#0d0d0d] shadow-xl shadow-black/60 overflow-hidden"
+          >
+            {options.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-xs font-medium transition-all flex items-center justify-between gap-3 ${
+                  opt.value === value
+                    ? "bg-amber-500/10 text-amber-200/90"
+                    : "text-white/50 hover:bg-white/5 hover:text-white/70"
+                }`}
+              >
+                <span>{opt.label}</span>
+                {opt.value === value && (
+                  <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="2 6 5 9 10 3" />
+                  </svg>
+                )}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // ─── Types ──────────────────────────────────────────────────
 interface SavedDeck {
@@ -378,7 +454,7 @@ const DeckCard = memo(function DeckCard({
 
         {/* Cost badge */}
         <div
-          className="absolute top-1 left-1 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-black shadow-md"
+          className="absolute top-1.5 left-1.5 w-7 h-7 rounded-full flex items-center justify-center text-sm font-black text-black shadow-lg"
           style={{ background: sinColor }}
         >
           {card.cost}
@@ -386,8 +462,8 @@ const DeckCard = memo(function DeckCard({
 
         {/* Tier badge */}
         <div
-          className="absolute top-1 right-1 px-1 py-0.5 rounded text-[7px] font-semibold uppercase tracking-wider"
-          style={{ background: `${tierColor}30`, color: tierColor }}
+          className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider"
+          style={{ background: `${tierColor}40`, color: tierColor, border: `1px solid ${tierColor}30` }}
         >
           {card.tier}
         </div>
@@ -412,20 +488,20 @@ const DeckCard = memo(function DeckCard({
       {/* Info — click to view detail */}
       <button
         onClick={onViewDetail}
-        className="p-1.5 flex flex-col gap-0.5 text-left w-full hover:bg-white/5 transition-colors"
+        className="p-2 flex flex-col gap-1 text-left w-full hover:bg-white/5 transition-colors"
         title="Click for card details"
       >
-        <p className="text-[11px] font-semibold truncate leading-tight" style={{ color: isInDeck ? sinColor : `${sinColor}cc` }}>
+        <p className="text-xs font-bold truncate leading-tight" style={{ color: isInDeck ? sinColor : `${sinColor}ee` }}>
           {card.name}
         </p>
-        <div className="flex items-center gap-0.5 flex-wrap">
+        <div className="flex items-center gap-1 flex-wrap">
           {card.effects.slice(0, 2).map((eff, i) => (
-            <span key={i} className="text-[8px] px-1 py-0.5 rounded bg-white/5 text-white/50 leading-none">
+            <span key={i} className="text-[9px] px-1.5 py-0.5 rounded bg-white/8 text-white/70 leading-none font-medium">
               {EFFECT_LABELS[eff.type] || eff.type}
             </span>
           ))}
           {card.effects.length > 2 && (
-            <span className="text-[8px] text-white/25">+{card.effects.length - 2}</span>
+            <span className="text-[9px] text-white/40 font-medium">+{card.effects.length - 2}</span>
           )}
         </div>
       </button>
@@ -1002,30 +1078,18 @@ export default function DeckBuilder() {
             </div>
 
             {/* Effect filter */}
-            <select
+            <ThemedDropdown
               value={effectFilter}
-              onChange={(e) => setEffectFilter(e.target.value)}
-              className="shrink-0 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/50 focus:border-amber-500/20 focus:outline-none cursor-pointer"
-            >
-              {EFFECT_FILTER_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-black text-white">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              options={EFFECT_FILTER_OPTIONS}
+              onChange={setEffectFilter}
+            />
 
             {/* Sort */}
-            <select
+            <ThemedDropdown
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="shrink-0 px-2.5 py-1.5 bg-white/5 border border-white/10 rounded-lg text-xs text-white/50 focus:border-amber-500/20 focus:outline-none cursor-pointer"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value} className="bg-black text-white">
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              options={SORT_OPTIONS}
+              onChange={setSortBy}
+            />
 
             {/* Spacer */}
             <div className="flex-1" />
@@ -1094,7 +1158,7 @@ export default function DeckBuilder() {
                 <p className="text-white/20 text-base">No cards match your filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-7 xl:grid-cols-8 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
                 <AnimatePresence mode="popLayout">
                   {filteredCards.map((card) => (
                     <DeckCard

@@ -1,7 +1,9 @@
 /**
  * Terms & Conditions Page
  * 
- * No-nonsense, honest terms with AI artwork waiver.
+ * Accurate terms reflecting the game's current features:
+ * - Manus OAuth login, Supabase DB, saved decks, user accounts
+ * - AI artwork, sound assets, analytics
  * Dark gothic branding, mobile responsive.
  */
 
@@ -50,8 +52,9 @@ export default function Terms() {
                 TL;DR
               </h2>
               <p className="text-sm text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                This game is free. Forever. No login required. No tracking. No data collection. No hidden nonsense.
-                Play the game, have fun, and may the best sinner win. That's it. That's the terms.
+                This game is free to play. You can sign in with a Manus account to save decks and track your games,
+                or play as a guest with limited features. We use minimal analytics to improve the game. Card artwork
+                is AI-generated. Don't be a jerk in the comments. That's the gist.
               </p>
             </div>
           </section>
@@ -63,30 +66,37 @@ export default function Terms() {
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                7 Deadly Sins Card Game is a free, browser-based multiplayer card game. No account creation is required.
-                No payment is required. No subscription will ever be required. This game was built for the love of gaming,
-                and it will stay that way.
+                7 Deadly Sins Card Game is a free, browser-based multiplayer card game featuring seven sin factions,
+                each with unique cards, passives, and strategies. The game includes real-time multiplayer via Supabase,
+                bot opponents, a deck builder, balance analysis tools, lore articles, and a tutorial system.
               </p>
               <p>
-                You can play with friends or against bots. You can explore the card collection, read the balance analysis,
-                study the matchup matrix, or just admire the art. All of it is free. All of it will remain free.
+                No payment is required to play. No subscription will ever be required. All game content — including
+                all 378 cards across 7 factions, all game modes, and all features — is freely accessible.
               </p>
             </div>
           </section>
 
-          {/* No Login, No Tracking */}
+          {/* Accounts & Authentication */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              II. NO LOGIN. NO TRACKING. EVER.
+              II. ACCOUNTS & AUTHENTICATION
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                We do not require you to create an account. We do not track your behavior. We do not use analytics.
-                We do not set cookies for tracking purposes. We do not sell data because we do not collect data.
+                You may sign in using <strong className="text-white/60">Manus OAuth</strong> to unlock additional features
+                such as saving multiple decks, persistent game history, and account management. Authentication is handled
+                securely through Manus's OAuth infrastructure — we never see or store your password.
               </p>
               <p>
-                Your browser may store a temporary player ID locally so the game knows which seat is yours during a match.
-                This never leaves your device and is not sent to any third party.
+                <strong className="text-white/60">Guest access</strong> is available with limited features: you can play
+                games, use the deck builder (limited to 1 saved deck via localStorage), and browse all content without
+                creating an account.
+              </p>
+              <p>
+                When you sign in, we store your Manus user ID, display name, and email address in our database to
+                associate your saved decks and game data with your account. You can request deletion of your account
+                data at any time.
               </p>
             </div>
           </section>
@@ -161,17 +171,36 @@ export default function Terms() {
                 We reserve the right to remove comments that violate basic human decency.
               </p>
               <p>
-                Usernames chosen for in-game sessions are temporary and stored only in your browser.
+                In-game usernames are stored with your account (if signed in) or in localStorage (if guest).
                 Pick whatever name you want — just keep it civil.
               </p>
             </div>
           </section>
 
-          {/* Buy Me a Coffee */}
+          {/* Data Storage */}
+          <section>
+            <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              VI. DATA STORAGE & HOSTING
+            </h2>
+            <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
+              <p>
+                Game data (user accounts, saved decks, game logs) is stored in a{" "}
+                <strong className="text-white/60">Supabase</strong> (PostgreSQL) database. Real-time multiplayer
+                communication uses Supabase Realtime channels. The application is hosted on{" "}
+                <strong className="text-white/60">Vercel</strong>.
+              </p>
+              <p>
+                Static assets (card artwork, icons) are served via CDN. No user-uploaded content is stored —
+                the game does not support file uploads.
+              </p>
+            </div>
+          </section>
+
+          {/* Donations */}
           <section>
             <div className="rounded-xl p-6 border border-greed-glow/15 bg-greed-glow/[0.03]">
               <h2 className="text-lg font-bold text-greed-glow/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-                VI. DONATIONS
+                VII. DONATIONS
               </h2>
               <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
                 <p>
@@ -181,18 +210,6 @@ export default function Terms() {
                   This game is and will always be completely free. You owe nothing. But if you're feeling generous
                   and want to buy me a coffee — hey, whatever floats your boat. Happy gaming!
                 </p>
-                <a
-                  href="https://buymeacoffee.com/placeholder"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-2 px-5 py-2.5 rounded-lg bg-greed-glow/10 border border-greed-glow/20 text-greed-glow/80 hover:bg-greed-glow/15 hover:text-greed-glow transition-all text-xs tracking-wider uppercase"
-                  style={{ fontFamily: "var(--font-heading)" }}
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
-                    <path d="M20.216 6.415l-.132-.666c-.119-.598-.388-1.163-1.001-1.379-.197-.069-.42-.098-.57-.241-.152-.143-.196-.366-.231-.572-.065-.378-.125-.756-.192-1.133-.057-.325-.102-.69-.25-.987-.195-.4-.597-.634-.996-.788a5.723 5.723 0 00-.626-.194c-1-.263-2.05-.36-3.077-.416a25.834 25.834 0 00-3.7.062c-.915.083-1.88.184-2.75.5-.318.116-.646.256-.888.501-.297.302-.393.77-.177 1.146.154.267.415.456.692.58.36.162.737.284 1.123.366 1.075.238 2.189.331 3.287.37 1.218.05 2.437.01 3.65-.118.299-.033.598-.073.896-.119.352-.054.578-.513.474-.834-.124-.383-.457-.531-.834-.473-.466.074-.96.108-1.382.146-1.177.08-2.358.082-3.536.006a22.228 22.228 0 01-1.157-.107c-.086-.01-.18-.025-.258-.036-.243-.036-.484-.08-.724-.13-.111-.027-.111-.185 0-.212h.005c.277-.06.557-.108.838-.147h.002c.131-.009.263-.032.394-.048a25.076 25.076 0 013.426-.12c.674.019 1.347.062 2.014.13l.04.005c.11.01.218.024.327.039.364.047.736.097 1.092.16.116.021.236.042.345.082.188.064.377.186.5.374.085.127.124.283.141.452.034.35.058.701.084 1.052.014.19.032.378.053.565.024.222-.06.427-.222.596-.339.351-.818.472-1.289.516-.652.06-1.31.066-1.964.043a18.3 18.3 0 01-1.721-.17c-.1-.014-.199-.03-.298-.048-.122-.022-.245-.049-.365-.078a.68.68 0 01-.519-.55c-.034-.196.06-.39.222-.52.293-.236.636-.39.987-.493.34-.1.693-.17 1.047-.214.366-.046.735-.07 1.104-.074.365-.004.73.01 1.094.04.36.03.718.077 1.073.14.354.064.702.148 1.04.26.34.11.668.254.97.44.15.09.29.2.41.33.12.13.22.28.29.45.07.17.11.35.12.54v.01c.01.19-.02.38-.08.56-.06.18-.15.35-.27.5-.12.15-.27.28-.44.38-.17.1-.35.18-.55.23-.19.05-.4.07-.6.07-.2 0-.4-.02-.59-.07-.19-.05-.37-.13-.54-.23-.17-.1-.32-.23-.44-.38-.12-.15-.21-.32-.27-.5-.06-.18-.09-.37-.08-.56v-.01c.01-.19.05-.37.12-.54.07-.17.17-.32.29-.45.12-.13.26-.24.41-.33z" />
-                  </svg>
-                  Buy Me a Coffee
-                </a>
               </div>
             </div>
           </section>
@@ -200,7 +217,7 @@ export default function Terms() {
           {/* Disclaimer */}
           <section>
             <h2 className="text-lg font-bold text-white/80 tracking-wider mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              VII. DISCLAIMER
+              VIII. DISCLAIMER
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>

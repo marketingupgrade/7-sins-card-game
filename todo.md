@@ -1228,7 +1228,7 @@
 - [x] Add narrator quip for consume action
 - [x] Server-side consume validation with thematic error messages
 - [x] Reset consumed_this_round at round advance
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Patch Notes Update
 - [x] Update changelog/patch notes with consume mechanic, pass hint, and brandbook
@@ -1237,3 +1237,28 @@
 - [ ] Generate first 50 SEO-critical blog posts
 - [ ] Generate remaining posts to reach 666 total
 - [ ] Insert all posts into Manus DB
+
+## Deck Builder UI Fixes
+- [x] Fix card effects visibility (increased font size, contrast, and padding)
+- [x] Fix tally counter / badge sizes (larger cost and tier badges)
+- [x] Reduced grid columns for better card readability
+- [x] Verify deck builder works well on mobile and desktop
+
+## Legal Pages Update
+- [x] Update Terms & Conditions to accurately reflect the game (accounts, OAuth, Supabase, AI art)
+- [x] Update Privacy Policy with actual data handling practices (Manus OAuth, Supabase, analytics)
+- [x] Update Cookie Policy with real cookie/storage usage (session JWT, localStorage inventory)
+- [ ] Push to GitHub (Vercel)
+
+## Deck Builder UI Fixes
+- [x] Fix card effects visibility (increased font size, contrast, and padding)
+- [x] Fix tally counter / badge sizes (larger cost and tier badges)
+- [x] Reduced grid columns for better card readability
+- [x] Verify deck builder works well on mobile and desktop
+
+## Legal Pages Update
+- [x] Update Terms & Conditions to accurately reflect the game (accounts, OAuth, Supabase, AI art)
+- [x] Update Privacy Policy with actual data handling practices (Manus OAuth, Supabase, analytics)
+- [x] Update Cookie Policy with real cookie/storage usage (session JWT, localStorage inventory)
+- [ ] Push to GitHub
+- [x] Replace native <select> dropdowns with themed custom dropdowns (effect filter, sort)
