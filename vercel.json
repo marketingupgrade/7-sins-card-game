@@ -1,27 +1,26 @@
 {
   "version": 2,
-  "buildCommand": "vite build",
+  "buildCommand": "pnpm run build",
   "outputDirectory": "dist/public",
   "installCommand": "pnpm install",
   "framework": null,
   "functions": {
-    "api/index.ts": {
-      "maxDuration": 30,
-      "includeFiles": "../server/**,../shared/**,../drizzle/**,../storage/**"
+    "dist/api/index.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api"
+      "destination": "/dist/api"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/api"
+      "destination": "/dist/api"
     },
     {
       "source": "/rss.xml",
-      "destination": "/api"
+      "destination": "/dist/api"
     },
     {
       "source": "/(.*)",
