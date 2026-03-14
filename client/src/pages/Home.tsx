@@ -58,49 +58,49 @@ const SIN_HEROES: SinHeroData[] = [
     tagline: "Burn bright. Burn fast. Burn everything.",
     desc: "Vengeance: Strike me and feel the wound twice.",
     color: "wrath",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-wrath-opt_37c4a2c3.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-wrath-opt_37c4a2c3.webp",
   },
   {
     key: "sloth", name: "SLOTH", latin: "ACEDIA", subtitle: "The Enduring",
     tagline: "Why rush? Everything dies eventually.",
     desc: "Endurance: Patience is armor. Stillness is strength.",
     color: "sloth",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-sloth-opt_ace8da83.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-sloth-opt_ace8da83.webp",
   },
   {
     key: "greed", name: "GREED", latin: "AVARITIA", subtitle: "The Collector",
     tagline: "Everything has a price. Yours is higher.",
     desc: "Tax: Every wound you deal fills my coffers.",
     color: "greed",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-greed-opt_1340cd4c.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-greed-opt_1340cd4c.webp",
   },
   {
     key: "envy", name: "ENVY", latin: "INVIDIA", subtitle: "The Mimic",
     tagline: "If I can't have it, neither can you.",
     desc: "Jealousy: Your suffering looks so good on you. Let me make it worse.",
     color: "envy",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-envy-opt_37a0b39f.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-envy-opt_37a0b39f.webp",
   },
   {
     key: "pride", name: "PRIDE", latin: "SUPERBIA", subtitle: "The Exalted",
     tagline: "Kneel. Or be made to.",
     desc: "Hubris: Assert dominance. Punish everyone beneath you.",
     color: "pride",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-pride-opt_7b43ac54.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-pride-opt_7b43ac54.webp",
   },
   {
     key: "lust", name: "LUST", latin: "LUXURIA", subtitle: "The Temptress",
     tagline: "Come closer. It only hurts at first.",
     desc: "Temptation: Your pain is my pleasure. Literally.",
     color: "lust",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-lust-opt_cdcc85ed.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-lust-opt_cdcc85ed.webp",
   },
   {
     key: "gluttony", name: "GLUTTONY", latin: "GULA", subtitle: "The Devourer",
     tagline: "More. Always more. Never enough.",
     desc: "Devourer: Consume their arsenal. Grow stronger with every bite.",
     color: "gluttony",
-    heroImg: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/hero-gluttony-opt_d349da8c.webp",
+    heroImg: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/hero-gluttony-opt_d349da8c.webp",
   },
 ];
 
@@ -661,7 +661,7 @@ export default function Home() {
             <div className="flex items-center justify-center gap-3 mb-8">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-500/20" />
               <img
-                src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+                src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
                 alt="7S"
                 className="w-10 h-10 opacity-40"
               />
@@ -725,7 +725,7 @@ export default function Home() {
                 {/* QR Code */}
                 <div className="w-24 h-24 sm:w-20 sm:h-20 rounded-lg overflow-hidden border border-amber-500/15 group-hover:border-amber-500/30 transition-colors shadow-lg shadow-amber-900/10">
                   <img
-                    src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/bmc-qr-gothic-500_fc4d04dd.png"
+                    src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/bmc-qr-gothic-500_fc4d04dd.png"
                     alt="Scan to buy me a coffee"
                     className="w-full h-full object-cover"
                     loading="lazy"

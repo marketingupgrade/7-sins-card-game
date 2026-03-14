@@ -108,7 +108,7 @@ export default function ResetPassword() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <img
-              src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+              src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
               alt="7S"
               className="w-16 h-16 mx-auto mb-4 opacity-80 hover:opacity-100 transition-opacity"
             />

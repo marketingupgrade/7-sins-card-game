@@ -19,14 +19,14 @@ const DiscussionThread = lazy(() => import("@/components/DiscussionThread"));
 
 /* ─── Chart CDN URLs (webdev-persistent) ─────────────────────── */
 const CHARTS = {
-  winRates: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/01_win_rates_13adfa0c.png",
-  balanceJourney: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/02_balance_journey_141739dc.png",
-  passiveEvolution: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/03_passive_evolution_42231ce1.png",
-  costDistribution: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/04_cost_distribution_29837437.png",
-  factionRadar: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/05_faction_radar_54457a66.png",
-  costVsValue: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/06_cost_vs_value_c3c9c406.png",
-  compoundPatterns: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/07_compound_patterns_67d0bc15.png",
-  targetModes: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/08_target_modes_4fe8d921.png",
+  winRates: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/01_win_rates_13adfa0c.png",
+  balanceJourney: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/02_balance_journey_141739dc.png",
+  passiveEvolution: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/03_passive_evolution_42231ce1.png",
+  costDistribution: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/04_cost_distribution_29837437.png",
+  factionRadar: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/05_faction_radar_54457a66.png",
+  costVsValue: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/06_cost_vs_value_c3c9c406.png",
+  compoundPatterns: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/07_compound_patterns_67d0bc15.png",
+  targetModes: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/08_target_modes_4fe8d921.png",
 };
 
 /* ─── Faction Colors ─────────────────────────────────────────── */

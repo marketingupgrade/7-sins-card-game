@@ -150,7 +150,7 @@ export default function BlogPost() {
       setMeta("property", "article:section", CATEGORY_LABELS[post.category] || post.category);
 
       // Featured image for OG/Twitter (falls back to site-wide banner)
-      const featuredImg = (post as any).featuredImage || "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png";
+      const featuredImg = (post as any).featuredImage || "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png";
       setMeta("property", "og:image", featuredImg);
 
       // Twitter Card meta tags

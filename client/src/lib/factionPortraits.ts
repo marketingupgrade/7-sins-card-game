@@ -9,22 +9,22 @@
 import type { SinType } from "@shared/gameTypes";
 
 export const FACTION_PORTRAITS: Record<SinType, string> = {
-  wrath: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-wrath-opt_0149b931.webp",
-  sloth: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-sloth-opt_13c12228.webp",
-  greed: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-greed-opt_a97a86e5.webp",
-  envy: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-envy-opt_7d0e20de.webp",
-  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride-opt_8250f244.webp",
-  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust-opt_5602ab7b.webp",
-  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony-opt_520ab47f.webp",
+  wrath: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-wrath-opt_0149b931.webp",
+  sloth: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-sloth-opt_13c12228.webp",
+  greed: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-greed-opt_a97a86e5.webp",
+  envy: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-envy-opt_7d0e20de.webp",
+  pride: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-pride-opt_8250f244.webp",
+  lust: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-lust-opt_5602ab7b.webp",
+  gluttony: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-gluttony-opt_520ab47f.webp",
 };
 
 /** Full-resolution versions for hero/detail views (800x800 webp) */
 export const FACTION_PORTRAITS_HD: Record<SinType, string> = {
-  wrath: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-wrath-hd-opt_3ef49d3f.webp",
-  sloth: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-sloth-hd-opt_9c04af8a.webp",
-  greed: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-greed-hd-opt_89e6cb2e.webp",
-  envy: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-envy-hd-opt_db414868.webp",
-  pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-pride-hd-opt_31317a9a.webp",
-  lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-lust-hd-opt_8bea556a.webp",
-  gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/portrait-gluttony-hd-opt_da38f6b6.webp",
+  wrath: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-wrath-hd-opt_3ef49d3f.webp",
+  sloth: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-sloth-hd-opt_9c04af8a.webp",
+  greed: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-greed-hd-opt_89e6cb2e.webp",
+  envy: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-envy-hd-opt_db414868.webp",
+  pride: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-pride-hd-opt_31317a9a.webp",
+  lust: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-lust-hd-opt_8bea556a.webp",
+  gluttony: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/portrait-gluttony-hd-opt_da38f6b6.webp",
 };

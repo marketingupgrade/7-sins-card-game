@@ -43,18 +43,18 @@ export const ICON_URLS = {
   buff_generic: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310419663028555243/NAirJunFZRaSDgwL.png?Expires=1804704136&Signature=GQuBNAUwgumWwqsaBXM9wGlBCcmGeaL2rOn1W2m5-DMGeT3ti4flozatH3SV5riw9l2kg68sp0yikFFQWRcCmACmr17LdDhVK6oTSC3ikhubyMByIshAxmNeb~MryJ27LmSnyE~QGnRv8e~gj6mkqcn4aYf41RS2k7V~8uibgNJchSLts4pJJrNH5iMoEHEBFfQDc2l0ZTq5d8PMfLp3NgcCsrYv8T1v09lTVZrbBiYVvC82hpgAJRhP1qBZicO7QSheZhZiVsBgEEFrS4PyCiiOCt4ZBLbLGdM0n2oiTvDG9RszRVSe0sy0WVNpVztNOAX8B9TpueEBH1bCXBGEmg__&Key-Pair-Id=K2HSFNDJXOU9YS",
   energy_generic: "https://private-us-east-1.manuscdn.com/user_upload_by_module/session_file/310419663028555243/ARsVUVXaYgjPWULA.png?Expires=1804704136&Signature=lidQ47XNI~2d~LWfkK3D9r8VZipLjo8DDPu6nTlLHtBn1JrH6t7NmKLMIakBOYo-4qzzOhAlJp-ULzeOIndKCMVcx581tTKaMUGq7ow1DEaj49h7A2f8mkyHl3nmjYXsfEmDaOAJITCfrFlk0z9HIqv56AQuJTk40CHE0UANCUangHxUhmXvjtqbQmuKKmr7PXMDDAj-u4fGDqt9z4AAg50zZ9vDJt4IIMSOHLUx82ehYuLgZooDPatDHVc1dmTB8NiDfvkqCMkdO08KYc-roiEDGUtVIWbujYQyKTUbvetkDC04SrNRFmfXK8hkIkxaQPD3NknQu38FNdXCXYf3Vg__&Key-Pair-Id=K2HSFNDJXOU9YS",
   // Pride icons
-  pride_crown: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-pride_crown-opt_0240571d.webp",
-  damage_pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-damage_pride-opt_ef6395c1.webp",
-  shield_pride: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-shield_pride-opt_a1908e31.webp",
+  pride_crown: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-pride_crown-opt_0240571d.webp",
+  damage_pride: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-damage_pride-opt_ef6395c1.webp",
+  shield_pride: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-shield_pride-opt_a1908e31.webp",
   // Lust icons
-  lust_charm: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-lust_charm-opt_1cc26245.webp",
-  damage_lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-damage_lust-opt_98a30bb6.webp",
-  heal_lust: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-heal_lust-opt_6cd0faa3.webp",
+  lust_charm: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-lust_charm-opt_1cc26245.webp",
+  damage_lust: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-damage_lust-opt_98a30bb6.webp",
+  heal_lust: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-heal_lust-opt_6cd0faa3.webp",
   // Gluttony icons
-  gluttony_maw: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-gluttony_maw-opt_7c9c6a10.webp",
-  damage_gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-damage_gluttony-opt_870f61dc.webp",
-  shield_gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-shield_gluttony-opt_a3923775.webp",
-  buff_gluttony: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/icon-buff_gluttony-opt_0c94a0a3.webp",
+  gluttony_maw: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-gluttony_maw-opt_7c9c6a10.webp",
+  damage_gluttony: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-damage_gluttony-opt_870f61dc.webp",
+  shield_gluttony: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-shield_gluttony-opt_a3923775.webp",
+  buff_gluttony: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/icon-buff_gluttony-opt_0c94a0a3.webp",
 } as const;
 
 export type SfxName = keyof typeof SFX_URLS;

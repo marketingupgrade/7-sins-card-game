@@ -117,7 +117,7 @@ async function startServer() {
       rss += `  <lastBuildDate>${now}</lastBuildDate>\n`;
       rss += `  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />\n`;
       rss += `  <image>\n`;
-      rss += `    <url>https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png</url>\n`;
+      rss += `    <url>https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png</url>\n`;
       rss += `    <title>7 Deadly Sins Card Game</title>\n`;
       rss += `    <link>${baseUrl}</link>\n`;
       rss += `  </image>\n`;

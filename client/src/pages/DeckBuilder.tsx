@@ -1059,37 +1059,8 @@ export default function DeckBuilder() {
             {/* Spacer */}
             <div className="flex-1" />
 
-            {/* Action buttons */}
+            {/* Mobile deck panel toggle only in top bar */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={autoFill}
-                disabled={isFull}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white/[0.04] text-white/35 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/55 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
-              >
-                Auto-fill
-              </button>
-              <button
-                onClick={clearDeck}
-                disabled={deckCardIds.length === 0}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-500/[0.06] text-red-400/40 border border-red-500/[0.08] hover:bg-red-500/15 hover:text-red-400/70 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
-              >
-                Clear
-              </button>
-              <button
-                onClick={saveDeck}
-                disabled={isSaving || deckCardIds.length === 0 || guestAtDeckLimit}
-                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed ${
-                  guestAtDeckLimit
-                    ? "bg-white/5 text-white/30 border-white/10"
-                    : "bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
-                }`}
-                style={{ fontFamily: "var(--font-heading)" }}
-                title={guestAtDeckLimit ? "Sign in to save more decks" : undefined}
-              >
-                {isSaving ? "Saving..." : guestAtDeckLimit ? "Limit Reached" : "Save"}
-              </button>
-
-              {/* Mobile deck panel toggle */}
               <button
                 onClick={() => setShowDeckPanel(!showDeckPanel)}
                 className={`lg:hidden px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all duration-200 ${
@@ -1201,6 +1172,40 @@ export default function DeckBuilder() {
             <span className="text-[10px] text-white/25 font-medium tracking-wide shrink-0 hidden sm:block">
               {filteredCards.length} card{filteredCards.length !== 1 ? "s" : ""}
             </span>
+
+            {/* Divider before deck actions */}
+            <div className="w-px h-5 bg-white/[0.06] mx-0.5 hidden sm:block" />
+
+            {/* Deck action buttons */}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={autoFill}
+                disabled={isFull}
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] text-white/35 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/55 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
+              >
+                Auto-fill
+              </button>
+              <button
+                onClick={clearDeck}
+                disabled={deckCardIds.length === 0}
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-red-500/[0.06] text-red-400/40 border border-red-500/[0.08] hover:bg-red-500/15 hover:text-red-400/70 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
+              >
+                Clear
+              </button>
+              <button
+                onClick={saveDeck}
+                disabled={isSaving || deckCardIds.length === 0 || guestAtDeckLimit}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed ${
+                  guestAtDeckLimit
+                    ? "bg-white/5 text-white/30 border-white/10"
+                    : "bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 hover:text-amber-200 border-amber-500/25 shadow-[0_0_10px_rgba(245,158,11,0.1)]"
+                }`}
+                style={{ fontFamily: "var(--font-heading)" }}
+                title={guestAtDeckLimit ? "Sign in to save more decks" : undefined}
+              >
+                {isSaving ? "Saving..." : guestAtDeckLimit ? "Limit Reached" : "Save"}
+              </button>
+            </div>
           </div>
 
           {/* Save message */}

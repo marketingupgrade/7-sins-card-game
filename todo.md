@@ -1384,3 +1384,12 @@
 - [x] Redesign filtering system to Premium AAA level (glowing active states, backdrop blur, icons, clear filters button)
 - [x] Add slick, subtle animations to filter interactions (framer-motion transitions on dropdowns)
 - [x] Fix card counter positioning - move next to deck name in white text (inline with deck name input)
+
+## Card Image Quality Fixes
+- [ ] Identify all cards with bad images (hands, white space, gray backgrounds, AI artifacts)
+- [ ] Regenerate or replace broken card images
+- [ ] Update image URLs in database
+- [x] Move Auto-fill/Clear/Save buttons next to the filter bar (not floating near music/menu icons)
+- [ ] Migrate all 378 card art images from Manus CloudFront CDN to Supabase Storage
+- [ ] Update cardArtUrls.ts with new Supabase Storage URLs
+- [ ] Push updated URLs to GitHub

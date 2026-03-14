@@ -11,9 +11,9 @@
 
 // CDN URLs for music tracks (epic dark fantasy orchestral — Witcher-style)
 const MUSIC_TRACKS = {
-  menu: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/dark-winds-menu_0c68078a.ogg",
-  arena: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/dark-battle-arena_2953e88a.ogg",
-  arenaDrone: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/foxie-epic-lobby_7f20fd83.ogg",
+  menu: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/dark-winds-menu_0c68078a.ogg",
+  arena: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/dark-battle-arena_2953e88a.ogg",
+  arenaDrone: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/foxie-epic-lobby_7f20fd83.ogg",
 } as const;
 
 export type MusicScene = "menu" | "arena" | "silent";

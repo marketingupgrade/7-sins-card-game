@@ -25,13 +25,13 @@ import { Link } from "wouter";
 
 // ─── CDN Asset URLs ───────────────────────────────────────────────
 const CDN = {
-  factionPalette: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/01_faction_palette_c2080b3f.png",
-  brandColors: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/02_brand_colors_8ec21b7b.png",
-  typographyScale: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/03_typography_scale_60fc7e25.png",
-  goldenRatio: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/04_golden_ratio_e45228d3.png",
-  octalysisRadar: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/05_octalysis_radar_bbe36671.png",
-  brandPyramid: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/06_brand_pyramid_6d27d83a.png",
-  voiceSpectrum: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/07_voice_spectrum_7bd0d4a9.png",
+  factionPalette: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/01_faction_palette_c2080b3f.png",
+  brandColors: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/02_brand_colors_8ec21b7b.png",
+  typographyScale: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/03_typography_scale_60fc7e25.png",
+  goldenRatio: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/04_golden_ratio_e45228d3.png",
+  octalysisRadar: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/05_octalysis_radar_bbe36671.png",
+  brandPyramid: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/06_brand_pyramid_6d27d83a.png",
+  voiceSpectrum: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/07_voice_spectrum_7bd0d4a9.png",
 };
 
 // ─── Data Constants ───────────────────────────────────────────────
@@ -491,7 +491,7 @@ export default function Brandbook() {
 
         <div className="relative z-10">
           <img
-            src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+            src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
             alt="7S"
             className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 opacity-80"
           />
@@ -632,7 +632,7 @@ export default function Brandbook() {
             <div className="flex flex-col items-center gap-3">
               <div className="w-32 h-32 rounded-xl bg-[#0a0908] border border-[#332a22] flex items-center justify-center p-4">
                 <img
-                  src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
+                  src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-logo-v3-3chkwhz9LsB5kZ8AaXhdvw.webp"
                   alt="7S Logo — Dark"
                   className="w-full h-full object-contain"
                 />
@@ -645,28 +645,28 @@ export default function Brandbook() {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png"
                       alt="192px"
                       className="w-10 h-10"
                     />
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png"
                       alt="32px"
                       className="w-6 h-6"
                     />
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png"
                       alt="16px"
                       className="w-4 h-4"
                     />
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-[#141210] flex items-center justify-center">
                     <img
-                      src="https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/7s-icon-192x192_8dcc7e63.png"
+                      src="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png"
                       alt="48px"
                       className="w-8 h-8"
                     />
