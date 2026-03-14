@@ -1,0 +1,1 @@
+ALTER TABLE `blog_posts` ADD `featuredImage` varchar(500);

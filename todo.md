@@ -1335,3 +1335,6 @@
 - [x] URL syncs with search query (?q=) for SearchAction schema support
 - [x] Blog content renderer fixed: strips code fences, removes duplicate h1, fixes empty links
 - [ ] Push to GitHub
+- [x] RSS feed endpoint (/rss.xml) with latest blog posts
+- [x] Featured images for all 665 blog posts (reuse existing card art/spell icons)
+- [x] Update blog post OG meta tags to use individual featured images

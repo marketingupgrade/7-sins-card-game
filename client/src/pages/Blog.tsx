@@ -229,8 +229,20 @@ export default function Blog() {
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="group block bg-amber-950/10 border border-amber-900/20 rounded-lg p-6 hover:border-amber-700/40 hover:bg-amber-950/20 transition-all"
+                className="group block bg-amber-950/10 border border-amber-900/20 rounded-lg overflow-hidden hover:border-amber-700/40 hover:bg-amber-950/20 transition-all"
               >
+                {/* Featured image */}
+                {(post as any).featuredImage && (
+                  <div className="w-full h-40 overflow-hidden bg-amber-950/30">
+                    <img
+                      src={(post as any).featuredImage}
+                      alt={post.title}
+                      loading="lazy"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                )}
+                <div className="p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-[11px] font-[Cinzel] tracking-wider text-amber-500/60 uppercase bg-amber-900/20 px-2 py-0.5 rounded">
                     {CATEGORY_LABELS[post.category] || post.category}
@@ -256,6 +268,7 @@ export default function Blog() {
                   <span className="text-xs text-amber-500/50 group-hover:text-amber-400/70 transition-colors font-[Cinzel] tracking-wider">
                     READ MORE →
                   </span>
+                </div>
                 </div>
               </Link>
             ))}

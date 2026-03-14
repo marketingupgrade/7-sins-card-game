@@ -114,6 +114,8 @@ export const blogPosts = mysqlTable("blog_posts", {
   priority: mysqlEnum("priority", ["high", "medium", "low"]).default("medium").notNull(),
   /** Full HTML content of the blog post */
   content: text("content").notNull(),
+  /** Featured image URL (card art from the game) */
+  featuredImage: varchar("featuredImage", { length: 500 }),
   /** Estimated reading time in minutes */
   readingTime: int("readingTime").notNull().default(5),
   /** Whether the post is published */

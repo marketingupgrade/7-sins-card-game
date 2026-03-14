@@ -1,0 +1,45 @@
+{
+  "query": "SELECT id, slug, title, category, keywords FROM blog_posts WHERE published = 1 ORDER BY RAND() LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute SELECT id, slug, title, category, keywords FROM blog_posts WHERE published = 1 ORDER BY RAND() LIMIT 5",
+  "rows": [
+    {
+      "id": "30325",
+      "slug": "how-damage-mitigation-works-in-card-games",
+      "title": "How Damage Mitigation Works in Card Games",
+      "category": "game-design",
+      "keywords": "damage mitigation explained, card game mechanics, how it works"
+    },
+    {
+      "id": "30201",
+      "slug": "why-gothic-themes-dominate-the-card-game-genre",
+      "title": "Why Gothic Themes Dominate the Card Game Genre",
+      "category": "dark-fantasy-lore",
+      "keywords": "gothic themes card games, dark aesthetics, genre trends"
+    },
+    {
+      "id": "30147",
+      "slug": "how-to-play-mind-games-without-cheating",
+      "title": "How to Play Mind Games Without Cheating",
+      "category": "game-guides",
+      "keywords": "mind games, fair play, psychological tactics"
+    },
+    {
+      "id": "30473",
+      "slug": "best-card-game-to-play-on-phone-browser",
+      "title": "Best Card Game to Play on Phone Browser",
+      "category": "seo-pillars",
+      "keywords": "card game phone browser, mobile card game, play on phone"
+    },
+    {
+      "id": "30425",
+      "slug": "how-to-beat-lust-players-when-using-wrath",
+      "title": "How to Beat Lust Players When Using Wrath",
+      "category": "faction-guides",
+      "keywords": "beat lust with wrath, counter strategy, matchup tips"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\ttitle\tcategory\tkeywords\n30325\thow-damage-mitigation-works-in-card-games\tHow Damage Mitigation Works in Card Games\tgame-design\tdamage mitigation explained, card game mechanics, how it works\n30201\twhy-gothic-themes-dominate-the-card-game-genre\tWhy Gothic Themes Dominate the Card Game Genre\tdark-fantasy-lore\tgothic themes card games, dark aesthetics, genre trends\n30147\thow-to-play-mind-games-without-cheating\tHow to Play Mind Games Without Cheating\tgame-guides\tmind games, fair play, psychological tactics\n30473\tbest-card-game-to-play-on-phone-browser\tBest Card Game to Play on Phone Browser\tseo-pillars\tcard game phone browser, mobile card game, play on phone\n30425\thow-to-beat-lust-players-when-using-wrath\tHow to Beat Lust Players When Using Wrath\tfaction-guides\tbeat lust with wrath, counter strategy, matchup tips\n",
+  "stderr": "",
+  "execution_time_ms": 366
+}

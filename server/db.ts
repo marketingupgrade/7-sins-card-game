@@ -341,6 +341,20 @@ export async function getAllBlogSlugs(): Promise<{ slug: string; updatedAt: Date
 }
 
 /**
+ * Get recent blog posts for RSS feed (latest 50).
+ */
+export async function getRecentBlogPosts(limit = 50): Promise<BlogPost[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(blogPosts)
+    .where(eq(blogPosts.published, 1))
+    .orderBy(desc(blogPosts.publishedAt))
+    .limit(limit);
+}
+
+/**
  * Get blog category counts for sidebar/filtering.
  */
 export async function getBlogCategoryCounts(): Promise<{ category: string; count: number }[]> {

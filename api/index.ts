@@ -83,6 +83,61 @@ app.get("/sitemap.xml", async (_req, res) => {
   }
 });
 
+// RSS feed
+app.get("/rss.xml", async (_req, res) => {
+  try {
+    const { getRecentBlogPosts } = await import("../server/db");
+    const posts = await getRecentBlogPosts(50);
+    const baseUrl = "https://www.7sinscardgame.com";
+    const now = posts.length > 0 && posts[0].publishedAt
+      ? new Date(posts[0].publishedAt).toUTCString()
+      : new Date().toUTCString();
+
+    let rss = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    rss += `<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">\n`;
+    rss += `<channel>\n`;
+    rss += `  <title>7 Deadly Sins Card Game - Lore &amp; Strategy</title>\n`;
+    rss += `  <link>${baseUrl}/blog</link>\n`;
+    rss += `  <description>Dark fantasy lore, strategy guides, and mythology from the world of the 7 Deadly Sins Card Game. Free PvP card game infused with Dante, Buddhist, Norse, Japanese, and Celtic sin traditions.</description>\n`;
+    rss += `  <language>en-us</language>\n`;
+    rss += `  <lastBuildDate>${now}</lastBuildDate>\n`;
+    rss += `  <atom:link href="${baseUrl}/rss.xml" rel="self" type="application/rss+xml" />\n`;
+    rss += `  <image>\n`;
+    rss += `    <url>https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png</url>\n`;
+    rss += `    <title>7 Deadly Sins Card Game</title>\n`;
+    rss += `    <link>${baseUrl}</link>\n`;
+    rss += `  </image>\n`;
+
+    for (const post of posts) {
+      const pubDate = post.publishedAt ? new Date(post.publishedAt).toUTCString() : now;
+      const postUrl = `${baseUrl}/blog/${post.slug}`;
+      const desc = (post.metaDescription || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const title = (post.title || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      rss += `  <item>\n`;
+      rss += `    <title>${title}</title>\n`;
+      rss += `    <link>${postUrl}</link>\n`;
+      rss += `    <guid isPermaLink="true">${postUrl}</guid>\n`;
+      rss += `    <pubDate>${pubDate}</pubDate>\n`;
+      rss += `    <description>${desc}</description>\n`;
+      rss += `    <category>${post.category}</category>\n`;
+      if (post.featuredImage) {
+        rss += `    <enclosure url="${post.featuredImage}" type="image/webp" length="0" />\n`;
+      }
+      rss += `  </item>\n`;
+    }
+
+    rss += `</channel>\n`;
+    rss += `</rss>`;
+
+    res.setHeader("Content-Type", "application/rss+xml; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=3600");
+    res.send(rss);
+  } catch (err) {
+    console.error("RSS feed generation error:", err);
+    res.status(500).send("Error generating RSS feed");
+  }
+});
+
 // OAuth callback under /api/oauth/callback
 registerOAuthRoutes(app);
 

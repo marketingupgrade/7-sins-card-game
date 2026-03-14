@@ -149,10 +149,15 @@ export default function BlogPost() {
       setMeta("property", "article:modified_time", post.updatedAt ? new Date(post.updatedAt).toISOString() : "");
       setMeta("property", "article:section", CATEGORY_LABELS[post.category] || post.category);
 
+      // Featured image for OG/Twitter (falls back to site-wide banner)
+      const featuredImg = (post as any).featuredImage || "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png";
+      setMeta("property", "og:image", featuredImg);
+
       // Twitter Card meta tags
       setMeta("name", "twitter:card", "summary_large_image");
       setMeta("name", "twitter:title", post.title);
       setMeta("name", "twitter:description", post.metaDescription || "");
+      setMeta("name", "twitter:image", featuredImg);
 
       // Article schema + BreadcrumbList
       let scriptTag = document.querySelector('script[data-blog-schema]');
@@ -183,6 +188,7 @@ export default function BlogPost() {
             name: "7 Deadly Sins Card Game",
             url: baseUrl,
           },
+          image: (post as any).featuredImage || undefined,
           mainEntityOfPage: {
             "@type": "WebPage",
             "@id": postUrl,
@@ -350,6 +356,17 @@ export default function BlogPost() {
             </span>
           </div>
         </header>
+
+        {/* Featured Image */}
+        {(post as any).featuredImage && (
+          <div className="w-full h-64 md:h-80 rounded-lg overflow-hidden mb-10 border border-amber-900/20">
+            <img
+              src={(post as any).featuredImage}
+              alt={post.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
 
         {/* Article Content */}
         <article

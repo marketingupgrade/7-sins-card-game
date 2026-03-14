@@ -1,0 +1,40 @@
+{
+  "query": "SELECT id, slug, title, category FROM blog_posts WHERE published = 1 ORDER BY id LIMIT 5",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute SELECT id, slug, title, category FROM blog_posts WHERE published = 1 ORDER BY id LIMIT 5",
+  "rows": [
+    {
+      "id": "1",
+      "slug": "how-to-play-the-wrath-faction-complete-guide",
+      "title": "How to Play the Wrath Faction: Complete Guide",
+      "category": "faction-guides"
+    },
+    {
+      "id": "2",
+      "slug": "advanced-wrath-strategies-compound-effects-and-combos",
+      "title": "Advanced Wrath Strategies: Compound Effects and Combos",
+      "category": "faction-guides"
+    },
+    {
+      "id": "3",
+      "slug": "best-wrath-deck-30-card-ranked-build",
+      "title": "Best Wrath Deck: 30-Card Ranked Build",
+      "category": "faction-guides"
+    },
+    {
+      "id": "4",
+      "slug": "budget-wrath-deck-win-with-common-cards",
+      "title": "Budget Wrath Deck: Win with Common Cards",
+      "category": "faction-guides"
+    },
+    {
+      "id": "5",
+      "slug": "wrath-lore-the-sin-behind-the-cards",
+      "title": "Wrath Lore: The Sin Behind the Cards",
+      "category": "faction-guides"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslug\ttitle\tcategory\n1\thow-to-play-the-wrath-faction-complete-guide\tHow to Play the Wrath Faction: Complete Guide\tfaction-guides\n2\tadvanced-wrath-strategies-compound-effects-and-combos\tAdvanced Wrath Strategies: Compound Effects and Combos\tfaction-guides\n3\tbest-wrath-deck-30-card-ranked-build\tBest Wrath Deck: 30-Card Ranked Build\tfaction-guides\n4\tbudget-wrath-deck-win-with-common-cards\tBudget Wrath Deck: Win with Common Cards\tfaction-guides\n5\twrath-lore-the-sin-behind-the-cards\tWrath Lore: The Sin Behind the Cards\tfaction-guides\n",
+  "stderr": "",
+  "execution_time_ms": 475
+}
