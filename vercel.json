@@ -5,22 +5,22 @@
   "installCommand": "pnpm install",
   "framework": null,
   "functions": {
-    "dist/api/index.js": {
+    "api/index.mjs": {
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/dist/api"
+      "destination": "/api"
     },
     {
       "source": "/sitemap.xml",
-      "destination": "/dist/api"
+      "destination": "/api"
     },
     {
       "source": "/rss.xml",
-      "destination": "/dist/api"
+      "destination": "/api"
     },
     {
       "source": "/(.*)",

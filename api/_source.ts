@@ -1,8 +1,18 @@
 /**
- * Vercel Serverless Function Entry Point
+ * Vercel Serverless Function Source
+ * 
+ * This file is the editable source. During build, esbuild bundles it into
+ * api/index.mjs which Vercel uses as the serverless function entry point.
+ * This avoids Vercel's inability to resolve parent directory imports at runtime.
  */
 import "dotenv/config";
 import express from "express";
+import { createExpressMiddleware } from "@trpc/server/adapters/express";
+import { registerOAuthRoutes } from "../server/_core/oauth";
+import { registerChatRoutes } from "../server/_core/chat";
+import { appRouter } from "../server/routers";
+import { createContext } from "../server/_core/context";
+import { getAllBlogSlugs, getRecentBlogPosts } from "../server/db";
 
 const app = express();
 
@@ -19,45 +29,9 @@ app.use((_req, res, next) => {
   next();
 });
 
-// Diagnostic endpoint to identify which module fails
-app.get("/api/diag", async (_req, res) => {
-  const results: Record<string, string> = {};
-  const modules = [
-    "../shared/const",
-    "../shared/gameTypes",
-    "../shared/cardData",
-    "../shared/_core/errors",
-    "../drizzle/schema",
-    "../server/_core/env",
-    "../server/_core/cookies",
-    "../server/_core/trpc",
-    "../server/_core/context",
-    "../server/_core/sdk",
-    "../server/_core/notification",
-    "../server/_core/systemRouter",
-    "../server/_core/oauth",
-    "../server/_core/chat",
-    "../server/supabaseServer",
-    "../server/storage",
-    "../server/db",
-    "../server/gameEngine",
-    "../server/routers",
-  ];
-  for (const mod of modules) {
-    try {
-      await import(mod);
-      results[mod] = "OK";
-    } catch (e: any) {
-      results[mod] = `FAIL: ${e.code || ""} ${e.message}`;
-    }
-  }
-  res.json(results);
-});
-
 // Dynamic sitemap.xml
 app.get("/sitemap.xml", async (_req, res) => {
   try {
-    const { getAllBlogSlugs } = await import("../server/db");
     const slugs = await getAllBlogSlugs();
     const baseUrl = "https://www.7sinscardgame.com";
 
@@ -108,7 +82,6 @@ app.get("/sitemap.xml", async (_req, res) => {
 // RSS feed
 app.get("/rss.xml", async (_req, res) => {
   try {
-    const { getRecentBlogPosts } = await import("../server/db");
     const posts = await getRecentBlogPosts(50);
     const baseUrl = "https://www.7sinscardgame.com";
     const now = posts.length > 0 && posts[0].publishedAt
@@ -160,34 +133,19 @@ app.get("/rss.xml", async (_req, res) => {
   }
 });
 
-// Lazy-load all heavy modules to isolate the error
-let initialized = false;
-app.use(async (req, res, next) => {
-  if (!initialized) {
-    try {
-      const { registerOAuthRoutes } = await import("../server/_core/oauth");
-      const { registerChatRoutes } = await import("../server/_core/chat");
-      const { appRouter } = await import("../server/routers");
-      const { createContext } = await import("../server/_core/context");
-      const { createExpressMiddleware } = await import("@trpc/server/adapters/express");
+// OAuth routes
+registerOAuthRoutes(app);
 
-      registerOAuthRoutes(app);
-      registerChatRoutes(app);
-      app.use(
-        "/api/trpc",
-        createExpressMiddleware({
-          router: appRouter,
-          createContext,
-        })
-      );
-      initialized = true;
-    } catch (e: any) {
-      console.error("Failed to initialize:", e);
-      res.status(500).json({ error: "Init failed", message: e.message, code: e.code, stack: e.stack?.split("\n").slice(0, 5) });
-      return;
-    }
-  }
-  next();
-});
+// Chat routes
+registerChatRoutes(app);
+
+// tRPC middleware
+app.use(
+  "/api/trpc",
+  createExpressMiddleware({
+    router: appRouter,
+    createContext,
+  })
+);
 
 export default app;
