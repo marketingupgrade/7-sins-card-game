@@ -26,12 +26,30 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 /** Render blog content — detects HTML vs markdown and styles accordingly */
 function renderContent(content: string): string {
+  // Strip markdown code fences (```html ... ```) that wrap some generated posts
+  let cleaned = content.trim();
+  if (cleaned.startsWith("```")) {
+    cleaned = cleaned.replace(/^```(?:html)?\s*\n?/, "").replace(/\n?```\s*$/, "").trim();
+  }
+
   // Detect if content is already HTML (from OpenAI-generated posts)
-  const isHtml = content.trim().startsWith("<");
+  const isHtml = cleaned.startsWith("<");
 
   if (isHtml) {
+    // Remove the first <h1>...</h1> to avoid duplicating the page template title
+    cleaned = cleaned.replace(/<h1[^>]*>.*?<\/h1>\s*/i, "");
+    // Remove wrapping <article> tags if present
+    cleaned = cleaned.replace(/^<article[^>]*>\s*/i, "").replace(/\s*<\/article>\s*$/i, "");
+    // Fix empty internal links: href="" or href="()" → proper paths
+    cleaned = cleaned
+      .replace(/href=""([^>]*>)([^<]*deck builder)/gi, 'href="/deck-builder"$1$2')
+      .replace(/href=""([^>]*>)([^<]*balance analysis)/gi, 'href="/balance"$1$2')
+      .replace(/href=""([^>]*>)([^<]*changelog)/gi, 'href="/changelog"$1$2')
+      .replace(/href=""([^>]*>)([^<]*blog)/gi, 'href="/blog"$1$2')
+      .replace(/href="\(\)"?/gi, 'href="/"')
+      .replace(/href=""/g, 'href="/"');
     // Style existing HTML tags with gothic theme classes
-    return content
+    return cleaned
       .replace(/<h1([^>]*)>/gi, '<h1$1 class="text-3xl font-[Cinzel] text-amber-200 mt-10 mb-4 tracking-wide">')
       .replace(/<h2([^>]*)>/gi, '<h2$1 class="text-2xl font-[Cinzel] text-amber-200 mt-10 mb-4 tracking-wide">')
       .replace(/<h3([^>]*)>/gi, '<h3$1 class="text-xl font-[Cinzel] text-amber-200 mt-8 mb-3 tracking-wide">')
@@ -43,7 +61,9 @@ function renderContent(content: string): string {
       .replace(/<ul([^>]*)>/gi, '<ul$1 class="mb-4 space-y-1 list-disc list-inside text-amber-200/60">')
       .replace(/<ol([^>]*)>/gi, '<ol$1 class="mb-4 space-y-1 list-decimal list-inside text-amber-200/60">')
       .replace(/<li([^>]*)>/gi, '<li$1 class="ml-4 pl-2 text-amber-200/60">')
-      .replace(/<blockquote([^>]*)>/gi, '<blockquote$1 class="border-l-2 border-amber-700/50 pl-4 italic text-amber-200/40 my-4">');
+      .replace(/<blockquote([^>]*)>/gi, '<blockquote$1 class="border-l-2 border-amber-700/50 pl-4 italic text-amber-200/40 my-4">')
+      .replace(/<hr\s*\/?>/gi, '<hr class="border-amber-900/30 my-8">')
+      .replace(/<section([^>]*)>/gi, '<section$1 class="mb-8">');
   }
 
   // Markdown rendering for older posts

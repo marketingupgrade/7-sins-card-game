@@ -40,11 +40,19 @@ export default function Blog() {
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
 
-  // Debounce search input
+  // Debounce search input and sync to URL
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
       setPage(1);
+      // Update URL with search query for SearchAction schema
+      const url = new URL(window.location.href);
+      if (searchQuery) {
+        url.searchParams.set("q", searchQuery);
+      } else {
+        url.searchParams.delete("q");
+      }
+      window.history.replaceState({}, "", url.toString());
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);

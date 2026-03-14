@@ -267,7 +267,10 @@ export async function getBlogPosts(opts: {
     conditions.push(eq(blogPosts.category, opts.category));
   }
   if (opts.search) {
-    conditions.push(sql`${blogPosts.title} LIKE ${`%${opts.search}%`}`);
+    const term = `%${opts.search}%`;
+    conditions.push(
+      sql`(${blogPosts.title} LIKE ${term} OR ${blogPosts.metaDescription} LIKE ${term} OR ${blogPosts.keywords} LIKE ${term})`
+    );
   }
 
   const where = conditions.length === 1 ? conditions[0] : and(...conditions);

@@ -1321,3 +1321,17 @@
 - [x] Home page: Meta description targeting "free PvP online card game"
 - [x] Content renderer: Detects HTML vs markdown and styles both with gothic theme
 - [ ] Push to GitHub
+
+## OG Banner Image
+- [x] Generated 1200x630 OG banner (7S logo + gothic cathedral + demonic cards + ember particles)
+- [x] Uploaded to CDN via webdev static assets
+- [x] Updated index.html OG and Twitter meta tags with banner URL
+- [x] Changed Twitter card to summary_large_image for large preview
+- [ ] Push to GitHub
+
+## Blog Search Enhancement
+- [x] Blog search already existed with debounced input and URL params
+- [x] Enhanced search to match title + metaDescription + keywords (not just title)
+- [x] URL syncs with search query (?q=) for SearchAction schema support
+- [x] Blog content renderer fixed: strips code fences, removes duplicate h1, fixes empty links
+- [ ] Push to GitHub
