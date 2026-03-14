@@ -1386,10 +1386,10 @@
 - [x] Fix card counter positioning - move next to deck name in white text (inline with deck name input)
 
 ## Card Image Quality Fixes
-- [ ] Identify all cards with bad images (hands, white space, gray backgrounds, AI artifacts)
-- [ ] Regenerate or replace broken card images
-- [ ] Update image URLs in database
+- [ ] Identify all cards with bad images (hands, white space, gray backgrounds, AI artifacts) — images migrated as-is, quality fix deferred
+- [ ] Regenerate or replace broken card images — deferred
+- [x] Update image URLs in database (all 415 assets now on Supabase Storage, 0 CloudFront refs)
 - [x] Move Auto-fill/Clear/Save buttons next to the filter bar (not floating near music/menu icons)
-- [ ] Migrate all 378 card art images from Manus CloudFront CDN to Supabase Storage
-- [ ] Update cardArtUrls.ts with new Supabase Storage URLs
-- [ ] Push updated URLs to GitHub
+- [x] Migrate all 378 card art images from Manus CloudFront CDN to Supabase Storage (card-art bucket)
+- [x] Update cardArtUrls.ts with new Supabase Storage URLs (378 URLs updated)
+- [x] Push updated URLs to GitHub (+ 37 additional assets: fonts, icons, portraits, music, OG images)
