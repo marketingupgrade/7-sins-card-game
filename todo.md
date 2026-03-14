@@ -1377,15 +1377,10 @@
 - [x] Update api/_source.ts to query Supabase instead of TiDB (created server/db-supabase.ts, 0 mysql2/drizzle refs)
 - [x] Rebuild Vercel bundle and push to GitHub (api/index.mjs now fully Supabase-native)
 
-## Deck Builder Dropdown Bugs
-- [ ] Fix "All Effects" dropdown not opening on click in deck builder
-- [ ] Fix "Cost" sort dropdown not opening on click in deck builder
-- [ ] Fix "My Deck" toggle not opening deck panel in deck builder
-
-## Deck Builder Dropdown Bugs & Premium AAA Filtering
-- [ ] Fix "All Effects" dropdown not opening on click in deck builder
-- [ ] Fix "Cost" sort dropdown not opening on click in deck builder
-- [ ] Fix "My Deck" toggle not opening deck panel in deck builder
-- [ ] Redesign entire filtering system to Premium AAA level (inspired by MTG Arena, Hearthstone)
-- [ ] Add slick, subtle animations to filter interactions
-- [ ] Fix card counter positioning - move next to deck name in white text, not a separate box
+## Deck Builder Dropdown Bugs & Premium AAA Filter System
+- [x] Fix "All Effects" dropdown not opening when clicked (portal-based dropdown escapes overflow)
+- [x] Fix "Cost" sort dropdown not opening when clicked (portal-based dropdown escapes overflow)
+- [x] Fix "My Deck" toggle / deck panel toggle working correctly
+- [x] Redesign filtering system to Premium AAA level (glowing active states, backdrop blur, icons, clear filters button)
+- [x] Add slick, subtle animations to filter interactions (framer-motion transitions on dropdowns)
+- [x] Fix card counter positioning - move next to deck name in white text (inline with deck name input)
