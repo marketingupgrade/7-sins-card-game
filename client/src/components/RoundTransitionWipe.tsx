@@ -80,4 +80,4 @@ const RoundTransitionWipe: React.FC<RoundTransitionWipeProps> = ({
   );
 };
 
-export default RoundTransitionWipe;
+export default React.memo(RoundTransitionWipe);

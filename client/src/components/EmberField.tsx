@@ -10,14 +10,14 @@
  * - Embers: slightly larger, orange-red, faster vertical rise with sway
  */
 
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 
 interface EmberFieldProps {
   count?: number;
   className?: string;
 }
 
-export default function EmberField({ count = 20, className = "" }: EmberFieldProps) {
+const EmberField = memo(function EmberField({ count = 20, className = "" }: EmberFieldProps) {
   const particles = useMemo(() => {
     const dustCount = Math.floor(count * 0.7);
     const emberCount = count - dustCount;
@@ -74,4 +74,5 @@ export default function EmberField({ count = 20, className = "" }: EmberFieldPro
       ))}
     </div>
   );
-}
+});
+export default EmberField;

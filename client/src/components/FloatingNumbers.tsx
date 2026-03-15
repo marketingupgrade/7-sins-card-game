@@ -81,4 +81,4 @@ const FloatingNumberItem: React.FC<FloatingNumberItemProps> = ({ number, onCompl
   );
 };
 
-export default FloatingNumbers;
+export default React.memo(FloatingNumbers);

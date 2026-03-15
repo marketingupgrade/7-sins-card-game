@@ -13,7 +13,7 @@
 
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import { useRef, useCallback, useState, memo, lazy, Suspense } from "react";
-import SinShaderOverlay from "./WebGLSinShaders";
+const SinShaderOverlay = lazy(() => import("./WebGLSinShaders"));
 import { CardDefinition, SinType, CompoundPattern, getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";

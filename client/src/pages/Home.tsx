@@ -339,12 +339,14 @@ export default function Home() {
               <button
                 onClick={goPrev}
                 className="absolute left-2 md:-left-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-white/30 transition-all"
+                aria-label="Previous faction"
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button
                 onClick={goNext}
                 className="absolute right-2 md:-right-6 top-1/2 -translate-y-1/2 z-20 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:border-white/30 transition-all"
+                aria-label="Next faction"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>

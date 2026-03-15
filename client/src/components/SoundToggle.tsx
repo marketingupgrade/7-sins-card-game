@@ -53,6 +53,7 @@ export function SoundToggle() {
         onClick={toggle}
         className="p-2 rounded-lg transition-all duration-200 hover:bg-white/10"
         title={enabled ? "Mute sounds" : "Unmute sounds"}
+        aria-label={enabled ? "Mute sounds" : "Unmute sounds"}
       >
         {enabled ? (
           <Volume2 className="w-5 h-5 text-purple-400" />

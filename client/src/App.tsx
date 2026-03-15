@@ -19,8 +19,9 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { TutorialProvider } from "./contexts/TutorialContext";
 import { AuthProvider } from "./contexts/AuthContext";
-import SigilMenu from "./components/SigilMenu";
-import { MusicToggle } from "./components/MusicToggle";
+// Lazy-load global controls to defer framer-motion from critical path
+const SigilMenu = lazy(() => import("./components/SigilMenu"));
+const MusicToggle = lazy(() => import("./components/MusicToggle").then(m => ({ default: m.MusicToggle })));
 
 // Lazy-load TutorialOverlay to defer framer-motion from critical path
 const TutorialOverlay = lazy(() => import("./components/TutorialOverlay"));
@@ -76,10 +77,12 @@ function GlobalControls() {
   if (isGamePage || isLobbyPage || isLoginPage || isAuthCallback) return null;
 
   return (
-    <div className="fixed top-4 right-4 z-40 flex items-center gap-1">
-      <MusicToggle />
-      <SigilMenu />
-    </div>
+    <Suspense fallback={null}>
+      <div className="fixed top-4 right-4 z-40 flex items-center gap-1">
+        <MusicToggle />
+        <SigilMenu />
+      </div>
+    </Suspense>
   );
 }
 

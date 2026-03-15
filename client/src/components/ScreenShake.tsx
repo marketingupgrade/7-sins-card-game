@@ -83,4 +83,4 @@ const ScreenShake: React.FC<ScreenShakeProps> = ({ trigger, intensity, children 
   );
 };
 
-export default ScreenShake;
+export default React.memo(ScreenShake);

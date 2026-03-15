@@ -45,4 +45,4 @@ const HpCriticalOverlay: React.FC<HpCriticalOverlayProps> = ({ hpPercent, isActi
   );
 };
 
-export default HpCriticalOverlay;
+export default React.memo(HpCriticalOverlay);

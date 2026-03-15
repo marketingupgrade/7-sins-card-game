@@ -73,4 +73,4 @@ const SinReactiveBackground: React.FC<SinReactiveBackgroundProps> = ({
   );
 };
 
-export default SinReactiveBackground;
+export default React.memo(SinReactiveBackground);

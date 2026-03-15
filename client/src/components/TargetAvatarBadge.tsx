@@ -10,6 +10,7 @@
  * Used on both desktop cards and mobile thumbnails.
  */
 
+import { memo } from "react";
 import { motion } from "framer-motion";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { getSinCssVar } from "@/lib/sinColors";
@@ -30,7 +31,7 @@ interface TargetAvatarBadgeProps {
   size?: "sm" | "md";
 }
 
-export default function TargetAvatarBadge({
+const TargetAvatarBadge = memo(function TargetAvatarBadge({
   targetSin,
   targetName,
   isSelf,
@@ -148,4 +149,5 @@ export default function TargetAvatarBadge({
   }
 
   return null;
-}
+});
+export default TargetAvatarBadge;

@@ -170,4 +170,4 @@ const EnergyOrb: React.FC<EnergyOrbProps> = ({
   );
 };
 
-export default EnergyOrbs;
+export default React.memo(EnergyOrbs);

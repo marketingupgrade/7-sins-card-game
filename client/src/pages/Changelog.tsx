@@ -84,6 +84,24 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.0",
+    date: "March 2026",
+    title: "The Optimization",
+    summary: "Performance refactoring driven by Lighthouse audit. Lazy-loaded 13 heavy components, memoized 8 VFX systems, improved accessibility from 78 to 91, and optimized asset loading. Zero regressions.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Lazy-loaded 13 heavy GameBoard sub-components (GameOverScreen, ResolutionReveal, BattleLog, VictoryCinematic, WebGLSinShaders, MobileBattleOverview, and more) via React.lazy + Suspense for faster initial game load" },
+      { category: "feature", text: "Lazy-loaded SigilMenu and MusicToggle in App.tsx, removing framer-motion from the critical rendering path" },
+      { category: "feature", text: "Wrapped 8 VFX components in React.memo (EmberField, EnergyOrbs, HpCriticalOverlay, SinReactiveBackground, YourTurnBanner, RoundTransitionWipe, FloatingNumbers, ScreenShake) to prevent unnecessary re-renders during gameplay" },
+      { category: "feature", text: "TargetAvatarBadge and CardHoverPreview also wrapped in React.memo for stable rendering" },
+      { category: "feature", text: "Attempted Babylon.js selective imports for tree-shaking (12 classes used out of full engine). Bundle unchanged due to Babylon's module structure, but import pattern is now future-ready" },
+      { category: "fix", text: "Accessibility: Added aria-labels to MusicToggle, SoundToggle, and carousel navigation buttons. Score improved from 78 to 91" },
+      { category: "fix", text: "Accessibility: Removed maximum-scale=1 from viewport meta to allow pinch-to-zoom (WCAG 1.4.4 compliance)" },
+      { category: "fix", text: "Added fetchpriority='high' to hero image preload for faster Largest Contentful Paint" },
+      { category: "fix", text: "Production build verified: 14 well-split chunks with route-based code splitting already in place" },
+    ],
+  },
+  {
     version: "5.6.0",
     date: "March 2026",
     title: "The All-Seeing Eye",

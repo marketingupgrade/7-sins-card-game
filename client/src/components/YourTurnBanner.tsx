@@ -74,4 +74,4 @@ const YourTurnBanner: React.FC<YourTurnBannerProps> = ({ show, sinType }) => {
   );
 };
 
-export default YourTurnBanner;
+export default React.memo(YourTurnBanner);

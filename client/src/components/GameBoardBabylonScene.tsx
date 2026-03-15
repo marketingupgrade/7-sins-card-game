@@ -64,8 +64,29 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
     let scene: any;
 
     (async () => {
-      const BABYLON = await import("@babylonjs/core");
+      const [
+        { Engine },
+        { Scene },
+        { ArcRotateCamera },
+        { HemisphericLight, PointLight },
+        { MeshBuilder },
+        { StandardMaterial },
+        { Color3, Color4, Vector3 },
+        { ParticleSystem },
+        { GlowLayer },
+      ] = await Promise.all([
+        import("@babylonjs/core/Engines/engine"),
+        import("@babylonjs/core/scene"),
+        import("@babylonjs/core/Cameras/arcRotateCamera"),
+        import("@babylonjs/core/Lights"),
+        import("@babylonjs/core/Meshes/meshBuilder"),
+        import("@babylonjs/core/Materials/standardMaterial"),
+        import("@babylonjs/core/Maths/math"),
+        import("@babylonjs/core/Particles/particleSystem"),
+        import("@babylonjs/core/Layers/glowLayer"),
+      ]);
       if (disposed.current) return;
+      const BABYLON = { Engine, Scene, ArcRotateCamera, HemisphericLight, PointLight, MeshBuilder, StandardMaterial, Color3, Color4, Vector3, ParticleSystem, GlowLayer };
 
       const isMobile = window.innerWidth < 768;
 
@@ -82,7 +103,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       sceneRef.current = scene;
       scene.clearColor = new BABYLON.Color4(0.015, 0.01, 0.025, 1);
       scene.ambientColor = new BABYLON.Color3(0.02, 0.015, 0.03);
-      scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+      scene.fogMode = 3; // Scene.FOGMODE_EXP2
       scene.fogDensity = 0.035;
       scene.fogColor = new BABYLON.Color3(0.015, 0.01, 0.025);
 
@@ -239,7 +260,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         embers.gravity = new BABYLON.Vector3(0, 0.5, 0);
         embers.minEmitPower = 0.1;
         embers.maxEmitPower = 0.3;
-        embers.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+        embers.blendMode = 1; // ParticleSystem.BLENDMODE_ADD
         embers.start();
       });
 
@@ -280,7 +301,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       dust.gravity = new BABYLON.Vector3(0, -0.005, 0);
       dust.minEmitPower = 0.01;
       dust.maxEmitPower = 0.03;
-      dust.blendMode = BABYLON.ParticleSystem.BLENDMODE_ADD;
+      dust.blendMode = 1; // ParticleSystem.BLENDMODE_ADD
       dust.start();
 
       // --- ANIMATION LOOP ---
@@ -375,7 +396,11 @@ function triggerFloorRune(scene: any, sin: string, index: number) {
   const z = Math.sin(angle) * dist;
 
   // Dynamic import approach for creating rune meshes
-  import("@babylonjs/core").then(({ MeshBuilder, StandardMaterial, Color3, Vector3 }) => {
+  Promise.all([
+    import("@babylonjs/core/Meshes/meshBuilder"),
+    import("@babylonjs/core/Materials/standardMaterial"),
+    import("@babylonjs/core/Maths/math"),
+  ]).then(([{ MeshBuilder }, { StandardMaterial }, { Color3, Vector3 }]) => {
     const runeDisc = MeshBuilder.CreateTorus(`rune_${index}_${Date.now()}`, {
       diameter: 0.5 + Math.random() * 0.3,
       thickness: 0.025,

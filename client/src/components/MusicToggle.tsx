@@ -57,6 +57,7 @@ export function MusicToggle({ className = "" }: { className?: string }) {
         onClick={handleToggle}
         className="p-1.5 rounded-md transition-all duration-200 hover:bg-white/10 text-white/70 hover:text-white"
         title={muted ? "Unmute music" : "Mute music"}
+        aria-label={muted ? "Unmute music" : "Mute music"}
       >
         {muted ? (
           // Music off icon (note with X)
