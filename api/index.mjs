@@ -237,6 +237,114 @@ async function deleteAllUserData(supabaseUserId) {
     commentsDeleted: commentCount ?? 0
   };
 }
+function mapCommunityDeck(row) {
+  return {
+    id: row.id,
+    playerId: row.player_id,
+    gamertag: row.gamertag,
+    deckName: row.deck_name,
+    faction: row.faction,
+    cardIds: row.card_ids,
+    strategy: row.strategy || "",
+    likes: row.likes || 0,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at)
+  };
+}
+async function getPlayerGamertag(playerId) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from("players").select("gamertag").eq("id", playerId).single();
+  if (error || !data) return null;
+  return data.gamertag || null;
+}
+async function setPlayerGamertag(playerId, gamertag) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { error } = await sb.from("players").update({ gamertag }).eq("id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to set gamertag:", error.message);
+    return false;
+  }
+  return true;
+}
+async function isGamertagTaken(gamertag, excludePlayerId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  let query = sb.from("players").select("id", { count: "exact", head: true }).eq("gamertag", gamertag);
+  if (excludePlayerId) {
+    query = query.neq("id", excludePlayerId);
+  }
+  const { count } = await query;
+  return (count ?? 0) > 0;
+}
+async function publishCommunityDeck(input) {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Database not available");
+  const { data, error } = await sb.from("community_decks").insert({
+    player_id: input.playerId,
+    gamertag: input.gamertag,
+    deck_name: input.deckName,
+    faction: input.faction,
+    card_ids: input.cardIds,
+    strategy: input.strategy
+  }).select("id").single();
+  if (error || !data) throw new Error("Failed to publish deck: " + (error?.message || "unknown"));
+  return { id: data.id };
+}
+async function listCommunityDecks(opts) {
+  const sb = getSupabase();
+  if (!sb) return { decks: [], total: 0 };
+  const page = opts.page ?? 1;
+  const limit = opts.limit ?? 20;
+  const offset = (page - 1) * limit;
+  let query = sb.from("community_decks").select("*", { count: "exact" });
+  if (opts.faction) {
+    query = query.eq("faction", opts.faction);
+  }
+  if (opts.sortBy === "likes") {
+    query = query.order("likes", { ascending: false }).order("created_at", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+  query = query.range(offset, offset + limit - 1);
+  const { data, count, error } = await query;
+  if (error || !data) return { decks: [], total: 0 };
+  return { decks: data.map(mapCommunityDeck), total: count ?? 0 };
+}
+async function getCommunityDeck(deckId) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from("community_decks").select("*").eq("id", deckId).single();
+  if (error || !data) return null;
+  return mapCommunityDeck(data);
+}
+async function unpublishCommunityDeck(deckId, playerId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { error } = await sb.from("community_decks").delete().eq("id", deckId).eq("player_id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to unpublish deck:", error.message);
+    return false;
+  }
+  return true;
+}
+async function likeCommunityDeck(deckId) {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { data: current } = await sb.from("community_decks").select("likes").eq("id", deckId).single();
+  if (!current) return false;
+  const { error } = await sb.from("community_decks").update({ likes: (current.likes || 0) + 1 }).eq("id", deckId);
+  if (error) return false;
+  return true;
+}
+async function getPlayerCommunityDecks(playerId) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("community_decks").select("*").eq("player_id", playerId).order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map(mapCommunityDeck);
+}
 async function upsertUser(_user) {
   return;
 }
@@ -5645,6 +5753,85 @@ var appRouter = router({
       })
     ).mutation(async ({ input }) => {
       return setActiveDeck(input.supabaseUserId, input.faction, input.deckId);
+    })
+  }),
+  /** Community deck library — publish and browse player decks */
+  community: router({
+    /** List published community decks with optional filters */
+    list: publicProcedure.input(
+      z3.object({
+        faction: z3.string().max(32).optional(),
+        sortBy: z3.enum(["newest", "likes"]).default("newest"),
+        page: z3.number().int().positive().default(1),
+        limit: z3.number().int().min(1).max(50).default(20)
+      })
+    ).query(async ({ input }) => {
+      return listCommunityDecks(input);
+    }),
+    /** Get a single community deck by ID */
+    get: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).query(async ({ input }) => {
+      return getCommunityDeck(input.deckId);
+    }),
+    /** Publish a deck to the community library (requires auth) */
+    publish: publicProcedure.input(
+      z3.object({
+        playerId: z3.string().min(1).max(64),
+        gamertag: z3.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
+        deckName: z3.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+        faction: z3.string().min(1).max(32),
+        cardIds: z3.string().min(2),
+        strategy: z3.string().max(500).default("").transform((s) => s.replace(/[<>"']/g, ""))
+      })
+    ).mutation(async ({ input }) => {
+      let parsed;
+      try {
+        parsed = JSON.parse(input.cardIds);
+      } catch {
+        throw new Error("cardIds must be a valid JSON array");
+      }
+      if (!Array.isArray(parsed) || parsed.length !== 30) {
+        throw new Error("Deck must contain exactly 30 cards");
+      }
+      const currentTag = await getPlayerGamertag(input.playerId);
+      if (!currentTag || currentTag !== input.gamertag) {
+        const taken = await isGamertagTaken(input.gamertag, input.playerId);
+        if (taken) {
+          throw new Error("Gamertag is already taken by another player");
+        }
+        await setPlayerGamertag(input.playerId, input.gamertag);
+      }
+      return publishCommunityDeck(input);
+    }),
+    /** Unpublish (delete) a community deck — only the owner */
+    unpublish: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64)
+      })
+    ).mutation(async ({ input }) => {
+      return unpublishCommunityDeck(input.deckId, input.playerId);
+    }),
+    /** Like a community deck */
+    like: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).mutation(async ({ input }) => {
+      return likeCommunityDeck(input.deckId);
+    }),
+    /** Get the current player's gamertag */
+    getGamertag: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
+      return { gamertag: await getPlayerGamertag(input.playerId) };
+    }),
+    /** Check if a gamertag is available */
+    checkGamertag: publicProcedure.input(
+      z3.object({
+        gamertag: z3.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
+        excludePlayerId: z3.string().max(64).optional()
+      })
+    ).query(async ({ input }) => {
+      const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
+      return { available: !taken };
+    }),
+    /** Get all community decks published by a specific player */
+    myDecks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
+      return getPlayerCommunityDecks(input.playerId);
     })
   }),
   /** User account management — data purge for GDPR compliance */

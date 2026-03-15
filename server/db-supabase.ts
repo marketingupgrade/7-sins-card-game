@@ -468,6 +468,199 @@ export async function deleteAllUserData(supabaseUserId: string): Promise<{
   };
 }
 
+// ─── Community Decks ──────────────────────────────────────
+
+export interface CommunityDeck {
+  id: number;
+  playerId: string;
+  gamertag: string;
+  deckName: string;
+  faction: string;
+  cardIds: string;
+  strategy: string;
+  likes: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+function mapCommunityDeck(row: any): CommunityDeck {
+  return {
+    id: row.id,
+    playerId: row.player_id,
+    gamertag: row.gamertag,
+    deckName: row.deck_name,
+    faction: row.faction,
+    cardIds: row.card_ids,
+    strategy: row.strategy || "",
+    likes: row.likes || 0,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at),
+  };
+}
+
+/** Get or set a player's gamertag */
+export async function getPlayerGamertag(playerId: string): Promise<string | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("players")
+    .select("gamertag")
+    .eq("id", playerId)
+    .single();
+  if (error || !data) return null;
+  return data.gamertag || null;
+}
+
+export async function setPlayerGamertag(playerId: string, gamertag: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { error } = await sb
+    .from("players")
+    .update({ gamertag })
+    .eq("id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to set gamertag:", error.message);
+    return false;
+  }
+  return true;
+}
+
+export async function isGamertagTaken(gamertag: string, excludePlayerId?: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  let query = sb
+    .from("players")
+    .select("id", { count: "exact", head: true })
+    .eq("gamertag", gamertag);
+  if (excludePlayerId) {
+    query = query.neq("id", excludePlayerId);
+  }
+  const { count } = await query;
+  return (count ?? 0) > 0;
+}
+
+/** Publish a deck to the community library */
+export async function publishCommunityDeck(input: {
+  playerId: string;
+  gamertag: string;
+  deckName: string;
+  faction: string;
+  cardIds: string;
+  strategy: string;
+}): Promise<{ id: number }> {
+  const sb = getSupabase();
+  if (!sb) throw new Error("Database not available");
+  const { data, error } = await sb
+    .from("community_decks")
+    .insert({
+      player_id: input.playerId,
+      gamertag: input.gamertag,
+      deck_name: input.deckName,
+      faction: input.faction,
+      card_ids: input.cardIds,
+      strategy: input.strategy,
+    })
+    .select("id")
+    .single();
+  if (error || !data) throw new Error("Failed to publish deck: " + (error?.message || "unknown"));
+  return { id: data.id };
+}
+
+/** List community decks with optional filters */
+export async function listCommunityDecks(opts: {
+  faction?: string;
+  sortBy?: "newest" | "likes";
+  page?: number;
+  limit?: number;
+}): Promise<{ decks: CommunityDeck[]; total: number }> {
+  const sb = getSupabase();
+  if (!sb) return { decks: [], total: 0 };
+
+  const page = opts.page ?? 1;
+  const limit = opts.limit ?? 20;
+  const offset = (page - 1) * limit;
+
+  let query = sb
+    .from("community_decks")
+    .select("*", { count: "exact" });
+
+  if (opts.faction) {
+    query = query.eq("faction", opts.faction);
+  }
+
+  if (opts.sortBy === "likes") {
+    query = query.order("likes", { ascending: false }).order("created_at", { ascending: false });
+  } else {
+    query = query.order("created_at", { ascending: false });
+  }
+
+  query = query.range(offset, offset + limit - 1);
+
+  const { data, count, error } = await query;
+  if (error || !data) return { decks: [], total: 0 };
+  return { decks: data.map(mapCommunityDeck), total: count ?? 0 };
+}
+
+/** Get a single community deck by ID */
+export async function getCommunityDeck(deckId: number): Promise<CommunityDeck | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("community_decks")
+    .select("*")
+    .eq("id", deckId)
+    .single();
+  if (error || !data) return null;
+  return mapCommunityDeck(data);
+}
+
+/** Unpublish (delete) a community deck — only the owner can do this */
+export async function unpublishCommunityDeck(deckId: number, playerId: string): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { error } = await sb
+    .from("community_decks")
+    .delete()
+    .eq("id", deckId)
+    .eq("player_id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to unpublish deck:", error.message);
+    return false;
+  }
+  return true;
+}
+
+/** Like a community deck (increment likes) */
+export async function likeCommunityDeck(deckId: number): Promise<boolean> {
+  const sb = getSupabase();
+  if (!sb) return false;
+  const { data: current } = await sb
+    .from("community_decks")
+    .select("likes")
+    .eq("id", deckId)
+    .single();
+  if (!current) return false;
+  const { error } = await sb
+    .from("community_decks")
+    .update({ likes: (current.likes || 0) + 1 })
+    .eq("id", deckId);
+  if (error) return false;
+  return true;
+}
+
+/** Get community decks published by a specific player */
+export async function getPlayerCommunityDecks(playerId: string): Promise<CommunityDeck[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("community_decks")
+    .select("*")
+    .eq("player_id", playerId)
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map(mapCommunityDeck);
+}
+
 // ─── User Management (stubs for Manus OAuth compat) ────────
 // These are used by the Manus OAuth flow in the bundled serverless function.
 // On Vercel with Supabase Auth, these are no-ops but must exist to avoid

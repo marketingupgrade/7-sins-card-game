@@ -39,6 +39,15 @@ import {
   deleteDeck,
   setActiveDeck,
   deleteAllUserData,
+  getPlayerGamertag,
+  setPlayerGamertag,
+  isGamertagTaken,
+  publishCommunityDeck,
+  listCommunityDecks,
+  getCommunityDeck,
+  unpublishCommunityDeck,
+  likeCommunityDeck,
+  getPlayerCommunityDecks,
   getBlogPosts,
   getBlogPostBySlug,
   getRelatedPosts,
@@ -216,6 +225,126 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         return setActiveDeck(input.supabaseUserId, input.faction, input.deckId);
+      }),
+  }),
+
+  /** Community deck library — publish and browse player decks */
+  community: router({
+    /** List published community decks with optional filters */
+    list: publicProcedure
+      .input(
+        z.object({
+          faction: z.string().max(32).optional(),
+          sortBy: z.enum(["newest", "likes"]).default("newest"),
+          page: z.number().int().positive().default(1),
+          limit: z.number().int().min(1).max(50).default(20),
+        })
+      )
+      .query(async ({ input }) => {
+        return listCommunityDecks(input);
+      }),
+
+    /** Get a single community deck by ID */
+    get: publicProcedure
+      .input(z.object({ deckId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        return getCommunityDeck(input.deckId);
+      }),
+
+    /** Publish a deck to the community library (requires auth) */
+    publish: publicProcedure
+      .input(
+        z.object({
+          playerId: z.string().min(1).max(64),
+          gamertag: z
+            .string()
+            .min(3)
+            .max(30)
+            .regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
+          deckName: z.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+          faction: z.string().min(1).max(32),
+          cardIds: z.string().min(2),
+          strategy: z
+            .string()
+            .max(500)
+            .default("")
+            .transform((s) => s.replace(/[<>"']/g, "")),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Validate cardIds is valid JSON array of 30 items
+        let parsed: string[];
+        try {
+          parsed = JSON.parse(input.cardIds);
+        } catch {
+          throw new Error("cardIds must be a valid JSON array");
+        }
+        if (!Array.isArray(parsed) || parsed.length !== 30) {
+          throw new Error("Deck must contain exactly 30 cards");
+        }
+
+        // Set the gamertag on the player record (upsert)
+        const currentTag = await getPlayerGamertag(input.playerId);
+        if (!currentTag || currentTag !== input.gamertag) {
+          // Check if gamertag is taken by someone else
+          const taken = await isGamertagTaken(input.gamertag, input.playerId);
+          if (taken) {
+            throw new Error("Gamertag is already taken by another player");
+          }
+          await setPlayerGamertag(input.playerId, input.gamertag);
+        }
+
+        return publishCommunityDeck(input);
+      }),
+
+    /** Unpublish (delete) a community deck — only the owner */
+    unpublish: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return unpublishCommunityDeck(input.deckId, input.playerId);
+      }),
+
+    /** Like a community deck */
+    like: publicProcedure
+      .input(z.object({ deckId: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        return likeCommunityDeck(input.deckId);
+      }),
+
+    /** Get the current player's gamertag */
+    getGamertag: publicProcedure
+      .input(z.object({ playerId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return { gamertag: await getPlayerGamertag(input.playerId) };
+      }),
+
+    /** Check if a gamertag is available */
+    checkGamertag: publicProcedure
+      .input(
+        z.object({
+          gamertag: z
+            .string()
+            .min(3)
+            .max(30)
+            .regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
+          excludePlayerId: z.string().max(64).optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
+        return { available: !taken };
+      }),
+
+    /** Get all community decks published by a specific player */
+    myDecks: publicProcedure
+      .input(z.object({ playerId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return getPlayerCommunityDecks(input.playerId);
       }),
   }),
 

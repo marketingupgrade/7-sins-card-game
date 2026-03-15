@@ -1640,4 +1640,28 @@
 - [x] 10 vitest tests for URL sharing + drill-down data validation (urlDeckSharing.test.ts)
 - [x] Full test suite: 371 tests, 22 files, 0 failures
 - [x] Update patch notes (v5.7.8 'The Strategist's Lens')
-- [ ] Save checkpoint and push to GitHub
+- [x] Save checkpoint and push to GitHub
+
+### Community Deck Library (v5.7.9)
+- [x] Add gamertag field to user profile (not real name)
+- [x] Create community_decks table (playerId, deckName, faction, cardIds, strategy description, gamertag, timestamps)
+- [x] tRPC procedure: publishDeck (public) — publish a deck with name and strategy
+- [x] tRPC procedure: listCommunityDecks (public) — browse published decks with filters
+- [x] tRPC procedure: unpublishDeck (public) — remove own published deck
+- [x] tRPC procedure: likeDeck — like a community deck
+- [x] tRPC procedure: checkGamertag — check gamertag availability
+- [x] tRPC procedure: getGamertag — get current player's gamertag
+- [x] tRPC procedure: myDecks — get player's published decks
+- [x] Community Decks page: browsable library with faction filter, sort by date/likes
+- [x] Show gamertag (not real name) on published decks
+- [x] Import button on each community deck to load it into deck builder
+- [x] Gamertag setup prompt for first-time publishers
+- [x] Write 13 vitest tests for community deck procedures
+- [x] Update patch notes (v5.7.9 'The Community Forge')
+- [x] Add Community Decks to SigilMenu navigation and Home footer
+## Remaining Matchup Drill-Downs (v5.7.9)
+- [x] Fill remaining 9 of 21 non-mirror matchup drill-down entries (Wrath-Greed, Wrath-Pride, Sloth-Greed, Sloth-Envy, Greed-Envy, Greed-Lust, Greed-Pride, Lust-Gluttony, Gluttony-Pride)
+- [x] Ensure all 21 matchups have detailed passive interaction, strengths, key cards, counter-strategy
+- [x] Add 11 new MATCHUP_ANALYSIS flavor text entries
+- [x] Full test suite: 384 tests, 23 files, 0 failures
+- [x] Save checkpoint and push to GitHub

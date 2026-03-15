@@ -84,6 +84,26 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.9",
+    date: "March 2026",
+    title: "The Community Forge",
+    summary: "Players can now publish their custom decks to a shared Community Deck Library, browse builds from other players, filter by faction, like favorites, and one-click import into the Deck Builder. Gamertag system lets players choose a public identity. All 21 non-mirror matchup drill-downs are now complete with detailed passive interactions, key cards, and counter-strategies. 384 tests passing.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Community Deck Library: New /community page to browse, search, and share player-built decks" },
+      { category: "feature", text: "Publish Deck: Logged-in players can publish any saved 30-card deck to the community with a name and strategy description" },
+      { category: "feature", text: "Gamertag System: Players choose a unique public gamertag (3-30 chars) displayed on published decks instead of real names" },
+      { category: "feature", text: "Faction Filter: Browse community decks by faction with color-coded filter pills" },
+      { category: "feature", text: "Sort Options: Sort community decks by newest or most liked" },
+      { category: "feature", text: "Like System: Like community decks to surface the best builds" },
+      { category: "feature", text: "One-Click Import: Import any community deck directly into the Deck Builder via deck code" },
+      { category: "feature", text: "Unpublish: Deck owners can remove their published decks from the community" },
+      { category: "feature", text: "9 new matchup drill-downs: Wrath-Greed, Wrath-Pride, Sloth-Greed, Sloth-Envy, Greed-Envy, Greed-Lust, Greed-Pride, Lust-Gluttony, Gluttony-Pride" },
+      { category: "feature", text: "All 21 non-mirror matchups now have full drill-down analysis with passive interactions, strengths, key cards, and counter-strategies" },
+      { category: "feature", text: "13 new vitest tests for community deck CRUD, gamertag management, and access control" },
+    ],
+  },
+  {
     version: "5.7.8",
     date: "March 2026",
     title: "The Strategist's Lens",

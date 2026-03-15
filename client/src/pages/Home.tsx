@@ -651,6 +651,7 @@ export default function Home() {
                 { label: "Balance Analysis", href: "/balance" },
                 { label: "Brandbook", href: "/brandbook" },
                 { label: "Card Collection", href: "/collection" },
+                { label: "Community Decks", href: "/community" },
                 { label: "Deck Builder", href: "/deck-builder" },
                 { label: "Game Rules", href: "/rules" },
                 { label: "Lore", href: "/blog" },
