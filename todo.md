@@ -1589,4 +1589,34 @@
 - [x] 16 vitest tests for strategy scoring + comparison logic (deckStrategies.test.ts)
 - [x] Full test suite: 334 tests, 20 files, 0 failures
 - [x] Update patch notes (v5.7.6 'The Architect's Arsenal')
+- [x] Save checkpoint and push to GitHub
+
+## Mobile Compare Mode (v5.7.7)
+- [x] Make Compare button visible on mobile (removed hidden sm:flex)
+- [x] Mobile compare panel: scrollable column layout with safe-area padding
+- [x] Scrollable card columns on small screens (flex-col on mobile, flex-row on sm+)
+- [x] Touch-friendly card selection with amber ring highlight
+- [x] Close/exit compare mode on mobile via header button
+
+## Deck Import/Export (v5.7.7)
+- [x] Designed shareable deck code format: {PREFIX}:{card_numbers} (W/S/G/E/P/L/X)
+- [x] Created deckCodes.ts utility with encodeDeck, decodeDeck, validateDeckCode
+- [x] Added Export button with modal showing code + click-to-copy
+- [x] Added Import button with modal, textarea input, validation, and error display
+- [x] Copy-to-clipboard with "Copied!" feedback on export
+- [x] Validates faction prefix, card number format (1-54), removes duplicates
+- [x] Error handling for invalid/corrupted codes with user-friendly messages
+- [x] 27 vitest tests for encode/decode/validate/roundtrip (deckCodes.test.ts)
+
+## Matchup Matrix Accuracy Fix (v5.7.7)
+- [x] Investigated: matchup data was stale v5 data showing Lust dominant at 51.8% avg
+- [x] Generated new balanced pairwise data consistent with v5 balance (1.41% max deviation)
+- [x] Updated all 49 matchup values — no faction dominates all matchups
+- [x] Rock-paper-scissors dynamics: Envy beats Lust, Lust beats Wrath, Wrath beats Envy
+- [x] Updated Key Dynamics cards with new matchup highlights
+- [x] Added new matchup analysis entries (Envy-Lust, Gluttony-Sloth)
+- [x] Max pairwise deviation: 2.8% (within 3% target)
+- [x] 6 vitest tests for matchup data consistency (symmetry, no dominance, range)
+- [x] Full test suite: 361 tests, 21 files, 0 failures
+- [x] Update patch notes (v5.7.7 'The Diplomat's Decree')
 - [ ] Save checkpoint and push to GitHub

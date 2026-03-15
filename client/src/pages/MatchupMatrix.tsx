@@ -60,65 +60,65 @@ const FACTION_LABELS: Record<SinType, string> = {
 const MATCHUP_DATA: Record<SinType, Record<SinType, number>> = {
   wrath: {
     wrath: 50.0,
-    sloth: 47.2,
-    greed: 51.8,
-    envy: 52.4,
-    pride: 49.1,
-    lust: 46.3,
-    gluttony: 48.7,
+    sloth: 47.8,
+    greed: 50.5,
+    envy: 51.5,
+    pride: 50.7,
+    lust: 47.4,
+    gluttony: 48.0,
   },
   sloth: {
-    wrath: 52.8,
+    wrath: 52.2,
     sloth: 50.0,
-    greed: 48.6,
-    envy: 51.3,
-    pride: 52.1,
-    lust: 47.9,
-    gluttony: 49.4,
+    greed: 50.6,
+    envy: 49.8,
+    pride: 49.6,
+    lust: 48.8,
+    gluttony: 47.9,
   },
   greed: {
-    wrath: 48.2,
-    sloth: 51.4,
+    wrath: 49.5,
+    sloth: 49.4,
     greed: 50.0,
-    envy: 49.7,
-    pride: 50.8,
-    lust: 48.5,
-    gluttony: 52.3,
+    envy: 51.4,
+    pride: 49.9,
+    lust: 49.1,
+    gluttony: 50.8,
   },
   envy: {
-    wrath: 47.6,
-    sloth: 48.7,
-    greed: 50.3,
+    wrath: 48.5,
+    sloth: 50.2,
+    greed: 48.6,
     envy: 50.0,
-    pride: 48.2,
-    lust: 49.1,
-    gluttony: 47.8,
+    pride: 48.5,
+    lust: 50.5,
+    gluttony: 47.1,
   },
   pride: {
-    wrath: 50.9,
-    sloth: 47.9,
-    greed: 49.2,
-    envy: 51.8,
+    wrath: 49.3,
+    sloth: 50.4,
+    greed: 50.1,
+    envy: 51.5,
     pride: 50.0,
-    lust: 48.4,
-    gluttony: 49.6,
+    lust: 48.2,
+    gluttony: 47.8,
   },
   lust: {
-    wrath: 53.7,
-    sloth: 52.1,
-    greed: 51.5,
-    envy: 50.9,
-    pride: 51.6,
+    wrath: 52.6,
+    sloth: 51.2,
+    greed: 50.9,
+    envy: 49.5,
+    pride: 51.8,
     lust: 50.0,
-    gluttony: 51.2,
+    gluttony: 49.9,
   },
   gluttony: {
-    wrath: 51.3,
-    sloth: 50.6,
-    greed: 47.7,
-    envy: 52.2,
-    pride: 50.4,
-    lust: 48.8,
+    wrath: 52.0,
+    sloth: 52.1,
+    greed: 49.2,
+    envy: 52.9,
+    pride: 52.2,
+    lust: 50.1,
     gluttony: 50.0,
   },
 };
@@ -131,13 +131,15 @@ const MATCHUP_ANALYSIS: Record<string, string> = {
   "wrath-envy": "Wrath's high burst overwhelms Envy before affliction stacking can escalate. VENGEANCE reflect punishes Envy's damage-to-amplify loop.",
   "wrath-lust": "Lust's TEMPTATION lifesteal directly counters Wrath's aggression — every hit heals Lust while VENGEANCE only reflects a portion.",
   "wrath-sloth": "Sloth's ENDURANCE shields absorb Wrath's burst. The slowburn pattern outlasts Wrath's aggressive front-loading.",
-  "sloth-pride": "Sloth's consistent shield generation negates Pride's conditional burst. ENDURANCE triggers every round vs HUBRIS at ~45%.",
-  "greed-gluttony": "Greed steals resources Gluttony needs for discard_burn chains. TAX shields protect against Gluttony's damage output.",
+  "sloth-pride": "Pride's HUBRIS burst can overwhelm Sloth's shields when it triggers, but Sloth's consistent ENDURANCE generation keeps the matchup close.",
+  "greed-gluttony": "Greed's resource theft disrupts Gluttony's discard_burn chains, but Gluttony's DEVOURER energy gain can outpace the theft.",
   "lust-wrath": "Lust's TEMPTATION converts Wrath's aggression into sustain. The more Wrath attacks, the more Lust heals.",
   "envy-gluttony": "Gluttony's discard_burn removes cards Envy needs for affliction stacking. DEVOURER energy gain outpaces JEALOUSY scaling.",
   "pride-envy": "Pride's expensive cards trigger HUBRIS more reliably, and the x1.324 multiplier overwhelms Envy's gradual amplification.",
   "gluttony-wrath": "Gluttony's deck destruction removes Wrath's high-damage cards from circulation. DEVOURER energy sustains the burn chain.",
   "lust-sloth": "Lust's lifesteal slowly erodes Sloth's shields. TEMPTATION healing outpaces ENDURANCE shield generation in long games.",
+  "envy-lust": "Envy's JEALOUSY affliction amplification disrupts Lust's sustain loop — amplified afflictions deal more than TEMPTATION can heal.",
+  "gluttony-sloth": "Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key late-game cards before they can compound.",
 };
 
 /* ─── Color Interpolation ───────────────────────────────────── */
@@ -559,6 +561,11 @@ export default function MatchupMatrix() {
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <DynamicCard
+              title="Gluttony Devours Envy"
+              factions={["gluttony", "envy"]}
+              description="The strongest matchup in the game. Gluttony's deck destruction removes cards Envy needs for affliction stacking, while DEVOURER energy gain outpaces JEALOUSY's gradual amplification."
+            />
+            <DynamicCard
               title="Lust Dominates Wrath"
               factions={["lust", "wrath"]}
               description="Lust's TEMPTATION lifesteal directly counters Wrath's aggression. Every hit heals Lust while VENGEANCE only reflects a portion — creating a net-positive exchange for Lust."
@@ -569,24 +576,19 @@ export default function MatchupMatrix() {
               description="Sloth's ENDURANCE shields absorb Wrath's burst damage. The slowburn compound pattern outlasts Wrath's aggressive front-loading, winning the attrition war."
             />
             <DynamicCard
-              title="Greed Starves Gluttony"
+              title="Envy Disrupts Lust"
+              factions={["envy", "lust"]}
+              description="Envy's JEALOUSY affliction amplification disrupts Lust's sustain loop — amplified afflictions deal more damage than TEMPTATION can heal, breaking the attrition advantage."
+            />
+            <DynamicCard
+              title="Gluttony Burns Sloth"
+              factions={["gluttony", "sloth"]}
+              description="Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key late-game cards before they can compound. DEVOURER energy sustains the pressure."
+            />
+            <DynamicCard
+              title="Greed Checks Gluttony"
               factions={["greed", "gluttony"]}
               description="Greed's resource theft disrupts Gluttony's discard_burn chains. TAX shields provide passive defense while Greed steals the energy Gluttony needs."
-            />
-            <DynamicCard
-              title="Gluttony Devours Envy"
-              factions={["gluttony", "envy"]}
-              description="Gluttony's deck destruction removes cards Envy needs for affliction stacking. DEVOURER energy gain outpaces JEALOUSY's gradual amplification."
-            />
-            <DynamicCard
-              title="Pride Overpowers Envy"
-              factions={["pride", "envy"]}
-              description="Pride's expensive cards trigger HUBRIS reliably, and the x1.324 multiplier overwhelms Envy's gradual affliction amplification before it can scale."
-            />
-            <DynamicCard
-              title="Lust Outlasts Sloth"
-              factions={["lust", "sloth"]}
-              description="Lust's lifesteal slowly erodes Sloth's shields over time. TEMPTATION healing outpaces ENDURANCE shield generation in extended games."
             />
           </div>
         </div>

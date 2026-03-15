@@ -28,6 +28,7 @@ import {
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
 import { STRATEGIES, autoFillByStrategy, type StrategyType } from "@/lib/deckStrategies";
+import { encodeDeck, decodeDeck, validateDeckCode } from "@/lib/deckCodes";
 
 // ─── Constants ──────────────────────────────────────────────
 const MAX_DECK_SIZE = 30;
@@ -1264,6 +1265,57 @@ export default function DeckBuilder() {
     setShowStrategyPicker(true);
   }, []);
 
+  // Import/Export deck codes
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importCode, setImportCode] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportCopied, setExportCopied] = useState(false);
+
+  const handleExport = useCallback(() => {
+    if (!selectedFaction || deckCardIds.length === 0) return;
+    setExportCopied(false);
+    setShowExportModal(true);
+  }, [selectedFaction, deckCardIds]);
+
+  const exportCode = useMemo(() => {
+    if (!selectedFaction) return "";
+    return encodeDeck(selectedFaction, deckCardIds) || "";
+  }, [selectedFaction, deckCardIds]);
+
+  const copyExportCode = useCallback(() => {
+    if (!exportCode) return;
+    navigator.clipboard.writeText(exportCode).then(() => {
+      setExportCopied(true);
+      setTimeout(() => setExportCopied(false), 2000);
+    });
+  }, [exportCode]);
+
+  const handleImport = useCallback(() => {
+    setImportCode("");
+    setImportError(null);
+    setShowImportModal(true);
+  }, []);
+
+  const applyImport = useCallback(() => {
+    const validation = validateDeckCode(importCode);
+    if (!validation.valid) {
+      setImportError(validation.error || "Invalid code");
+      return;
+    }
+    const result = decodeDeck(importCode);
+    if (!result) {
+      setImportError("Failed to decode deck");
+      return;
+    }
+    // Apply the imported deck
+    setSelectedFaction(result.faction);
+    setDeckCardIds(result.cardIds.slice(0, MAX_DECK_SIZE));
+    setShowImportModal(false);
+    setSaveMessage(`Imported ${result.cardIds.length} cards for ${result.faction.charAt(0).toUpperCase() + result.faction.slice(1)}!`);
+    setTimeout(() => setSaveMessage(null), 3000);
+  }, [importCode]);
+
   // Guest deck limit check
   const isGuest = !user;
   const guestAtDeckLimit = isGuest && !activeDeckId && savedDecks.length >= GUEST_MAX_DECKS;
@@ -1748,6 +1800,21 @@ export default function DeckBuilder() {
                 Clear
               </button>
               <button
+                onClick={handleImport}
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-cyan-500/[0.06] text-cyan-400/50 border border-cyan-500/[0.08] hover:bg-cyan-500/15 hover:text-cyan-400/80 transition-all duration-200"
+                title="Import deck from code"
+              >
+                Import
+              </button>
+              <button
+                onClick={handleExport}
+                disabled={!selectedFaction || deckCardIds.length === 0}
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-cyan-500/[0.06] text-cyan-400/50 border border-cyan-500/[0.08] hover:bg-cyan-500/15 hover:text-cyan-400/80 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed"
+                title="Export deck as shareable code"
+              >
+                Export
+              </button>
+              <button
                 onClick={saveDeck}
                 disabled={isSaving || deckCardIds.length === 0 || guestAtDeckLimit}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed ${
@@ -1840,6 +1907,126 @@ export default function DeckBuilder() {
             }}
             onClose={() => setDetailCard(null)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Import Modal */}
+      <AnimatePresence>
+        {showImportModal && createPortal(
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setShowImportModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-xl p-5"
+              style={{
+                background: "linear-gradient(135deg, rgba(20, 16, 12, 0.98), rgba(15, 12, 8, 0.98))",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-sm font-bold text-amber-200/80 mb-3 tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)" }}>Import Deck</h3>
+              <p className="text-[10px] text-white/30 mb-3">Paste a deck code to import. Format: W:01,02,03,... (W=Wrath, S=Sloth, G=Greed, E=Envy, P=Pride, L=Lust, X=Gluttony)</p>
+              <textarea
+                value={importCode}
+                onChange={(e) => { setImportCode(e.target.value); setImportError(null); }}
+                placeholder="e.g. W:01,03,05,07,09,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39,41,43,45,47,49,51,53,02,04,06"
+                className="w-full h-24 px-3 py-2 rounded-lg text-xs text-white/80 placeholder-white/15 resize-none focus:outline-none focus:ring-1 focus:ring-amber-500/30"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  fontFamily: "monospace",
+                }}
+              />
+              {importError && (
+                <p className="text-[10px] text-red-400/80 mt-2">{importError}</p>
+              )}
+              <div className="flex gap-2 mt-4 justify-end">
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="px-3 py-1.5 rounded-lg text-[10px] text-white/30 hover:text-white/50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={applyImport}
+                  disabled={!importCode.trim()}
+                  className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-amber-500/15 text-amber-200/80 hover:bg-amber-500/25 border border-amber-500/25 transition-all disabled:opacity-25 disabled:cursor-not-allowed"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  Import
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>,
+          document.body
+        )}
+      </AnimatePresence>
+
+      {/* Export Modal */}
+      <AnimatePresence>
+        {showExportModal && createPortal(
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.7)" }}
+            onClick={() => setShowExportModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="w-full max-w-md rounded-xl p-5"
+              style={{
+                background: "linear-gradient(135deg, rgba(20, 16, 12, 0.98), rgba(15, 12, 8, 0.98))",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-sm font-bold text-amber-200/80 mb-3 tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)" }}>Export Deck</h3>
+              <p className="text-[10px] text-white/30 mb-3">Share this code with friends to let them import your deck build.</p>
+              <div
+                className="relative rounded-lg px-3 py-2.5 cursor-pointer group"
+                style={{
+                  background: "rgba(255,255,255,0.03)",
+                  border: "1px solid rgba(255,255,255,0.06)",
+                }}
+                onClick={copyExportCode}
+              >
+                <p className="text-xs text-cyan-300/70 font-mono break-all pr-8">{exportCode}</p>
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-hover:text-white/50 transition-colors">
+                  {exportCopied ? "\u2713 Copied!" : "Click to copy"}
+                </span>
+              </div>
+              <div className="flex gap-2 mt-4 justify-end">
+                <button
+                  onClick={() => setShowExportModal(false)}
+                  className="px-3 py-1.5 rounded-lg text-[10px] text-white/30 hover:text-white/50 transition-colors"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={copyExportCode}
+                  className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-cyan-500/15 text-cyan-300/80 hover:bg-cyan-500/25 border border-cyan-500/25 transition-all"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  {exportCopied ? "Copied!" : "Copy Code"}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>,
+          document.body
         )}
       </AnimatePresence>
     </div>

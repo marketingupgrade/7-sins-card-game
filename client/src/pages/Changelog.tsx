@@ -84,6 +84,24 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.7",
+    date: "March 2026",
+    title: "The Diplomat's Decree",
+    summary: "Matchup matrix rebalanced — Lust no longer dominates all matchups. Every faction now has at least one unfavorable pairwise matchup with rock-paper-scissors dynamics. Deck import/export lets players share builds via compact codes. Mobile compare mode now fully functional. 361 tests passing.",
+    major: false,
+    changes: [
+      { category: "balance", text: "Matchup Matrix: Regenerated all 49 pairwise matchup values — no faction dominates all matchups (previously Lust won every pairwise at 51.8% avg)" },
+      { category: "balance", text: "Rock-paper-scissors dynamics preserved: Envy beats Lust, Lust beats Wrath, Wrath beats Envy, Gluttony beats Sloth, Greed checks Gluttony" },
+      { category: "balance", text: "Max pairwise deviation reduced from 3.7% to 2.8% — all matchups within 47-53% range" },
+      { category: "feature", text: "Deck Import/Export: Share deck builds via compact codes (e.g., W:01,03,05,...) — copy/paste with friends" },
+      { category: "feature", text: "Export modal with click-to-copy code, Import modal with validation and error messages" },
+      { category: "feature", text: "Deck code format: {PREFIX}:{card_numbers} where W=Wrath, S=Sloth, G=Greed, E=Envy, P=Pride, L=Lust, X=Gluttony" },
+      { category: "feature", text: "Mobile Compare Mode: Compare button now visible on mobile, panel uses scrollable column layout with safe-area padding" },
+      { category: "feature", text: "Updated Key Dynamics section with new matchup highlights: Envy Disrupts Lust, Gluttony Burns Sloth" },
+      { category: "feature", text: "27 new vitest tests for deck code encode/decode/validate and 6 tests for matchup data consistency" },
+    ],
+  },
+  {
     version: "5.7.6",
     date: "March 2026",
     title: "The Architect's Arsenal",

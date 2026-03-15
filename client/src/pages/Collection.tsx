@@ -624,7 +624,7 @@ export default function Collection() {
             {/* Compare toggle */}
             <button
               onClick={() => compareMode ? exitCompareMode() : setCompareMode(true)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all duration-200 hidden sm:flex items-center gap-1.5
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all duration-200 flex items-center gap-1.5
                 ${compareMode
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
                   : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60'}`}
@@ -915,21 +915,21 @@ export default function Collection() {
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-amber-500/20 shadow-2xl"
           >
-            <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="max-w-7xl mx-auto px-4 py-4 pb-[env(safe-area-inset-bottom,16px)]">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-amber-300" style={{ fontFamily: "var(--font-heading)" }}>
                   Comparing {compareCards.length} Cards
                 </h3>
                 <button
                   onClick={exitCompareMode}
-                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors px-2 py-1 rounded border border-white/10 hover:border-white/20"
                 >
                   Close
                 </button>
               </div>
 
               {/* Side-by-side comparison */}
-              <div className={`grid gap-3 ${compareCards.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              <div className={`grid gap-3 ${compareCards.length === 2 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'} max-h-[60vh] sm:max-h-none overflow-y-auto sm:overflow-visible`}>
                 {compareCards.map((card) => {
                   const sinColor = SIN_COLORS[card.sin];
                   const tm = getCardTargetMode(card);
@@ -1056,7 +1056,7 @@ export default function Collection() {
             exit={{ y: 100, opacity: 0 }}
             className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-amber-500/20"
           >
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+            <div className="max-w-7xl mx-auto px-4 py-3 pb-[env(safe-area-inset-bottom,12px)] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
                   <span className="text-amber-300 text-sm font-bold">{compareIds.length}</span>
