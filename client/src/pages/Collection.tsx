@@ -1,7 +1,7 @@
 /**
  * Collection Page — Card Gallery & Compendium
  *
- * Browse all 378 cards across 7 factions.
+ * Browse all 424 cards across 7 factions (378 standard + 46 zero-cost).
  * Filter by faction, tier, effect type, compound pattern, and search by name.
  * Click a card to see its full details in a modal.
  */

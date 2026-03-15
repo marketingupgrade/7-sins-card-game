@@ -2,7 +2,7 @@
  * Matchup Matrix Page — 7x7 Faction Win Rate Heatmap
  *
  * Visualizes pairwise faction matchup dynamics in a 4-player FFA context.
- * Data derived from Monte Carlo simulation (v5.10 balance: 333 HP, ×1.75 defense, Final Reckoning).
+ * Data derived from Monte Carlo simulation (v5.11 balance: 333 HP, ×1.75 defense, Final Reckoning, Sloth AOE passive, 10-card hand cap).
  *
  * Features:
  * - Interactive 7x7 heatmap grid with color-coded cells
@@ -50,7 +50,8 @@ const FACTION_LABELS: Record<SinType, string> = {
  * In a 4-player FFA, "matchup" measures how often faction A finishes
  * ahead of faction B when both are in the same game. 50% = perfectly even.
  *
- * Data from v5.10 Monte Carlo simulation (1.26M games, 333 HP, ×1.75 defense, Final Reckoning).
+ * Data from v5.11 Monte Carlo simulation (1.26M games, 333 HP, ×1.75 defense, Final Reckoning).
+ * v5.11 changes: Sloth ENDURANCE now deals energy x2 AOE damage per turn, hand cap at 10, 46 new zero-cost cards.
  * These values reflect the compound-ticking dynamics, passive interactions,
  * the simultaneous-resolution turn structure, and the Final Reckoning at round 20.
  *
@@ -139,12 +140,12 @@ interface MatchupDetail {
 
 const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   "wrath-sloth": {
-    summary: "Sloth's shields absorb Wrath's burst, winning the attrition war.",
-    passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields — reflected damage is absorbed before it can threaten Sloth's HP.",
+    summary: "Sloth's shields absorb Wrath's burst while ENDURANCE AOE (energy x2) chips away at Wrath's HP each turn.",
+    passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields. Meanwhile, Sloth's new AOE passive (energy x2 damage per turn) adds unavoidable chip damage that compounds over time.",
     attackerStrengths: ["High burst damage in early rounds", "VENGEANCE punishes attackers", "Aggressive compound patterns escalate fast"],
-    defenderStrengths: ["ENDURANCE generates shields each turn", "Slowburn pattern scales into late game", "Shield stacking absorbs burst windows"],
-    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields, but Sloth's Torpor Shield and Lethargy Wall regenerate faster than Wrath can burn through.",
-    counterStrategy: "As Wrath: focus single-target burst to break shields before they stack. As Sloth: conserve energy for shield generation, avoid trading early.",
+    defenderStrengths: ["ENDURANCE generates shields AND deals AOE damage each turn", "Slowburn pattern scales into late game", "AOE passive punishes all opponents simultaneously"],
+    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields, but Sloth's Torpor Shield regenerates while ENDURANCE AOE deals 8-14 damage per turn to all enemies.",
+    counterStrategy: "As Wrath: focus single-target burst to kill Sloth before AOE damage accumulates. As Sloth: conserve energy to maximize both shield generation and AOE output.",
   },
   "wrath-envy": {
     summary: "Wrath's high burst overwhelms Envy before affliction stacking escalates.",
@@ -163,12 +164,12 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     counterStrategy: "As Wrath: include heal_block cards to shut down TEMPTATION. As Lust: maximize damage-over-time to trigger more lifesteal.",
   },
   "sloth-pride": {
-    summary: "Pride's HUBRIS burst can overwhelm shields, but Sloth's consistency keeps it close.",
-    passiveInteraction: "HUBRIS multiplier (x1.324) on expensive cards can punch through ENDURANCE shields in a single round, but only when triggered.",
-    attackerStrengths: ["ENDURANCE generates consistent shields", "Slowburn compounds over time", "High survivability in long games"],
+    summary: "Pride's HUBRIS burst can overwhelm shields, but Sloth's AOE passive and consistency keep the pressure on.",
+    passiveInteraction: "HUBRIS multiplier (x1.324) on expensive cards can punch through ENDURANCE shields, but Sloth's AOE passive (energy x2) deals unavoidable damage every turn.",
+    attackerStrengths: ["ENDURANCE generates shields AND deals AOE damage", "Slowburn compounds over time", "AOE passive creates a damage clock Pride must race against"],
     defenderStrengths: ["HUBRIS amplifies expensive card effects", "Single massive burst rounds", "High-tier cards have outsized impact"],
-    keyCards: "Pride's Crown of Thorns with HUBRIS can deal 40+ damage in one round, breaking Sloth's shield stack. Sloth needs to spread shields across rounds.",
-    counterStrategy: "As Sloth: maintain shield buffer above 30 HP equivalent. As Pride: save expensive cards for burst rounds.",
+    keyCards: "Pride's Crown of Thorns with HUBRIS can deal 40+ damage in one round, but Sloth's ENDURANCE AOE deals 8-14 damage per turn to all enemies, creating a race condition.",
+    counterStrategy: "As Sloth: maximize energy to boost both shields and AOE output. As Pride: burst early before Sloth's cumulative AOE damage becomes decisive.",
   },
   "greed-gluttony": {
     summary: "Greed's resource theft disrupts Gluttony's burn chains, creating a resource war.",
@@ -179,12 +180,12 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     counterStrategy: "As Greed: steal energy early to prevent burn chains. As Gluttony: prioritize deck burn over direct damage.",
   },
   "lust-sloth": {
-    summary: "Lust's lifesteal slowly erodes Sloth's shields in a battle of sustain.",
-    passiveInteraction: "TEMPTATION healing outpaces ENDURANCE shield generation in long games — Lust heals while dealing damage, Sloth only shields.",
-    attackerStrengths: ["TEMPTATION heals while dealing damage", "Lifesteal bypasses shield regeneration", "Sustain advantage in 15+ round games"],
-    defenderStrengths: ["ENDURANCE shields absorb damage", "Slowburn pattern delays Lust's scaling", "Shield stacking buys time"],
-    keyCards: "Lust's Charming Whisper deals damage AND heals, slowly outpacing Sloth's shield generation. Sloth needs burst damage to threaten Lust.",
-    counterStrategy: "As Lust: play for the long game, maximize damage ticks. As Sloth: include offensive cards to pressure Lust's HP directly.",
+    summary: "Lust's lifesteal vs Sloth's shields + AOE: a battle of sustain where Sloth's AOE passive tips the scales.",
+    passiveInteraction: "TEMPTATION healing competes with ENDURANCE shield generation, but Sloth's new AOE passive (energy x2) adds unavoidable damage that Lust must out-heal.",
+    attackerStrengths: ["TEMPTATION heals while dealing damage", "Lifesteal bypasses shield regeneration", "Sustain advantage if AOE damage can be out-healed"],
+    defenderStrengths: ["ENDURANCE shields absorb damage AND deals AOE", "AOE passive creates pressure Lust must out-heal", "Shield stacking + AOE is a dual threat"],
+    keyCards: "Lust's Charming Whisper deals damage AND heals, but must out-heal Sloth's ENDURANCE AOE (8-14 per turn). Sloth's dual threat of shields + AOE creates sustained pressure.",
+    counterStrategy: "As Lust: maximize lifesteal to out-heal AOE damage. As Sloth: maximize energy for both shield generation and AOE output.",
   },
   "envy-lust": {
     summary: "Envy's affliction amplification disrupts Lust's sustain loop.",
@@ -203,12 +204,12 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     counterStrategy: "As Gluttony: burn Wrath's deck early to remove burst cards. As Wrath: play high-damage cards immediately, don't hold them.",
   },
   "gluttony-sloth": {
-    summary: "Gluttony's deck burn disrupts Sloth's slowburn strategy by removing late-game cards.",
-    passiveInteraction: "DEVOURER energy sustains burn pressure while removing the compound cards Sloth needs for late-game scaling.",
+    summary: "Gluttony's deck burn disrupts Sloth's slowburn, but Sloth's AOE passive provides a backup damage source.",
+    passiveInteraction: "DEVOURER energy sustains burn pressure while removing compound cards. However, Sloth's AOE passive (energy x2) provides damage independent of cards in hand.",
     attackerStrengths: ["Deck burn removes compound cards", "DEVOURER self-sustains energy", "Disrupts slowburn scaling"],
-    defenderStrengths: ["ENDURANCE shields buy time", "Slowburn compounds if cards survive", "High survivability"],
-    keyCards: "Gluttony's Ravenous Maw destroys Sloth's key slowburn cards before they can compound. Sloth needs early shield stacking to survive.",
-    counterStrategy: "As Gluttony: target Sloth's compound cards for burn. As Sloth: play compound cards early before they're destroyed.",
+    defenderStrengths: ["ENDURANCE shields buy time", "AOE passive deals damage even when deck is thinned", "Dual threat: shields + AOE from passive alone"],
+    keyCards: "Gluttony's Ravenous Maw destroys Sloth's key slowburn cards, but Sloth's ENDURANCE AOE (energy x2) deals damage regardless of hand contents.",
+    counterStrategy: "As Gluttony: target Sloth's compound cards for burn AND steal energy to weaken AOE. As Sloth: play compound cards early, rely on AOE passive as backup.",
   },
   "gluttony-envy": {
     summary: "The strongest matchup — Gluttony's deck destruction removes cards Envy needs for affliction stacking.",
@@ -251,20 +252,20 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     counterStrategy: "As Wrath: maintain pressure every round to prevent Pride from setting up HUBRIS combos. As Pride: save expensive cards for back-to-back HUBRIS rounds.",
   },
   "sloth-greed": {
-    summary: "Sloth's shield stacking outlasts Greed's resource denial in a war of attrition.",
-    passiveInteraction: "ENDURANCE generates shields from stored energy and hand size, while TAX generates shields from damage ticks — both factions build defenses, but Sloth's is more reliable.",
-    attackerStrengths: ["ENDURANCE shields scale with hand size and energy", "Slowburn compounds grow stronger each turn", "High survivability in 15+ round games"],
-    defenderStrengths: ["TAX shields from damage provide passive defense", "Energy steal can disrupt ENDURANCE scaling", "Resource denial weakens Sloth's hand-size dependency"],
-    keyCards: "Sloth's Torpor Shield stacks compound shields that outpace TAX generation. Greed's energy steal can reduce Sloth's stored energy, weakening ENDURANCE output.",
-    counterStrategy: "As Sloth: hold cards to maximize ENDURANCE shield generation. As Greed: aggressively steal energy to reduce Sloth's passive output.",
+    summary: "Sloth's shields + AOE passive outlast Greed's resource denial in a war of attrition.",
+    passiveInteraction: "ENDURANCE generates shields AND deals AOE damage (energy x2), while TAX generates shields from damage ticks. Sloth's dual output outpaces Greed's single-axis defense.",
+    attackerStrengths: ["ENDURANCE shields scale with energy", "AOE passive (energy x2) adds unavoidable damage", "Dual threat: defense + offense from one passive"],
+    defenderStrengths: ["TAX shields from damage provide passive defense", "Energy steal can disrupt ENDURANCE scaling and AOE output", "Resource denial weakens both Sloth's shields and AOE"],
+    keyCards: "Sloth's Torpor Shield stacks compound shields while ENDURANCE AOE chips away at Greed's HP. Greed's energy steal is critical: reducing Sloth's energy weakens both shields AND AOE.",
+    counterStrategy: "As Sloth: hold cards and energy to maximize both shield generation and AOE. As Greed: aggressively steal energy to cripple Sloth's dual passive output.",
   },
   "sloth-envy": {
-    summary: "Envy's affliction amplification slowly pierces through Sloth's shield wall.",
-    passiveInteraction: "JEALOUSY deepens afflictions on damage, which bypass ENDURANCE shields — afflictions tick through shields, giving Envy a slow but reliable win condition.",
-    attackerStrengths: ["ENDURANCE generates consistent shields", "Slowburn compounds scale over time", "High survivability delays Envy's scaling"],
+    summary: "Envy's affliction amplification pierces Sloth's shields, but Sloth's AOE passive punishes back.",
+    passiveInteraction: "JEALOUSY afflictions bypass ENDURANCE shields, but Sloth's AOE passive (energy x2) deals unavoidable damage to Envy every turn. A race between affliction scaling and AOE accumulation.",
+    attackerStrengths: ["ENDURANCE generates shields", "AOE passive (energy x2) deals unavoidable damage", "Dual threat forces Envy to race against the AOE clock"],
     defenderStrengths: ["JEALOUSY afflictions bypass shield absorption", "Affliction amplification scales exponentially", "Duo targeting spreads debuffs past shields"],
-    keyCards: "Envy's Jealous Gaze applies afflictions that tick through Sloth's shields. Sloth's Lethargy Wall can delay but not prevent affliction stacking.",
-    counterStrategy: "As Sloth: include affliction_cleanse cards to remove debuffs before they compound. As Envy: stack afflictions early while Sloth focuses on shield generation.",
+    keyCards: "Envy's Jealous Gaze applies afflictions that tick through shields, but Sloth's ENDURANCE AOE (8-14 per turn) creates a damage race Envy must win before being ground down.",
+    counterStrategy: "As Sloth: include affliction_cleanse cards and rely on AOE to pressure Envy. As Envy: stack afflictions fast to outpace Sloth's AOE accumulation.",
   },
   "greed-envy": {
     summary: "Greed's resource denial disrupts Envy's affliction engine before it scales.",
@@ -315,20 +316,20 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
 const MATCHUP_ANALYSIS: Record<string, string> = {
   "wrath-envy": "Wrath's high burst overwhelms Envy before affliction stacking can escalate. VENGEANCE reflect punishes Envy's damage-to-amplify loop.",
   "wrath-lust": "Lust's TEMPTATION lifesteal directly counters Wrath's aggression — every hit heals Lust while VENGEANCE only reflects a portion.",
-  "wrath-sloth": "Sloth's ENDURANCE shields absorb Wrath's burst. The slowburn pattern outlasts Wrath's aggressive front-loading.",
-  "sloth-pride": "Pride's HUBRIS burst can overwhelm Sloth's shields when it triggers, but Sloth's consistent ENDURANCE generation keeps the matchup close.",
+  "wrath-sloth": "Sloth's ENDURANCE shields absorb Wrath's burst while the new AOE passive (energy x2) chips away at Wrath's HP every turn.",
+  "sloth-pride": "Pride's HUBRIS burst can overwhelm Sloth's shields, but Sloth's ENDURANCE AOE passive (energy x2) creates a damage clock Pride must race against.",
   "greed-gluttony": "Greed's resource theft disrupts Gluttony's discard_burn chains, but Gluttony's DEVOURER energy gain can outpace the theft.",
   "lust-wrath": "Lust's TEMPTATION converts Wrath's aggression into sustain. The more Wrath attacks, the more Lust heals.",
   "envy-gluttony": "Gluttony's discard_burn removes cards Envy needs for affliction stacking. DEVOURER energy gain outpaces JEALOUSY scaling.",
   "pride-envy": "Pride's expensive cards trigger HUBRIS more reliably, and the x1.324 multiplier overwhelms Envy's gradual amplification.",
   "gluttony-wrath": "Gluttony's deck destruction removes Wrath's high-damage cards from circulation. DEVOURER energy sustains the burn chain.",
-  "lust-sloth": "Lust's lifesteal slowly erodes Sloth's shields. TEMPTATION healing outpaces ENDURANCE shield generation in long games.",
+  "lust-sloth": "Lust's lifesteal vs Sloth's shields + AOE passive. TEMPTATION must now out-heal ENDURANCE AOE (energy x2) in addition to eroding shields.",
   "envy-lust": "Envy's JEALOUSY affliction amplification disrupts Lust's sustain loop — amplified afflictions deal more than TEMPTATION can heal.",
-  "gluttony-sloth": "Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key late-game cards before they can compound.",
+  "gluttony-sloth": "Gluttony's deck burn disrupts Sloth's slowburn, but Sloth's AOE passive (energy x2) provides card-independent damage even when the deck is thinned.",
   "wrath-greed": "Wrath's AoE burst generates fewer TAX shield ticks than single-target attacks. VENGEANCE reflect adds chip damage that Greed's shields can't fully absorb.",
   "wrath-pride": "Wrath's consistent round-over-round damage outpaces Pride's conditional HUBRIS triggers. VENGEANCE reflect punishes Pride's own attacks.",
-  "sloth-greed": "Sloth's ENDURANCE shields scale more reliably than TAX shields. Greed's energy steal can disrupt but not prevent Sloth's compound growth.",
-  "sloth-envy": "Envy's JEALOUSY afflictions bypass Sloth's ENDURANCE shields, ticking through the shield wall for a slow but reliable win condition.",
+  "sloth-greed": "Sloth's ENDURANCE shields + AOE passive outscale TAX shields. Greed's energy steal is critical: it weakens both Sloth's shields AND AOE output.",
+  "sloth-envy": "Envy's JEALOUSY afflictions bypass shields, but Sloth's AOE passive (energy x2) creates a damage race. Whoever scales faster wins.",
   "greed-envy": "Greed's energy steal starves Envy's affliction_amplify engine. TAX shields absorb the damage ticks that JEALOUSY needs to deepen.",
   "greed-lust": "Lust's TEMPTATION lifesteal outpaces TAX shield generation in longer games. Greed needs early aggression to prevent Lust's sustain from taking over.",
   "greed-pride": "Pride's HUBRIS burst can overwhelm TAX shields in single rounds, but Greed's energy steal delays the expensive card plays HUBRIS needs.",
@@ -744,7 +745,7 @@ export default function MatchupMatrix() {
               className="text-sm sm:text-base text-white/40 max-w-xl mx-auto leading-relaxed"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Pairwise faction win rates from 100K simulated games. Each cell shows how often the
+              Pairwise faction win rates from 1.26M simulated games (v5.11). Each cell shows how often the
               row faction finishes ahead of the column faction in 4-player free-for-all.
             </p>
           </motion.div>
@@ -988,7 +989,7 @@ export default function MatchupMatrix() {
             <DynamicCard
               title="Sloth Walls Wrath"
               factions={["sloth", "wrath"]}
-              description="Sloth's ENDURANCE shields absorb Wrath's burst damage. The slowburn compound pattern outlasts Wrath's aggressive front-loading, winning the attrition war."
+              description="Sloth's ENDURANCE shields absorb Wrath's burst while the new AOE passive (energy x2) chips away at Wrath's HP every turn. The dual threat of shields + AOE outlasts Wrath's aggression."
             />
             <DynamicCard
               title="Envy Disrupts Lust"
@@ -998,7 +999,7 @@ export default function MatchupMatrix() {
             <DynamicCard
               title="Gluttony Burns Sloth"
               factions={["gluttony", "sloth"]}
-              description="Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key late-game cards before they can compound. DEVOURER energy sustains the pressure."
+              description="Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key compound cards. However, Sloth's AOE passive (energy x2) provides card-independent damage even when the deck is thinned."
             />
             <DynamicCard
               title="Greed Checks Gluttony"
@@ -1026,7 +1027,7 @@ export default function MatchupMatrix() {
               Methodology Note
             </h3>
             <p className="text-xs text-white/35 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-              Pairwise matchup rates are measured across 100K simulated 4-player FFA games using the v5 balanced parameters.
+              Pairwise matchup rates are measured across 1.26M simulated 4-player FFA games using the v5.11 balanced parameters (333 HP, ×1.75 defense, Final Reckoning at round 20, Sloth AOE passive, 10-card hand cap, 424 cards including 46 zero-cost).
               Each cell represents the probability that the row faction finishes with a higher placement than the column faction
               when both appear in the same game. Because this is a 4-player format (not 1v1), matchup dynamics are influenced
               by the other two factions present — a faction may perform differently against the same opponent depending on the
@@ -1047,7 +1048,7 @@ export default function MatchupMatrix() {
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-500/20" />
           </div>
           <p className="text-center text-[10px] text-white/15" style={{ fontFamily: "var(--font-heading)" }}>
-            7 Deadly Sins — Matchup Matrix v5 — 100K Game Simulation
+            7 Deadly Sins — Matchup Matrix v5.11 — 1.26M Game Simulation
           </p>
         </div>
       </footer>

@@ -288,7 +288,7 @@ const CHANGELOG: PatchNote[] = [
     summary: "Collection page gains a target mode filter for deck-building research. The Deck Builder now shows a Target Coverage breakdown with intelligent synergy warnings that flag missing AoE coverage, lack of offense, or no sustain. 318 tests passing.",
     major: false,
     changes: [
-      { category: "feature", text: "Collection: New 'Target' filter row with pills for Single, AoE, Duo, Self, and Mixed — filter the entire 378-card pool by targeting type" },
+      { category: "feature", text: "Collection: New 'Target' filter row with pills for Single, AoE, Duo, Self, and Mixed — filter the entire card pool by targeting type" },
       { category: "feature", text: "Deck Builder: Target Coverage section in the insights panel showing a 5-column grid with counts for each target mode" },
       { category: "feature", text: "Deck Builder: Intelligent synergy warnings — danger (no offense), caution (no AoE / no single-target), tip (no sustain), and positive feedback for balanced decks" },
       { category: "feature", text: "Color-coded warning cards: red for danger, yellow for caution, green for tips — with contextual icons and actionable advice" },
@@ -307,7 +307,7 @@ const CHANGELOG: PatchNote[] = [
       { category: "feature", text: "MobileCardZoom: Full target mode label in the card header, visible when tapping a card during gameplay on mobile" },
       { category: "feature", text: "Shared targetModeUtils.ts: Extracted getCardTargetMode into a reusable utility with TargetModeInfo type, replacing inline implementations" },
       { category: "fix", text: "CardHoverPreview refactored to use shared utility instead of its own inline getCardTargetMode function" },
-      { category: "feature", text: "9 new vitest tests validating target mode detection against all 378 cards in the card pool" },
+      { category: "feature", text: "9 new vitest tests validating target mode detection across the card pool" },
     ],
   },
   {

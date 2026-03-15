@@ -319,13 +319,13 @@ export default function BalanceAnalysis() {
           </h1>
 
           <p className="text-white/40 text-base md:text-lg max-w-2xl mx-auto leading-relaxed italic" style={{ fontFamily: "var(--font-body)" }}>
-            How 1.5 million simulated games and a combined passive-card optimizer achieved a 1.41% maximum win rate deviation across seven factions.
+            How 1.5 million simulated games and a combined passive-card optimizer achieved a 1.41% maximum win rate deviation across seven factions. Updated for v5.11 with 46 zero-cost cards, hand cap, and Sloth AOE passive.
           </p>
 
           {/* Key stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10 max-w-3xl mx-auto">
             <StatCard value="1.41%" label="Max Deviation" />
-            <StatCard value="378" label="Total Cards" />
+            <StatCard value="424" label="Total Cards" />
             <StatCard value="500K+" label="Games Simulated" />
             <StatCard value="PERFECT" label="Balance Grade" accent="#22c55e" />
           </div>
@@ -346,7 +346,7 @@ export default function BalanceAnalysis() {
         <Section id="summary" number="01" title="Executive Summary">
           <div className="prose-gothic">
             <p>
-              This document presents the complete balance analysis of the 7 Deadly Sins card game, a 4-player free-for-all card game featuring <strong>378 unique cards</strong> across seven factions, each with a distinct passive ability. Through five iterative balancing versions and over 1.5 million simulated games, the system achieved a <strong>1.41% maximum win rate deviation</strong> — well within the 1.5% target threshold and earning a PERFECT balance grade.
+              This document presents the complete balance analysis of the 7 Deadly Sins card game, a 4-player free-for-all card game featuring <strong>424 unique cards</strong> across seven factions, each with a distinct passive ability. Through five iterative balancing versions and over 1.5 million simulated games, the system achieved a <strong>1.41% maximum win rate deviation</strong> — well within the 1.5% target threshold and earning a PERFECT balance grade. Version 5.11 added 46 zero-cost cards (12 per faction), a 10-card hand cap, a 10-second turn timer, and upgraded Sloth's ENDURANCE passive to deal energy x2 AOE damage each turn.
             </p>
             <p>
               The balancing process required not only card value tuning but a complete structural redesign of all seven faction passives, proving that <strong>passive ability design is the dominant factor in faction balance</strong>, not individual card statistics.
@@ -367,9 +367,11 @@ export default function BalanceAnalysis() {
             rows={[
               ["Players per game", "4"],
               ["Factions", "7 (Wrath, Sloth, Greed, Envy, Pride, Lust, Gluttony)"],
-              ["Cards per faction", "54 (50 standard + 4 skip-queue priority)"],
-              ["Total card pool", "378"],
+              ["Cards per faction", "~60 (50 standard + 4 skip-queue + ~6 zero-cost)"],
+              ["Total card pool", "424 (378 standard + 46 zero-cost)"],
               ["Starting HP", "333 (v5.10 — increased from 200)"],
+              ["Hand cap", "10 cards maximum (v5.11)"],
+              ["Turn timer", "10 seconds after first player locks in (v5.11)"],
               ["Starting energy", "3"],
               ["Rounds per game", "20"],
               ["Resolution order", "Skip-queue first, then lowest cost first"],
@@ -558,14 +560,14 @@ export default function BalanceAnalysis() {
         <Section id="cardpool" number="06" title="Card Pool Statistics">
           <div className="prose-gothic">
             <p>
-              The 378-card pool was carefully shaped to ensure each faction has a playable cost curve, appropriate compound pattern distribution, and meaningful target mode variety.
+              The 424-card pool (378 standard + 46 zero-cost) was carefully shaped to ensure each faction has a playable cost curve, appropriate compound pattern distribution, and meaningful target mode variety. In v5.11, 46 zero-cost cards were added (approximately 6-7 per faction) to prevent energy-lock situations where players have no playable cards.
             </p>
           </div>
 
           <ChartImage
             src={CHARTS.costDistribution}
             alt="Card Cost Distribution by Faction"
-            caption="Figure 5 — Cost distribution: bell curve centered around 2-3, with Pride's deliberate absence of 0-cost cards"
+            caption="Figure 5 — Cost distribution: bell curve centered around 2-3. v5.11 added 46 zero-cost cards across all factions for energy safety"
           />
 
           <ChartImage
@@ -721,7 +723,7 @@ export default function BalanceAnalysis() {
               <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy×2 to all enemies). The power budget must account for trigger frequency.
             </p>
             <p>
-              <strong>5. 378 cards maintain balance.</strong> Expanding from 252 to 378 cards (including 28 skip-queue priority cards) did not destabilize the balance, suggesting the system is robust to card pool expansion.
+              <strong>5. 424 cards maintain balance.</strong> Expanding from 252 to 424 cards (including 28 skip-queue priority cards and 46 zero-cost cards) did not destabilize the balance, suggesting the system is robust to card pool expansion. The v5.11 zero-cost cards specifically address energy-lock perception issues without disrupting the power curve.
             </p>
 
             <h3 className="text-lg text-white/80 mb-4 mt-8" style={{ fontFamily: "var(--font-heading)" }}>Methods &amp; Techniques</h3>
@@ -743,7 +745,7 @@ export default function BalanceAnalysis() {
                     ["Monte Carlo Simulation", "Random game sampling for win rate estimation", "500K games", "Core measurement tool; \u00b10.36% confidence interval"],
                     ["Combined Optimizer", "Simultaneous tuning of all 7 passive parameters", "15K iterations", "Reduced deviation from 6.2% to 1.23%"],
                     ["Gradient-Free Search", "Nelder-Mead simplex for passive parameter space", "7-dimensional", "Navigated non-convex landscape without derivatives"],
-                    ["Card Value Normalization", "Standardized base values across tiers and costs", "378 cards", "Eliminated card-level variance as confounding factor"],
+                    ["Card Value Normalization", "Standardized base values across tiers and costs", "424 cards", "Eliminated card-level variance as confounding factor"],
                     ["Compound Tick Analysis", "Modeled exponential scaling across 3 patterns", "10-tick depth", "Identified multiplicative passive interactions"],
                     ["Binomial Confidence Testing", "Statistical validation of win rate significance", "57K games/faction", "Confirmed deviations are real, not noise"],
                     ["Ablation Studies", "Isolated passive vs. card contributions to balance", "5 versions", "Proved passives dominate over card stats"],
@@ -784,13 +786,13 @@ export default function BalanceAnalysis() {
           </div>
           <div className="text-center">
             <p className="text-xs text-white/20 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              7 Deadly Sins Card Game — Balance Analysis v5
+              7 Deadly Sins Card Game — Balance Analysis v5.11
             </p>
             <p className="text-[10px] text-white/10 mt-1" style={{ fontFamily: "var(--font-body)" }}>
               Joris van Huet — Causality Engine — March 2026
             </p>
             <p className="text-[10px] text-white/10 mt-1" style={{ fontFamily: "var(--font-body)" }}>
-              Simulation Engine: Python Monte Carlo, 100K-500K games per validation pass
+              Simulation Engine: Python Monte Carlo, 100K-500K games per validation pass | v5.11: 46 zero-cost cards, hand cap 10, Sloth AOE passive
             </p>
           </div>
         </div>

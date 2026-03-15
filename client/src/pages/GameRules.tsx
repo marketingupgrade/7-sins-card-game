@@ -477,7 +477,7 @@ export default function GameRules() {
                   phase: "Selection",
                   icon: (<svg viewBox="0 0 32 32" className="w-8 h-8 sm:w-10 sm:h-10" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="6" y="2" width="20" height="28" rx="3" stroke="#d4a574" strokeWidth="1.5" /><path d="M11 8h10M11 12h10M11 16h6" stroke="#d4a574" strokeWidth="1.2" strokeLinecap="round" /><circle cx="22" cy="24" r="3" stroke="#d4a574" strokeWidth="1.2" /><path d="M22 22v4M20 24h4" stroke="#d4a574" strokeWidth="1" strokeLinecap="round" /><path d="M6 6l-2-2M26 6l2-2" stroke="#d4a574" strokeWidth="0.8" opacity="0.5" /><rect x="9" y="5" width="14" height="1" rx="0.5" fill="#d4a574" opacity="0.2" /></svg>),
                   time: `${SELECTION_TIMER_SECONDS}s timer`,
-                  description: "All players choose cards simultaneously. Select 0 or more cards from your hand (limited by energy). Cards are locked in but hidden from opponents.",
+                  description: "All players choose cards simultaneously. Select 0 or more cards from your hand (limited by energy). Cards are locked in but hidden from opponents. Once any opponent locks in, a 10-second countdown starts — if time runs out, your current selection auto-locks.",
                 },
                 {
                   phase: "Resolution",

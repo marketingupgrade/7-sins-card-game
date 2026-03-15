@@ -73,7 +73,7 @@ export default function Terms() {
               </p>
               <p>
                 No payment is required to play. No subscription will ever be required. All game content — including
-                all 378 cards across 7 factions, all game modes, and all features — is freely accessible.
+                all 424 cards across 7 factions, all game modes, and all features — is freely accessible.
               </p>
             </div>
           </section>

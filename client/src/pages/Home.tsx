@@ -683,7 +683,7 @@ export default function Home() {
             {/* Game Stats */}
             <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-6">
               {[
-                "378 Cards", "7 Factions", "20 Rounds", "333 HP", "3 Compound Patterns", "Final Reckoning"
+                "424 Cards", "7 Factions", "20 Rounds", "333 HP", "3 Compound Patterns", "Final Reckoning"
               ].map((stat, i) => (
                 <span key={i} className="text-[10px] tracking-[0.1em] uppercase text-white/40" style={{ fontFamily: "var(--font-heading)" }}>
                   {stat}

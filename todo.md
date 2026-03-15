@@ -1904,3 +1904,19 @@
 - [x] Balanced: weaker effects (baseValue 1-5, duration 1-2) but always playable
 - [x] Added to cardData.ts for all 7 factions (424 total cards, up from 378)
 - [x] Deck building works with expanded card pool (verified via tests)
+
+### MatchupMatrix v5.11 Update
+- [x] Update MatchupMatrix header comment to reference v5.11 balance
+- [x] Update Sloth matchup descriptions to reflect AOE passive upgrade
+- [x] Update matchup analysis text to account for zero-cost cards and hand cap
+- [x] Update simulation reference from v5.10 to v5.11
+
+### v5.11 Content Audit (All Pages)
+- [x] Update Home.tsx: 378 → 424 cards in footer stats
+- [x] Update Collection.tsx: header comment 378 → 424 cards
+- [x] Update Terms.tsx: 378 → 424 cards in game content description
+- [x] Update SigilMenu.tsx: 378 → 424 cards, v5.1 → v5.11
+- [x] Update BalanceAnalysis.tsx: card pool 378 → 424, hand cap, turn timer, Sloth AOE, methodology table
+- [x] Update GameRules.tsx: Selection phase description to mention 10-second turn timer
+- [x] Update Changelog.tsx: remove hardcoded 378 from v5.7.4 and v5.7.5 entries
+- [x] Update MatchupMatrix.tsx: methodology note, footer, header, key dynamics, all Sloth matchup descriptions for v5.11
