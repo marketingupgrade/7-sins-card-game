@@ -84,6 +84,21 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.6.0",
+    date: "March 2026",
+    title: "The All-Seeing Eye",
+    summary: "Target clarity overhaul. Selected cards now show who they're aimed at with faction avatar overlays. Cards in hand display interaction hints so new players know they can tap/hover for details.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Target Avatar Overlay: Selected cards now display a circular faction portrait badge showing which player the card is targeting. Appears bottom-left of the card on both desktop and mobile." },
+      { category: "feature", text: "Self-Target Indicator: Cards with self-targeting effects show your own faction portrait with a 'SELF' label, clearly distinguishing self-buffs from attacks." },
+      { category: "feature", text: "Needs-Target Pulse: Cards that require a target but don't have one yet show a pulsing dashed '?' badge, prompting you to select an opponent." },
+      { category: "feature", text: "Desktop: Playable cards show a subtle eye icon with 'HOVER' label when not hovered, teaching new players that cards have hover-preview details." },
+      { category: "feature", text: "Mobile: Card thumbnails show a subtle eye icon with 'TAP' label on playable cards, making it clear they're interactive and can be tapped for full details." },
+      { category: "fix", text: "Target assignment is now visually unambiguous — you can see at a glance which card targets which player without relying solely on the 'TARGET' label on player bars." },
+    ],
+  },
+  {
     version: "5.5.0",
     date: "March 2026",
     title: "The Refinement",

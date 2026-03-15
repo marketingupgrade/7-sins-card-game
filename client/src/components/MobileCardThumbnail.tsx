@@ -182,6 +182,23 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         )}
       </div>
 
+      {/* Tap-to-view hint — subtle eye icon on unselected cards */}
+      {!isSelected && isPlayable && (
+        <div
+          className="absolute bottom-1 right-1 flex items-center gap-0.5 px-1 py-0.5 rounded-full pointer-events-none"
+          style={{
+            background: "oklch(0.08 0.01 70 / 0.75)",
+            border: "1px solid oklch(0.5 0 0 / 0.2)",
+          }}
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="oklch(0.7 0 0 / 0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span className="text-[7px] font-bold uppercase" style={{ color: "oklch(0.7 0 0 / 0.5)", fontFamily: "var(--font-heading)" }}>TAP</span>
+        </div>
+      )}
+
       {/* Selected glow */}
       {isSelected && (
         <motion.div

@@ -431,6 +431,23 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         </p>
       </div>
 
+      {/* Hover-for-details hint — subtle eye icon on playable, non-selected, non-hovered cards */}
+      {actuallyPlayable && !isSelected && !isHovered && (
+        <div
+          className="absolute bottom-2 right-2 flex items-center gap-1 px-1.5 py-0.5 rounded-full pointer-events-none opacity-50"
+          style={{
+            background: "oklch(0.08 0.01 70 / 0.8)",
+            border: "1px solid oklch(0.5 0 0 / 0.15)",
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="oklch(0.7 0 0 / 0.6)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+          <span className="text-[8px] font-bold uppercase hidden sm:inline" style={{ color: "oklch(0.7 0 0 / 0.5)", fontFamily: "var(--font-heading)" }}>HOVER</span>
+        </div>
+      )}
+
       {/* Selected indicator */}
       {isSelected && (
         <motion.div

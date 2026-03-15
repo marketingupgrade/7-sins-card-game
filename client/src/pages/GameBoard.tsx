@@ -71,6 +71,7 @@ import MobilePlayerBar from "@/components/MobilePlayerBar";
 import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
 import CardHoverPreview from "@/components/CardHoverPreview";
+import TargetAvatarBadge from "@/components/TargetAvatarBadge";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 import BattleLog from "@/components/BattleLog";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -411,6 +412,24 @@ export default function GameBoard() {
   const energyRemaining = useMemo(() => {
     return (myPlayer?.currentEnergy ?? 0) - selectedCardsEnergyCost;
   }, [myPlayer?.currentEnergy, selectedCardsEnergyCost]);
+
+  // ─── Target resolution helper for TargetAvatarBadge ─────────
+  const getCardTargetInfo = useCallback((cardId: string) => {
+    if (!gameState) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+    const sel = selectedCards.find(s => s.cardId === cardId);
+    if (!sel) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+    const card = CARD_MAP[cardId];
+    if (!card) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+    const hasSingleTarget = card.effects.some(e => e.targetMode === 'single' || e.targetMode === 'duo');
+    const isSelfOnly = !hasSingleTarget && card.effects.some(e => e.targetMode === 'self');
+    if (isSelfOnly) return { needsTarget: false, isSelf: true, targetSin: undefined, targetName: undefined };
+    if (hasSingleTarget && !sel.targetPlayerId) return { needsTarget: true, isSelf: false, targetSin: undefined, targetName: undefined };
+    if (sel.targetPlayerId) {
+      const target = gameState.players.find(p => p.id === sel.targetPlayerId);
+      if (target) return { needsTarget: false, isSelf: target.id === playerId, targetSin: target.chosenSin || undefined, targetName: target.username };
+    }
+    return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+  }, [selectedCards, gameState, playerId]);
 
   // Brandbook: detect when no cards are affordable to hint the PASS button
   const canAffordAnyCard = useMemo(() => {
@@ -1359,6 +1378,23 @@ export default function GameBoard() {
                         {selectedCards.findIndex(s => s.cardId === card.id) + 1}
                       </div>
                     )}
+                    {/* Target avatar overlay — bottom-left of selected cards */}
+                    {selectedCards.some(s => s.cardId === card.id) && (() => {
+                      const info = getCardTargetInfo(card.id);
+                      if (!info.needsTarget && !info.isSelf && !info.targetSin) return null;
+                      return (
+                        <div className="absolute -bottom-3 -left-2 z-20">
+                          <TargetAvatarBadge
+                            targetSin={info.targetSin || undefined}
+                            targetName={info.targetName}
+                            isSelf={info.isSelf}
+                            ownSin={mySin}
+                            needsTarget={info.needsTarget}
+                            size="md"
+                          />
+                        </div>
+                      );
+                    })()}
                   </div>
                 </motion.div>
               ))}
@@ -1417,6 +1453,23 @@ export default function GameBoard() {
                           {selectedCards.findIndex(s => s.cardId === card.id) + 1}
                         </div>
                       )}
+                      {/* Target avatar overlay — bottom-left of selected mobile cards */}
+                      {selectedCards.some(s => s.cardId === card.id) && (() => {
+                        const info = getCardTargetInfo(card.id);
+                        if (!info.needsTarget && !info.isSelf && !info.targetSin) return null;
+                        return (
+                          <div className="absolute -bottom-2 -left-1.5 z-20">
+                            <TargetAvatarBadge
+                              targetSin={info.targetSin || undefined}
+                              targetName={info.targetName}
+                              isSelf={info.isSelf}
+                              ownSin={mySin}
+                              needsTarget={info.needsTarget}
+                              size="sm"
+                            />
+                          </div>
+                        );
+                      })()}
                     </div>
                   </motion.div>
                 ))}

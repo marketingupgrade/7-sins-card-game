@@ -1455,3 +1455,23 @@
 - [x] Brandbook: Add Section 14 "UX Design Principles" 
 - [x] Update patch notes with v5.5.0 UX upgrade
 - [x] Save checkpoint and push to GitHub
+
+## Target Avatar Overlay on Selected Cards
+- [ ] Desktop: Show target player's avatar overlay on selected cards in hand
+- [ ] Mobile: Show target player's avatar overlay on selected card thumbnails
+- [ ] Ensure overlay is visible but doesn't obscure card art/info
+- [ ] Works for both single-target and self-target cards
+- [ ] Update patch notes with this improvement
+- [ ] Save checkpoint and push to GitHub
+- [x] Mobile: Add "tap to view" hint on card thumbnails so users know cards are interactive
+- [ ] Desktop: Add visual cue that cards can be hovered for details
+
+## Target Avatar Overlay + Card Interaction Hints
+- [x] Create TargetAvatarBadge component (target portrait, self indicator, needs-target pulse)
+- [x] Desktop: Show target avatar overlay on selected cards in hand
+- [x] Mobile: Show target avatar overlay on selected card thumbnails
+- [x] Desktop: Add visual cue that cards can be hovered/clicked for details
+- [x] Mobile: Add "tap to view" hint on card thumbnails so users know cards are interactive
+- [x] Both: Ensure targeting state is crystal clear at all times
+- [x] Update patch notes
+- [x] Save checkpoint and push to GitHub
