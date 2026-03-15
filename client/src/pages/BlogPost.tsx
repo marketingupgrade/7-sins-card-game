@@ -10,6 +10,7 @@ import { useEffect, useMemo } from "react";
 import { Link, useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { ChevronLeft, Clock, Calendar, Tag } from "lucide-react";
+import DOMPurify from "dompurify";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "game-guides": "Game Guides",
@@ -278,12 +279,16 @@ export default function BlogPost() {
 
   const renderedContent = useMemo(() => {
     if (!post?.content) return "";
-    return renderContent(post.content);
+    // Sanitize HTML output to prevent XSS from any compromised blog content
+    return DOMPurify.sanitize(renderContent(post.content), {
+      ADD_ATTR: ["target", "rel", "class", "loading"],
+      ADD_TAGS: ["article", "section"],
+    });
   }, [post?.content]);
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-10 h-10 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
           <p className="text-amber-200/60 text-sm font-[Cinzel] tracking-wider">
@@ -296,7 +301,7 @@ export default function BlogPost() {
 
   if (!post) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-3xl font-[Cinzel] text-amber-200 mb-4">Article Not Found</h1>
           <p className="text-amber-200/40 mb-6">This scroll has been lost to the ages.</p>
@@ -312,7 +317,7 @@ export default function BlogPost() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-amber-100">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-amber-100">
       {/* Navigation */}
       <nav className="border-b border-amber-900/20 px-4 py-4">
         <div className="max-w-4xl mx-auto">

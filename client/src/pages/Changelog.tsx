@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.9.1",
+    date: "March 2026",
+    title: "The Iron Ward",
+    summary: "Comprehensive security, brand, and performance audit with targeted hardening. Blog search input sanitized against PostgREST injection. Discussion comment deletion now requires author verification. Content-Security-Policy header added. Blog content sanitized with DOMPurify. Page backgrounds standardized to CSS variables for brand consistency. Dead code removed. 414 tests passing across 24 files.",
+    major: false,
+    changes: [
+      { category: "fix", text: "Security: Blog search input sanitized to strip PostgREST filter operators, preventing filter injection attacks" },
+      { category: "fix", text: "Security: Discussion comment deletion now requires guestId ownership verification \u2014 players can only delete their own comments" },
+      { category: "fix", text: "Security: Content-Security-Policy header added with strict default-src, whitelisted Supabase CDN for images/fonts/API" },
+      { category: "fix", text: "Security: Blog post HTML content now sanitized with DOMPurify before rendering to prevent XSS" },
+      { category: "fix", text: "Brand: All page backgrounds standardized to CSS variables (--color-page-bg, --color-page-bg-deep) \u2014 no more 5 different hex values" },
+      { category: "fix", text: "Brand: Font syntax normalized \u2014 all Cinzel references now use consistent font-[Cinzel] format" },
+      { category: "fix", text: "Performance: Removed unused getDeckCommentCount (singular) function \u2014 batch version handles all use cases" },
+      { category: "fix", text: "Code Quality: Migrated sitemap/RSS imports from deprecated db.ts to db-supabase.ts, retired 414-line dead code file" },
+    ],
+  },
+  {
     version: "5.9.0",
     date: "March 2026",
     title: "The Sinners' Gallery",
@@ -520,7 +537,7 @@ export default function Changelog() {
   }, [filter]);
 
   return (
-    <div className="min-h-screen bg-[#050508] relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={15} />
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />
 

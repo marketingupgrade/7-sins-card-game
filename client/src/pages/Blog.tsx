@@ -147,7 +147,7 @@ export default function Blog() {
   }, [category]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-amber-100">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-amber-100">
       {/* Hero Header */}
       <header className="relative py-16 px-4 text-center border-b border-amber-900/20">
         <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 to-transparent" />

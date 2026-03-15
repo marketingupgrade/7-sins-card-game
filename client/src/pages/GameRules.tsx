@@ -361,7 +361,7 @@ function EffectRow({
 /* ─── Main Page ─────────────────────────────────────────────── */
 export default function GameRules() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-white relative overflow-hidden">
       {/* Background effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <EmberField count={12} />

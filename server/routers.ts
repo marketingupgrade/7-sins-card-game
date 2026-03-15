@@ -121,11 +121,14 @@ export const appRouter = router({
         return result;
       }),
 
-    /** Delete a comment (and its replies) */
+    /** Delete a comment — requires guestId for ownership verification */
     delete: publicProcedure
-      .input(z.object({ commentId: z.number().int().positive() }))
+      .input(z.object({
+        commentId: z.number().int().positive(),
+        guestId: z.string().max(64).optional(),
+      }))
       .mutation(async ({ input }) => {
-        return deleteDiscussionComment(input.commentId);
+        return deleteDiscussionComment(input.commentId, input.guestId);
       }),
 
     /** Upvote a comment */

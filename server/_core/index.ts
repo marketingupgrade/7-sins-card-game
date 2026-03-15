@@ -42,6 +42,21 @@ async function startServer() {
     res.setHeader("X-XSS-Protection", "1; mode=block");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    // CSP: allow self, Supabase CDN for fonts/images, inline styles for Tailwind
+    res.setHeader(
+      "Content-Security-Policy",
+      [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: blob: https://xqotfmrlhqiayiyjijpl.supabase.co https://*.supabase.co",
+        "font-src 'self' https://xqotfmrlhqiayiyjijpl.supabase.co",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'",
+      ].join("; ")
+    );
     if (process.env.NODE_ENV === "production") {
       res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     }
@@ -50,7 +65,7 @@ async function startServer() {
   // Dynamic sitemap.xml
   app.get("/sitemap.xml", async (_req, res) => {
     try {
-      const { getAllBlogSlugs } = await import("../db");
+      const { getAllBlogSlugs } = await import("../db-supabase");
       const slugs = await getAllBlogSlugs();
       const baseUrl = "https://www.7sinscardgame.com";
       
@@ -100,7 +115,7 @@ async function startServer() {
   // RSS feed
   app.get("/rss.xml", async (_req, res) => {
     try {
-      const { getRecentBlogPosts } = await import("../db");
+      const { getRecentBlogPosts } = await import("../db-supabase");
       const posts = await getRecentBlogPosts(50);
       const baseUrl = "https://www.7sinscardgame.com";
       const now = posts.length > 0 && posts[0].publishedAt

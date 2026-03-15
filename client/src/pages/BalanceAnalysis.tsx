@@ -272,7 +272,7 @@ function TableOfContents() {
 
 export default function BalanceAnalysis() {
   return (
-    <div className="min-h-screen bg-[#050508] relative">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative">
       {/* Atmospheric background */}
       <EmberField count={12} />
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />

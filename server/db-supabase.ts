@@ -151,10 +151,13 @@ export async function getBlogPosts(opts: {
     query = query.eq("category", opts.category);
   }
   if (opts.search) {
-    // Search across title, meta_description, and keywords
-    query = query.or(
-      `title.ilike.%${opts.search}%,meta_description.ilike.%${opts.search}%,keywords.ilike.%${opts.search}%`
-    );
+    // Sanitize search input: strip PostgREST operators and special chars to prevent filter injection
+    const sanitized = opts.search.replace(/[.,%()\\]/g, " ").trim();
+    if (sanitized.length > 0) {
+      query = query.or(
+        `title.ilike.%${sanitized}%,meta_description.ilike.%${sanitized}%,keywords.ilike.%${sanitized}%`
+      );
+    }
   }
 
   const { data, count, error } = await query;
@@ -301,9 +304,21 @@ export async function createDiscussionComment(
   return { id: data.id };
 }
 
-export async function deleteDiscussionComment(commentId: number): Promise<boolean> {
+export async function deleteDiscussionComment(commentId: number, guestId?: string): Promise<boolean> {
   const sb = getSupabase();
   if (!sb) return false;
+
+  // Verify ownership: only the author (matched by guest_id) can delete their comment
+  if (guestId) {
+    const { data: comment } = await sb
+      .from("discussion_comments")
+      .select("guest_id")
+      .eq("id", commentId)
+      .single();
+    if (!comment || comment.guest_id !== guestId) {
+      return false; // Not the author — deny deletion
+    }
+  }
 
   // Delete child replies first
   await sb.from("discussion_comments").delete().eq("parent_id", commentId);
@@ -798,18 +813,6 @@ export async function deleteDeckComment(
     return false;
   }
   return true;
-}
-
-/** Get comment count for a deck (for badge display) */
-export async function getDeckCommentCount(deckId: number): Promise<number> {
-  const sb = getSupabase();
-  if (!sb) return 0;
-  const { count, error } = await sb
-    .from("community_comments")
-    .select("id", { count: "exact", head: true })
-    .eq("deck_id", deckId);
-  if (error) return 0;
-  return count ?? 0;
 }
 
 /** Get comment counts for multiple decks at once (batch) */

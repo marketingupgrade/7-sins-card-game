@@ -285,7 +285,7 @@ export default function Account() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0810] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin" />
       </div>
     );
@@ -305,7 +305,7 @@ export default function Account() {
     : "Unknown";
 
   return (
-    <div className="min-h-screen bg-[#0a0810] text-white">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-white">
       {/* Header */}
       <div className="border-b border-white/5 bg-black/30">
         <div className="container max-w-3xl py-4 flex items-center justify-between">

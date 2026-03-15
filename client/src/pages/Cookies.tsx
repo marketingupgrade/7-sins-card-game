@@ -14,7 +14,7 @@ import EmberField from "@/components/EmberField";
 
 export default function Cookies() {
   return (
-    <div className="min-h-screen bg-[#050508] relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={12} />
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />
 
@@ -186,16 +186,16 @@ export default function Cookies() {
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <div className="rounded-lg border border-white/8 overflow-hidden">
                 <div className="grid grid-cols-4 gap-px bg-white/5">
-                  <div className="bg-[#0a0a0f] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Name</div>
-                  <div className="bg-[#0a0a0f] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Purpose</div>
-                  <div className="bg-[#0a0a0f] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Type</div>
-                  <div className="bg-[#0a0a0f] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Duration</div>
+                  <div className="bg-[var(--color-page-bg)] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Name</div>
+                  <div className="bg-[var(--color-page-bg)] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Purpose</div>
+                  <div className="bg-[var(--color-page-bg)] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Type</div>
+                  <div className="bg-[var(--color-page-bg)] p-3 text-[10px] font-bold text-white/50 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>Duration</div>
                 </div>
                 <div className="grid grid-cols-4 gap-px bg-white/5">
-                  <div className="bg-[#050508] p-3 text-xs text-white/40 font-mono">session</div>
-                  <div className="bg-[#050508] p-3 text-xs text-white/40">Authentication (JWT)</div>
-                  <div className="bg-[#050508] p-3 text-xs text-white/40">Strictly necessary</div>
-                  <div className="bg-[#050508] p-3 text-xs text-white/40">Session / expiry</div>
+                  <div className="bg-[var(--color-page-bg-deep)] p-3 text-xs text-white/40 font-mono">session</div>
+                  <div className="bg-[var(--color-page-bg-deep)] p-3 text-xs text-white/40">Authentication (JWT)</div>
+                  <div className="bg-[var(--color-page-bg-deep)] p-3 text-xs text-white/40">Strictly necessary</div>
+                  <div className="bg-[var(--color-page-bg-deep)] p-3 text-xs text-white/40">Session / expiry</div>
                 </div>
               </div>
               <p className="text-white/30 text-xs italic mt-2">

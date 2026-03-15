@@ -162,7 +162,7 @@ export default function Profile() {
   }, ALL_SINS[0]);
 
   return (
-    <div className="min-h-screen bg-[#0a0810] text-white">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-white">
       {/* Header */}
       <div className="border-b border-white/5 bg-black/30">
         <div className="container max-w-4xl py-4 flex items-center justify-between">

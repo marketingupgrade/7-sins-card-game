@@ -410,7 +410,7 @@ export default function PlayerProfile() {
   // ─── Loading State ──────────────────────────────────────────
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto" />
           <p className="text-zinc-500 text-sm mt-4">Loading profile...</p>
@@ -422,7 +422,7 @@ export default function PlayerProfile() {
   // ─── Error / Not Found State ────────────────────────────────
   if (error || !profile) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center px-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -456,9 +456,9 @@ export default function PlayerProfile() {
   ];
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--color-page-bg)]">
       {/* Back navigation */}
-      <div className="sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-sm border-b border-zinc-800/50">
+      <div className="sticky top-0 z-20 bg-[var(--color-page-bg)]/90 backdrop-blur-sm border-b border-zinc-800/50">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={() => navigate("/community")}

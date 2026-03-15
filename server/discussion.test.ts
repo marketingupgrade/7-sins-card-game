@@ -28,7 +28,7 @@ describe("Discussion Comments Schema & Routing", () => {
   });
 
   it("should have db helper functions for discussion", async () => {
-    const db = await import("./db");
+    const db = await import("./db-supabase");
     expect(db.getDiscussionComments).toBeDefined();
     expect(db.createDiscussionComment).toBeDefined();
     expect(db.deleteDiscussionComment).toBeDefined();

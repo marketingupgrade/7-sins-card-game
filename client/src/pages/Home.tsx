@@ -297,7 +297,7 @@ export default function Home() {
   )), [heroIndex]);
 
   return (
-    <div className="min-h-screen bg-[#050508] relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       {/* ═══ Lightweight Atmospheric Background ═══ */}
       <EmberField count={24} />
 

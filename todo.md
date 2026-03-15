@@ -1736,3 +1736,24 @@
 - [x] Update Changelog.tsx with v5.9.0 'The Sinners' Gallery' entry
 - [x] Full test suite: 414 tests, 24 files, 0 failures
 - [x] Push to GitHub for Vercel deployment
+
+## Comprehensive Audit (v5.9.1)
+- [x] Security audit: endpoints, auth, input validation, XSS, CSRF, data exposure
+  - [x] Sanitized blog search input against PostgREST filter injection
+  - [x] Added ownership check to discussion.delete (guestId verification)
+  - [x] Added Content-Security-Policy header (strict default-src, Supabase CDN whitelisted)
+  - [x] Added DOMPurify sanitization to blog content rendering
+- [x] Brandbook audit: design consistency, colors, typography, spacing, UX patterns
+  - [x] Standardized all page backgrounds to CSS variables (--color-page-bg, --color-page-bg-deep)
+  - [x] Normalized font-['Cinzel'] to font-[Cinzel] across all pages
+- [x] Performance audit: bundle size, lazy loading, query efficiency, render performance
+  - [x] Removed unused getDeckCommentCount (singular) function
+  - [x] batchDeckWinRates already uses single .in() query (confirmed efficient)
+- [x] Code review: architecture, DRY, dead code, type safety, documentation
+  - [x] Migrated sitemap/RSS imports from db.ts to db-supabase.ts
+  - [x] Retired dead db.ts (414 lines) to db.deprecated.ts
+  - [x] Updated discussion.test.ts import to db-supabase.ts
+- [x] Implement safe refactors (nothing breaks)
+- [x] Run full test suite: 414 tests, 24 files, 0 failures
+- [x] Update Changelog.tsx with v5.9.1 'The Iron Ward' entry
+- [x] Push to GitHub

@@ -597,7 +597,7 @@ export default function Collection() {
     showPriorityOnly;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-white">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">

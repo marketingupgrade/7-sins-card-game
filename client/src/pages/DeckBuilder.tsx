@@ -200,7 +200,7 @@ function PortalDropdown({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.96 }}
             transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
-            className="fixed z-[9999] min-w-[180px] rounded-xl border border-amber-500/15 bg-[#0a0a0a]/95 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-hidden"
+            className="fixed z-[9999] min-w-[180px] rounded-xl border border-amber-500/15 bg-[var(--color-page-bg)]/95 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-hidden"
             style={{ top: pos.top, left: pos.left }}
           >
             <div className="py-1">

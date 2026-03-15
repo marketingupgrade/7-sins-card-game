@@ -190,7 +190,7 @@ function LogMatchModal({
         exit={{ opacity: 0, scale: 0.9 }}
         className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-sm w-full shadow-2xl"
       >
-        <h3 className="font-['Cinzel'] text-lg text-amber-400 mb-1">Log Match Result</h3>
+        <h3 className="font-[Cinzel] text-lg text-amber-400 mb-1">Log Match Result</h3>
         <p className="text-zinc-400 text-xs mb-4">
           Record a match played with <span className="text-white font-medium">{deck.deckName}</span>
         </p>
@@ -321,7 +321,7 @@ function GamertagModal({
         exit={{ opacity: 0, scale: 0.9 }}
         className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-md w-full shadow-2xl"
       >
-        <h3 className="font-['Cinzel'] text-xl text-amber-400 mb-2">Choose Your Gamertag</h3>
+        <h3 className="font-[Cinzel] text-xl text-amber-400 mb-2">Choose Your Gamertag</h3>
         <p className="text-zinc-400 text-sm mb-4">
           This name will be displayed on your published decks and comments. It must be unique and 3-30 characters
           (letters, numbers, underscores, hyphens).
@@ -445,7 +445,7 @@ function PublishModal({
         exit={{ opacity: 0, scale: 0.9 }}
         className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-lg w-full shadow-2xl max-h-[85vh] overflow-y-auto"
       >
-        <h3 className="font-['Cinzel'] text-xl text-amber-400 mb-1">Publish to Community</h3>
+        <h3 className="font-[Cinzel] text-xl text-amber-400 mb-1">Publish to Community</h3>
         <p className="text-zinc-400 text-sm mb-4">
           Share your deck as <span className="text-amber-400 font-mono">{gamertag}</span>
         </p>
@@ -1293,7 +1293,7 @@ export default function CommunityDecks() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-white">
       {/* Header */}
       <header className="relative border-b border-zinc-800/60">
         <div className="max-w-6xl mx-auto px-4 py-8 sm:py-12">
@@ -1306,7 +1306,7 @@ export default function CommunityDecks() {
 
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mt-3">
             <div>
-              <h1 className="font-['Cinzel'] text-3xl sm:text-4xl text-amber-400 tracking-wide">
+              <h1 className="font-[Cinzel] text-3xl sm:text-4xl text-amber-400 tracking-wide">
                 Community Decks
               </h1>
               <p className="text-zinc-400 mt-2 text-sm sm:text-base max-w-xl">

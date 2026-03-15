@@ -14,7 +14,7 @@ import EmberField from "@/components/EmberField";
 
 export default function Privacy() {
   return (
-    <div className="min-h-screen bg-[#050508] relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={12} />
       <div className="absolute inset-0 noise-overlay pointer-events-none" style={{ zIndex: 1 }} />
 

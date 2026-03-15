@@ -80,9 +80,12 @@ async function getBlogPosts(opts) {
     query = query.eq("category", opts.category);
   }
   if (opts.search) {
-    query = query.or(
-      `title.ilike.%${opts.search}%,meta_description.ilike.%${opts.search}%,keywords.ilike.%${opts.search}%`
-    );
+    const sanitized = opts.search.replace(/[.,%()\\]/g, " ").trim();
+    if (sanitized.length > 0) {
+      query = query.or(
+        `title.ilike.%${sanitized}%,meta_description.ilike.%${sanitized}%,keywords.ilike.%${sanitized}%`
+      );
+    }
   }
   const { data, count, error } = await query;
   if (error) {
@@ -159,9 +162,15 @@ async function createDiscussionComment(input) {
   if (error || !data) throw new Error("Failed to create comment: " + (error?.message || "unknown"));
   return { id: data.id };
 }
-async function deleteDiscussionComment(commentId) {
+async function deleteDiscussionComment(commentId, guestId) {
   const sb = getSupabase();
   if (!sb) return false;
+  if (guestId) {
+    const { data: comment } = await sb.from("discussion_comments").select("guest_id").eq("id", commentId).single();
+    if (!comment || comment.guest_id !== guestId) {
+      return false;
+    }
+  }
   await sb.from("discussion_comments").delete().eq("parent_id", commentId);
   await sb.from("discussion_comments").delete().eq("id", commentId);
   return true;
@@ -5854,9 +5863,12 @@ var appRouter = router({
       });
       return result;
     }),
-    /** Delete a comment (and its replies) */
-    delete: publicProcedure.input(z3.object({ commentId: z3.number().int().positive() })).mutation(async ({ input }) => {
-      return deleteDiscussionComment(input.commentId);
+    /** Delete a comment — requires guestId for ownership verification */
+    delete: publicProcedure.input(z3.object({
+      commentId: z3.number().int().positive(),
+      guestId: z3.string().max(64).optional()
+    })).mutation(async ({ input }) => {
+      return deleteDiscussionComment(input.commentId, input.guestId);
     }),
     /** Upvote a comment */
     upvote: publicProcedure.input(z3.object({ commentId: z3.number().int().positive() })).mutation(async ({ input }) => {
