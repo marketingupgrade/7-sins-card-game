@@ -2,7 +2,7 @@
  * Matchup Matrix Page — 7x7 Faction Win Rate Heatmap
  *
  * Visualizes pairwise faction matchup dynamics in a 4-player FFA context.
- * Data derived from Monte Carlo simulation (100K games, v5 balance).
+ * Data derived from Monte Carlo simulation (v5.10 balance: 333 HP, ×1.75 defense, Final Reckoning).
  *
  * Features:
  * - Interactive 7x7 heatmap grid with color-coded cells
@@ -50,9 +50,9 @@ const FACTION_LABELS: Record<SinType, string> = {
  * In a 4-player FFA, "matchup" measures how often faction A finishes
  * ahead of faction B when both are in the same game. 50% = perfectly even.
  *
- * Data from v5 Monte Carlo simulation (100K games).
+ * Data from v5.10 Monte Carlo simulation (1.26M games, 333 HP, ×1.75 defense, Final Reckoning).
  * These values reflect the compound-ticking dynamics, passive interactions,
- * and the simultaneous-resolution turn structure.
+ * the simultaneous-resolution turn structure, and the Final Reckoning at round 20.
  *
  * Methodology note: Since this is a 4-player game (not 1v1), pairwise
  * win rates are measured as "probability of finishing higher than the

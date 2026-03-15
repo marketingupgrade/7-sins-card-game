@@ -358,7 +358,7 @@ export default function BalanceAnalysis() {
         <Section id="architecture" number="02" title="Game Architecture">
           <div className="prose-gothic">
             <p>
-              The 7 Deadly Sins card game is a simultaneous-resolution, compound-damage card game for four players. Each player selects one of seven sin factions, receives a 54-card deck, and plays over 20 rounds with 200 HP. The core mechanic is <strong>compound ticking</strong> — every card effect persists and deals damage (or heals, shields, steals) across multiple rounds, creating escalating pressure curves.
+              The 7 Deadly Sins card game is a simultaneous-resolution, compound-damage card game for four players. Each player selects one of seven sin factions, receives a 54-card deck, and plays over 20 rounds with 333 HP. At round 20, the <strong>Final Reckoning</strong> triggers — all remaining cards in hand are played, and the highest HP wins. The core mechanic is <strong>compound ticking</strong> — every card effect persists and deals damage (or heals, shields, steals) across multiple rounds, creating escalating pressure curves.
             </p>
           </div>
 
@@ -369,7 +369,7 @@ export default function BalanceAnalysis() {
               ["Factions", "7 (Wrath, Sloth, Greed, Envy, Pride, Lust, Gluttony)"],
               ["Cards per faction", "54 (50 standard + 4 skip-queue priority)"],
               ["Total card pool", "378"],
-              ["Starting HP", "200"],
+              ["Starting HP", "333 (v5.10 — increased from 200)"],
               ["Starting energy", "3"],
               ["Rounds per game", "20"],
               ["Resolution order", "Skip-queue first, then lowest cost first"],

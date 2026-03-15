@@ -1780,7 +1780,7 @@
 - [x] Frontend: Validation (min 3 chars, max 24 chars, alphanumeric + dots/underscores/hyphens/spaces)
 - [x] Frontend: Clear error messages for rejected usernames
 - [x] Write tests for username update procedure (25 tests)
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Legal Pages Update (v5.9.2)
 - [x] Remove all "Manus account" references from Terms & Conditions
@@ -1791,4 +1791,39 @@
 - [x] Add privacy-first philosophy ("games should be for fun, not extraction") to all legal pages
 - [x] Ensure all legal pages are accurate and up to date
 - [x] Add Buy Me a Coffee link (https://buymeacoffee.com/jojovh) to Donations section in T&S (already present)
+- [x] Push to GitHub
+
+## Defensive Mechanism Evaluation (v5.10 Mathematical Model)
+- [x] Read and catalog all current card data (shields, heals, damage reduction) across 7 factions
+- [x] Document current defensive vs offensive value ratios per faction
+- [x] Define gameplay quality metrics (game length, comeback rate, strategic diversity, faction balance)
+- [x] Design defensive scaling scenarios (×0.50 to ×3.00, 11 scenarios)
+- [x] Build Monte Carlo simulation engine in Python
+- [x] Simulate 672K games across all faction matchups (1500/matchup × 28 matchups × 16 scenarios)
+- [x] Statistical analysis: composite quality scores, metric decomposition
+- [x] Generate visualizations (6 charts: quality curve, metrics, win rates, heatmaps, tradeoffs, recommendation)
+- [x] Write comprehensive balance report with recommendations
+- [x] Determine optimal defensive multiplier: ×1.75 (inflection point before diminishing returns)
+
+## Extended Defensive Evaluation: Final Reckoning + HP Pools (v5.10.1)
+- [x] Implement Round 20 "Final Reckoning" mechanic (all cards in hand played regardless of energy)
+- [x] Add configurable HP pool parameter (200, 333, 666)
+- [x] Run full simulation matrix: 3 HP pools × 5 defense mults × with/without Reckoning (1.26M games)
+- [x] Analyze how HP pool size interacts with defensive scaling
+- [x] Analyze how Final Reckoning affects timeout rate and game decisiveness
+- [x] Generate comparison visualizations (6 charts)
+- [x] Write comprehensive report with recommendations
+- [x] Determine optimal: 333 HP + ×1.75 defense + Final Reckoning (Q=65.5, +29.7 vs baseline)
+
+## v5.10.0 - The Reckoning Update (333 HP + ×1.75 Defense + Final Reckoning)
+- [x] Core: Change starting HP from 200 to 333 in gameTypes.ts
+- [x] Core: Apply ×1.75 multiplier to all defensive card values (229 effects across 7 factions)
+- [x] Core: Implement Final Reckoning mechanic at round 20 (both client + server engines)
+- [x] Core: Update passive ability constants (Sloth cap 25→44, catch-up threshold 80→133)
+- [x] Page: Update Rules page with Final Reckoning section (orange-themed, Section IX)
+- [x] Page: Update Balancing page with 333 HP and Final Reckoning context
+- [x] Page: Update Matchups page header with v5.10 simulation reference
+- [x] Page: Update Patch Notes with v5.10.0 + v5.9.2 changelog entries
+- [x] Page: Update Home.tsx stats (333 HP, Final Reckoning), tutorial steps, bot engine comments
+- [x] Tests: 23 new reckoning tests + updated 3 existing tests (462 total passing)
 - [ ] Push to GitHub

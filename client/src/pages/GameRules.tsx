@@ -30,6 +30,7 @@ import {
   ENERGY_PER_TURN,
   SELECTION_TIMER_SECONDS,
   ROUND_16_DOUBLING,
+  FINAL_RECKONING_ROUND,
   WRATH_VENGEANCE_PCT,
   SLOTH_ENDURANCE_MULT,
   SLOTH_ENDURANCE_CAP,
@@ -430,7 +431,9 @@ export default function GameRules() {
                 compound-ticking cards that escalate in power over time.
               </p>
               <p>
-                The last player standing wins. If multiple players survive all {MAX_ROUNDS} rounds,
+                The last player standing wins. If the game reaches <strong>round {FINAL_RECKONING_ROUND}</strong>,
+                the <strong>Final Reckoning</strong> triggers: every surviving player plays <em>all remaining cards
+                in their hand</em> simultaneously, regardless of energy cost. After all Reckoning effects resolve,
                 the player with the <strong>highest remaining HP</strong> wins. There are no draws —
                 tiebreakers use seat index (lower seat wins).
               </p>
@@ -707,6 +710,26 @@ export default function GameRules() {
                   are <strong className="text-red-300/70">doubled</strong>. This creates a dramatic escalation in the late game,
                   punishing players who have accumulated many afflictions and rewarding those who maintained clean boards.
                   Afflictions can only be doubled once — the flag prevents re-doubling.
+                </p>
+              </div>
+
+              <div
+                className="rounded-lg p-4"
+                style={{
+                  background: "linear-gradient(135deg, rgba(40, 10, 5, 0.5), rgba(30, 15, 10, 0.4))",
+                  border: "1px solid rgba(249, 115, 22, 0.25)",
+                }}
+              >
+                <h4 className="text-sm font-bold text-orange-400/90 mb-2" style={{ fontFamily: "var(--font-heading)" }}>
+                  Round {FINAL_RECKONING_ROUND} — The Final Reckoning
+                </h4>
+                <p className="text-xs text-white/45 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                  If the game reaches round {FINAL_RECKONING_ROUND}, the <strong className="text-orange-300/80">Final Reckoning</strong> triggers.
+                  Every surviving player plays <strong className="text-orange-300/80">all remaining cards in their hand</strong> simultaneously,
+                  regardless of energy cost. All effects resolve, and the player with the <strong className="text-orange-300/80">highest HP</strong> wins.
+                  This mechanic ensures every game has a decisive conclusion — no more timeouts. The Reckoning rewards players
+                  who conserved powerful cards and maintained high HP through the late game. It flips the winner approximately
+                  25% of the time, creating genuine comeback drama without being a coin flip.
                 </p>
               </div>
 

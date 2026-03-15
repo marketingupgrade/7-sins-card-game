@@ -1226,7 +1226,7 @@ var WRATH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 9, duration: 2, targetMode: "self" }],
     description: "A common wrath card"
   },
   {
@@ -1296,7 +1296,7 @@ var WRATH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "self_damage", baseValue: 5, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }],
+    effects: [{ type: "self_damage", baseValue: 5, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 16, duration: 3, targetMode: "self" }],
     description: "A common wrath card"
   },
   {
@@ -1336,7 +1336,7 @@ var WRATH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 21, duration: 3, targetMode: "single" }, { type: "self_damage", baseValue: 7, duration: 2, targetMode: "self" }, { type: "shield_gain", baseValue: 9, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 21, duration: 3, targetMode: "single" }, { type: "self_damage", baseValue: 7, duration: 2, targetMode: "self" }, { type: "shield_gain", baseValue: 16, duration: 2, targetMode: "self" }],
     description: "A rare wrath card"
   },
   {
@@ -1376,7 +1376,7 @@ var WRATH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 16, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 11, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 16, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 19, duration: 3, targetMode: "self" }],
     description: "A rare wrath card"
   },
   {
@@ -1436,7 +1436,7 @@ var WRATH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 11, duration: 5, targetMode: "duo" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 5, targetMode: "duo" }, { type: "shield_gain", baseValue: 12, duration: 2, targetMode: "self" }],
     description: "A rare wrath card"
   },
   {
@@ -1446,7 +1446,7 @@ var WRATH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 12, duration: 2, targetMode: "self" }],
     description: "A rare wrath card"
   },
   {
@@ -1476,7 +1476,7 @@ var WRATH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 9, duration: 2, targetMode: "single" }],
+    effects: [{ type: "shield_gain", baseValue: 23, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 9, duration: 2, targetMode: "single" }],
     description: "A rare wrath card"
   },
   {
@@ -1496,7 +1496,7 @@ var WRATH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "self_damage", baseValue: 5, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 12, duration: 4, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "self_damage", baseValue: 5, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 12, duration: 4, targetMode: "single" }, { type: "shield_gain", baseValue: 9, duration: 3, targetMode: "self" }],
     description: "The molten core within erupts, burning all in its path"
   },
   {
@@ -1536,7 +1536,7 @@ var WRATH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "self_damage", baseValue: 13, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 21, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 21, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 11, duration: 2, targetMode: "self" }],
+    effects: [{ type: "self_damage", baseValue: 13, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 37, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 21, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 19, duration: 2, targetMode: "self" }],
     description: "The berserker's final gambit \u2014 all or nothing"
   },
   {
@@ -1546,7 +1546,7 @@ var WRATH_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "aoe" }, { type: "self_damage", baseValue: 9, duration: 2, targetMode: "self" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "aoe" }, { type: "self_damage", baseValue: 9, duration: 2, targetMode: "self" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "aoe" }],
     description: "Fury made manifest, tearing through defenses"
   },
   {
@@ -1556,7 +1556,7 @@ var WRATH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 21, duration: 4, targetMode: "duo" }, { type: "self_damage", baseValue: 11, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 13, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 21, duration: 4, targetMode: "duo" }, { type: "self_damage", baseValue: 11, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 23, duration: 3, targetMode: "self" }],
     description: "A storm of blades fueled by bottomless anger"
   },
   {
@@ -1596,7 +1596,7 @@ var WRATH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "self_damage", baseValue: 9, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 23, duration: 3, targetMode: "self" }, { type: "self_damage", baseValue: 9, duration: 3, targetMode: "self" }],
     description: "Rage crystallized into devastating force"
   },
   {
@@ -1606,7 +1606,7 @@ var WRATH_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 22, duration: 3, targetMode: "single" }, { type: "self_damage", baseValue: 9, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 11, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 22, duration: 3, targetMode: "single" }, { type: "self_damage", baseValue: 9, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 19, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "The fury of a thousand battles compressed into one blow"
   },
   {
@@ -1626,7 +1626,7 @@ var WRATH_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "self_damage", baseValue: 13, duration: 2, targetMode: "self" }, { type: "damage", baseValue: 26, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 16, duration: 2, targetMode: "self" }],
+    effects: [{ type: "self_damage", baseValue: 13, duration: 2, targetMode: "self" }, { type: "damage", baseValue: 26, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 28, duration: 2, targetMode: "self" }],
     description: "The final expression of wrath \u2014 total annihilation"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -1670,7 +1670,7 @@ var WRATH_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "Attack is the best defense \u2014 but a little armor doesn't hurt.",
     skipQueue: true
   }
@@ -1693,7 +1693,7 @@ var SLOTH_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1713,7 +1713,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1733,7 +1733,7 @@ var SLOTH_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1763,7 +1763,7 @@ var SLOTH_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "slowburn",
-    effects: [{ type: "heal_gain", baseValue: 3, duration: 4, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 4, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1773,7 +1773,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1803,7 +1803,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 9, duration: 3, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1813,7 +1813,7 @@ var SLOTH_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1833,7 +1833,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1853,7 +1853,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "slowburn",
-    effects: [{ type: "shield_gain", baseValue: 3, duration: 4, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 4, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1873,7 +1873,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common sloth card"
   },
   {
@@ -1883,7 +1883,7 @@ var SLOTH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "heal_gain", baseValue: 5, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 4, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 9, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 4, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1903,7 +1903,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1923,7 +1923,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1943,7 +1943,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 8, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1953,7 +1953,7 @@ var SLOTH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1963,7 +1963,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "single" }, { type: "shield_gain", baseValue: 3, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 4, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -1973,7 +1973,7 @@ var SLOTH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -2003,7 +2003,7 @@ var SLOTH_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -2013,7 +2013,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "duo" }, { type: "heal_gain", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "duo" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -2023,7 +2023,7 @@ var SLOTH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "energy_block", baseValue: 1, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 2, targetMode: "single" }],
+    effects: [{ type: "shield_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "energy_block", baseValue: 1, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 2, targetMode: "single" }],
     description: "A rare sloth card"
   },
   {
@@ -2033,7 +2033,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare sloth card"
   },
   {
@@ -2043,7 +2043,7 @@ var SLOTH_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 3, duration: 3, targetMode: "single" }],
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 3, duration: 3, targetMode: "single" }],
     description: "Lethargy spreads like a contagion through the battlefield"
   },
   {
@@ -2053,7 +2053,7 @@ var SLOTH_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 5, duration: 5, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 9, duration: 5, targetMode: "self" }],
     description: "The weight of inaction crushes all ambition"
   },
   {
@@ -2063,7 +2063,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 6, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "shield_gain", baseValue: 10, duration: 4, targetMode: "self" }],
     description: "A yawn so powerful it drains the will to fight"
   },
   {
@@ -2073,7 +2073,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "heal_gain", baseValue: 6, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 8, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 10, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 14, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Entropy accelerates \u2014 everything slows to a crawl"
   },
   {
@@ -2083,7 +2083,7 @@ var SLOTH_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "The comfort of stagnation becomes a fortress"
   },
   {
@@ -2093,7 +2093,7 @@ var SLOTH_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 5, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 5, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 9, duration: 4, targetMode: "self" }],
     description: "Apathy weaponized into a defensive cocoon"
   },
   {
@@ -2103,7 +2103,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 10, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 18, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Time itself seems to slow around the slothful"
   },
   {
@@ -2113,7 +2113,7 @@ var SLOTH_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "shield_gain", baseValue: 6, duration: 5, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 4, targetMode: "self" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 5, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 4, targetMode: "self" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
     description: "A torpor so deep it becomes impenetrable armor"
   },
   {
@@ -2123,7 +2123,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 5, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 9, duration: 4, targetMode: "self" }],
     description: "The lazy path proves the most efficient"
   },
   {
@@ -2133,7 +2133,7 @@ var SLOTH_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "aoe" }, { type: "damage", baseValue: 5, duration: 5, targetMode: "aoe" }, { type: "shield_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "energy_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "aoe" }, { type: "damage", baseValue: 5, duration: 5, targetMode: "aoe" }, { type: "shield_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "energy_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "Inertia becomes an unstoppable force"
   },
   {
@@ -2143,7 +2143,7 @@ var SLOTH_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 9, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 6, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 10, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Rest becomes a weapon more potent than any blade"
   },
   {
@@ -2153,7 +2153,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 5, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 9, duration: 3, targetMode: "self" }],
     description: "The ultimate expression of doing absolutely nothing"
   },
   {
@@ -2163,7 +2163,7 @@ var SLOTH_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "shield_gain", baseValue: 6, duration: 5, targetMode: "self" }, { type: "damage", baseValue: 3, duration: 5, targetMode: "duo" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 5, targetMode: "self" }, { type: "damage", baseValue: 3, duration: 5, targetMode: "duo" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Procrastination elevated to an art form of survival"
   },
   {
@@ -2173,7 +2173,7 @@ var SLOTH_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "In stillness, true power is conserved"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -2184,7 +2184,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 8, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }],
     description: "A lazy barrier that somehow blocks everything.",
     skipQueue: true
   },
@@ -2195,7 +2195,7 @@ var SLOTH_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "energy_block", baseValue: 1, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    effects: [{ type: "energy_block", baseValue: 1, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 9, duration: 2, targetMode: "self" }],
     description: "Your yawn is contagious \u2014 and draining.",
     skipQueue: true
   },
@@ -2217,7 +2217,7 @@ var SLOTH_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 6, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 10, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Do nothing, gain everything. The slothful way.",
     skipQueue: true
   }
@@ -2270,7 +2270,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A common greed card"
   },
   {
@@ -2290,7 +2290,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A common greed card"
   },
   {
@@ -2310,7 +2310,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }],
     description: "A common greed card"
   },
   {
@@ -2340,7 +2340,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 6, duration: 2, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 10, duration: 2, targetMode: "single" }],
     description: "A common greed card"
   },
   {
@@ -2350,7 +2350,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A common greed card"
   },
   {
@@ -2380,7 +2380,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A common greed card"
   },
   {
@@ -2390,7 +2390,7 @@ var GREED_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "A common greed card"
   },
   {
@@ -2430,7 +2430,7 @@ var GREED_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "A rare greed card"
   },
   {
@@ -2440,7 +2440,7 @@ var GREED_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 6, duration: 5, targetMode: "duo" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 5, targetMode: "duo" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "duo" }],
     description: "A rare greed card"
   },
   {
@@ -2450,7 +2450,7 @@ var GREED_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 18, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "A rare greed card"
   },
   {
@@ -2500,7 +2500,7 @@ var GREED_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 6, duration: 5, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 5, targetMode: "single" }, { type: "shield_gain", baseValue: 10, duration: 4, targetMode: "self" }],
     description: "A rare greed card"
   },
   {
@@ -2520,7 +2520,7 @@ var GREED_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 6, duration: 3, targetMode: "single" }],
+    effects: [{ type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 10, duration: 3, targetMode: "single" }],
     description: "A rare greed card"
   },
   {
@@ -2570,7 +2570,7 @@ var GREED_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 6, duration: 2, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 10, duration: 2, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
     description: "A rare greed card"
   },
   {
@@ -2580,7 +2580,7 @@ var GREED_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "A rare greed card"
   },
   {
@@ -2590,7 +2590,7 @@ var GREED_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 23, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Every coin stolen fuels the next heist"
   },
   {
@@ -2610,7 +2610,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 18, duration: 3, targetMode: "self" }],
     description: "A golden cage that traps and drains simultaneously"
   },
   {
@@ -2620,7 +2620,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 6, duration: 4, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 10, duration: 4, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }],
     description: "Avarice knows no bounds \u2014 take it all"
   },
   {
@@ -2630,7 +2630,7 @@ var GREED_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 2, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 2, duration: 2, targetMode: "aoe" }],
     description: "The Midas touch corrupts everything it contacts"
   },
   {
@@ -2640,7 +2640,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 6, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 10, duration: 3, targetMode: "single" }],
     description: "Wealth hoarded becomes a weapon of mass destruction"
   },
   {
@@ -2660,7 +2660,7 @@ var GREED_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 28, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "The vault grows deeper as enemies grow poorer"
   },
   {
@@ -2670,7 +2670,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "duo" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 6, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "duo" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 10, duration: 3, targetMode: "duo" }],
     description: "A hostile takeover of body, mind, and soul"
   },
   {
@@ -2680,7 +2680,7 @@ var GREED_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "shield_gain", baseValue: 13, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 5, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "shield_gain", baseValue: 23, duration: 5, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 5, targetMode: "self" }],
     description: "Interest compounds on suffering as well as gold"
   },
   {
@@ -2690,7 +2690,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 10, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 2, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 18, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 2, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }],
     description: "The market crashes, but greed always profits"
   },
   {
@@ -2700,7 +2700,7 @@ var GREED_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 10, duration: 3, targetMode: "single" }],
+    effects: [{ type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 10, duration: 3, targetMode: "single" }],
     description: "Embezzlement of life force \u2014 the ultimate white collar crime"
   },
   {
@@ -2710,7 +2710,7 @@ var GREED_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 12, duration: 4, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 4, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 18, duration: 3, targetMode: "self" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }],
     description: "A pyramid scheme of pain and profit"
   },
   {
@@ -2720,7 +2720,7 @@ var GREED_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 6, duration: 2, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 10, duration: 2, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 2, targetMode: "aoe" }],
     description: "The final audit reveals everything was already taken"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -2742,7 +2742,7 @@ var GREED_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 6, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_steal", baseValue: 10, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "The taxman arrives before the battle \u2014 nothing escapes the ledger.",
     skipQueue: true
   },
@@ -2764,7 +2764,7 @@ var GREED_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "Collect interest before the debt is even owed.",
     skipQueue: true
   }
@@ -2827,7 +2827,7 @@ var ENVY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A common envy card"
   },
   {
@@ -2847,7 +2847,7 @@ var ENVY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A common envy card"
   },
   {
@@ -2907,7 +2907,7 @@ var ENVY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    effects: [{ type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "A common envy card"
   },
   {
@@ -2917,7 +2917,7 @@ var ENVY_CARDS = [
     cost: 2,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A common envy card"
   },
   {
@@ -2977,7 +2977,7 @@ var ENVY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A rare envy card"
   },
   {
@@ -3027,7 +3027,7 @@ var ENVY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" }],
     description: "A rare envy card"
   },
   {
@@ -3057,7 +3057,7 @@ var ENVY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
     description: "A rare envy card"
   },
   {
@@ -3107,7 +3107,7 @@ var ENVY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
     description: "A rare envy card"
   },
   {
@@ -3167,7 +3167,7 @@ var ENVY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 10, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 10, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 18, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 18, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
     description: "Covetous eyes see every vulnerability"
   },
   {
@@ -3187,7 +3187,7 @@ var ENVY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" }],
     description: "What they have, you want \u2014 and you'll take it"
   },
   {
@@ -3217,7 +3217,7 @@ var ENVY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }],
     description: "The curse of comparison amplifies all suffering"
   },
   {
@@ -3227,7 +3227,7 @@ var ENVY_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 4, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
     description: "Jealousy festers, turning small wounds into mortal ones"
   },
   {
@@ -3267,7 +3267,7 @@ var ENVY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" }],
     description: "In the end, envy consumes the envious most of all"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -3289,7 +3289,7 @@ var ENVY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 6, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "What's yours is mine \u2014 especially your health.",
     skipQueue: true
   },
@@ -3311,7 +3311,7 @@ var ENVY_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }, { type: "damage", baseValue: 4, duration: 2, targetMode: "single" }],
+    effects: [{ type: "shield_steal", baseValue: 9, duration: 2, targetMode: "single" }, { type: "damage", baseValue: 4, duration: 2, targetMode: "single" }],
     description: "Your protection becomes my weapon.",
     skipQueue: true
   }
@@ -3344,7 +3344,7 @@ var PRIDE_CARDS = [
     cost: 2,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3374,7 +3374,7 @@ var PRIDE_CARDS = [
     cost: 2,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3414,7 +3414,7 @@ var PRIDE_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 3, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3424,7 +3424,7 @@ var PRIDE_CARDS = [
     cost: 2,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3434,7 +3434,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3454,7 +3454,7 @@ var PRIDE_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3484,7 +3484,7 @@ var PRIDE_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3504,7 +3504,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A common pride card"
   },
   {
@@ -3524,7 +3524,7 @@ var PRIDE_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3534,7 +3534,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "duo" }, { type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "duo" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3544,7 +3544,7 @@ var PRIDE_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 8, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3574,7 +3574,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3594,7 +3594,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3614,7 +3614,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 9, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3624,7 +3624,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A rare pride card"
   },
   {
@@ -3634,7 +3634,7 @@ var PRIDE_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3654,7 +3654,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3664,7 +3664,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "A rare pride card"
   },
   {
@@ -3684,7 +3684,7 @@ var PRIDE_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "Supreme confidence that borders on divinity"
   },
   {
@@ -3694,7 +3694,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "rare",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "duo" }],
     description: "Overbearing force that crushes lesser beings"
   },
   {
@@ -3704,7 +3704,7 @@ var PRIDE_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 8, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "A god complex made manifest in devastating power"
   },
   {
@@ -3724,7 +3724,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
     description: "Narcissistic brilliance that blinds all who witness it"
   },
   {
@@ -3734,7 +3734,7 @@ var PRIDE_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "The pedestal grows higher with every victory"
   },
   {
@@ -3744,7 +3744,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Arrogance so pure it becomes a shield"
   },
   {
@@ -3764,7 +3764,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 4, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }],
     description: "Superiority isn't a complex \u2014 it's a fact"
   },
   {
@@ -3774,7 +3774,7 @@ var PRIDE_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 8, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 9, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "heal_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
     description: "The throne demands sacrifice from all who approach"
   },
   {
@@ -3784,7 +3784,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }],
     description: "Vanity's mirror reflects only perfection"
   },
   {
@@ -3794,7 +3794,7 @@ var PRIDE_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 7, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 12, duration: 4, targetMode: "self" }],
     description: "The summit of pride \u2014 looking down on everything"
   },
   {
@@ -3804,7 +3804,7 @@ var PRIDE_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "duo" }, { type: "shield_steal", baseValue: 3, duration: 3, targetMode: "duo" }, { type: "draw_reduction", baseValue: 1, duration: 2, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "duo" }, { type: "shield_steal", baseValue: 5, duration: 3, targetMode: "duo" }, { type: "draw_reduction", baseValue: 1, duration: 2, targetMode: "duo" }],
     description: "An ego so massive it warps reality itself"
   },
   {
@@ -3814,7 +3814,7 @@ var PRIDE_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 7, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Pride goeth before destruction \u2014 but what a glorious fall"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -3825,7 +3825,7 @@ var PRIDE_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 10, duration: 2, targetMode: "self" }],
     description: "The king speaks first. Always.",
     skipQueue: true
   },
@@ -3847,7 +3847,7 @@ var PRIDE_CARDS = [
     cost: 0,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 9, duration: 2, targetMode: "self" }],
     description: "You're not even worth my attention. But this shield is.",
     skipQueue: true
   },
@@ -3891,7 +3891,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -3911,7 +3911,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 3, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 5, duration: 3, targetMode: "single" }],
     description: "A common lust card"
   },
   {
@@ -3921,7 +3921,7 @@ var LUST_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 2, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -3941,7 +3941,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 2, duration: 5, targetMode: "single" }, { type: "heal_gain", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 5, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -3991,7 +3991,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 2, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 4, duration: 3, targetMode: "single" }],
     description: "A common lust card"
   },
   {
@@ -4031,7 +4031,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -4041,7 +4041,7 @@ var LUST_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -4061,7 +4061,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A common lust card"
   },
   {
@@ -4071,7 +4071,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 8, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 8, duration: 3, targetMode: "single" }],
     description: "A rare lust card"
   },
   {
@@ -4081,7 +4081,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "single" }, { type: "heal_steal", baseValue: 2, duration: 4, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 4, targetMode: "single" }],
     description: "A rare lust card"
   },
   {
@@ -4091,7 +4091,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4111,7 +4111,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 2, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "aoe" }],
     description: "A rare lust card"
   },
   {
@@ -4121,7 +4121,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 3, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4131,7 +4131,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 3, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 5, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4151,7 +4151,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4161,7 +4161,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4171,7 +4171,7 @@ var LUST_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "single" }, { type: "heal_steal", baseValue: 2, duration: 5, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 5, targetMode: "single" }],
     description: "A rare lust card"
   },
   {
@@ -4181,7 +4181,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 2, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "duo" }],
     description: "A rare lust card"
   },
   {
@@ -4191,7 +4191,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4201,7 +4201,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card"
   },
   {
@@ -4211,7 +4211,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "heal_steal", baseValue: 3, duration: 5, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 5, duration: 5, targetMode: "single" }],
     description: "A rare lust card"
   },
   {
@@ -4221,7 +4221,7 @@ var LUST_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 2, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "single" }],
     description: "A rare lust card"
   },
   {
@@ -4231,7 +4231,7 @@ var LUST_CARDS = [
     cost: 4,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "An irresistible allure that drains the willing"
   },
   {
@@ -4241,7 +4241,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 3, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "Passion's embrace heals as it destroys"
   },
   {
@@ -4251,7 +4251,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 5, duration: 5, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "The siren's call lures victims to sweet oblivion"
   },
   {
@@ -4261,7 +4261,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 8, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "Desire made weapon \u2014 every touch steals life"
   },
   {
@@ -4271,7 +4271,7 @@ var LUST_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 5, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
     description: "A seductive whisper that weakens all resolve"
   },
   {
@@ -4281,7 +4281,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 8, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 4, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 14, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
     description: "The dance of temptation leaves only exhaustion"
   },
   {
@@ -4291,7 +4291,7 @@ var LUST_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 8, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
     description: "Obsession fuels an endless cycle of taking"
   },
   {
@@ -4301,7 +4301,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 2, duration: 5, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 1, duration: 4, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 1, duration: 4, targetMode: "aoe" }],
     description: "The kiss of corruption spreads with every heartbeat"
   },
   {
@@ -4311,7 +4311,7 @@ var LUST_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 2, duration: 2, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 4, duration: 2, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Infatuation blinds while lust devours"
   },
   {
@@ -4321,7 +4321,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "single" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "A charm so potent it turns enemies into fuel"
   },
   {
@@ -4331,7 +4331,7 @@ var LUST_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 4, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 7, duration: 4, targetMode: "self" }],
     description: "The web of desire ensnares all who draw near"
   },
   {
@@ -4341,7 +4341,7 @@ var LUST_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "duo" }, { type: "heal_steal", baseValue: 4, duration: 4, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "duo" }, { type: "heal_steal", baseValue: 7, duration: 4, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "duo" }],
     description: "Passion's fire burns brightest in the darkest moments"
   },
   {
@@ -4351,7 +4351,7 @@ var LUST_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 9, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 9, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Every stolen glance becomes a stolen breath"
   },
   {
@@ -4361,7 +4361,7 @@ var LUST_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "The ultimate seduction \u2014 life itself surrendered willingly"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -4372,7 +4372,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "A sweet nothing that cuts like a blade.",
     skipQueue: true
   },
@@ -4383,7 +4383,7 @@ var LUST_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 12, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "Draw them close, then take what you need.",
     skipQueue: true
   },
@@ -4405,7 +4405,7 @@ var LUST_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "Desire sharpened to a point \u2014 it strikes before reason.",
     skipQueue: true
   }
@@ -4488,7 +4488,7 @@ var GLUTTONY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 9, duration: 2, targetMode: "self" }],
     description: "A common gluttony card"
   },
   {
@@ -4518,7 +4518,7 @@ var GLUTTONY_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 10, duration: 3, targetMode: "self" }],
     description: "A common gluttony card"
   },
   {
@@ -4538,7 +4538,7 @@ var GLUTTONY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A common gluttony card"
   },
   {
@@ -4558,7 +4558,7 @@ var GLUTTONY_CARDS = [
     cost: 0,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 3, targetMode: "self" }],
     description: "A common gluttony card"
   },
   {
@@ -4608,7 +4608,7 @@ var GLUTTONY_CARDS = [
     cost: 1,
     tier: "common",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 12, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A common gluttony card"
   },
   {
@@ -4658,7 +4658,7 @@ var GLUTTONY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 16, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare gluttony card"
   },
   {
@@ -4668,7 +4668,7 @@ var GLUTTONY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 10, duration: 2, targetMode: "self" }],
     description: "A rare gluttony card"
   },
   {
@@ -4698,7 +4698,7 @@ var GLUTTONY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }],
+    effects: [{ type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }],
     description: "A rare gluttony card"
   },
   {
@@ -4738,7 +4738,7 @@ var GLUTTONY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 3, duration: 2, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 3, duration: 2, targetMode: "single" }],
     description: "A rare gluttony card"
   },
   {
@@ -4748,7 +4748,7 @@ var GLUTTONY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "slowburn",
-    effects: [{ type: "discard_burn", baseValue: 2, duration: 5, targetMode: "single" }, { type: "damage", baseValue: 7, duration: 5, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 3, targetMode: "single" }],
+    effects: [{ type: "discard_burn", baseValue: 2, duration: 5, targetMode: "single" }, { type: "damage", baseValue: 7, duration: 5, targetMode: "single" }, { type: "shield_steal", baseValue: 9, duration: 3, targetMode: "single" }],
     description: "A rare gluttony card"
   },
   {
@@ -4778,7 +4778,7 @@ var GLUTTONY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 12, duration: 2, targetMode: "self" }],
     description: "An insatiable hunger that consumes everything"
   },
   {
@@ -4788,7 +4788,7 @@ var GLUTTONY_CARDS = [
     cost: 3,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "The feast never ends \u2014 there's always room for more"
   },
   {
@@ -4808,7 +4808,7 @@ var GLUTTONY_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 4, targetMode: "aoe" }, { type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 6, duration: 3, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 4, targetMode: "aoe" }, { type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 10, duration: 3, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Ravenous consumption fuels unstoppable growth"
   },
   {
@@ -4818,7 +4818,7 @@ var GLUTTONY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 17, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "single" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 17, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" }],
     description: "The glutton's banquet \u2014 your loss is their gain"
   },
   {
@@ -4838,7 +4838,7 @@ var GLUTTONY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 17, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 30, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 21, duration: 3, targetMode: "self" }, { type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }],
     description: "An appetite for destruction that knows no satiation"
   },
   {
@@ -4848,7 +4848,7 @@ var GLUTTONY_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "slowburn",
-    effects: [{ type: "discard_burn", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "damage", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 5, duration: 4, targetMode: "aoe" }],
+    effects: [{ type: "discard_burn", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "damage", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 9, duration: 4, targetMode: "aoe" }],
     description: "The more you feed it, the hungrier it becomes"
   },
   {
@@ -4878,7 +4878,7 @@ var GLUTTONY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "duo" }, { type: "damage", baseValue: 14, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "duo" }, { type: "damage", baseValue: 14, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 12, duration: 3, targetMode: "duo" }],
     description: "The feast of fools \u2014 everyone's invited, no one leaves"
   },
   {
@@ -4888,7 +4888,7 @@ var GLUTTONY_CARDS = [
     cost: 6,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 4, targetMode: "aoe" }, { type: "damage", baseValue: 12, duration: 4, targetMode: "aoe" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 4, targetMode: "aoe" }, { type: "damage", baseValue: 12, duration: 4, targetMode: "aoe" }, { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }],
     description: "Metabolizing misery into raw energy"
   },
   {
@@ -4898,7 +4898,7 @@ var GLUTTONY_CARDS = [
     cost: 5,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 3, duration: 3, targetMode: "aoe" }, { type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 24, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "An all-you-can-eat buffet of suffering"
   },
   {
@@ -4908,7 +4908,7 @@ var GLUTTONY_CARDS = [
     cost: 4,
     tier: "epic",
     compoundPattern: "standard",
-    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 15, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 12, duration: 3, targetMode: "self" }],
+    effects: [{ type: "discard_burn", baseValue: 5, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 15, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 21, duration: 3, targetMode: "self" }],
     description: "The final course \u2014 everything that remains"
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -4930,7 +4930,7 @@ var GLUTTONY_CARDS = [
     cost: 2,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 8, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 14, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Consume everything in reach \u2014 health, energy, all of it.",
     skipQueue: true
   },
@@ -4952,7 +4952,7 @@ var GLUTTONY_CARDS = [
     cost: 1,
     tier: "rare",
     compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "The hunger strikes before the feast begins.",
     skipQueue: true
   }
@@ -5010,7 +5010,7 @@ var MAX_ENERGY = 7;
 var CONSUME_ENERGY_REFUND = 1;
 var WRATH_VENGEANCE_PCT = 0.634;
 var SLOTH_ENDURANCE_MULT = 0.45;
-var SLOTH_ENDURANCE_CAP = 25;
+var SLOTH_ENDURANCE_CAP = 44;
 var GREED_TAX_PCT = 0.063;
 var GREED_TAX_TICK = 2;
 var ENVY_JEALOUSY_PCT = 0.106;
@@ -5018,10 +5018,11 @@ var LUST_TEMPTATION_PCT = 0.25;
 var GLUTTONY_DEVOURER_ENERGY = 1.585;
 var STARTING_ENERGY = 2;
 var MAX_ROUNDS = 20;
-var STARTING_HP = 200;
+var STARTING_HP = 333;
 var HAND_SIZE = 5;
 var CARDS_PER_DECK = 30;
 var ROUND_16_DOUBLING = 16;
+var FINAL_RECKONING_ROUND = 20;
 
 // server/supabaseServer.ts
 import { createClient as createClient2 } from "@supabase/supabase-js";
@@ -5679,8 +5680,38 @@ async function advanceRound(gameId) {
     return;
   }
   const newRound = game.current_round + 1;
-  if (newRound > MAX_ROUNDS) {
-    const sortedByHp = [...alivePlayers].sort((a, b) => b.current_hp - a.current_hp);
+  if (newRound > MAX_ROUNDS || game.current_round === FINAL_RECKONING_ROUND) {
+    if (game.current_round === FINAL_RECKONING_ROUND) {
+      for (const p of alivePlayers) {
+        const hand = p.hand || [];
+        for (const cardId of hand) {
+          const card = getCardById(cardId);
+          if (!card) continue;
+          const enemies = alivePlayers.filter((e) => e.id !== p.id && e.is_alive);
+          const target = enemies.sort((a, b) => a.current_hp - b.current_hp)[0];
+          if (!target) continue;
+          for (const effect of card.effects) {
+            const targetId = effect.targetMode === "self" ? p.id : target.id;
+            await sb.from("active_effects").insert({
+              game_id: gameId,
+              target_player_id: targetId,
+              source_player_id: p.id,
+              effect_type: effect.type,
+              base_value: effect.baseValue,
+              applied_at_round: game.current_round,
+              duration_rounds: effect.duration,
+              card_id: cardId,
+              compound_pattern: card.compoundPattern,
+              current_tick: 0
+            });
+          }
+        }
+        await sb.from("game_players").update({ hand: [] }).eq("id", p.id);
+      }
+      await resolveActiveEffects(gameId, game.current_round);
+    }
+    const { data: postReckoningPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("is_alive", true).order("current_hp", { ascending: false });
+    const sortedByHp = postReckoningPlayers || alivePlayers;
     const winner = sortedByHp[0];
     await sb.from("games").update({
       status: "finished",

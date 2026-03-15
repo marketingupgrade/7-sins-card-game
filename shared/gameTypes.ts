@@ -1,14 +1,17 @@
 /**
  * 7 Deadly Sins Card Game — Shared Type Definitions (v4)
  *
- * v4 Balance Overhaul:
+ * v4 Balance Overhaul (updated v5.10 — The Reckoning):
  * - ALL cards are compound-only (no flat cards)
- * - 200 HP, 20 rounds, start 2 energy +1/round (max 7), carry-over
+ * - 333 HP, 20 rounds, start 2 energy +1/round (max 7), carry-over
+ * - Final Reckoning at round 20: all cards in hand played, highest HP wins
+ * - Defensive values scaled ×1.75 for longer, more strategic games
  * - 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn
  * - 13 effect types with 4 target modes
  * - 7 faction passives tuned via Monte Carlo (15k games, max 2.9% deviation)
- * - HP increased to 200 for longer, more strategic games
+ * - HP increased to 333 for longer, more strategic games (v5.10)
  * - Round 16 affliction doubling mechanic
+ * - Round 20 Final Reckoning mechanic (v5.10)
  *
  * These types are shared between client and server to ensure
  * type safety across the entire game stack.
@@ -179,12 +182,18 @@ export interface CardDefinition {
  *
  * Sin-specific passives (v5 balanced — Monte Carlo 500K games, 1.23% max deviation):
  * - Wrath:    VENGEANCE — When taking damage, reflect 63.4% back to attacker
- * - Sloth:    ENDURANCE — Start of turn: gain shield = energy × handSize × 0.45 (cap 25)
+ * - Sloth:    ENDURANCE — Start of turn: gain shield = energy × handSize × 0.45 (cap 44)
  * - Greed:    TAX — On tick-2 of compound damage dealt, gain shield = 6.3% of damage
  * - Envy:     JEALOUSY — When dealing damage, amplify target's worst affliction by 10.6%
  * - Pride:    HUBRIS — If you played the highest-cost card this round (ties count), all your effects get ×1.324
  * - Lust:     TEMPTATION — On compound tick damage dealt, heal 25% of damage as HP
  * - Gluttony: DEVOURER — Each card burned via discard_burn grants 1.585 energy
+ *
+ * v5.10 — The Reckoning:
+ * - HP increased from 200 to 333
+ * - All defensive card base values scaled ×1.75
+ * - Sloth ENDURANCE cap raised from 25 to 44 (proportional to HP increase)
+ * - Final Reckoning at round 20: both players play all cards in hand, highest HP wins
  */
 export const MAX_ENERGY = 7;
 export const ENERGY_PER_TURN = 1; // +1 energy gained per round
@@ -193,7 +202,7 @@ export const CONSUME_ENERGY_REFUND = 1; // +1 energy when banishing a card (max 
 // v5 Passive constants (tuned via combined optimizer)
 export const WRATH_VENGEANCE_PCT = 0.634;
 export const SLOTH_ENDURANCE_MULT = 0.45;
-export const SLOTH_ENDURANCE_CAP = 25;
+export const SLOTH_ENDURANCE_CAP = 44; // Scaled from 25 proportional to 333/200 HP increase
 export const GREED_TAX_PCT = 0.063;
 export const GREED_TAX_TICK = 2; // triggers on tick index 2
 export const ENVY_JEALOUSY_PCT = 0.106;
@@ -344,12 +353,13 @@ export interface GameLogEntry {
 
 // ─── Game Constants (v4) ────────────────────────────────────
 export const MAX_ROUNDS = 20;
-export const STARTING_HP = 200;
+export const STARTING_HP = 333;
 export const HAND_SIZE = 5;
 export const CARDS_PER_DECK = 30;
 export const MAX_FACTION_CARDS = 54;
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
-export const CATCHUP_HP_THRESHOLD = 80; // 40% of 200 HP
+export const CATCHUP_HP_THRESHOLD = 133; // 40% of 333 HP
+export const FINAL_RECKONING_ROUND = 20; // Round 20: all cards in hand played, highest HP wins
 
 /**
  * @deprecated Use getCompoundTickValue() with pattern for compound cards.

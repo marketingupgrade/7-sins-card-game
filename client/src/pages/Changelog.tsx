@@ -84,6 +84,40 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.10.0",
+    date: "March 2026",
+    title: "The Reckoning",
+    summary: "The biggest balance overhaul since v4. Starting HP increased from 200 to 333, all defensive card values scaled ×1.75, and the new Final Reckoning mechanic at round 20 ensures every game ends with a decisive conclusion. Backed by 1.26 million Monte Carlo simulated games across 30 configurations. Gameplay quality score increased +29.7 points over baseline.",
+    major: true,
+    changes: [
+      { category: "breaking", text: "Starting HP increased from 200 to 333 — games are longer and more strategic, with more room for comeback plays", factions: ["Wrath", "Sloth", "Greed", "Envy", "Pride", "Lust", "Gluttony"] },
+      { category: "breaking", text: "Final Reckoning: At round 20, all surviving players play every card in their hand regardless of energy cost. Highest HP after resolution wins. Eliminates timeouts entirely." },
+      { category: "balance", text: "All defensive card base values (heal_gain, shield_gain, heal_steal, shield_steal) scaled ×1.75 — 229 card effects updated across all 7 factions", factions: ["Wrath", "Sloth", "Greed", "Envy", "Pride", "Lust", "Gluttony"] },
+      { category: "balance", text: "Sloth ENDURANCE passive cap raised from 25 to 44 (proportional to HP increase)", factions: ["Sloth"] },
+      { category: "balance", text: "Catch-up HP threshold adjusted from 80 to 133 (40% of 333 HP)" },
+      { category: "feature", text: "Final Reckoning implemented in both client and server game engines with full effect resolution" },
+      { category: "feature", text: "Rules page updated with dedicated Final Reckoning section (orange-themed, Section IX)" },
+      { category: "feature", text: "Balance Analysis page updated with 333 HP and Final Reckoning context" },
+      { category: "feature", text: "Tutorial steps updated to reference 333 HP and Final Reckoning mechanic" },
+      { category: "feature", text: "Monte Carlo analysis: 1.26M games simulated across 3 HP pools × 5 defense multipliers × with/without Reckoning" },
+    ],
+  },
+  {
+    version: "5.9.2",
+    date: "March 2026",
+    title: "The Honest Covenant",
+    summary: "Username editing with profanity filter, legal page rewrites removing third-party references, and transparency about database hosting. Privacy-first philosophy added to all legal pages.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Gamertag Editing: Players can now edit their gamertag from the Account page with inline edit button" },
+      { category: "feature", text: "Profanity Filter: Username changes validated against leo-profanity + custom substring matching for slurs, hate speech, and impersonation" },
+      { category: "feature", text: "25 dedicated profanity filter tests covering racial slurs, embedded profanity, and edge cases" },
+      { category: "fix", text: "Legal Pages: Removed all third-party account references from Terms, Privacy, and Cookie Policy" },
+      { category: "fix", text: "Transparency: All legal pages now disclose Supabase EU (Frankfurt) database hosting" },
+      { category: "fix", text: "Philosophy: Added privacy-first statement to all legal pages — 'Games should be for fun, not extraction'" },
+    ],
+  },
+  {
     version: "5.9.1",
     date: "March 2026",
     title: "The Iron Ward",

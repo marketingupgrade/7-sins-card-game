@@ -1,0 +1,635 @@
+{
+  "scenarios": [
+    {
+      "defense_mult": 0.5,
+      "avg_game_length": 12.51,
+      "std_game_length": 5.34,
+      "comeback_rate": 0.8943,
+      "blowout_rate": 0.2269,
+      "timeout_rate": 0.2301,
+      "avg_hp_volatility": 11.91,
+      "defensive_interaction_rate": 0.621,
+      "faction_balance_deviation": 0.3729,
+      "strategic_diversity": 3.0807,
+      "quality_score": 47.27,
+      "win_rates": {
+        "wrath": 0.8729,
+        "sloth": 0.2878,
+        "greed": 0.7151,
+        "envy": 0.4807,
+        "pride": 0.3667,
+        "lust": 0.2973,
+        "gluttony": 0.4797
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.9993,
+          "greed": 0.99,
+          "envy": 1.0,
+          "pride": 0.994,
+          "lust": 1.0,
+          "gluttony": 1.0
+        },
+        "sloth": {
+          "wrath": 0.0007,
+          "sloth": 1.0,
+          "greed": 0.0033,
+          "envy": 0.1793,
+          "pride": 0.4773,
+          "lust": 0.456,
+          "gluttony": 0.1853
+        },
+        "greed": {
+          "wrath": 0.01,
+          "sloth": 0.9967,
+          "greed": 1.0,
+          "envy": 0.9147,
+          "pride": 0.89,
+          "lust": 0.9893,
+          "gluttony": 0.92
+        },
+        "envy": {
+          "wrath": 0.0,
+          "sloth": 0.8207,
+          "greed": 0.0853,
+          "envy": 1.0,
+          "pride": 0.6727,
+          "lust": 0.778,
+          "gluttony": 0.4887
+        },
+        "pride": {
+          "wrath": 0.006,
+          "sloth": 0.5227,
+          "greed": 0.11,
+          "envy": 0.3273,
+          "pride": 1.0,
+          "lust": 0.5947,
+          "gluttony": 0.3727
+        },
+        "lust": {
+          "wrath": 0.0,
+          "sloth": 0.544,
+          "greed": 0.0107,
+          "envy": 0.222,
+          "pride": 0.4053,
+          "lust": 1.0,
+          "gluttony": 0.196
+        },
+        "gluttony": {
+          "wrath": 0.0,
+          "sloth": 0.8147,
+          "greed": 0.08,
+          "envy": 0.5113,
+          "pride": 0.6273,
+          "lust": 0.804,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 0.75,
+      "avg_game_length": 13.07,
+      "std_game_length": 5.47,
+      "comeback_rate": 0.8554,
+      "blowout_rate": 0.2096,
+      "timeout_rate": 0.2682,
+      "avg_hp_volatility": 11.23,
+      "defensive_interaction_rate": 0.6378,
+      "faction_balance_deviation": 0.3662,
+      "strategic_diversity": 3.0941,
+      "quality_score": 46.75,
+      "win_rates": {
+        "wrath": 0.8662,
+        "sloth": 0.365,
+        "greed": 0.72,
+        "envy": 0.4325,
+        "pride": 0.3539,
+        "lust": 0.3302,
+        "gluttony": 0.4322
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.9853,
+          "greed": 0.972,
+          "envy": 0.9993,
+          "pride": 0.9747,
+          "lust": 0.9993,
+          "gluttony": 0.9993
+        },
+        "sloth": {
+          "wrath": 0.0147,
+          "sloth": 1.0,
+          "greed": 0.0067,
+          "envy": 0.4127,
+          "pride": 0.53,
+          "lust": 0.542,
+          "gluttony": 0.414
+        },
+        "greed": {
+          "wrath": 0.028,
+          "sloth": 0.9933,
+          "greed": 1.0,
+          "envy": 0.9293,
+          "pride": 0.89,
+          "lust": 0.986,
+          "gluttony": 0.9333
+        },
+        "envy": {
+          "wrath": 0.0007,
+          "sloth": 0.5873,
+          "greed": 0.0707,
+          "envy": 1.0,
+          "pride": 0.6607,
+          "lust": 0.6267,
+          "gluttony": 0.514
+        },
+        "pride": {
+          "wrath": 0.0253,
+          "sloth": 0.47,
+          "greed": 0.11,
+          "envy": 0.3393,
+          "pride": 1.0,
+          "lust": 0.524,
+          "gluttony": 0.3627
+        },
+        "lust": {
+          "wrath": 0.0007,
+          "sloth": 0.458,
+          "greed": 0.014,
+          "envy": 0.3733,
+          "pride": 0.476,
+          "lust": 1.0,
+          "gluttony": 0.3193
+        },
+        "gluttony": {
+          "wrath": 0.0007,
+          "sloth": 0.586,
+          "greed": 0.0667,
+          "envy": 0.486,
+          "pride": 0.6373,
+          "lust": 0.6807,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 1.0,
+      "avg_game_length": 13.55,
+      "std_game_length": 5.48,
+      "comeback_rate": 0.825,
+      "blowout_rate": 0.1911,
+      "timeout_rate": 0.2975,
+      "avg_hp_volatility": 10.76,
+      "defensive_interaction_rate": 0.6521,
+      "faction_balance_deviation": 0.3472,
+      "strategic_diversity": 3.1088,
+      "quality_score": 47.22,
+      "win_rates": {
+        "wrath": 0.8472,
+        "sloth": 0.4229,
+        "greed": 0.7244,
+        "envy": 0.4108,
+        "pride": 0.3688,
+        "lust": 0.3384,
+        "gluttony": 0.3873
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.902,
+          "greed": 0.9393,
+          "envy": 0.996,
+          "pride": 0.9453,
+          "lust": 0.9953,
+          "gluttony": 1.0
+        },
+        "sloth": {
+          "wrath": 0.098,
+          "sloth": 1.0,
+          "greed": 0.024,
+          "envy": 0.5147,
+          "pride": 0.606,
+          "lust": 0.54,
+          "gluttony": 0.6007
+        },
+        "greed": {
+          "wrath": 0.0607,
+          "sloth": 0.976,
+          "greed": 1.0,
+          "envy": 0.9347,
+          "pride": 0.8767,
+          "lust": 0.986,
+          "gluttony": 0.9613
+        },
+        "envy": {
+          "wrath": 0.004,
+          "sloth": 0.4853,
+          "greed": 0.0653,
+          "envy": 1.0,
+          "pride": 0.622,
+          "lust": 0.5873,
+          "gluttony": 0.5227
+        },
+        "pride": {
+          "wrath": 0.0547,
+          "sloth": 0.394,
+          "greed": 0.1233,
+          "envy": 0.378,
+          "pride": 1.0,
+          "lust": 0.5713,
+          "gluttony": 0.4293
+        },
+        "lust": {
+          "wrath": 0.0047,
+          "sloth": 0.46,
+          "greed": 0.014,
+          "envy": 0.4127,
+          "pride": 0.4287,
+          "lust": 1.0,
+          "gluttony": 0.3873
+        },
+        "gluttony": {
+          "wrath": 0.0,
+          "sloth": 0.3993,
+          "greed": 0.0387,
+          "envy": 0.4773,
+          "pride": 0.5707,
+          "lust": 0.6127,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 1.25,
+      "avg_game_length": 13.98,
+      "std_game_length": 5.48,
+      "comeback_rate": 0.7971,
+      "blowout_rate": 0.1742,
+      "timeout_rate": 0.3287,
+      "avg_hp_volatility": 10.42,
+      "defensive_interaction_rate": 0.6571,
+      "faction_balance_deviation": 0.321,
+      "strategic_diversity": 3.115,
+      "quality_score": 48.23,
+      "win_rates": {
+        "wrath": 0.821,
+        "sloth": 0.4628,
+        "greed": 0.7305,
+        "envy": 0.4054,
+        "pride": 0.3682,
+        "lust": 0.3542,
+        "gluttony": 0.3579
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.794,
+          "greed": 0.8727,
+          "envy": 0.9927,
+          "pride": 0.9253,
+          "lust": 0.9847,
+          "gluttony": 0.9987
+        },
+        "sloth": {
+          "wrath": 0.206,
+          "sloth": 1.0,
+          "greed": 0.0373,
+          "envy": 0.5267,
+          "pride": 0.7173,
+          "lust": 0.4833,
+          "gluttony": 0.732
+        },
+        "greed": {
+          "wrath": 0.1273,
+          "sloth": 0.9627,
+          "greed": 1.0,
+          "envy": 0.928,
+          "pride": 0.8833,
+          "lust": 0.9873,
+          "gluttony": 0.9553
+        },
+        "envy": {
+          "wrath": 0.0073,
+          "sloth": 0.4733,
+          "greed": 0.072,
+          "envy": 1.0,
+          "pride": 0.6047,
+          "lust": 0.548,
+          "gluttony": 0.538
+        },
+        "pride": {
+          "wrath": 0.0747,
+          "sloth": 0.2827,
+          "greed": 0.1167,
+          "envy": 0.3953,
+          "pride": 1.0,
+          "lust": 0.6027,
+          "gluttony": 0.4733
+        },
+        "lust": {
+          "wrath": 0.0153,
+          "sloth": 0.5167,
+          "greed": 0.0127,
+          "envy": 0.452,
+          "pride": 0.3973,
+          "lust": 1.0,
+          "gluttony": 0.4393
+        },
+        "gluttony": {
+          "wrath": 0.0013,
+          "sloth": 0.268,
+          "greed": 0.0447,
+          "envy": 0.462,
+          "pride": 0.5267,
+          "lust": 0.5607,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 1.5,
+      "avg_game_length": 14.3,
+      "std_game_length": 5.46,
+      "comeback_rate": 0.7744,
+      "blowout_rate": 0.1595,
+      "timeout_rate": 0.357,
+      "avg_hp_volatility": 10.19,
+      "defensive_interaction_rate": 0.6638,
+      "faction_balance_deviation": 0.2913,
+      "strategic_diversity": 3.1201,
+      "quality_score": 49.04,
+      "win_rates": {
+        "wrath": 0.7913,
+        "sloth": 0.5,
+        "greed": 0.7317,
+        "envy": 0.3921,
+        "pride": 0.3678,
+        "lust": 0.3865,
+        "gluttony": 0.3307
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.6367,
+          "greed": 0.844,
+          "envy": 0.9753,
+          "pride": 0.8987,
+          "lust": 0.9767,
+          "gluttony": 0.9987
+        },
+        "sloth": {
+          "wrath": 0.3633,
+          "sloth": 1.0,
+          "greed": 0.0553,
+          "envy": 0.506,
+          "pride": 0.7507,
+          "lust": 0.508,
+          "gluttony": 0.8167
+        },
+        "greed": {
+          "wrath": 0.156,
+          "sloth": 0.9447,
+          "greed": 1.0,
+          "envy": 0.924,
+          "pride": 0.8787,
+          "lust": 0.9813,
+          "gluttony": 0.9687
+        },
+        "envy": {
+          "wrath": 0.0247,
+          "sloth": 0.494,
+          "greed": 0.076,
+          "envy": 1.0,
+          "pride": 0.5773,
+          "lust": 0.4227,
+          "gluttony": 0.542
+        },
+        "pride": {
+          "wrath": 0.1013,
+          "sloth": 0.2493,
+          "greed": 0.1213,
+          "envy": 0.4227,
+          "pride": 1.0,
+          "lust": 0.546,
+          "gluttony": 0.5013
+        },
+        "lust": {
+          "wrath": 0.0233,
+          "sloth": 0.492,
+          "greed": 0.0187,
+          "envy": 0.5773,
+          "pride": 0.454,
+          "lust": 1.0,
+          "gluttony": 0.5267
+        },
+        "gluttony": {
+          "wrath": 0.0013,
+          "sloth": 0.1833,
+          "greed": 0.0313,
+          "envy": 0.458,
+          "pride": 0.4987,
+          "lust": 0.4733,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 1.75,
+      "avg_game_length": 14.54,
+      "std_game_length": 5.46,
+      "comeback_rate": 0.7499,
+      "blowout_rate": 0.1497,
+      "timeout_rate": 0.3836,
+      "avg_hp_volatility": 10.05,
+      "defensive_interaction_rate": 0.6663,
+      "faction_balance_deviation": 0.2532,
+      "strategic_diversity": 3.1219,
+      "quality_score": 49.46,
+      "win_rates": {
+        "wrath": 0.7532,
+        "sloth": 0.5302,
+        "greed": 0.7365,
+        "envy": 0.3869,
+        "pride": 0.3652,
+        "lust": 0.4151,
+        "gluttony": 0.313
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.48,
+          "greed": 0.7907,
+          "envy": 0.9533,
+          "pride": 0.8647,
+          "lust": 0.946,
+          "gluttony": 0.9907
+        },
+        "sloth": {
+          "wrath": 0.52,
+          "sloth": 1.0,
+          "greed": 0.084,
+          "envy": 0.498,
+          "pride": 0.84,
+          "lust": 0.45,
+          "gluttony": 0.8493
+        },
+        "greed": {
+          "wrath": 0.2093,
+          "sloth": 0.916,
+          "greed": 1.0,
+          "envy": 0.9187,
+          "pride": 0.892,
+          "lust": 0.9773,
+          "gluttony": 0.9787
+        },
+        "envy": {
+          "wrath": 0.0467,
+          "sloth": 0.502,
+          "greed": 0.0813,
+          "envy": 1.0,
+          "pride": 0.5853,
+          "lust": 0.3533,
+          "gluttony": 0.5267
+        },
+        "pride": {
+          "wrath": 0.1353,
+          "sloth": 0.16,
+          "greed": 0.108,
+          "envy": 0.4147,
+          "pride": 1.0,
+          "lust": 0.574,
+          "gluttony": 0.5293
+        },
+        "lust": {
+          "wrath": 0.054,
+          "sloth": 0.55,
+          "greed": 0.0227,
+          "envy": 0.6467,
+          "pride": 0.426,
+          "lust": 1.0,
+          "gluttony": 0.6213
+        },
+        "gluttony": {
+          "wrath": 0.0093,
+          "sloth": 0.1507,
+          "greed": 0.0213,
+          "envy": 0.4733,
+          "pride": 0.4707,
+          "lust": 0.3787,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    },
+    {
+      "defense_mult": 2.0,
+      "avg_game_length": 14.73,
+      "std_game_length": 5.41,
+      "comeback_rate": 0.7352,
+      "blowout_rate": 0.1383,
+      "timeout_rate": 0.4011,
+      "avg_hp_volatility": 9.97,
+      "defensive_interaction_rate": 0.6693,
+      "faction_balance_deviation": 0.2444,
+      "strategic_diversity": 3.1254,
+      "quality_score": 50.14,
+      "win_rates": {
+        "wrath": 0.7145,
+        "sloth": 0.5561,
+        "greed": 0.7444,
+        "envy": 0.3955,
+        "pride": 0.3572,
+        "lust": 0.4215,
+        "gluttony": 0.3108
+      },
+      "matchup_matrix": {
+        "wrath": {
+          "wrath": 1.0,
+          "sloth": 0.3493,
+          "greed": 0.6773,
+          "envy": 0.9327,
+          "pride": 0.8467,
+          "lust": 0.9213,
+          "gluttony": 0.9887
+        },
+        "sloth": {
+          "wrath": 0.6507,
+          "sloth": 1.0,
+          "greed": 0.096,
+          "envy": 0.506,
+          "pride": 0.8947,
+          "lust": 0.4593,
+          "gluttony": 0.842
+        },
+        "greed": {
+          "wrath": 0.3227,
+          "sloth": 0.904,
+          "greed": 1.0,
+          "envy": 0.8913,
+          "pride": 0.9,
+          "lust": 0.966,
+          "gluttony": 0.9713
+        },
+        "envy": {
+          "wrath": 0.0673,
+          "sloth": 0.494,
+          "greed": 0.1087,
+          "envy": 1.0,
+          "pride": 0.5827,
+          "lust": 0.3587,
+          "gluttony": 0.5527
+        },
+        "pride": {
+          "wrath": 0.1533,
+          "sloth": 0.1053,
+          "greed": 0.1,
+          "envy": 0.4173,
+          "pride": 1.0,
+          "lust": 0.562,
+          "gluttony": 0.5193
+        },
+        "lust": {
+          "wrath": 0.0787,
+          "sloth": 0.5407,
+          "greed": 0.034,
+          "envy": 0.6413,
+          "pride": 0.438,
+          "lust": 1.0,
+          "gluttony": 0.6393
+        },
+        "gluttony": {
+          "wrath": 0.0113,
+          "sloth": 0.158,
+          "greed": 0.0287,
+          "envy": 0.4473,
+          "pride": 0.4807,
+          "lust": 0.3607,
+          "gluttony": 1.0
+        }
+      },
+      "total_games": 42000
+    }
+  ],
+  "metadata": {
+    "total_cards": 378,
+    "factions": [
+      "wrath",
+      "sloth",
+      "greed",
+      "envy",
+      "pride",
+      "lust",
+      "gluttony"
+    ],
+    "games_per_matchup": 1500,
+    "max_rounds": 20,
+    "starting_hp": 200
+  }
+}

@@ -1,11 +1,13 @@
 /**
- * Server-Side Game Engine (v4)
+ * Server-Side Game Engine (v4, updated v5.10 — The Reckoning)
  *
  * ALL cards are compound. No flat cards exist.
- * 50 HP, 20 rounds, 3 energy/turn (fixed).
+ * 333 HP, 20 rounds, start 2 energy +1/round (max 7), carry-over.
  * 3 compound patterns: standard (Fibonacci), aggressive (powers of 2), slowburn.
  * 7 faction passives tuned via Monte Carlo simulation.
  * Round 16: all afflictions double.
+ * Round 20: Final Reckoning — all cards in hand played, highest HP wins.
+ * Defensive card values scaled ×1.75.
  */
 
 import { nanoid } from "nanoid";
@@ -24,6 +26,7 @@ import {
   STARTING_HP,
   STARTING_ENERGY,
   ROUND_16_DOUBLING,
+  FINAL_RECKONING_ROUND,
   CARDS_PER_DECK,
   TurnPhase,
   WRATH_VENGEANCE_PCT,
@@ -1000,8 +1003,54 @@ async function advanceRound(gameId: string): Promise<void> {
 
   const newRound = game.current_round + 1;
 
-  if (newRound > MAX_ROUNDS) {
-    const sortedByHp = [...alivePlayers].sort((a: any, b: any) => b.current_hp - a.current_hp);
+  // ─── FINAL RECKONING (v5.10) ─────────────────────────────
+  // At round 20: all alive players play every card in their hand
+  // (regardless of energy), then highest HP wins.
+  if (newRound > MAX_ROUNDS || game.current_round === FINAL_RECKONING_ROUND) {
+    // If we just finished round 20, resolve all remaining hand cards first
+    if (game.current_round === FINAL_RECKONING_ROUND) {
+      for (const p of alivePlayers) {
+        const hand: string[] = p.hand || [];
+        for (const cardId of hand) {
+          const card = getCardById(cardId);
+          if (!card) continue;
+          // Find lowest-HP enemy as default target
+          const enemies = alivePlayers.filter((e: any) => e.id !== p.id && e.is_alive);
+          const target = enemies.sort((a: any, b: any) => a.current_hp - b.current_hp)[0];
+          if (!target) continue;
+          // Apply each card effect directly
+          for (const effect of card.effects) {
+            const targetId = effect.targetMode === "self" ? p.id : target.id;
+            await sb.from("active_effects").insert({
+              game_id: gameId,
+              target_player_id: targetId,
+              source_player_id: p.id,
+              effect_type: effect.type,
+              base_value: effect.baseValue,
+              applied_at_round: game.current_round,
+              duration_rounds: effect.duration,
+              card_id: cardId,
+              compound_pattern: card.compoundPattern,
+              current_tick: 0,
+            });
+          }
+        }
+        // Clear hand after playing all cards
+        await sb.from("game_players").update({ hand: [] }).eq("id", p.id);
+      }
+      // Resolve all the newly created effects
+      await resolveActiveEffects(gameId, game.current_round);
+    }
+
+    // Re-fetch players after Reckoning resolution
+    const { data: postReckoningPlayers } = await sb
+      .from("game_players")
+      .select("*")
+      .eq("game_id", gameId)
+      .eq("is_alive", true)
+      .order("current_hp", { ascending: false });
+
+    const sortedByHp = postReckoningPlayers || alivePlayers;
     const winner = sortedByHp[0];
     await sb.from("games").update({
       status: "finished",
