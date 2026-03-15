@@ -1495,7 +1495,7 @@
 - [x] Mobile: Show as bottom sheet prompt
 - [x] Auto-dismiss after timeout or when next round starts
 - [x] Update patch notes
-- [ ] Save checkpoint and push to GitHub
+- [x] Save checkpoint and push to GitHub
 ## Resolution Reveal Animation Bug (v5.7.1)
 - [x] Debug why ResolutionReveal animation never shows on desktop or mobile
 - [x] Root cause: 18 lazy-loaded components missing React <Suspense> boundaries
@@ -1505,4 +1505,22 @@
 - [x] Verify round-end prompt appears after the reveal animation completes
 - [x] Write 22 vitest tests for resolution reveal data flow (resolutionReveal.test.ts)
 - [x] Update patch notes (v5.7.1 'The Revelation')
+- [x] Save checkpoint and push to GitHub
+
+## Desktop Card Hover Cue (v5.7.2)
+- [ ] Review existing card interaction hints (mobile tap hint, desktop hover preview)
+- [ ] Add visual hover cue on desktop cards showing they can be hovered for details
+- [ ] Ensure cue is subtle and doesn't obstruct card art
+- [ ] Cue should disappear after first hover interaction (learned behavior)
+- [ ] Update patch notes
+- [ ] Save checkpoint and push to GitHub
+
+## Multi-Target / AoE Target Avatar Badge (v5.7.2)
+- [x] Investigate if TargetAvatarBadge shows all targets for multi-target/AoE cards
+- [x] Fix badge to display multiple target portraits for AoE cards (stacked portraits with "ALL" label)
+- [x] Fix badge to display 2 target portraits for duo cards (stacked with "x2" label)
+- [x] Ensure self-target + enemy targets are visually distinct on mixed cards (self row + targets row)
+- [x] Updated getCardTargetInfo to detect AoE/duo/mixed target modes
+- [x] Write 19 vitest tests for multi-target logic (targetAvatarBadge.test.ts)
+- [x] Update patch notes (v5.7.2 'The All-Seeing Target')
 - [ ] Save checkpoint and push to GitHub

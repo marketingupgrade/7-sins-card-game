@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.2",
+    date: "March 2026",
+    title: "The All-Seeing Target",
+    summary: "Multi-target clarity upgrade. AoE and duo cards now show stacked faction portraits of all affected opponents. Mixed cards (self + AoE) display both your portrait and enemy targets. The targeting system now correctly distinguishes between single, duo, AoE, and self target modes.",
+    major: false,
+    changes: [
+      { category: "feature", text: "AoE Target Display: Cards with area-of-effect now show stacked faction portraits of ALL alive opponents with an 'ALL' label, making it clear the card hits everyone" },
+      { category: "feature", text: "Duo Target Display: Duo-targeting cards show 2 stacked portraits (primary selected target + lowest-HP secondary) with a '×2' label" },
+      { category: "feature", text: "Mixed Target Display: Cards with both self and AoE/duo effects show your own portrait with 'SELF' label above the stacked enemy portraits, clearly communicating the dual nature of the card" },
+      { category: "feature", text: "Portraits appear with staggered spring animations (60ms delay per portrait) for a premium cascading reveal effect" },
+      { category: "fix", text: "getCardTargetInfo now correctly detects all 4 target modes (single, duo, aoe, self) and their combinations instead of only handling single/self" },
+      { category: "fix", text: "AoE cards no longer show empty badge — previously they fell through all conditions and returned null because they weren't 'single' or 'self'" },
+      { category: "fix", text: "Duo cards without a selected target now correctly show the pulsing '?' prompt with isDuo flag" },
+      { category: "feature", text: "Added 19 vitest tests covering all target mode combinations: single, self, AoE, duo, self+AoE, self+single, self+duo, AoE+single, and edge cases" },
+    ],
+  },
+  {
     version: "5.7.1",
     date: "March 2026",
     title: "The Revelation",

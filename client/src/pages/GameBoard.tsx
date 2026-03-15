@@ -457,21 +457,68 @@ export default function GameBoard() {
   }, [myPlayer?.currentEnergy, selectedCardsEnergyCost]);
 
   // ─── Target resolution helper for TargetAvatarBadge ─────────
-  const getCardTargetInfo = useCallback((cardId: string) => {
-    if (!gameState) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+  // Returns targeting info including multi-target (AoE/duo) data
+  const getCardTargetInfo = useCallback((cardId: string): {
+    needsTarget: boolean;
+    isSelf: boolean;
+    targetSin?: string;
+    targetName?: string;
+    isAoe: boolean;
+    isDuo: boolean;
+    targets: Array<{ sin: string; name: string }>;
+  } => {
+    const empty = { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined, isAoe: false, isDuo: false, targets: [] as Array<{ sin: string; name: string }> };
+    if (!gameState) return empty;
     const sel = selectedCards.find(s => s.cardId === cardId);
-    if (!sel) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+    if (!sel) return empty;
     const card = CARD_MAP[cardId];
-    if (!card) return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
-    const hasSingleTarget = card.effects.some(e => e.targetMode === 'single' || e.targetMode === 'duo');
-    const isSelfOnly = !hasSingleTarget && card.effects.some(e => e.targetMode === 'self');
-    if (isSelfOnly) return { needsTarget: false, isSelf: true, targetSin: undefined, targetName: undefined };
-    if (hasSingleTarget && !sel.targetPlayerId) return { needsTarget: true, isSelf: false, targetSin: undefined, targetName: undefined };
-    if (sel.targetPlayerId) {
-      const target = gameState.players.find(p => p.id === sel.targetPlayerId);
-      if (target) return { needsTarget: false, isSelf: target.id === playerId, targetSin: target.chosenSin || undefined, targetName: target.username };
+    if (!card) return empty;
+
+    const hasSingleTarget = card.effects.some(e => e.targetMode === 'single');
+    const hasDuo = card.effects.some(e => e.targetMode === 'duo');
+    const hasAoe = card.effects.some(e => e.targetMode === 'aoe');
+    const hasSelf = card.effects.some(e => e.targetMode === 'self');
+
+    // Build list of alive opponents for AoE/duo display
+    const aliveOpponents = gameState.players
+      .filter(p => p.isAlive && p.id !== playerId)
+      .sort((a, b) => a.currentHp - b.currentHp);
+
+    // AoE card — hits all opponents (may also have self effects)
+    if (hasAoe) {
+      const targets = aliveOpponents.map(p => ({ sin: p.chosenSin || 'wrath', name: p.username }));
+      return { needsTarget: false, isSelf: hasSelf, targetSin: undefined, targetName: undefined, isAoe: true, isDuo: false, targets };
     }
-    return { needsTarget: false, isSelf: false, targetSin: undefined, targetName: undefined };
+
+    // Duo card — hits 2 lowest-HP opponents (may also have self effects)
+    if (hasDuo) {
+      // Duo cards still need a target selection for the primary target
+      if (!sel.targetPlayerId) {
+        return { ...empty, needsTarget: true, isDuo: true };
+      }
+      // Show the selected target + next lowest HP opponent
+      const primaryTarget = gameState.players.find(p => p.id === sel.targetPlayerId);
+      const secondaryTarget = aliveOpponents.find(p => p.id !== sel.targetPlayerId);
+      const targets: Array<{ sin: string; name: string }> = [];
+      if (primaryTarget) targets.push({ sin: primaryTarget.chosenSin || 'wrath', name: primaryTarget.username });
+      if (secondaryTarget) targets.push({ sin: secondaryTarget.chosenSin || 'wrath', name: secondaryTarget.username });
+      return { needsTarget: false, isSelf: hasSelf, targetSin: undefined, targetName: undefined, isAoe: false, isDuo: true, targets };
+    }
+
+    // Single target card
+    if (hasSingleTarget) {
+      if (!sel.targetPlayerId) return { ...empty, needsTarget: true };
+      const target = gameState.players.find(p => p.id === sel.targetPlayerId);
+      if (target) return { ...empty, needsTarget: false, isSelf: target.id === playerId, targetSin: target.chosenSin || undefined, targetName: target.username };
+      return empty;
+    }
+
+    // Self-only card
+    if (hasSelf) {
+      return { ...empty, isSelf: true };
+    }
+
+    return empty;
   }, [selectedCards, gameState, playerId]);
 
   // Brandbook: detect when no cards are affordable to hint the PASS button
@@ -1467,7 +1514,7 @@ export default function GameBoard() {
                     {/* Target avatar overlay — bottom-left of selected cards */}
                     {selectedCards.some(s => s.cardId === card.id) && (() => {
                       const info = getCardTargetInfo(card.id);
-                      if (!info.needsTarget && !info.isSelf && !info.targetSin) return null;
+                      if (!info.needsTarget && !info.isSelf && !info.targetSin && !info.isAoe && !info.isDuo) return null;
                       return (
                         <div className="absolute -bottom-3 -left-2 z-20">
                           <TargetAvatarBadge
@@ -1476,6 +1523,9 @@ export default function GameBoard() {
                             isSelf={info.isSelf}
                             ownSin={mySin}
                             needsTarget={info.needsTarget}
+                            isAoe={info.isAoe}
+                            isDuo={info.isDuo}
+                            targets={info.targets}
                             size="md"
                           />
                         </div>
@@ -1542,7 +1592,7 @@ export default function GameBoard() {
                       {/* Target avatar overlay — bottom-left of selected mobile cards */}
                       {selectedCards.some(s => s.cardId === card.id) && (() => {
                         const info = getCardTargetInfo(card.id);
-                        if (!info.needsTarget && !info.isSelf && !info.targetSin) return null;
+                        if (!info.needsTarget && !info.isSelf && !info.targetSin && !info.isAoe && !info.isDuo) return null;
                         return (
                           <div className="absolute -bottom-2 -left-1.5 z-20">
                             <TargetAvatarBadge
@@ -1551,6 +1601,9 @@ export default function GameBoard() {
                               isSelf={info.isSelf}
                               ownSin={mySin}
                               needsTarget={info.needsTarget}
+                              isAoe={info.isAoe}
+                              isDuo={info.isDuo}
+                              targets={info.targets}
                               size="sm"
                             />
                           </div>
