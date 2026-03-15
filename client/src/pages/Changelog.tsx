@@ -84,6 +84,22 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.6",
+    date: "March 2026",
+    title: "The Architect's Arsenal",
+    summary: "Deck Builder gains strategy-based auto-fill presets (Aggro, Control, Balanced) with scoring algorithms that prioritize different card attributes. The Collection page now features a card comparison mode for side-by-side analysis of up to 3 cards. 334 tests passing.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Deck Builder: Strategy auto-fill presets — Aggro (damage-focused, low-cost, aggressive pattern), Control (defensive, high-cost, slowburn), and Balanced (moderate across all types)" },
+      { category: "feature", text: "Deck Builder: Strategy picker dropdown replaces old auto-fill button — each preset shows description, color-coded icon, and fills deck optimally for that archetype" },
+      { category: "feature", text: "Shared deckStrategies.ts: Scoring algorithms that evaluate cards on effect types, cost curve, compound pattern, tier, and target mode" },
+      { category: "feature", text: "Collection: Compare mode toggle in header — select 2-3 cards to view a side-by-side comparison panel" },
+      { category: "feature", text: "Collection: Comparison panel shows card art, faction/tier/target badges, cost/pattern/effects grid, individual effect breakdowns with total damage, and overall output" },
+      { category: "feature", text: "Collection: Amber ring highlight and checkbox overlay on selected cards during compare mode" },
+      { category: "feature", text: "16 new vitest tests for strategy scoring logic and card comparison mode" },
+    ],
+  },
+  {
     version: "5.7.5",
     date: "March 2026",
     title: "The Strategist's Toolkit",

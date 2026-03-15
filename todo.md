@@ -1567,4 +1567,26 @@
 - [x] 14 vitest tests for filter logic and synergy warnings (deckSynergy.test.ts)
 - [x] Full test suite: 318 tests, 19 files, 0 failures
 - [x] Update patch notes (v5.7.5 'The Strategist's Toolkit')
+- [x] Save checkpoint and push to GitHub
+
+## Deck Auto-Fill Strategy Presets (v5.7.6)
+- [x] Add Aggro preset (prioritizes damage, low-cost, aggressive pattern)
+- [x] Add Control preset (prioritizes defense, blocks, slowburn pattern)
+- [x] Add Balanced preset (moderate scoring across all types)
+- [x] Replace old auto-fill button with strategy picker dropdown
+- [x] Created shared deckStrategies.ts utility with scoring algorithms
+- [x] Click-outside handler to close strategy picker
+- [x] Auto-fill respects selected faction and fills to MAX_DECK_SIZE
+
+## Card Comparison Mode (v5.7.6)
+- [x] Add compare mode toggle to Collection page header (desktop)
+- [x] Allow selecting 2-3 cards with checkbox overlay on MiniCards
+- [x] Amber ring highlight on selected cards
+- [x] Show side-by-side comparison panel (sticky bottom bar) with art, stats, effects, total output
+- [x] Include remove button per card in comparison
+- [x] Instruction banner when <2 cards selected
+- [x] Card detail modal disabled during compare mode
+- [x] 16 vitest tests for strategy scoring + comparison logic (deckStrategies.test.ts)
+- [x] Full test suite: 334 tests, 20 files, 0 failures
+- [x] Update patch notes (v5.7.6 'The Architect's Arsenal')
 - [ ] Save checkpoint and push to GitHub

@@ -27,6 +27,7 @@ import {
 } from "@shared/gameTypes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
+import { STRATEGIES, autoFillByStrategy, type StrategyType } from "@/lib/deckStrategies";
 
 // ─── Constants ──────────────────────────────────────────────
 const MAX_DECK_SIZE = 30;
@@ -1230,19 +1231,38 @@ export default function DeckBuilder() {
     setDeckName("My Deck");
   }, []);
 
-  // Auto-fill remaining slots
-  const autoFill = useCallback(() => {
-    const remaining = MAX_DECK_SIZE - deckCardIds.length;
-    if (remaining <= 0) return;
-    const available = factionCards.filter((c) => !deckCardIds.includes(c.id));
-    const sorted = [...available].sort((a, b) => {
-      const tierOrder = { epic: 0, rare: 1, common: 2 };
-      if (tierOrder[a.tier] !== tierOrder[b.tier]) return tierOrder[a.tier] - tierOrder[b.tier];
-      return b.cost - a.cost;
-    });
-    const toAdd = sorted.slice(0, remaining).map((c) => c.id);
-    setDeckCardIds((prev) => [...prev, ...toAdd]);
+  // Strategy auto-fill
+  const [showStrategyPicker, setShowStrategyPicker] = useState(false);
+  const [lastStrategy, setLastStrategy] = useState<StrategyType | null>(null);
+  const strategyPickerRef = useRef<HTMLDivElement>(null);
+
+  // Close strategy picker on click outside
+  useEffect(() => {
+    if (!showStrategyPicker) return;
+    const handleClick = (e: MouseEvent) => {
+      if (strategyPickerRef.current && !strategyPickerRef.current.contains(e.target as Node)) {
+        setShowStrategyPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showStrategyPicker]);
+
+  const autoFillWithStrategy = useCallback((strategy: StrategyType) => {
+    const toAdd = autoFillByStrategy(factionCards, deckCardIds, strategy, MAX_DECK_SIZE);
+    if (toAdd.length > 0) {
+      setDeckCardIds((prev) => [...prev, ...toAdd]);
+      setLastStrategy(strategy);
+      setSaveMessage(`${STRATEGIES.find(s => s.type === strategy)?.label} strategy applied! ${toAdd.length} cards added.`);
+      setTimeout(() => setSaveMessage(null), 3000);
+    }
+    setShowStrategyPicker(false);
   }, [deckCardIds, factionCards]);
+
+  // Legacy auto-fill (fallback, uses balanced)
+  const autoFill = useCallback(() => {
+    setShowStrategyPicker(true);
+  }, []);
 
   // Guest deck limit check
   const isGuest = !user;
@@ -1671,13 +1691,55 @@ export default function DeckBuilder() {
 
             {/* Deck action buttons */}
             <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                onClick={autoFill}
-                disabled={isFull}
-                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] text-white/35 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/55 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed hidden sm:block"
-              >
-                Auto-fill
-              </button>
+              {/* Strategy Auto-Fill */}
+              <div className="relative hidden sm:block" ref={strategyPickerRef}>
+                <button
+                  onClick={autoFill}
+                  disabled={isFull}
+                  className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium bg-white/[0.04] text-white/35 border border-white/[0.06] hover:bg-white/[0.08] hover:text-white/55 transition-all duration-200 disabled:opacity-25 disabled:cursor-not-allowed flex items-center gap-1"
+                >
+                  <span>Strategy Fill</span>
+                  <svg className="w-2.5 h-2.5 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+                <AnimatePresence>
+                  {showStrategyPicker && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -4, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="absolute top-full right-0 mt-1.5 z-50 w-56 rounded-xl border border-white/10 bg-black/95 backdrop-blur-xl shadow-2xl overflow-hidden"
+                    >
+                      <div className="p-2 border-b border-white/5">
+                        <p className="text-[9px] text-white/30 uppercase tracking-wider font-semibold px-2 py-1" style={{ fontFamily: "var(--font-heading)" }}>Choose Strategy</p>
+                      </div>
+                      <div className="p-1.5 space-y-0.5">
+                        {STRATEGIES.map((s) => (
+                          <button
+                            key={s.type}
+                            onClick={() => autoFillWithStrategy(s.type)}
+                            className="w-full flex items-start gap-2.5 px-2.5 py-2 rounded-lg hover:bg-white/[0.06] transition-all duration-150 text-left group"
+                          >
+                            <span className="text-base mt-0.5 shrink-0">{s.icon}</span>
+                            <div className="min-w-0">
+                              <p className="text-[11px] font-bold tracking-wide group-hover:text-white/90 transition-colors" style={{ color: s.color, fontFamily: "var(--font-heading)" }}>{s.label}</p>
+                              <p className="text-[9px] text-white/30 leading-relaxed mt-0.5">{s.description}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="p-1.5 border-t border-white/5">
+                        <button
+                          onClick={() => setShowStrategyPicker(false)}
+                          className="w-full text-center text-[9px] text-white/20 hover:text-white/40 py-1 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <button
                 onClick={clearDeck}
                 disabled={deckCardIds.length === 0}

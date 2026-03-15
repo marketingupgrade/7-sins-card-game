@@ -87,9 +87,15 @@ const PATTERN_COLORS: Record<CompoundPattern, string> = {
 const MiniCard = memo(function MiniCard({
   card,
   onClick,
+  compareMode,
+  isCompared,
+  onToggleCompare,
 }: {
   card: CardDefinition;
   onClick: () => void;
+  compareMode?: boolean;
+  isCompared?: boolean;
+  onToggleCompare?: () => void;
 }) {
   const sinColor = SIN_COLORS[card.sin];
   const artUrl = CARD_ART_URLS[card.id];
@@ -102,12 +108,13 @@ const MiniCard = memo(function MiniCard({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
       transition={{ duration: 0.2 }}
-      onClick={onClick}
-      className="group relative flex flex-col rounded-lg overflow-hidden cursor-pointer
-                 border border-white/10 hover:border-white/30 transition-all duration-200
+      onClick={compareMode ? (onToggleCompare || onClick) : onClick}
+      className={`group relative flex flex-col rounded-lg overflow-hidden cursor-pointer
+                 border transition-all duration-200
                  bg-black/40 hover:bg-black/60 hover:shadow-lg hover:shadow-black/40
-                 hover:-translate-y-1 active:scale-95"
-      style={{ borderColor: `${sinColor}30` }}
+                 hover:-translate-y-1 active:scale-95
+                 ${isCompared ? 'ring-2 ring-amber-400/60 border-amber-400/40' : 'border-white/10 hover:border-white/30'}`}
+      style={{ borderColor: isCompared ? undefined : `${sinColor}30` }}
     >
       {/* Art */}
       <div className="relative aspect-[3/4] overflow-hidden bg-black">
@@ -168,6 +175,20 @@ const MiniCard = memo(function MiniCard({
             </div>
           ) : null;
         })()}
+        {/* Compare checkbox overlay */}
+        {compareMode && (
+          <div className={`absolute inset-0 flex items-center justify-center transition-all duration-150
+                          ${isCompared ? 'bg-amber-500/10' : 'bg-black/20'}`}>
+            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all
+                            ${isCompared ? 'bg-amber-500 border-amber-400 scale-110' : 'bg-black/60 border-white/30'}`}>
+              {isCompared && (
+                <svg className="w-3.5 h-3.5 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       {/* Info */}
       <div className="p-2 flex flex-col gap-0.5">
@@ -482,6 +503,28 @@ export default function Collection() {
   const [selectedTargetMode, setSelectedTargetMode] = useState<"all" | "aoe" | "duo" | "mixed" | "single" | "self">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
+  // Compare mode
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const MAX_COMPARE = 3;
+
+  const toggleCompare = useCallback((cardId: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(cardId)) return prev.filter((id) => id !== cardId);
+      if (prev.length >= MAX_COMPARE) return prev;
+      return [...prev, cardId];
+    });
+  }, []);
+
+  const compareCards = useMemo(() => {
+    return compareIds.map((id) => ALL_CARDS.find((c) => c.id === id)).filter(Boolean) as CardDefinition[];
+  }, [compareIds]);
+
+  const exitCompareMode = useCallback(() => {
+    setCompareMode(false);
+    setCompareIds([]);
+  }, []);
+
   // Get all unique effect types present in cards
   const availableEffects = useMemo(() => {
     const effects = new Set<EffectType>();
@@ -577,25 +620,40 @@ export default function Collection() {
               </p>
             </div>
           </div>
-          {/* Search */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search cards..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-48 md:w-64 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10
-                         text-sm text-white placeholder-white/30 outline-none
-                         focus:border-white/30 focus:bg-white/10 transition-all"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs"
-              >
-                x
-              </button>
-            )}
+          <div className="flex items-center gap-2">
+            {/* Compare toggle */}
+            <button
+              onClick={() => compareMode ? exitCompareMode() : setCompareMode(true)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider border transition-all duration-200 hidden sm:flex items-center gap-1.5
+                ${compareMode
+                  ? 'bg-amber-500/20 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
+                  : 'bg-white/5 border-white/10 text-white/40 hover:bg-white/10 hover:text-white/60'}`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+              </svg>
+              {compareMode ? `Compare (${compareIds.length}/${MAX_COMPARE})` : 'Compare'}
+            </button>
+            {/* Search */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search cards..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-48 md:w-64 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10
+                           text-sm text-white placeholder-white/30 outline-none
+                           focus:border-white/30 focus:bg-white/10 transition-all"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 text-xs"
+                >
+                  x
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -817,6 +875,9 @@ export default function Collection() {
                 key={card.id}
                 card={card}
                 onClick={() => setSelectedCard(card)}
+                compareMode={compareMode}
+                isCompared={compareIds.includes(card.id)}
+                onToggleCompare={() => toggleCompare(card.id)}
               />
             ))}
           </AnimatePresence>
@@ -844,9 +905,180 @@ export default function Collection() {
         </div>
       </div>
 
+      {/* Compare Panel — sticky bottom bar when cards are selected */}
+      <AnimatePresence>
+        {compareMode && compareCards.length >= 2 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-t border-amber-500/20 shadow-2xl"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-amber-300" style={{ fontFamily: "var(--font-heading)" }}>
+                  Comparing {compareCards.length} Cards
+                </h3>
+                <button
+                  onClick={exitCompareMode}
+                  className="text-xs text-white/40 hover:text-white/70 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+
+              {/* Side-by-side comparison */}
+              <div className={`grid gap-3 ${compareCards.length === 2 ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {compareCards.map((card) => {
+                  const sinColor = SIN_COLORS[card.sin];
+                  const tm = getCardTargetMode(card);
+                  const artUrl = CARD_ART_URLS[card.id];
+                  return (
+                    <div
+                      key={card.id}
+                      className="rounded-lg border border-white/10 bg-white/[0.02] overflow-hidden"
+                      style={{ borderColor: `${sinColor}30` }}
+                    >
+                      {/* Card header with art */}
+                      <div className="flex items-center gap-3 p-3">
+                        <div className="w-12 h-16 rounded overflow-hidden bg-black shrink-0">
+                          {artUrl ? (
+                            <img src={artUrl} alt={card.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center" style={{ background: `${sinColor}15` }}>
+                              <img src={SIN_ARCHETYPE_ICONS[card.sin]} alt={card.sin} className="w-6 h-6 opacity-40" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold truncate" style={{ color: sinColor, fontFamily: "var(--font-heading)" }}>
+                            {card.name}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ background: sinColor, color: '#000' }}>
+                              {card.sin}
+                            </span>
+                            <span className="text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase" style={{ background: `${TIER_COLORS[card.tier]}30`, color: TIER_COLORS[card.tier] }}>
+                              {card.tier}
+                            </span>
+                            {tm && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase" style={{ color: tm.color, background: tm.bgColor }}>
+                                {tm.shortLabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => toggleCompare(card.id)}
+                          className="shrink-0 w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/30 hover:text-red-400 hover:border-red-400/30 transition-colors"
+                        >
+                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      {/* Stats grid */}
+                      <div className="grid grid-cols-3 gap-px bg-white/5">
+                        <div className="bg-black/80 p-2 text-center">
+                          <p className="text-[9px] text-white/30 uppercase">Cost</p>
+                          <p className="text-sm font-bold" style={{ color: sinColor }}>{card.cost}</p>
+                        </div>
+                        <div className="bg-black/80 p-2 text-center">
+                          <p className="text-[9px] text-white/30 uppercase">Pattern</p>
+                          <p className="text-[11px] font-semibold" style={{ color: PATTERN_COLORS[card.compoundPattern] }}>
+                            {PATTERN_LABELS[card.compoundPattern]}
+                          </p>
+                        </div>
+                        <div className="bg-black/80 p-2 text-center">
+                          <p className="text-[9px] text-white/30 uppercase">Effects</p>
+                          <p className="text-sm font-bold text-white/70">{card.effects.length}</p>
+                        </div>
+                      </div>
+
+                      {/* Effects list */}
+                      <div className="p-2 space-y-1">
+                        {card.effects.map((eff, i) => {
+                          const totalDmg = Array.from({ length: eff.duration }, (_, t) =>
+                            getCompoundTickValue(eff.baseValue, card.compoundPattern, t)
+                          ).reduce((a, b) => a + b, 0);
+                          return (
+                            <div key={i} className="flex items-center justify-between text-[10px] px-2 py-1.5 rounded bg-white/[0.03]">
+                              <div className="flex items-center gap-1.5">
+                                {getEffectIconUrl(eff.type, card.sin) && (
+                                  <img src={getEffectIconUrl(eff.type, card.sin)!} alt={eff.type} className="w-3.5 h-3.5 opacity-60" />
+                                )}
+                                <span className="text-white/60 font-medium">{EFFECT_LABELS[eff.type] || eff.type}</span>
+                              </div>
+                              <div className="flex items-center gap-2 text-white/40">
+                                <span>B:{eff.baseValue}</span>
+                                <span>{eff.duration}t</span>
+                                <span className="font-bold text-white/60">={totalDmg}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Total output */}
+                      <div className="px-3 py-2 border-t border-white/5 flex items-center justify-between">
+                        <span className="text-[9px] text-white/30 uppercase">Total Output</span>
+                        <span className="text-sm font-bold" style={{ color: sinColor }}>
+                          {card.effects.reduce((sum, eff) => {
+                            return sum + Array.from({ length: eff.duration }, (_, t) =>
+                              getCompoundTickValue(eff.baseValue, card.compoundPattern, t)
+                            ).reduce((a, b) => a + b, 0);
+                          }, 0)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {compareCards.length < MAX_COMPARE && (
+                <p className="text-[10px] text-white/20 text-center mt-2">
+                  Select {MAX_COMPARE - compareCards.length} more card{MAX_COMPARE - compareCards.length > 1 ? 's' : ''} to compare
+                </p>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Compare mode instruction banner */}
+      <AnimatePresence>
+        {compareMode && compareCards.length < 2 && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-t border-amber-500/20"
+          >
+            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                  <span className="text-amber-300 text-sm font-bold">{compareIds.length}</span>
+                </div>
+                <p className="text-sm text-white/60">
+                  Select {2 - compareIds.length} more card{2 - compareIds.length > 1 ? 's' : ''} to compare (up to {MAX_COMPARE})
+                </p>
+              </div>
+              <button
+                onClick={exitCompareMode}
+                className="text-xs text-white/40 hover:text-white/70 px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Card Detail Modal */}
       <AnimatePresence>
-        {selectedCard && (
+        {selectedCard && !compareMode && (
           <CardDetailModal card={selectedCard} onClose={() => setSelectedCard(null)} />
         )}
       </AnimatePresence>
