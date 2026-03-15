@@ -81,7 +81,7 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
         ${isTargetable && player.isAlive ? "cursor-pointer" : ""}
       `}
       style={{
-        minHeight: 44,
+        minHeight: 56,
         background: isMe
           ? "linear-gradient(135deg, oklch(0.14 0.02 70 / 0.9), oklch(0.10 0.01 70 / 0.8))"
           : "linear-gradient(135deg, oklch(0.12 0.01 280 / 0.8), oklch(0.08 0.005 280 / 0.7))",
@@ -114,7 +114,7 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
       {/* Avatar + Passive tooltip */}
       <div className="relative flex-shrink-0">
         <div
-          className="w-8 h-8 rounded-full overflow-hidden border-2"
+          className="w-10 h-10 rounded-full overflow-hidden border-2"
           style={{ borderColor: sinColor }}
           onClick={togglePassive}
         >
@@ -195,8 +195,8 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
           )}
         </div>
 
-        {/* HP bar — compact but readable */}
-        <div className="relative h-3.5 bg-muted/50 rounded-full overflow-hidden mt-0.5">
+        {/* HP bar — taller for readability */}
+        <div className="relative h-5 bg-muted/50 rounded-full overflow-hidden mt-0.5">
           <motion.div
             animate={{ width: `${hpPercent}%` }}
             transition={{ duration: 0.6, ease: "easeOut" }}
@@ -213,7 +213,7 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
           )}
           <div className="absolute inset-0 flex items-center justify-center">
             <span
-              className="text-[10px] font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
+              className="text-xs font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]"
               style={{ fontFamily: "var(--font-heading)" }}
             >
               {player.currentHp}/{player.maxHp}
@@ -223,13 +223,13 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
         </div>
       </div>
 
-      {/* Energy dots */}
+      {/* Energy dots — larger for touch */}
       <div className="flex flex-col items-center gap-0.5 flex-shrink-0">
-        <div className="flex gap-0.5">
+        <div className="flex gap-1">
           {Array.from({ length: MAX_ENERGY }).map((_, i) => (
             <div
               key={i}
-              className="w-2 h-2 rounded-full"
+              className="w-2.5 h-2.5 rounded-full"
               style={{
                 background: i < player.currentEnergy
                   ? sinColor
@@ -241,7 +241,7 @@ export const MobilePlayerBar = memo(function MobilePlayerBar({
             />
           ))}
         </div>
-        <span className="text-[8px] text-muted-foreground/60 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+        <span className="text-[9px] text-muted-foreground/60 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
           {player.currentEnergy}/{MAX_ENERGY}
         </span>
       </div>

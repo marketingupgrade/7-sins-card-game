@@ -1423,4 +1423,35 @@
 
 ## Patch Notes Update
 - [x] Update patch notes page with latest changes (card art regeneration, deck save fix, deck CRUD tests)
-- [ ] Push updated code to GitHub for Vercel deployment
+- [x] Push updated code to GitHub for Vercel deployment
+
+## Game Board UX Upgrade (Desktop + Mobile)
+- [x] Study UX skill references (interaction design, mobile design, visual design, cognitive psychology)
+- [x] Audit current GameBoard desktop layout for UX issues
+- [x] Audit current GameBoard mobile layout for UX issues
+- [x] Redesign desktop game board with improved visual hierarchy, information architecture, and interaction feedback
+- [x] Redesign mobile game board with touch-optimized controls, thumb-zone layout, and reduced cognitive load
+- [x] Improve card hand interaction (hover states, selection feedback, play animations)
+- [x] Improve HP/energy bars with clearer visual feedback and state changes
+- [x] Improve turn indicator and round counter visibility
+- [x] Improve game log readability and accessibility
+- [x] Improve active effects display with better grouping and visual hierarchy
+- [x] Add micro-interactions and state transitions for game events
+- [x] Ensure WCAG AA contrast ratios across all game UI elements
+- [x] Test desktop and mobile layouts across breakpoints
+
+## UX-Driven Game Board Upgrades
+- [x] Desktop: Card hover preview tooltip (large card detail on hover, positioned via Fitts's Law)
+- [x] Desktop: Move action buttons below/integrated with card hand (reduce motor distance)
+- [x] Desktop: Improve center area — action feed prominent, ritual circle smaller
+- [x] Desktop: Player panel hierarchy — HP bar dominant, effects collapsible
+- [x] Desktop: Reduce VFX cognitive overload (fewer simultaneous animation layers)
+- [x] Mobile: Larger card thumbnails (96px wide, 44px+ touch targets)
+- [x] Mobile: Bottom sheet card zoom instead of full-screen overlay
+- [x] Mobile: Larger opponent bars (56px min height for touch targets)
+- [x] Mobile: Compact top bar — reduced padding and icon sizes
+- [x] Mobile: Better visual hierarchy for HP/energy (larger, more prominent)
+- [x] Update brandbook with UX design principles (Fitts's Law, cognitive load, Hick's Law, mobile-first, accessibility)
+- [x] Brandbook: Add Section 14 "UX Design Principles" 
+- [x] Update patch notes with v5.5.0 UX upgrade
+- [x] Save checkpoint and push to GitHub

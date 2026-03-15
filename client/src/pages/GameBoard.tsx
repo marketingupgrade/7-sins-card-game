@@ -70,6 +70,7 @@ import VictoryCinematic from "@/components/VictoryCinematic";
 import MobilePlayerBar from "@/components/MobilePlayerBar";
 import MobileCardThumbnail from "@/components/MobileCardThumbnail";
 import MobileCardZoom from "@/components/MobileCardZoom";
+import CardHoverPreview from "@/components/CardHoverPreview";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 import BattleLog from "@/components/BattleLog";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -157,6 +158,11 @@ export default function GameBoard() {
   const prevGameStatus = useRef<string>('active');
   const [mobileZoomCard, setMobileZoomCard] = useState<string | null>(null);
   const isMobile = useIsMobile();
+
+  // Desktop card hover preview state
+  const [hoverPreviewCard, setHoverPreviewCard] = useState<string | null>(null);
+  const [hoverPreviewPos, setHoverPreviewPos] = useState({ x: 0, y: 0 });
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Phase 2: Impact VFX state
   const [impactVfxTrigger, setImpactVfxTrigger] = useState(0);
@@ -846,12 +852,12 @@ export default function GameBoard() {
         isActive={myPlayer?.isAlive ?? true}
       />
 
-      {/* Top Bar — Gothic Stone Header */}
-      <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1.5 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-4 md:w-5 h-4 md:h-5 opacity-60" />
-            <span className="text-base md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+      {/* Top Bar — Gothic Stone Header (compact on mobile) */}
+      <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex items-center gap-1.5 md:gap-2">
+            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
+            <span className="text-sm md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
               <span className="hidden md:inline">Round </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>
           </div>
@@ -901,16 +907,16 @@ export default function GameBoard() {
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-3">
+        <div className="flex items-center gap-1 md:gap-3">
           <button
             onClick={() => setShowLog(!showLog)}
-            className="relative p-1.5 md:p-2 rounded-lg transition-all hover:bg-candle/10 group"
+            className="relative p-1 md:p-2 rounded-lg transition-all hover:bg-candle/10 group"
             title="Battle Log"
           >
             <img
               src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg"
               alt="Battle Log"
-              className="w-4 md:w-5 h-4 md:h-5 opacity-60 group-hover:opacity-90 transition-opacity"
+              className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60 group-hover:opacity-90 transition-opacity"
             />
             {logEntries.filter(e => e.action_type === 'play_card').length > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full text-[8px] font-bold flex items-center justify-center" style={{ background: 'oklch(0.55 0.22 25)', color: 'white' }}>
@@ -925,7 +931,7 @@ export default function GameBoard() {
 
       {/* Arena Grid — Gothic Cathedral Interior */}
       <div className="relative z-10 flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
-        <div className="hidden md:grid flex-1 grid-cols-[minmax(200px,280px)_1fr_minmax(200px,280px)] grid-rows-[auto_1fr_auto] gap-3 p-3">
+        <div className="hidden md:grid flex-1 grid-cols-[minmax(220px,300px)_1fr_minmax(220px,300px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
           
           {/* NORTH */}
           <div className="col-start-2 row-start-1 flex justify-center items-start gap-2">
@@ -993,8 +999,8 @@ export default function GameBoard() {
             )}
           </div>
 
-          {/* CENTER — Ritual Circle + Resolution Reveal */}
-          <div className="col-start-2 row-start-2 flex items-center justify-center relative">
+          {/* CENTER — Battle Hub: Ritual Circle + Action Feed + Resolution Reveal */}
+          <div className="col-start-2 row-start-2 flex flex-col items-center justify-center relative gap-3">
             {/* Resolution card reveal overlay */}
             {isShowingResolution && cachedLockedPlays.length > 0 && (
               <ResolutionReveal
@@ -1005,27 +1011,49 @@ export default function GameBoard() {
                 onComplete={handleResolutionComplete}
               />
             )}
-            <div className="text-center">
-              <div className="w-28 h-28 mx-auto rounded-full border-2 border-candle/30 flex items-center justify-center mb-3 relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 30px oklch(0.75 0.12 70 / 0.1), inset 0 0 20px oklch(0.75 0.12 70 / 0.05)' }}>
-                {/* Rotating ritual ring */}
+            {/* Compact ritual circle */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-full border-2 border-candle/30 flex items-center justify-center relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 20px oklch(0.75 0.12 70 / 0.1)' }}>
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                   className="absolute inset-0 rounded-full border border-candle/10"
                   style={{ borderStyle: 'dashed' }}
                 />
-                <div>
-                  <p className="text-3xl font-black text-candle" style={{ fontFamily: "var(--font-heading)", textShadow: '0 0 10px oklch(0.75 0.12 70 / 0.4)' }}>
-                    {gameState.currentRound}
-                  </p>
-                  <p className="text-sm text-candle/40 uppercase tracking-[0.2em]" style={{ fontFamily: "var(--font-heading)" }}>
-                    of {MAX_ROUNDS}
-                  </p>
-                </div>
+                <p className="text-xl font-black text-candle" style={{ fontFamily: "var(--font-heading)", textShadow: '0 0 10px oklch(0.75 0.12 70 / 0.4)' }}>
+                  {gameState.currentRound}
+                </p>
               </div>
-              <p className="text-base text-candle/50 font-medium" style={{ fontFamily: 'var(--font-body)', letterSpacing: '0.05em' }}>
-                {alivePlayers.length} players alive
-              </p>
+              <div>
+                <p className="text-sm text-candle/60 font-bold uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+                  Round {gameState.currentRound} of {MAX_ROUNDS}
+                </p>
+                <p className="text-xs text-candle/35 font-medium" style={{ fontFamily: 'var(--font-body)' }}>
+                  {alivePlayers.length} sinners standing
+                </p>
+              </div>
+            </div>
+            {/* Inline action feed — shows last 3 actions */}
+            <div className="w-full max-w-xs px-3 py-2 rounded-lg" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.08)' }}>
+              <AnimatePresence mode="popLayout">
+                {actionFeedState.length > 0 ? actionFeedState.slice(-3).map((entry) => (
+                  <motion.p
+                    key={entry.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="text-xs text-foreground/70 py-0.5 truncate"
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    {entry.text}
+                  </motion.p>
+                )) : (
+                  <p className="text-xs text-muted-foreground/40 py-0.5 italic" style={{ fontFamily: "var(--font-body)" }}>
+                    Awaiting the first move...
+                  </p>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -1099,8 +1127,8 @@ export default function GameBoard() {
 
         {/* Mobile Layout — Marvel Snap / LoR inspired */}
         <div className="md:hidden flex-1 flex flex-col overflow-hidden">
-          {/* Opponents — thin horizontal bars */}
-          <div className="flex flex-col gap-1 px-2 pt-2 pb-1">
+          {/* Opponents — larger bars with better touch targets */}
+          <div className="flex flex-col gap-1.5 px-2 pt-2 pb-1">
             {[opponents.west, opponents.north, opponents.east].filter(Boolean).map((opp) => (
               <MobilePlayerBar
                 key={opp!.id}
@@ -1157,31 +1185,7 @@ export default function GameBoard() {
           )}
         </div>
 
-        {/* Action Feed — Desktop only (mobile has inline feed above) */}
-        <div className="hidden md:block px-4 py-2 border-t border-candle/10 bg-gradient-to-t from-background/60 to-transparent">
-          <div className="max-w-4xl mx-auto">
-            <AnimatePresence mode="popLayout">
-              {actionFeedState.map((entry) => (
-                <motion.div
-                  key={entry.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3 }}
-                  className="text-sm text-foreground/80 py-1"
-                  style={{ fontFamily: "var(--font-body)" }}
-                >
-                  {entry.text}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-            {actionFeedState.length === 0 && (
-              <div className="text-sm text-muted-foreground/50 py-1" style={{ fontFamily: "var(--font-body)" }}>
-                Awaiting the first move...
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Action Feed moved to center area on desktop; mobile has inline feed */}
 
         {/* Action Buttons — above cards so they're never hidden */}
         <div className="shrink-0 relative z-20">
@@ -1209,7 +1213,7 @@ export default function GameBoard() {
                     ] : "none",
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
-                  className="px-5 md:px-10 py-2.5 md:py-3 rounded-lg text-base md:text-lg font-black uppercase tracking-wider disabled:opacity-50"
+                  className="px-6 md:px-10 py-3 md:py-3 rounded-lg text-base md:text-lg font-black uppercase tracking-wider disabled:opacity-50"
                   style={{
                     fontFamily: "var(--font-heading)",
                     background: selectedCards.length > 0
@@ -1241,7 +1245,7 @@ export default function GameBoard() {
                     ],
                   } : {}}
                   transition={!canAffordAnyCard && selectedCards.length === 0 ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
-                  className={`px-4 md:px-8 py-2.5 md:py-3 rounded-lg border-2 text-base md:text-lg font-bold uppercase tracking-wide transition-all ${
+                  className={`px-5 md:px-8 py-3 md:py-3 rounded-lg border-2 text-base md:text-lg font-bold uppercase tracking-wide transition-all ${
                     !canAffordAnyCard && selectedCards.length === 0
                       ? "border-candle/50 text-candle"
                       : "border-border/40 text-muted-foreground hover:border-border/60 hover:text-foreground"
@@ -1287,8 +1291,8 @@ export default function GameBoard() {
 
         {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
         <div data-tutorial="card-hand" className="px-2 md:px-4 pb-4 md:pb-6 shrink-0 overflow-visible">
-          {/* Desktop hand */}
-          <div className="hidden md:flex items-end justify-center gap-3 overflow-x-auto pb-6 pt-4 scrollbar-thin" style={{ minHeight: '220px' }}>
+          {/* Desktop hand — UX: tighter gap, hover-lift for Fitts's Law proximity */}
+          <div className="hidden md:flex items-end justify-center gap-2 overflow-x-auto pb-4 pt-2 scrollbar-thin" style={{ minHeight: '200px' }}>
             {myPlayer && (
               <DeckPile
                 sin={(myPlayer.chosenSin as SinType) || "wrath"}
@@ -1305,27 +1309,43 @@ export default function GameBoard() {
                   initial={{ opacity: 0, y: 80, rotate: -8, scale: 0.85 }}
                   animate={{
                     opacity: 1,
-                    y: 0,
-                    rotate: (i - myCards.length / 2) * 2,
-                    scale: 1,
+                    y: selectedCards.some(s => s.cardId === card.id) ? -16 : 0,
+                    rotate: (i - myCards.length / 2) * 1.5,
+                    scale: selectedCards.some(s => s.cardId === card.id) ? 1.05 : 1,
                   }}
+                  whileHover={{ y: -24, scale: 1.08, zIndex: 50, transition: { duration: 0.15 } }}
                   exit={{ opacity: 0, y: 60, scale: 0.9, transition: { duration: 0.2 } }}
                   transition={{
                     type: "spring",
                     stiffness: 350,
                     damping: 28,
                     mass: 0.8,
-                    delay: i * 0.08,
+                    delay: i * 0.06,
                   }}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 relative"
                 >
-                  <div className="relative" data-card-id={card.id} ref={(el) => {
-                    // Set tracer source to the last selected card that needs a target
-                    const lastSel = selectedCards[selectedCards.length - 1];
-                    if (lastSel && lastSel.cardId === card.id) {
-                      tracerSourceRef.current = el;
-                    }
-                  }}>
+                  <div
+                    className="relative"
+                    data-card-id={card.id}
+                    ref={(el) => {
+                      const lastSel = selectedCards[selectedCards.length - 1];
+                      if (lastSel && lastSel.cardId === card.id) {
+                        tracerSourceRef.current = el;
+                      }
+                    }}
+                    onMouseEnter={(e) => {
+                      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setHoverPreviewPos({ x: rect.left + rect.width / 2, y: rect.top });
+                      hoverTimerRef.current = setTimeout(() => {
+                        setHoverPreviewCard(card.id);
+                      }, 350);
+                    }}
+                    onMouseLeave={() => {
+                      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+                      setHoverPreviewCard(null);
+                    }}
+                  >
                     <GameCard
                       card={card}
                       currentRound={gameState.currentRound}
@@ -1393,7 +1413,7 @@ export default function GameBoard() {
                         }}
                       />
                       {selectedCards.findIndex(s => s.cardId === card.id) >= 0 && (
-                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-candle text-background text-[10px] font-black flex items-center justify-center shadow-lg z-10">
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-candle text-background text-[11px] font-black flex items-center justify-center shadow-lg z-10">
                           {selectedCards.findIndex(s => s.cardId === card.id) + 1}
                         </div>
                       )}
@@ -1439,6 +1459,16 @@ export default function GameBoard() {
             }}
           />
         )}
+
+      {/* Desktop Card Hover Preview — portal-style floating preview */}
+      {!isMobile && hoverPreviewCard && CARD_MAP[hoverPreviewCard] && (
+        <CardHoverPreview
+          card={CARD_MAP[hoverPreviewCard]}
+          position={hoverPreviewPos}
+          visible={!!hoverPreviewCard}
+          canAfford={energyRemaining >= (CARD_MAP[hoverPreviewCard]?.cost ?? 0)}
+        />
+      )}
       </div>
 
       {/* Tier 2: Death Sequence */}
@@ -1601,7 +1631,7 @@ const PlayerPanel = memo(function PlayerPanel({
       whileTap={isTargetable ? { scale: 0.97 } : {}}
       onClick={isTargetable ? onSelect : undefined}
       animate={{
-        width: isHovered && !compact ? 320 : compact ? 180 : 260,
+        width: isHovered && !compact ? 340 : compact ? 200 : 280,
       }}
       transition={{ duration: 0.25, ease: "easeOut" }}
       className={`
@@ -1738,7 +1768,7 @@ const PlayerPanel = memo(function PlayerPanel({
 
         {/* HP Bar — larger and more readable */}
           <div className="flex items-center gap-2.5 mb-2">
-          <div className={`relative flex-1 ${compact ? "h-5" : "h-7"} bg-muted/50 rounded-full overflow-hidden`}>
+          <div className={`relative flex-1 ${compact ? "h-5" : "h-8"} bg-muted/50 rounded-full overflow-hidden`}>
             <motion.div
               animate={{ width: `${hpPercent}%` }}
               transition={{ duration: 0.6, ease: "easeOut" }}

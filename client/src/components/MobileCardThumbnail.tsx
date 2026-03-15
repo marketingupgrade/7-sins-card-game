@@ -69,8 +69,8 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         ${isSelected ? "ring-2 ring-offset-1 ring-offset-background" : ""}
       `}
       style={{
-        width: 80,
-        height: 120,
+        width: 96,
+        height: 140,
         border: isSelected
           ? `2px solid ${sinColor}`
           : `1px solid color-mix(in oklch, ${sinColor} 30%, oklch(0.3 0 0))`,
@@ -81,7 +81,7 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
       }}
     >
       {/* Card art — fills top portion */}
-      <div className="h-[48px] relative overflow-hidden">
+      <div className="h-[58px] relative overflow-hidden">
         {artUrl ? (
           <img
             src={artUrl}
@@ -101,9 +101,9 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
         {/* Gradient overlay for readability */}
         <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 20%, oklch(0.08 0.01 70 / 0.85) 100%)" }} />
 
-        {/* Energy cost badge — top-right */}
+        {/* Energy cost badge — top-right, larger for readability */}
         <div
-          className="absolute top-0.5 right-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+          className="absolute top-1 right-1 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-black"
           style={{
             fontFamily: "var(--font-heading)",
             background: canAfford
@@ -143,9 +143,9 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
       </div>
 
       {/* Card name */}
-      <div className="px-1 pt-0.5" style={{ height: 24 }}>
+      <div className="px-1.5 pt-1" style={{ height: 28 }}>
         <p
-          className="text-[9px] font-bold text-foreground leading-tight line-clamp-2"
+          className="text-[10px] font-bold text-foreground leading-tight line-clamp-2"
           style={{
             fontFamily: "var(--font-heading)",
             textShadow: "0 1px 3px rgba(0,0,0,0.8)",
@@ -156,20 +156,20 @@ export const MobileCardThumbnail = memo(function MobileCardThumbnail({
       </div>
 
       {/* Effect summary — color-coded rows with symbols */}
-      <div className="px-1 pb-1 flex flex-col gap-px" style={{ height: 44 }}>
+      <div className="px-1.5 pb-1.5 flex flex-col gap-0.5" style={{ height: 48 }}>
         {card.effects.slice(0, 3).map((eff, i) => {
           const display = EFFECT_DISPLAY[eff.type] || { symbol: "•", color: "oklch(0.6 0.1 70)", label: "?" };
           return (
             <div key={i} className="flex items-center gap-0.5">
-              <span className="text-[9px]" style={{ lineHeight: 1 }}>{display.symbol}</span>
+              <span className="text-[10px]" style={{ lineHeight: 1 }}>{display.symbol}</span>
               <span
-                className="text-[9px] font-black"
+                className="text-[10px] font-black"
                 style={{ fontFamily: "var(--font-heading)", color: display.color }}
               >
                 {eff.baseValue}
               </span>
               <span
-                className="text-[7px] font-bold uppercase opacity-70"
+                className="text-[8px] font-bold uppercase opacity-70"
                 style={{ fontFamily: "var(--font-heading)", color: display.color }}
               >
                 {display.label}

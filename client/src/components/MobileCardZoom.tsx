@@ -103,8 +103,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-[200] flex items-center justify-center"
-          style={{ padding: "21px" /* Fibonacci space-21 */ }}
+          className="fixed inset-0 z-[200] flex items-end justify-center"
           onClick={onClose}
         >
           {/* Backdrop — cathedral darkness */}
@@ -116,13 +115,17 @@ export const MobileCardZoom = memo(function MobileCardZoom({
             }}
           />
 
-          {/* Card Container — gothic stone frame */}
+          {/* Card Container — bottom sheet style for thumb-zone access */}
           <motion.div
-            initial={{ scale: 0.85, y: 55 /* Fibonacci space-55 */ }}
-            animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.85, y: 55 }}
-            transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="relative w-[300px] rounded-xl overflow-hidden"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(_, info) => { if (info.offset.y > 100) onClose(); }}
+            transition={{ type: "spring", damping: 30, stiffness: 350 }}
+            className="relative w-full max-w-[400px] rounded-t-2xl overflow-hidden"
             style={{
               background: "oklch(0.13 0.015 70)", /* Cathedral stone */
               border: `2px solid ${sinColor}40`,
@@ -134,6 +137,11 @@ export const MobileCardZoom = memo(function MobileCardZoom({
             }}
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Swipe handle at top */}
+            <div className="flex justify-center pt-2 pb-1">
+              <div className="w-10 h-1 rounded-full" style={{ background: 'oklch(0.75 0.15 85 / 0.2)' }} />
+            </div>
+
             {/* Card Art — with candlelight vignette */}
             {artUrl && (
               <div className="relative overflow-hidden" style={{ height: "200px" }}>
@@ -351,8 +359,12 @@ export const MobileCardZoom = memo(function MobileCardZoom({
               )}
             </div>
 
-            {/* Close hint — narrator voice */}
-            <div className="text-center" style={{ paddingBottom: "8px" }}>
+            {/* Swipe handle + Close hint — bottom sheet convention */}
+            <div className="flex flex-col items-center" style={{ paddingBottom: "13px", paddingTop: "5px" }}>
+              <div
+                className="w-10 h-1 rounded-full mb-1"
+                style={{ background: "oklch(0.75 0.15 85 / 0.15)" }}
+              />
               <span
                 className="text-[10px]"
                 style={{
@@ -360,7 +372,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                   color: "oklch(0.75 0.15 85 / 0.2)",
                 }}
               >
-                tap anywhere to dismiss
+                swipe down or tap backdrop to dismiss
               </span>
             </div>
           </motion.div>

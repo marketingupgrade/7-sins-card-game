@@ -168,6 +168,7 @@ const TOC_SECTIONS = [
   { id: "faction-profiles", num: "11", title: "Faction Profiles" },
   { id: "library-standards", num: "12", title: "Library Standards" },
   { id: "brand-examples", num: "13", title: "Brand Examples" },
+  { id: "ux-principles", num: "14", title: "UX Design Principles" },
 ];
 
 // ─── Reusable Sub-Components ──────────────────────────────────────
@@ -1043,12 +1044,147 @@ export default function Brandbook() {
             <NarratorQuote key={i}>{q}</NarratorQuote>
           ))}
         </div>
+        {/* ── Section 14: UX Design Principles ──────────────── */}
+        <SectionHeader num="14" title="UX Design Principles" id="ux-principles" />
 
-        {/* ── Footer ───────────────────────────────────────────── */}
-        <div className="mt-32 pt-8 border-t border-[#332a22]">
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/80 text-lg leading-relaxed mb-8">
+          Every pixel in the cathedral serves a purpose. These principles, drawn from cognitive psychology,
+          interaction design research, and mobile-first methodology, govern how the game feels to play.
+          A beautiful interface that frustrates the player is a failed interface.
+        </p>
+
+        {/* Fitts's Law */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Fitts's Law: Motor Distance Matters</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          The time to acquire a target is a function of the distance to and size of the target.
+          In practice: action buttons must be close to where the player's cursor or thumb already rests.
+          Cards in the hand hover-lift toward the action bar. Lock-in and Pass buttons sit directly
+          above the card fan, not across the screen.
+        </p>
+        <div className="rounded-lg p-5 mb-8" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.1)' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="font-[Cinzel] text-sm text-[#d4a854] mb-1">Desktop</p>
+              <ul className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm space-y-1">
+                <li>Card hover lifts -24px toward action buttons</li>
+                <li>Selected cards lift -16px with 1.05x scale</li>
+                <li>Action buttons positioned directly above card hand</li>
+                <li>Player panels expand on hover (280px → 340px)</li>
+              </ul>
+            </div>
+            <div>
+              <p className="font-[Cinzel] text-sm text-[#d4a854] mb-1">Mobile</p>
+              <ul className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm space-y-1">
+                <li>Card zoom uses bottom sheet (thumb zone)</li>
+                <li>Action buttons minimum 44px touch target</li>
+                <li>Player bars 56px min height</li>
+                <li>Drag-to-dismiss on card detail sheet</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Cognitive Load */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Miller's Law: Cognitive Load Management</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          The average person can hold 7 ± 2 items in working memory. The game board must never
+          overwhelm. Information is layered: essential data (HP, energy, turn state) is always visible;
+          secondary data (effect details, compound projections) reveals on interaction.
+        </p>
+        <div className="rounded-lg p-5 mb-8" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.1)' }}>
+          <p className="font-[Cinzel] text-sm text-[#d4a854] mb-2">Information Hierarchy</p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              <span className="font-[Cinzel] text-xs text-[#e8e0d0]/90 w-20">Layer 1</span>
+              <span className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm">HP bar, energy orbs, turn indicator — always visible, no interaction needed</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-[Cinzel] text-xs text-[#e8e0d0]/70 w-20">Layer 2</span>
+              <span className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm">Effect badges, card costs, action feed — visible but compact</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-[Cinzel] text-xs text-[#e8e0d0]/50 w-20">Layer 3</span>
+              <span className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm">Compound projections, affliction tables, battle log — revealed on hover/tap</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hick's Law */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Hick's Law: Decision Simplification</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          Decision time increases logarithmically with the number of choices. The simultaneous lock-in
+          mechanic naturally limits decisions to a single moment. Card hand size (5-7 cards) stays within
+          comfortable decision range. Unaffordable cards are visually dimmed to reduce the effective
+          choice set.
+        </p>
+
+        {/* Doherty Threshold */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Doherty Threshold: 400ms Response Time</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          System responses under 400ms feel instantaneous. All UI interactions use spring physics
+          (stiffness: 350, damping: 28) to complete within this window. Card hover previews appear
+          after a 350ms delay to prevent accidental triggers while staying under the perception threshold.
+        </p>
+
+        {/* Mobile-First */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Mobile-First Design</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          The game is designed mobile-first, then enhanced for desktop. Touch targets follow Apple HIG
+          (44pt minimum). The bottom sheet pattern replaces modal overlays for card details.
+          Thumb-zone analysis places primary actions in the lower third of the screen.
+        </p>
+        <div className="rounded-lg p-5 mb-8" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.1)' }}>
+          <p className="font-[Cinzel] text-sm text-[#d4a854] mb-2">Touch Target Standards</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { element: "Card Thumbnail", size: "96 × 140px" },
+              { element: "Player Bar", size: "56px min-h" },
+              { element: "Action Button", size: "48px min-h" },
+              { element: "Energy Dot", size: "10px (2.5rem)" },
+            ].map((item, i) => (
+              <div key={i} className="text-center">
+                <p className="font-[Cinzel] text-xs text-[#e8e0d0]/80">{item.element}</p>
+                <p className="font-['Cormorant_Garamond'] text-sm text-[#d4a854]">{item.size}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Accessibility */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Accessibility Standards</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-4">
+          The gothic aesthetic must not compromise usability. Color is never the sole information channel:
+          HP bars show numeric values inside the bar. Effect badges include text labels alongside icons.
+          All interactive elements maintain visible focus rings for keyboard navigation.
+          The tutorial system supports keyboard navigation (arrow keys, Enter, Escape).
+        </p>
+        <div className="rounded-lg p-5 mb-8" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.1)' }}>
+          <p className="font-[Cinzel] text-sm text-[#d4a854] mb-2">Accessibility Checklist</p>
+          <ul className="font-['Cormorant_Garamond'] text-[#e8e0d0]/60 text-sm space-y-1">
+            <li>HP values rendered as text inside bars (not color-only)</li>
+            <li>Energy shown as both orbs and numeric count</li>
+            <li>Effect badges include text labels, not just emoji</li>
+            <li>Focus rings on all interactive elements</li>
+            <li>Keyboard-navigable tutorial (arrow keys, Enter, Escape)</li>
+            <li>Narrator text uses semantic HTML for screen readers</li>
+            <li>Reduced motion: spring animations degrade gracefully</li>
+          </ul>
+        </div>
+
+        {/* Microinteractions */}
+        <h3 className="font-[Cinzel] text-xl text-[#d4a854] mb-4">Microinteraction Design</h3>
+        <p className="font-['Cormorant_Garamond'] text-[#e8e0d0]/70 text-base leading-relaxed mb-6">
+          Every interaction has a trigger, rule, feedback loop, and mode. Card selection triggers a
+          lift animation (feedback) and updates the selection counter (rule). The lock-in button
+          pulses when cards are selected (mode change). HP damage triggers a flash + shake on the
+          player portrait (feedback). These microinteractions create a sense of weight and consequence
+          that reinforces the game's dark thematic tone.
+        </p>
+
+        {/* ── Footer ───────────────────────────────────────────── */}  <div className="mt-32 pt-8 border-t border-[#332a22]">
           <div className="text-center">
             <p className="font-[Cinzel] text-[#d4a854]/40 text-xs tracking-[0.3em] uppercase">
-              7 Deadly Sins Card Game — AAA Premium Brandbook v1.0
+              7 Deadly Sins Card Game — AAA Premium Brandbook v2.0
             </p>
             <p className="font-['Cormorant_Garamond'] text-[#8b7355]/40 text-sm mt-2 italic">
               "Every sinner starts somewhere."

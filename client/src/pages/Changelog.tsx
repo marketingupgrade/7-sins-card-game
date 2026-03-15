@@ -84,6 +84,27 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.5.0",
+    date: "March 2026",
+    title: "The Refinement",
+    summary: "UX-driven overhaul of the game board. Desktop gets card hover previews and smarter layouts. Mobile gets bottom-sheet card zoom, bigger touch targets, and thumb-zone actions. Brandbook updated with formal UX Design Principles.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Desktop: Card hover preview — hovering over a card in your hand shows a full-size detail tooltip with art, effects, compound scaling, and flavor text. 350ms delay prevents accidental triggers (Doherty Threshold)" },
+      { category: "feature", text: "Desktop: Center area redesigned — compact ritual circle with inline action feed showing recent plays, replacing the oversized round-only display" },
+      { category: "feature", text: "Desktop: Player panels expand on hover (280px → 340px) for better readability of afflictions and effects" },
+      { category: "feature", text: "Desktop: Card hand hover-lift animation — cards rise 24px toward action buttons on hover, selected cards lift 16px with 1.05x scale" },
+      { category: "feature", text: "Mobile: Card zoom converted from full-screen overlay to bottom sheet with drag-to-dismiss. Swipe handle at top, spring physics animation. Thumb-zone optimized." },
+      { category: "feature", text: "Mobile: Card thumbnails enlarged from 80×120 to 96×140px. Energy cost badge and selection indicators scaled up proportionally." },
+      { category: "feature", text: "Mobile: Player bars increased to 56px minimum height with 40px avatars and taller HP bars (h-5) for better touch accuracy" },
+      { category: "feature", text: "Mobile: Top bar compacted — reduced padding (py-1), smaller icons (w-3.5), tighter gaps to reclaim vertical space for gameplay" },
+      { category: "feature", text: "Mobile: Action buttons enlarged to 48px minimum height (py-3) meeting Apple HIG 44pt touch target standard" },
+      { category: "feature", text: "Brandbook v2.0: Added Section 14 'UX Design Principles' covering Fitts's Law, Miller's Law (cognitive load), Hick's Law (decision simplification), Doherty Threshold (400ms response), mobile-first design, accessibility standards, and microinteraction design" },
+      { category: "fix", text: "Desktop: HP bars increased from h-7 to h-8 for better readability at a glance" },
+      { category: "fix", text: "Mobile: Selection badge enlarged from w-4 to w-5 with better positioning (-top-1.5 -right-1.5) for visibility" },
+    ],
+  },
+  {
     version: "5.4.0",
     date: "March 2026",
     title: "The Purification",
