@@ -695,7 +695,9 @@ export interface CommunityComment {
   playerId: string;
   gamertag: string;
   content: string;
+  parentId: number | null;
   createdAt: Date;
+  replies?: CommunityComment[];
 }
 
 function mapCommunityComment(row: any): CommunityComment {
@@ -705,14 +707,20 @@ function mapCommunityComment(row: any): CommunityComment {
     playerId: row.player_id,
     gamertag: row.gamertag,
     content: row.content,
+    parentId: row.parent_id ?? null,
     createdAt: new Date(row.created_at),
   };
 }
 
-/** List comments for a community deck, newest first */
+/**
+ * List comments for a community deck as a threaded tree.
+ * Top-level comments (parent_id IS NULL) are returned newest-first.
+ * Each top-level comment has a `replies` array sorted oldest-first
+ * so conversations read naturally top-to-bottom.
+ */
 export async function listDeckComments(
   deckId: number,
-  limit = 50
+  limit = 100
 ): Promise<CommunityComment[]> {
   const sb = getSupabase();
   if (!sb) return [];
@@ -720,29 +728,50 @@ export async function listDeckComments(
     .from("community_comments")
     .select("*")
     .eq("deck_id", deckId)
-    .order("created_at", { ascending: false })
+    .order("created_at", { ascending: true })
     .limit(limit);
   if (error || !data) return [];
-  return data.map(mapCommunityComment);
+
+  const all = data.map(mapCommunityComment);
+  const byId = new Map<number, CommunityComment>();
+  const roots: CommunityComment[] = [];
+
+  for (const c of all) {
+    c.replies = [];
+    byId.set(c.id, c);
+  }
+  for (const c of all) {
+    if (c.parentId && byId.has(c.parentId)) {
+      byId.get(c.parentId)!.replies!.push(c);
+    } else {
+      roots.push(c);
+    }
+  }
+  // Return top-level newest-first
+  roots.reverse();
+  return roots;
 }
 
-/** Add a comment to a community deck */
+/** Add a comment (or reply) to a community deck */
 export async function addDeckComment(input: {
   deckId: number;
   playerId: string;
   gamertag: string;
   content: string;
+  parentId?: number | null;
 }): Promise<CommunityComment | null> {
   const sb = getSupabase();
   if (!sb) return null;
+  const row: Record<string, any> = {
+    deck_id: input.deckId,
+    player_id: input.playerId,
+    gamertag: input.gamertag,
+    content: input.content,
+  };
+  if (input.parentId) row.parent_id = input.parentId;
   const { data, error } = await sb
     .from("community_comments")
-    .insert({
-      deck_id: input.deckId,
-      player_id: input.playerId,
-      gamertag: input.gamertag,
-      content: input.content,
-    })
+    .insert(row)
     .select("*")
     .single();
   if (error || !data) {
@@ -810,6 +839,115 @@ export async function getPlayerCommunityDecks(playerId: string): Promise<Communi
     .order("created_at", { ascending: false });
   if (error || !data) return [];
   return data.map(mapCommunityDeck);
+}
+
+// ─── Deck Match Results (Win-Rate Tracking) ──────────────────
+
+export interface DeckMatchResult {
+  id: number;
+  deckId: number;
+  playerId: string;
+  result: "win" | "loss";
+  opponentFaction: string;
+  createdAt: Date;
+}
+
+function mapMatchResult(row: any): DeckMatchResult {
+  return {
+    id: row.id,
+    deckId: row.deck_id,
+    playerId: row.player_id,
+    result: row.result,
+    opponentFaction: row.opponent_faction,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+/** Log a match result (win/loss) for a community deck */
+export async function logDeckMatchResult(input: {
+  deckId: number;
+  playerId: string;
+  result: "win" | "loss";
+  opponentFaction: string;
+}): Promise<DeckMatchResult | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("deck_match_results")
+    .insert({
+      deck_id: input.deckId,
+      player_id: input.playerId,
+      result: input.result,
+      opponent_faction: input.opponentFaction,
+    })
+    .select("*")
+    .single();
+  if (error || !data) {
+    console.error("[Supabase] Failed to log match result:", error?.message);
+    return null;
+  }
+  return mapMatchResult(data);
+}
+
+/** Get aggregated win rate for a single deck */
+export async function getDeckWinRate(
+  deckId: number
+): Promise<{ wins: number; losses: number; total: number; winRate: number }> {
+  const sb = getSupabase();
+  if (!sb) return { wins: 0, losses: 0, total: 0, winRate: 0 };
+  const { data, error } = await sb
+    .from("deck_match_results")
+    .select("result")
+    .eq("deck_id", deckId);
+  if (error || !data) return { wins: 0, losses: 0, total: 0, winRate: 0 };
+  const wins = data.filter((r: any) => r.result === "win").length;
+  const losses = data.filter((r: any) => r.result === "loss").length;
+  const total = wins + losses;
+  return { wins, losses, total, winRate: total > 0 ? Math.round((wins / total) * 100) : 0 };
+}
+
+/** Get win rates for multiple decks at once (batch, for list page) */
+export async function batchDeckWinRates(
+  deckIds: number[]
+): Promise<Record<number, { wins: number; losses: number; total: number; winRate: number }>> {
+  const sb = getSupabase();
+  if (!sb || deckIds.length === 0) return {};
+  const { data, error } = await sb
+    .from("deck_match_results")
+    .select("deck_id, result")
+    .in("deck_id", deckIds);
+  if (error || !data) return {};
+  const result: Record<number, { wins: number; losses: number; total: number; winRate: number }> = {};
+  for (const row of data) {
+    if (!result[row.deck_id]) result[row.deck_id] = { wins: 0, losses: 0, total: 0, winRate: 0 };
+    if (row.result === "win") result[row.deck_id].wins++;
+    else result[row.deck_id].losses++;
+    result[row.deck_id].total++;
+  }
+  for (const id of Object.keys(result)) {
+    const r = result[Number(id)];
+    r.winRate = r.total > 0 ? Math.round((r.wins / r.total) * 100) : 0;
+  }
+  return result;
+}
+
+/** Get a player's recent match history with a specific deck */
+export async function getPlayerDeckHistory(
+  deckId: number,
+  playerId: string,
+  limit = 20
+): Promise<DeckMatchResult[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("deck_match_results")
+    .select("*")
+    .eq("deck_id", deckId)
+    .eq("player_id", playerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map(mapMatchResult);
 }
 
 // ─── User Management (stubs for Manus OAuth compat) ────────

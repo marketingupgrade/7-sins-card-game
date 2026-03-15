@@ -53,6 +53,10 @@ import {
   addDeckComment,
   deleteDeckComment,
   getDeckCommentCounts,
+  logDeckMatchResult,
+  getDeckWinRate,
+  batchDeckWinRates,
+  getPlayerDeckHistory,
   getBlogPosts,
   getBlogPostBySlug,
   getRelatedPosts,
@@ -345,7 +349,7 @@ export const appRouter = router({
         return listDeckComments(input.deckId, input.limit);
       }),
 
-    /** Add a comment to a community deck */
+    /** Add a comment (or reply) to a community deck */
     addComment: publicProcedure
       .input(
         z.object({
@@ -357,10 +361,14 @@ export const appRouter = router({
             .min(1)
             .max(500)
             .transform((s) => s.replace(/[<>"']/g, "")),
+          parentId: z.number().int().positive().nullish(),
         })
       )
       .mutation(async ({ input }) => {
-        return addDeckComment(input);
+        return addDeckComment({
+          ...input,
+          parentId: input.parentId ?? null,
+        });
       }),
 
     /** Delete a comment (only the author) */
@@ -411,6 +419,47 @@ export const appRouter = router({
       .input(z.object({ playerId: z.string().min(1).max(64) }))
       .query(async ({ input }) => {
         return getPlayerCommunityDecks(input.playerId);
+      }),
+
+    /** Log a match result (win/loss) for a community deck */
+    logMatch: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+          result: z.enum(["win", "loss"]),
+          opponentFaction: z.string().min(1).max(30),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return logDeckMatchResult(input);
+      }),
+
+    /** Get aggregated win rate for a single deck */
+    winRate: publicProcedure
+      .input(z.object({ deckId: z.number().int().positive() }))
+      .query(async ({ input }) => {
+        return getDeckWinRate(input.deckId);
+      }),
+
+    /** Get win rates for multiple decks (batch, for list page) */
+    batchWinRates: publicProcedure
+      .input(z.object({ deckIds: z.array(z.number().int().positive()).max(50) }))
+      .query(async ({ input }) => {
+        return batchDeckWinRates(input.deckIds);
+      }),
+
+    /** Get a player's match history with a specific deck */
+    matchHistory: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+          limit: z.number().int().min(1).max(50).default(20),
+        })
+      )
+      .query(async ({ input }) => {
+        return getPlayerDeckHistory(input.deckId, input.playerId, input.limit);
       }),
   }),
 

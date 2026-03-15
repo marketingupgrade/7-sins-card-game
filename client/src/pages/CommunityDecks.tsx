@@ -1,19 +1,23 @@
 /**
  * CommunityDecks — Browse & Share Player-Built Decks
  *
- * v5.8.0 Features:
+ * v5.8.1 Features:
  * - Browse published decks from the community
  * - Filter by faction, sort by newest/most liked
  * - Publish your own decks with gamertag (not real name)
  * - Import community decks into the deck builder
  * - Toggle-like with per-player rate-limiting (one like per deck)
  * - Animated heart fill for liked state (microinteraction)
- * - Threaded comments on each deck (social influence / Core Drive 5)
+ * - Threaded comments with nested replies (CD5 Social Influence)
+ * - Reply button on each comment to start a conversation thread
+ * - Win-rate tracking: log match results and see aggregate win rates
+ * - Match result logging modal with opponent faction selection
+ * - Win-rate badge on each deck card (shown when >= 3 matches logged)
  * - Comment count badges for social proof
  * - Gamertag setup prompt for first-time publishers
  *
  * UX: Follows Saffer's microinteraction model (Trigger → Rules → Feedback → Loops)
- * Behavioral: Octalysis CD5 (Social Influence) + CD2 (Accomplishment via likes)
+ * Behavioral: Octalysis CD5 (Social Influence) + CD2 (Accomplishment via likes/win rates)
  */
 import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
 import { createPortal } from "react-dom";
@@ -79,11 +83,19 @@ interface Comment {
   playerId: string;
   gamertag: string;
   content: string;
+  parentId: number | null;
   createdAt: string;
+  replies?: Comment[];
+}
+
+interface WinRateData {
+  wins: number;
+  losses: number;
+  total: number;
+  winRate: number;
 }
 
 // ─── Animated Heart Icon ────────────────────────────────────
-// Microinteraction: Trigger (click) → Rules (toggle) → Feedback (fill animation + scale bounce)
 function HeartIcon({ filled, size = 14 }: { filled: boolean; size?: number }) {
   return (
     <motion.svg
@@ -108,6 +120,156 @@ function CommentIcon({ size = 14 }: { size?: number }) {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
+  );
+}
+
+// ─── Trophy / Win-Rate Icon ─────────────────────────────────
+function TrophyIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+      <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+      <path d="M4 22h16" />
+      <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+      <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+      <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+    </svg>
+  );
+}
+
+// ─── Reply Arrow Icon ───────────────────────────────────────
+function ReplyIcon({ size = 12 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <polyline points="9 17 4 12 9 7" />
+      <path d="M20 18v-2a4 4 0 0 0-4-4H4" />
+    </svg>
+  );
+}
+
+// ─── Win Rate Badge ─────────────────────────────────────────
+function WinRateBadge({ data }: { data: WinRateData }) {
+  if (data.total < 3) return null; // Only show after 3+ matches for statistical relevance
+
+  const color =
+    data.winRate >= 60 ? "#22c55e" :
+    data.winRate >= 45 ? "#eab308" :
+    "#ef4444";
+
+  return (
+    <div
+      className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+      style={{ backgroundColor: `${color}15`, color, border: `1px solid ${color}30` }}
+      title={`${data.wins}W / ${data.losses}L (${data.total} matches)`}
+    >
+      <TrophyIcon size={10} />
+      <span>{data.winRate}%</span>
+      <span className="opacity-60 font-normal">({data.total})</span>
+    </div>
+  );
+}
+
+// ─── Log Match Result Modal ─────────────────────────────────
+function LogMatchModal({
+  deck,
+  onLog,
+  onClose,
+}: {
+  deck: CommunityDeck;
+  onLog: (result: "win" | "loss", opponentFaction: string) => void;
+  onClose: () => void;
+}) {
+  const [result, setResult] = useState<"win" | "loss">("win");
+  const [opponentFaction, setOpponentFaction] = useState<SinType>("wrath");
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.9 }}
+        className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 max-w-sm w-full shadow-2xl"
+      >
+        <h3 className="font-['Cinzel'] text-lg text-amber-400 mb-1">Log Match Result</h3>
+        <p className="text-zinc-400 text-xs mb-4">
+          Record a match played with <span className="text-white font-medium">{deck.deckName}</span>
+        </p>
+
+        {/* Result selection */}
+        <div className="mb-4">
+          <label className="text-zinc-400 text-xs font-medium mb-2 block">Result</label>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setResult("win")}
+              className={`flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all
+                ${result === "win"
+                  ? "border-green-500/50 bg-green-500/15 text-green-400"
+                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                }`}
+            >
+              Victory
+            </button>
+            <button
+              onClick={() => setResult("loss")}
+              className={`flex-1 py-2.5 rounded-lg border text-sm font-semibold transition-all
+                ${result === "loss"
+                  ? "border-red-500/50 bg-red-500/15 text-red-400"
+                  : "border-zinc-700 text-zinc-400 hover:border-zinc-500"
+                }`}
+            >
+              Defeat
+            </button>
+          </div>
+        </div>
+
+        {/* Opponent faction */}
+        <div className="mb-5">
+          <label className="text-zinc-400 text-xs font-medium mb-2 block">Opponent Faction</label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {SINS.map((sin) => (
+              <button
+                key={sin}
+                onClick={() => setOpponentFaction(sin)}
+                className={`flex flex-col items-center gap-1 py-2 rounded-lg border text-[10px] transition-all
+                  ${opponentFaction === sin
+                    ? "bg-opacity-15"
+                    : "border-zinc-700/50 text-zinc-500 hover:border-zinc-500"
+                  }`}
+                style={
+                  opponentFaction === sin
+                    ? { borderColor: `${SIN_COLORS[sin]}50`, backgroundColor: `${SIN_COLORS[sin]}12`, color: SIN_COLORS[sin] }
+                    : {}
+                }
+              >
+                <img src={SIN_ARCHETYPE_ICONS[sin]} alt="" className="w-5 h-5" />
+                <span className="capitalize font-medium">{sin}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-600 text-zinc-300
+                       hover:bg-zinc-800 transition-colors text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => onLog(result, opponentFaction)}
+            className={`flex-1 px-4 py-2.5 rounded-lg font-semibold text-sm transition-colors
+              ${result === "win"
+                ? "bg-green-600 text-white hover:bg-green-500"
+                : "bg-red-600 text-white hover:bg-red-500"
+              }`}
+          >
+            Log {result === "win" ? "Victory" : "Defeat"}
+          </button>
+        </div>
+      </motion.div>
+    </div>,
+    document.body
   );
 }
 
@@ -285,39 +447,35 @@ function PublishModal({
       >
         <h3 className="font-['Cinzel'] text-xl text-amber-400 mb-1">Publish to Community</h3>
         <p className="text-zinc-400 text-sm mb-4">
-          Publishing as <span className="text-amber-300 font-mono">{gamertag}</span>
+          Share your deck as <span className="text-amber-400 font-mono">{gamertag}</span>
         </p>
 
-        {loading ? (
-          <div className="text-zinc-400 text-center py-8">Loading your decks...</div>
-        ) : savedDecks.length === 0 ? (
-          <div className="text-zinc-400 text-center py-8">
-            <p className="mb-2">No saved decks found.</p>
-            <p className="text-sm">
-              <Link href="/deck-builder" className="text-amber-400 hover:underline">
-                Build a deck first
-              </Link>{" "}
-              — you need a complete 30-card deck to publish.
-            </p>
-          </div>
-        ) : (
-          <>
-            <label className="block text-zinc-300 text-sm mb-2 font-semibold">Select a Deck</label>
-            <div className="space-y-2 mb-4 max-h-48 overflow-y-auto pr-1">
-              {savedDecks.map((deck, i) => (
+        {/* Deck selection */}
+        <div className="mb-4">
+          <label className="text-zinc-400 text-xs font-medium mb-2 block">Select a Saved Deck</label>
+          {loading ? (
+            <div className="text-zinc-500 text-sm py-4 text-center">Loading your decks...</div>
+          ) : savedDecks.length === 0 ? (
+            <div className="text-zinc-500 text-sm py-4 text-center">
+              No complete decks found. Build a 30-card deck in the{" "}
+              <Link href="/deck-builder" className="text-amber-400 hover:underline">Deck Builder</Link> first.
+            </div>
+          ) : (
+            <div className="space-y-1.5 max-h-40 overflow-y-auto">
+              {savedDecks.map((deck, idx) => (
                 <button
                   key={deck.id}
-                  onClick={() => handleSelectDeck(i)}
-                  className={`w-full text-left px-3 py-2.5 rounded-lg border transition-colors flex items-center gap-3
-                    ${selectedDeckIdx === i
-                      ? "border-amber-500/60 bg-amber-500/10"
-                      : "border-zinc-700 bg-zinc-800/50 hover:border-zinc-500"
+                  onClick={() => handleSelectDeck(idx)}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border text-left transition-all
+                    ${selectedDeckIdx === idx
+                      ? "border-amber-500/50 bg-amber-500/10"
+                      : "border-zinc-700/50 hover:border-zinc-500"
                     }`}
                 >
                   <img
                     src={SIN_ARCHETYPE_ICONS[deck.faction as SinType]}
                     alt=""
-                    className="w-6 h-6"
+                    className="w-5 h-5"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm font-medium truncate">{deck.name}</div>
@@ -326,56 +484,147 @@ function PublishModal({
                 </button>
               ))}
             </div>
+          )}
+        </div>
 
-            <label className="block text-zinc-300 text-sm mb-1.5 font-semibold">Deck Name</label>
-            <input
-              type="text"
-              value={deckName}
-              onChange={(e) => setDeckName(e.target.value)}
-              placeholder="Give your deck a name..."
-              maxLength={100}
-              className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
-                         placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-3"
-            />
+        {selectedDeckIdx >= 0 && (
+          <>
+            {/* Deck name */}
+            <div className="mb-3">
+              <label className="text-zinc-400 text-xs font-medium mb-1.5 block">Deck Name</label>
+              <input
+                type="text"
+                value={deckName}
+                onChange={(e) => setDeckName(e.target.value)}
+                placeholder="Give your deck a name..."
+                maxLength={60}
+                className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
+                           placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50"
+              />
+            </div>
 
-            <label className="block text-zinc-300 text-sm mb-1.5 font-semibold">Strategy Notes (optional)</label>
-            <textarea
-              value={strategy}
-              onChange={(e) => setStrategy(e.target.value)}
-              placeholder="Describe your deck's strategy, key combos, or playstyle..."
-              maxLength={500}
-              rows={3}
-              className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
-                         placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-4 resize-none"
-            />
-
-            <div className="flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-600 text-zinc-300
-                           hover:bg-zinc-800 transition-colors text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handlePublish}
-                disabled={selectedDeckIdx < 0 || !deckName.trim()}
-                className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold
-                           hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
-              >
-                Publish
-              </button>
+            {/* Strategy description */}
+            <div className="mb-4">
+              <label className="text-zinc-400 text-xs font-medium mb-1.5 block">
+                Strategy Notes <span className="text-zinc-600">(optional)</span>
+              </label>
+              <textarea
+                value={strategy}
+                onChange={(e) => setStrategy(e.target.value.slice(0, 300))}
+                placeholder="Describe your deck's strategy, key combos, or playstyle..."
+                rows={3}
+                className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
+                           placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 resize-none"
+              />
+              {strategy.length > 0 && (
+                <div className="text-right mt-1">
+                  <span className={`text-[10px] ${strategy.length > 250 ? "text-amber-400" : "text-zinc-600"}`}>
+                    {strategy.length}/300
+                  </span>
+                </div>
+              )}
             </div>
           </>
         )}
+
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-600 text-zinc-300
+                       hover:bg-zinc-800 transition-colors text-sm"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handlePublish}
+            disabled={selectedDeckIdx < 0 || !deckName.trim()}
+            className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold
+                       hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+          >
+            Publish Deck
+          </button>
+        </div>
       </motion.div>
     </div>,
     document.body
   );
 }
 
-// ─── Comment Section (expandable per deck) ──────────────────
-// Behavioral: CD5 Social Influence — low-friction social interactions (social prods)
+// ─── Single Comment Row (used for both top-level and replies) ──
+function CommentRow({
+  comment,
+  currentUserId,
+  isReply,
+  onReply,
+  onDelete,
+}: {
+  comment: Comment;
+  currentUserId: string | null;
+  isReply?: boolean;
+  onReply: (commentId: number, gamertag: string) => void;
+  onDelete: (commentId: number) => void;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, height: 0 }}
+      transition={{ duration: 0.2 }}
+      className="group"
+    >
+      <div className={`flex items-start gap-2 ${isReply ? "ml-8" : ""}`}>
+        {/* Avatar */}
+        <div
+          className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
+          style={{
+            backgroundColor: `${SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]]}25`,
+            color: SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]],
+          }}
+        >
+          {comment.gamertag[0].toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-amber-400/80 font-mono text-[11px] font-medium">
+              {comment.gamertag}
+            </span>
+            <span className="text-zinc-600 text-[10px]">
+              {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+            </span>
+            {/* Reply button */}
+            {!isReply && currentUserId && (
+              <button
+                onClick={() => onReply(comment.id, comment.gamertag)}
+                className="opacity-0 group-hover:opacity-100 text-zinc-500 hover:text-amber-400
+                           transition-all text-[10px] flex items-center gap-0.5"
+                title="Reply to this comment"
+              >
+                <ReplyIcon size={10} />
+                Reply
+              </button>
+            )}
+            {currentUserId === comment.playerId && (
+              <button
+                onClick={() => onDelete(comment.id)}
+                className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400
+                           transition-all text-[10px] ml-auto"
+                title="Delete comment"
+              >
+                Delete
+              </button>
+            )}
+          </div>
+          <p className="text-zinc-300 text-xs leading-relaxed mt-0.5">{comment.content}</p>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Comment Section (expandable per deck, with threading) ──
 function CommentSection({
   deckId,
   currentUserId,
@@ -393,9 +642,10 @@ function CommentSection({
   const [loading, setLoading] = useState(true);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [replyTo, setReplyTo] = useState<{ id: number; gamertag: string } | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // Load comments
+  // Load threaded comments
   useEffect(() => {
     trpcQuery("community.comments", { deckId })
       .then((data: Comment[]) => {
@@ -404,6 +654,17 @@ function CommentSection({
       })
       .catch(() => setLoading(false));
   }, [deckId]);
+
+  const handleReply = useCallback((commentId: number, commentGamertag: string) => {
+    setReplyTo({ id: commentId, gamertag: commentGamertag });
+    setNewComment(`@${commentGamertag} `);
+    inputRef.current?.focus();
+  }, []);
+
+  const handleCancelReply = useCallback(() => {
+    setReplyTo(null);
+    setNewComment("");
+  }, []);
 
   const handleSubmit = async () => {
     if (!currentUserId) {
@@ -422,10 +683,24 @@ function CommentSection({
         playerId: currentUserId,
         gamertag,
         content: newComment.trim(),
+        parentId: replyTo?.id ?? null,
       });
       if (comment) {
-        setComments((prev) => [comment, ...prev]);
+        if (replyTo) {
+          // Add reply to the parent comment's replies array
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === replyTo.id
+                ? { ...c, replies: [...(c.replies || []), comment] }
+                : c
+            )
+          );
+        } else {
+          // Add as new top-level comment (newest first)
+          setComments((prev) => [{ ...comment, replies: [] }, ...prev]);
+        }
         setNewComment("");
+        setReplyTo(null);
       }
     } catch (err: any) {
       showToast(err.message || "Failed to post comment", "error");
@@ -440,7 +715,19 @@ function CommentSection({
         commentId,
         playerId: currentUserId,
       });
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      // Remove from top-level or from replies
+      setComments((prev) => {
+        // Check if it's a top-level comment
+        const isTopLevel = prev.some((c) => c.id === commentId);
+        if (isTopLevel) {
+          return prev.filter((c) => c.id !== commentId);
+        }
+        // It's a reply — remove from parent's replies
+        return prev.map((c) => ({
+          ...c,
+          replies: (c.replies || []).filter((r) => r.id !== commentId),
+        }));
+      });
     } catch {
       showToast("Failed to delete comment", "error");
     }
@@ -451,10 +738,36 @@ function CommentSection({
       e.preventDefault();
       handleSubmit();
     }
+    if (e.key === "Escape" && replyTo) {
+      handleCancelReply();
+    }
   };
 
   return (
     <div className="border-t border-zinc-800/60 px-4 pb-4 pt-3">
+      {/* Reply indicator */}
+      <AnimatePresence>
+        {replyTo && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="flex items-center gap-2 mb-2 text-xs"
+          >
+            <ReplyIcon size={12} />
+            <span className="text-zinc-400">
+              Replying to <span className="text-amber-400 font-mono">{replyTo.gamertag}</span>
+            </span>
+            <button
+              onClick={handleCancelReply}
+              className="text-zinc-500 hover:text-zinc-300 transition-colors ml-1"
+            >
+              Cancel
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Comment input */}
       <div className="flex gap-2 mb-3">
         <textarea
@@ -462,7 +775,13 @@ function CommentSection({
           value={newComment}
           onChange={(e) => setNewComment(e.target.value.slice(0, 500))}
           onKeyDown={handleKeyDown}
-          placeholder={currentUserId ? "Share your thoughts..." : "Sign in to comment"}
+          placeholder={
+            !currentUserId
+              ? "Sign in to comment"
+              : replyTo
+              ? `Reply to ${replyTo.gamertag}...`
+              : "Share your thoughts..."
+          }
           disabled={!currentUserId || submitting}
           rows={1}
           className="flex-1 bg-zinc-800/60 border border-zinc-700/50 rounded-lg px-3 py-2 text-white text-xs
@@ -476,7 +795,7 @@ function CommentSection({
                      text-amber-400 hover:bg-amber-600/30 transition-colors text-xs font-medium
                      disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
         >
-          {submitting ? "..." : "Post"}
+          {submitting ? "..." : replyTo ? "Reply" : "Post"}
         </button>
       </div>
 
@@ -489,7 +808,7 @@ function CommentSection({
         </div>
       )}
 
-      {/* Comments list */}
+      {/* Threaded comments list */}
       {loading ? (
         <div className="text-zinc-500 text-xs py-2">Loading comments...</div>
       ) : comments.length === 0 ? (
@@ -497,54 +816,32 @@ function CommentSection({
           No comments yet — be the first to share your thoughts
         </div>
       ) : (
-        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+        <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
           <AnimatePresence initial={false}>
             {comments.map((comment) => (
-              <motion.div
-                key={comment.id}
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="group"
-              >
-                <div className="flex items-start gap-2">
-                  {/* Avatar placeholder */}
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
-                    style={{
-                      backgroundColor: `${SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]]}25`,
-                      color: SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]],
-                    }}
-                  >
-                    {comment.gamertag[0].toUpperCase()}
+              <div key={comment.id}>
+                <CommentRow
+                  comment={comment}
+                  currentUserId={currentUserId}
+                  onReply={handleReply}
+                  onDelete={handleDelete}
+                />
+                {/* Nested replies */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="mt-1.5 space-y-1.5 border-l-2 border-zinc-800/60">
+                    {comment.replies.map((reply) => (
+                      <CommentRow
+                        key={reply.id}
+                        comment={reply}
+                        currentUserId={currentUserId}
+                        isReply
+                        onReply={handleReply}
+                        onDelete={handleDelete}
+                      />
+                    ))}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-amber-400/80 font-mono text-[11px] font-medium">
-                        {comment.gamertag}
-                      </span>
-                      <span className="text-zinc-600 text-[10px]">
-                        {new Date(comment.createdAt).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </span>
-                      {currentUserId === comment.playerId && (
-                        <button
-                          onClick={() => handleDelete(comment.id)}
-                          className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400
-                                     transition-all text-[10px] ml-auto"
-                          title="Delete comment"
-                        >
-                          Delete
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-zinc-300 text-xs leading-relaxed mt-0.5">{comment.content}</p>
-                  </div>
-                </div>
-              </motion.div>
+                )}
+              </div>
             ))}
           </AnimatePresence>
         </div>
@@ -554,16 +851,17 @@ function CommentSection({
 }
 
 // ─── Deck Card (Community Deck Display) ─────────────────────
-// Behavioral: CD2 Accomplishment (like count as social proof) + CD5 Social Influence (comments)
 const DeckCard = memo(function DeckCard({
   deck,
   currentUserId,
   isLiked,
   commentCount,
+  winRate,
   gamertag,
   onImport,
   onToggleLike,
   onUnpublish,
+  onLogMatch,
   onRequireGamertag,
   showToast,
 }: {
@@ -571,10 +869,12 @@ const DeckCard = memo(function DeckCard({
   currentUserId: string | null;
   isLiked: boolean;
   commentCount: number;
+  winRate: WinRateData | null;
   gamertag: string | null;
   onImport: (deck: CommunityDeck) => void;
   onToggleLike: (deckId: number) => void;
   onUnpublish: (deckId: number) => void;
+  onLogMatch: (deck: CommunityDeck) => void;
   onRequireGamertag: () => void;
   showToast: (msg: string, type: "success" | "error") => void;
 }) {
@@ -601,7 +901,7 @@ const DeckCard = memo(function DeckCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-900/80 border border-zinc-700/60 rounded-xl overflow-hidden hover:border-zinc-500/60 transition-colors group flex flex-col"
+      className="bg-zinc-900/80 border border-zinc-700/60 rounded-xl overflow-hidden hover:border-zinc-500/60 transition-colors group/card flex flex-col"
     >
       {/* Card art preview strip */}
       <div className="relative h-24 overflow-hidden">
@@ -628,6 +928,12 @@ const DeckCard = memo(function DeckCard({
             {SIN_LABELS[faction]}
           </span>
         </div>
+        {/* Win rate badge (top right) */}
+        {winRate && winRate.total >= 3 && (
+          <div className="absolute top-2 right-2">
+            <WinRateBadge data={winRate} />
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -648,7 +954,7 @@ const DeckCard = memo(function DeckCard({
         )}
 
         {/* Actions — Microinteraction: immediate visual feedback on every tap */}
-        <div className="flex items-center gap-2 mt-auto">
+        <div className="flex items-center gap-1.5 mt-auto flex-wrap">
           {/* Like toggle button */}
           <button
             onClick={() => onToggleLike(deck.id)}
@@ -679,10 +985,23 @@ const DeckCard = memo(function DeckCard({
             <span className="tabular-nums">{commentCount}</span>
           </button>
 
+          {/* Log match button */}
+          {currentUserId && (
+            <button
+              onClick={() => onLogMatch(deck)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-700
+                         text-zinc-300 hover:border-emerald-500/40 hover:text-emerald-400 transition-all text-xs"
+              title="Log a match result with this deck"
+            >
+              <TrophyIcon />
+              <span className="hidden sm:inline">Log</span>
+            </button>
+          )}
+
           {/* Import button */}
           <button
             onClick={() => onImport(deck)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 border border-amber-600/30
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-600/20 border border-amber-600/30
                        text-amber-400 hover:bg-amber-600/30 transition-colors text-xs font-medium"
             title="Import into Deck Builder"
           >
@@ -754,6 +1073,8 @@ export default function CommunityDecks() {
   const [publishing, setPublishing] = useState(false);
   const [likedDeckIds, setLikedDeckIds] = useState<Set<number>>(new Set());
   const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
+  const [winRates, setWinRates] = useState<Record<number, WinRateData>>({});
+  const [logMatchDeck, setLogMatchDeck] = useState<CommunityDeck | null>(null);
 
   const LIMIT = 12;
   const totalPages = Math.ceil(total / LIMIT);
@@ -782,11 +1103,14 @@ export default function CommunityDecks() {
       setDecks(result.decks);
       setTotal(result.total);
 
-      // Load comment counts for visible decks (batch query for efficiency)
+      // Load comment counts + win rates for visible decks (batch queries)
       if (result.decks.length > 0) {
         const deckIds = result.decks.map((d: CommunityDeck) => d.id);
         trpcQuery("community.commentCounts", { deckIds })
           .then((counts: Record<number, number>) => setCommentCounts(counts))
+          .catch(() => {});
+        trpcQuery("community.batchWinRates", { deckIds })
+          .then((rates: Record<number, WinRateData>) => setWinRates(rates))
           .catch(() => {});
       }
     } catch (err) {
@@ -826,7 +1150,6 @@ export default function CommunityDecks() {
   const handleGamertagSave = async (tag: string) => {
     setGamertag(tag);
     setShowGamertagModal(false);
-    // After setting gamertag, open publish modal
     setShowPublishModal(true);
   };
 
@@ -863,14 +1186,13 @@ export default function CommunityDecks() {
     }
   }, [navigate, showToast]);
 
-  // Toggle like with optimistic update (microinteraction: instant feedback < 100ms)
+  // Toggle like with optimistic update
   const handleToggleLike = useCallback(async (deckId: number) => {
     if (!user) {
       showToast("Sign in to like decks", "error");
       return;
     }
 
-    // Optimistic update — instant visual feedback
     const wasLiked = likedDeckIds.has(deckId);
     setLikedDeckIds((prev) => {
       const next = new Set(prev);
@@ -891,12 +1213,10 @@ export default function CommunityDecks() {
         deckId,
         playerId: user.id,
       });
-      // Reconcile with server truth
       setDecks((prev) =>
         prev.map((d) => (d.id === deckId ? { ...d, likes: result.newCount } : d))
       );
       if (result.liked !== !wasLiked) {
-        // Server disagreed — rollback
         setLikedDeckIds((prev) => {
           const next = new Set(prev);
           if (result.liked) next.add(deckId);
@@ -905,7 +1225,6 @@ export default function CommunityDecks() {
         });
       }
     } catch {
-      // Rollback on error
       setLikedDeckIds((prev) => {
         const next = new Set(prev);
         if (wasLiked) next.add(deckId);
@@ -934,6 +1253,40 @@ export default function CommunityDecks() {
       showToast("Failed to remove deck", "error");
     }
   }, [user, showToast, loadDecks]);
+
+  // Log match result
+  const handleLogMatch = useCallback((deck: CommunityDeck) => {
+    if (!user) {
+      showToast("Sign in to log match results", "error");
+      return;
+    }
+    setLogMatchDeck(deck);
+  }, [user, showToast]);
+
+  const handleLogMatchSubmit = useCallback(async (result: "win" | "loss", opponentFaction: string) => {
+    if (!user || !logMatchDeck) return;
+    try {
+      await trpcMutate("community.logMatch", {
+        deckId: logMatchDeck.id,
+        playerId: user.id,
+        result,
+        opponentFaction,
+      });
+      showToast(
+        result === "win" ? "Victory logged!" : "Defeat logged — learn and adapt!",
+        "success"
+      );
+      setLogMatchDeck(null);
+      // Refresh win rate for this deck
+      trpcQuery("community.winRate", { deckId: logMatchDeck.id })
+        .then((data: WinRateData) => {
+          setWinRates((prev) => ({ ...prev, [logMatchDeck.id]: data }));
+        })
+        .catch(() => {});
+    } catch {
+      showToast("Failed to log match result", "error");
+    }
+  }, [user, logMatchDeck, showToast]);
 
   const handleRequireGamertag = useCallback(() => {
     setShowGamertagModal(true);
@@ -1083,10 +1436,12 @@ export default function CommunityDecks() {
                   currentUserId={user?.id ?? null}
                   isLiked={likedDeckIds.has(deck.id)}
                   commentCount={commentCounts[deck.id] || 0}
+                  winRate={winRates[deck.id] || null}
                   gamertag={gamertag}
                   onImport={handleImport}
                   onToggleLike={handleToggleLike}
                   onUnpublish={handleUnpublish}
+                  onLogMatch={handleLogMatch}
                   onRequireGamertag={handleRequireGamertag}
                   showToast={showToast}
                 />
@@ -1156,6 +1511,16 @@ export default function CommunityDecks() {
             gamertag={gamertag}
             onPublish={handlePublish}
             onClose={() => setShowPublishModal(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {logMatchDeck && (
+          <LogMatchModal
+            deck={logMatchDeck}
+            onLog={handleLogMatchSubmit}
+            onClose={() => setLogMatchDeck(null)}
           />
         )}
       </AnimatePresence>

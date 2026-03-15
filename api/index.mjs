@@ -361,25 +361,43 @@ function mapCommunityComment(row) {
     playerId: row.player_id,
     gamertag: row.gamertag,
     content: row.content,
+    parentId: row.parent_id ?? null,
     createdAt: new Date(row.created_at)
   };
 }
-async function listDeckComments(deckId, limit = 50) {
+async function listDeckComments(deckId, limit = 100) {
   const sb = getSupabase();
   if (!sb) return [];
-  const { data, error } = await sb.from("community_comments").select("*").eq("deck_id", deckId).order("created_at", { ascending: false }).limit(limit);
+  const { data, error } = await sb.from("community_comments").select("*").eq("deck_id", deckId).order("created_at", { ascending: true }).limit(limit);
   if (error || !data) return [];
-  return data.map(mapCommunityComment);
+  const all = data.map(mapCommunityComment);
+  const byId = /* @__PURE__ */ new Map();
+  const roots = [];
+  for (const c of all) {
+    c.replies = [];
+    byId.set(c.id, c);
+  }
+  for (const c of all) {
+    if (c.parentId && byId.has(c.parentId)) {
+      byId.get(c.parentId).replies.push(c);
+    } else {
+      roots.push(c);
+    }
+  }
+  roots.reverse();
+  return roots;
 }
 async function addDeckComment(input) {
   const sb = getSupabase();
   if (!sb) return null;
-  const { data, error } = await sb.from("community_comments").insert({
+  const row = {
     deck_id: input.deckId,
     player_id: input.playerId,
     gamertag: input.gamertag,
     content: input.content
-  }).select("*").single();
+  };
+  if (input.parentId) row.parent_id = input.parentId;
+  const { data, error } = await sb.from("community_comments").insert(row).select("*").single();
   if (error || !data) {
     console.error("[Supabase] Failed to add comment:", error?.message);
     return null;
@@ -413,6 +431,66 @@ async function getPlayerCommunityDecks(playerId) {
   const { data, error } = await sb.from("community_decks").select("*").eq("player_id", playerId).order("created_at", { ascending: false });
   if (error || !data) return [];
   return data.map(mapCommunityDeck);
+}
+function mapMatchResult(row) {
+  return {
+    id: row.id,
+    deckId: row.deck_id,
+    playerId: row.player_id,
+    result: row.result,
+    opponentFaction: row.opponent_faction,
+    createdAt: new Date(row.created_at)
+  };
+}
+async function logDeckMatchResult(input) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from("deck_match_results").insert({
+    deck_id: input.deckId,
+    player_id: input.playerId,
+    result: input.result,
+    opponent_faction: input.opponentFaction
+  }).select("*").single();
+  if (error || !data) {
+    console.error("[Supabase] Failed to log match result:", error?.message);
+    return null;
+  }
+  return mapMatchResult(data);
+}
+async function getDeckWinRate(deckId) {
+  const sb = getSupabase();
+  if (!sb) return { wins: 0, losses: 0, total: 0, winRate: 0 };
+  const { data, error } = await sb.from("deck_match_results").select("result").eq("deck_id", deckId);
+  if (error || !data) return { wins: 0, losses: 0, total: 0, winRate: 0 };
+  const wins = data.filter((r) => r.result === "win").length;
+  const losses = data.filter((r) => r.result === "loss").length;
+  const total = wins + losses;
+  return { wins, losses, total, winRate: total > 0 ? Math.round(wins / total * 100) : 0 };
+}
+async function batchDeckWinRates(deckIds) {
+  const sb = getSupabase();
+  if (!sb || deckIds.length === 0) return {};
+  const { data, error } = await sb.from("deck_match_results").select("deck_id, result").in("deck_id", deckIds);
+  if (error || !data) return {};
+  const result = {};
+  for (const row of data) {
+    if (!result[row.deck_id]) result[row.deck_id] = { wins: 0, losses: 0, total: 0, winRate: 0 };
+    if (row.result === "win") result[row.deck_id].wins++;
+    else result[row.deck_id].losses++;
+    result[row.deck_id].total++;
+  }
+  for (const id of Object.keys(result)) {
+    const r = result[Number(id)];
+    r.winRate = r.total > 0 ? Math.round(r.wins / r.total * 100) : 0;
+  }
+  return result;
+}
+async function getPlayerDeckHistory(deckId, playerId, limit = 20) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("deck_match_results").select("*").eq("deck_id", deckId).eq("player_id", playerId).order("created_at", { ascending: false }).limit(limit);
+  if (error || !data) return [];
+  return data.map(mapMatchResult);
 }
 async function upsertUser(_user) {
   return;
@@ -5902,16 +5980,20 @@ var appRouter = router({
     ).query(async ({ input }) => {
       return listDeckComments(input.deckId, input.limit);
     }),
-    /** Add a comment to a community deck */
+    /** Add a comment (or reply) to a community deck */
     addComment: publicProcedure.input(
       z3.object({
         deckId: z3.number().int().positive(),
         playerId: z3.string().min(1).max(64),
         gamertag: z3.string().min(3).max(30),
-        content: z3.string().min(1).max(500).transform((s) => s.replace(/[<>"']/g, ""))
+        content: z3.string().min(1).max(500).transform((s) => s.replace(/[<>"']/g, "")),
+        parentId: z3.number().int().positive().nullish()
       })
     ).mutation(async ({ input }) => {
-      return addDeckComment(input);
+      return addDeckComment({
+        ...input,
+        parentId: input.parentId ?? null
+      });
     }),
     /** Delete a comment (only the author) */
     deleteComment: publicProcedure.input(
@@ -5943,6 +6025,35 @@ var appRouter = router({
     /** Get all community decks published by a specific player */
     myDecks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
       return getPlayerCommunityDecks(input.playerId);
+    }),
+    /** Log a match result (win/loss) for a community deck */
+    logMatch: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64),
+        result: z3.enum(["win", "loss"]),
+        opponentFaction: z3.string().min(1).max(30)
+      })
+    ).mutation(async ({ input }) => {
+      return logDeckMatchResult(input);
+    }),
+    /** Get aggregated win rate for a single deck */
+    winRate: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).query(async ({ input }) => {
+      return getDeckWinRate(input.deckId);
+    }),
+    /** Get win rates for multiple decks (batch, for list page) */
+    batchWinRates: publicProcedure.input(z3.object({ deckIds: z3.array(z3.number().int().positive()).max(50) })).query(async ({ input }) => {
+      return batchDeckWinRates(input.deckIds);
+    }),
+    /** Get a player's match history with a specific deck */
+    matchHistory: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64),
+        limit: z3.number().int().min(1).max(50).default(20)
+      })
+    ).query(async ({ input }) => {
+      return getPlayerDeckHistory(input.deckId, input.playerId, input.limit);
     })
   }),
   /** User account management — data purge for GDPR compliance */

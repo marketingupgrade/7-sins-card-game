@@ -1689,3 +1689,27 @@
 - [x] Update Changelog.tsx with v5.8.0 'The Social Crucible' entry
 - [x] Full test suite: 395 tests, 23 files, 0 failures
 - [x] Save checkpoint and push to GitHub
+
+## Deck Win-Rate Tracking (v5.8.1)
+- [x] Create deck_match_results table in Supabase (deck_id, player_id, result: win/loss, opponent_faction, created_at)
+- [x] tRPC procedure: logMatch — record a win/loss for a community deck
+- [x] tRPC procedure: winRate — aggregate win rate for a deck
+- [x] tRPC procedure: batchWinRates — batch win rates for deck list page
+- [x] Frontend: Log Match modal with Victory/Defeat toggle and opponent faction selector grid
+- [x] Frontend: Win-rate badge on deck cards (color-coded: green ≥60%, yellow ≥45%, red <45%)
+- [x] Frontend: Batch win rate loading for all visible deck cards
+- [x] Write tests for match result logging and win rate aggregation (7 tests)
+
+## Reply Threading on Comments (v5.8.1)
+- [x] Add parent_id column to community_comments table (nullable, self-referencing FK)
+- [x] Update addComment procedure to accept optional parentId for replies
+- [x] Update listDeckComments to return nested reply structure (top-level with replies array)
+- [x] Frontend: Reply button on each comment with reply indicator banner
+- [x] Frontend: Nested reply display with left border indent and visual threading
+- [x] Frontend: Keyboard shortcuts (Enter to post, Escape to cancel reply)
+- [x] Write tests for nested reply CRUD and threading (3 tests)
+
+## Patch Notes (v5.8.1)
+- [x] Update Changelog.tsx with v5.8.1 'The Arena Ledger' entry
+- [x] Full test suite: 405 tests, 23 files, 0 failures
+- [x] Save checkpoint

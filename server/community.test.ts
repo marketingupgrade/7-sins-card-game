@@ -1,8 +1,9 @@
 /**
- * Community Deck Library Integration Tests — v5.8.0
+ * Community Deck Library Integration Tests — v5.8.1
  *
  * Tests the community deck lifecycle:
- *   gamertag → publish → list → toggle-like → comments → unpublish
+ *   gamertag → publish → list → toggle-like → comments → threaded replies
+ *   → match result logging → win-rate tracking → unpublish
  *
  * NOTE: community_decks.player_id is a UUID with FK to players.id.
  * We create temporary test players in beforeAll and clean up in afterAll.
@@ -239,13 +240,58 @@ describe("community deck library", () => {
     expect(comment!.gamertag).toBe(SECOND_GAMERTAG);
   });
 
+  // ─── Threaded Replies ────────────────────────────────────
+
+  let replyCommentId: number;
+
+  it("adds a reply to an existing comment", async () => {
+    if (!publishedDeckId || !testCommentId) return;
+    const reply = await caller.community.addComment({
+      deckId: publishedDeckId,
+      playerId: SECOND_PLAYER_ID,
+      gamertag: SECOND_GAMERTAG,
+      content: "Thanks! Which card would you swap in?",
+      parentId: testCommentId,
+    });
+    expect(reply).toBeDefined();
+    expect(reply!.parentId).toBe(testCommentId);
+    expect(reply!.content).toBe("Thanks! Which card would you swap in?");
+    replyCommentId = reply!.id;
+  });
+
+  it("lists comments with replies nested under parent", async () => {
+    if (!publishedDeckId) return;
+    const comments = await caller.community.comments({ deckId: publishedDeckId });
+    // Top-level comments should not include replies at root level
+    const topLevel = comments.filter((c: any) => !c.parentId);
+    expect(topLevel.length).toBeGreaterThanOrEqual(2);
+
+    // Find the parent comment and check it has the reply
+    const parent = comments.find((c: any) => c.id === testCommentId);
+    if (parent) {
+      expect(parent.replies).toBeDefined();
+      expect(parent.replies!.length).toBeGreaterThanOrEqual(1);
+      expect(parent.replies!.some((r: any) => r.id === replyCommentId)).toBe(true);
+    }
+  });
+
+  it("deletes a reply comment", async () => {
+    if (!replyCommentId) return;
+    const result = await caller.community.deleteComment({
+      commentId: replyCommentId,
+      playerId: SECOND_PLAYER_ID,
+    });
+    expect(result).toBe(true);
+  });
+
   it("lists comments for a deck (newest first)", async () => {
     if (!publishedDeckId) return;
     const comments = await caller.community.comments({ deckId: publishedDeckId });
-    expect(comments.length).toBeGreaterThanOrEqual(2);
-    if (comments.length >= 2) {
-      const d0 = new Date(comments[0].createdAt).getTime();
-      const d1 = new Date(comments[1].createdAt).getTime();
+    const topLevel = comments.filter((c: any) => !c.parentId);
+    expect(topLevel.length).toBeGreaterThanOrEqual(2);
+    if (topLevel.length >= 2) {
+      const d0 = new Date(topLevel[0].createdAt).getTime();
+      const d1 = new Date(topLevel[1].createdAt).getTime();
       expect(d0).toBeGreaterThanOrEqual(d1);
     }
   });
@@ -266,7 +312,8 @@ describe("community deck library", () => {
     });
     // Verify comment still exists
     const comments = await caller.community.comments({ deckId: publishedDeckId! });
-    expect(comments.some((c: any) => c.id === testCommentId)).toBe(true);
+    const allComments = comments.flatMap((c: any) => [c, ...(c.replies || [])]);
+    expect(allComments.some((c: any) => c.id === testCommentId)).toBe(true);
   });
 
   it("deletes own comment", async () => {
@@ -277,7 +324,8 @@ describe("community deck library", () => {
     });
     expect(result).toBe(true);
     const comments = await caller.community.comments({ deckId: publishedDeckId! });
-    expect(comments.some((c: any) => c.id === testCommentId)).toBe(false);
+    const allComments = comments.flatMap((c: any) => [c, ...(c.replies || [])]);
+    expect(allComments.some((c: any) => c.id === testCommentId)).toBe(false);
   });
 
   it("rejects comment with content exceeding 500 chars", async () => {
@@ -288,6 +336,88 @@ describe("community deck library", () => {
         playerId: TEST_PLAYER_ID,
         gamertag: TEST_GAMERTAG,
         content: "x".repeat(501),
+      })
+    ).rejects.toThrow();
+  });
+
+  // ─── Match Result Logging & Win Rate ─────────────────────
+
+  it("logs a win match result", async () => {
+    if (!publishedDeckId) return;
+    const result = await caller.community.logMatch({
+      deckId: publishedDeckId,
+      playerId: TEST_PLAYER_ID,
+      result: "win",
+      opponentFaction: "sloth",
+    });
+    expect(result).toBeDefined();
+    expect(result!.result).toBe("win");
+    expect(result!.opponentFaction).toBe("sloth");
+  });
+
+  it("logs a loss match result", async () => {
+    if (!publishedDeckId) return;
+    const result = await caller.community.logMatch({
+      deckId: publishedDeckId,
+      playerId: TEST_PLAYER_ID,
+      result: "loss",
+      opponentFaction: "greed",
+    });
+    expect(result).toBeDefined();
+    expect(result!.result).toBe("loss");
+  });
+
+  it("logs a second win from another player", async () => {
+    if (!publishedDeckId) return;
+    const result = await caller.community.logMatch({
+      deckId: publishedDeckId,
+      playerId: SECOND_PLAYER_ID,
+      result: "win",
+      opponentFaction: "envy",
+    });
+    expect(result).toBeDefined();
+    expect(result!.result).toBe("win");
+    expect(result!.opponentFaction).toBe("envy");
+  });
+
+  it("returns correct win rate for a deck", async () => {
+    if (!publishedDeckId) return;
+    const winRate = await caller.community.winRate({ deckId: publishedDeckId });
+    expect(winRate.total).toBe(3);
+    expect(winRate.wins).toBe(2);
+    expect(winRate.losses).toBe(1);
+    // 2/3 = 66.67 → rounded to 67
+    expect(winRate.winRate).toBeGreaterThanOrEqual(66);
+    expect(winRate.winRate).toBeLessThanOrEqual(67);
+  });
+
+  it("returns batch win rates for multiple decks", async () => {
+    if (!publishedDeckId) return;
+    const rates = await caller.community.batchWinRates({
+      deckIds: [publishedDeckId],
+    });
+    expect(rates[publishedDeckId]).toBeDefined();
+    expect(rates[publishedDeckId].total).toBe(3);
+    expect(rates[publishedDeckId].wins).toBe(2);
+  });
+
+  it("returns zero win rate for a deck with no matches", async () => {
+    // Use a non-existent deck ID
+    const winRate = await caller.community.winRate({ deckId: 999999 });
+    expect(winRate.total).toBe(0);
+    expect(winRate.wins).toBe(0);
+    expect(winRate.losses).toBe(0);
+    expect(winRate.winRate).toBe(0);
+  });
+
+  it("rejects invalid match result value", async () => {
+    if (!publishedDeckId) return;
+    await expect(
+      caller.community.logMatch({
+        deckId: publishedDeckId,
+        playerId: TEST_PLAYER_ID,
+        result: "draw" as any,
+        opponentFaction: "wrath",
       })
     ).rejects.toThrow();
   });
@@ -319,6 +449,8 @@ describe("community deck library", () => {
   afterAll(async () => {
     const sb = getSupabase();
     try {
+      await sb.from("deck_match_results").delete().eq("player_id", TEST_PLAYER_ID);
+      await sb.from("deck_match_results").delete().eq("player_id", SECOND_PLAYER_ID);
       await sb.from("community_likes").delete().eq("player_id", TEST_PLAYER_ID);
       await sb.from("community_likes").delete().eq("player_id", SECOND_PLAYER_ID);
       await sb.from("community_comments").delete().eq("player_id", TEST_PLAYER_ID);

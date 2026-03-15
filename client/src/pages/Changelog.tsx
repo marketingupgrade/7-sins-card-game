@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.8.1",
+    date: "March 2026",
+    title: "The Arena Ledger",
+    summary: "Deck win-rate tracking lets players log match results against any community deck and see aggregate win rates displayed as badges on deck cards. Threaded replies bring focused strategy conversations to the comment system — reply to any comment to start a nested thread. 405 tests passing across 23 files.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Win-Rate Tracking: Players can log match results (Victory/Defeat) for any community deck, selecting the opponent faction" },
+      { category: "feature", text: "Win-Rate Badge: Decks with 3+ logged matches display a color-coded win-rate badge (green ≥60%, yellow ≥45%, red <45%) with match count" },
+      { category: "feature", text: "Log Match Modal: Premium modal with Victory/Defeat toggle and opponent faction selector grid with faction icons" },
+      { category: "feature", text: "Batch Win Rates: Win rates loaded in batch for all visible deck cards to minimize API calls" },
+      { category: "feature", text: "Threaded Replies: Reply button on each comment starts a nested conversation thread with visual threading (left border + indent)" },
+      { category: "feature", text: "Reply Indicator: Active reply-to banner shows which comment you're replying to, with cancel option" },
+      { category: "feature", text: "Keyboard Shortcuts: Enter to post, Shift+Enter for newline, Escape to cancel reply" },
+      { category: "feature", text: "10 new vitest tests for match logging, win-rate calculation, batch win rates, threaded replies, and reply deletion" },
+    ],
+  },
+  {
     version: "5.8.0",
     date: "March 2026",
     title: "The Social Crucible",
