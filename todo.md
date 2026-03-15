@@ -1475,3 +1475,16 @@
 - [x] Both: Ensure targeting state is crystal clear at all times
 - [x] Update patch notes
 - [x] Save checkpoint and push to GitHub
+
+## PageSpeed Audit & Performance Refactoring (v5.7.0)
+- [ ] Run Lighthouse audit and document baseline scores (LCP, CLS, FCP, TBT, SI)
+- [ ] Save safety checkpoint before any changes
+- [ ] Round A: Critical fixes (render-blocking JS/CSS, image optimization, lazy loading)
+- [ ] Round B: Code splitting (route-based chunks, dynamic imports for heavy components)
+- [ ] Round C: Asset optimization (font subsetting, unused CSS purge, compression)
+- [ ] Round D: Runtime performance (memo leaks, re-renders, animation cleanup)
+- [ ] Run full vitest suite — no regressions
+- [ ] Visual spot-check key pages (home, game board, deck builder, brandbook)
+- [ ] Re-test PageSpeed and compare before/after scores
+- [ ] Update patch notes with v5.7.0 and before/after metrics
+- [ ] Save checkpoint and push to GitHub
