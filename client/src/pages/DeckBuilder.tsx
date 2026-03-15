@@ -593,6 +593,360 @@ const DeckSlot = memo(function DeckSlot({
   );
 });
 
+// ─── Dynamic Deck Insights Panel ──────────────────────────────
+function DeckInsightsPanel({
+  deckCards,
+  deckCardIds,
+  deckStats,
+  sinColor,
+  selectedFaction,
+  isFull,
+  removeCard,
+  setDetailCard,
+}: {
+  deckCards: CardDefinition[];
+  deckCardIds: string[];
+  deckStats: { avgCost: number; tiers: { common: number; rare: number; epic: number }; skipQueue: number; total: number };
+  sinColor: string;
+  selectedFaction: SinType;
+  isFull: boolean;
+  removeCard: (id: string) => void;
+  setDetailCard: (card: CardDefinition) => void;
+}) {
+  // Effect distribution
+  const effectDist = useMemo(() => {
+    const cats: Record<string, { count: number; totalValue: number; color: string; label: string }> = {
+      damage: { count: 0, totalValue: 0, color: "#ef4444", label: "Damage" },
+      heal: { count: 0, totalValue: 0, color: "#22c55e", label: "Healing" },
+      shield: { count: 0, totalValue: 0, color: "#60a5fa", label: "Shield" },
+      energy: { count: 0, totalValue: 0, color: "#eab308", label: "Energy" },
+      control: { count: 0, totalValue: 0, color: "#c084fc", label: "Control" },
+      utility: { count: 0, totalValue: 0, color: "#f97316", label: "Utility" },
+    };
+    deckCards.forEach((c) => {
+      c.effects.forEach((e) => {
+        if (e.type === "damage" || e.type === "self_damage") {
+          cats.damage.count++; cats.damage.totalValue += e.baseValue;
+        } else if (e.type === "heal_gain" || e.type === "heal_steal") {
+          cats.heal.count++; cats.heal.totalValue += e.baseValue;
+        } else if (e.type === "shield_gain" || e.type === "shield_steal") {
+          cats.shield.count++; cats.shield.totalValue += e.baseValue;
+        } else if (e.type === "energy_gain" || e.type === "energy_steal" || e.type === "energy_regen") {
+          cats.energy.count++; cats.energy.totalValue += e.baseValue;
+        } else if (e.type === "heal_block" || e.type === "shield_block" || e.type === "energy_block" || e.type === "affliction_amplify" || e.type === "affliction_transfer") {
+          cats.control.count++; cats.control.totalValue += e.baseValue;
+        } else {
+          cats.utility.count++; cats.utility.totalValue += e.baseValue;
+        }
+      });
+    });
+    return cats;
+  }, [deckCards]);
+
+  // Archetype analysis
+  const archetype = useMemo(() => {
+    if (deckCards.length === 0) return { label: "Empty", desc: "Add cards to see analysis", aggro: 0, defense: 0, control: 0 };
+    const total = deckCards.reduce((s, c) => s + c.effects.length, 0) || 1;
+    let aggro = 0, defense = 0, control = 0;
+    deckCards.forEach((c) => {
+      c.effects.forEach((e) => {
+        if (["damage", "self_damage", "affliction_amplify", "affliction_transfer"].includes(e.type)) aggro++;
+        else if (["heal_gain", "heal_steal", "shield_gain", "shield_steal"].includes(e.type)) defense++;
+        else control++;
+      });
+    });
+    const aggroPct = (aggro / total) * 100;
+    const defensePct = (defense / total) * 100;
+    const controlPct = (control / total) * 100;
+    let label = "Balanced", desc = "A well-rounded deck with no dominant strategy";
+    if (aggroPct > 55) { label = "Aggressor"; desc = "Overwhelm enemies with relentless damage"; }
+    else if (defensePct > 45) { label = "Fortress"; desc = "Outlast opponents through superior sustain"; }
+    else if (controlPct > 40) { label = "Puppeteer"; desc = "Manipulate the battlefield to your advantage"; }
+    else if (aggroPct > 40 && defensePct > 30) { label = "Berserker"; desc = "Hit hard, heal fast — a dangerous gambit"; }
+    else if (defensePct > 30 && controlPct > 25) { label = "Warden"; desc = "Lock down threats while sustaining yourself"; }
+    return { label, desc, aggro: aggroPct, defense: defensePct, control: controlPct };
+  }, [deckCards]);
+
+  // Compound pattern distribution
+  const patternDist = useMemo(() => {
+    const counts = { standard: 0, aggressive: 0, slowburn: 0 };
+    deckCards.forEach((c) => counts[c.compoundPattern]++);
+    return counts;
+  }, [deckCards]);
+
+  // Synergy score (0-100)
+  const synergyScore = useMemo(() => {
+    if (deckCards.length < 3) return 0;
+    let score = 0;
+    const effectTypes = new Set<string>();
+    deckCards.forEach((c) => c.effects.forEach((e) => effectTypes.add(e.type)));
+    // Diversity bonus (more unique effects = better synergy)
+    score += Math.min(effectTypes.size * 6, 30);
+    // Curve smoothness bonus
+    const costs = Array(7).fill(0);
+    deckCards.forEach((c) => costs[Math.min(c.cost, 6)]++);
+    const avgCount = deckCards.length / 7;
+    const variance = costs.reduce((s, c) => s + Math.pow(c - avgCount, 2), 0) / 7;
+    score += Math.max(0, 25 - variance * 2);
+    // Tier balance bonus
+    const { tiers } = deckStats;
+    if (tiers.epic >= 2 && tiers.rare >= 4) score += 15;
+    else if (tiers.epic >= 1 && tiers.rare >= 3) score += 10;
+    // Priority card bonus
+    if (deckStats.skipQueue >= 2 && deckStats.skipQueue <= 5) score += 10;
+    // Pattern diversity bonus
+    const patterns = Object.values(patternDist).filter((v) => v > 0).length;
+    if (patterns >= 2) score += 10;
+    if (patterns >= 3) score += 10;
+    return Math.min(Math.round(score), 100);
+  }, [deckCards, deckStats, patternDist]);
+
+  // Matchup predictions against other factions
+  const matchups = useMemo(() => {
+    if (deckCards.length < 5) return [];
+    const factions: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
+    return factions
+      .filter((f) => f !== selectedFaction)
+      .map((f) => {
+        // Simple heuristic based on faction strengths
+        let advantage = 50; // baseline
+        const dmg = effectDist.damage.count;
+        const heal = effectDist.heal.count;
+        const shield = effectDist.shield.count;
+        const ctrl = effectDist.control.count;
+        if (f === "wrath") advantage += shield * 3 + heal * 2 - dmg; // shield/heal counters wrath
+        else if (f === "sloth") advantage += dmg * 2 + ctrl - heal; // aggro beats sloth
+        else if (f === "greed") advantage += ctrl * 3 - dmg; // control beats greed
+        else if (f === "envy") advantage += heal * 2 + shield - ctrl * 2; // sustain beats envy
+        else if (f === "pride") advantage += dmg * 2 - shield; // raw damage beats pride
+        else if (f === "lust") advantage += shield * 2 + ctrl - heal; // shield/control beats lust
+        else if (f === "gluttony") advantage += dmg * 3 - heal * 2; // burst beats gluttony
+        return { faction: f, advantage: Math.max(15, Math.min(85, advantage)), color: SIN_COLORS[f] };
+      });
+  }, [deckCards, selectedFaction, effectDist]);
+
+  const isEmpty = deckCards.length === 0;
+
+  return (
+    <div className="p-3 sm:p-4 space-y-3">
+      {/* ── Progress Bar ── */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[10px] text-white/30 uppercase tracking-wider font-semibold">Deck Progress</span>
+          <span className="text-xs font-bold" style={{ color: isFull ? "#22c55e" : sinColor }}>
+            {deckCardIds.length}/{MAX_DECK_SIZE}
+          </span>
+        </div>
+        <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: isFull ? "linear-gradient(90deg, #22c55e, #16a34a)" : `linear-gradient(90deg, ${sinColor}80, ${sinColor})` }}
+            animate={{ width: `${(deckCardIds.length / MAX_DECK_SIZE) * 100}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+        {isFull && (
+          <p className="text-[10px] text-green-400/60 text-center mt-1" style={{ fontFamily: "var(--font-heading)" }}>
+            Deck Complete — Ready for Battle
+          </p>
+        )}
+      </div>
+
+      {/* ── Card List ── */}
+      <div>
+        <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-1.5">Cards</p>
+        <div className="space-y-1 max-h-48 overflow-y-auto pr-1" style={{ scrollbarWidth: "thin", scrollbarColor: `${sinColor}40 transparent` }}>
+          <AnimatePresence mode="popLayout">
+            {isEmpty ? (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-6">
+                <svg className="mx-auto mb-2 text-white/10" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
+                  <rect x="2" y="4" width="14" height="17" rx="2" />
+                  <path d="M8 4V2a1 1 0 0 1 1-1h10a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1h-2" />
+                </svg>
+                <p className="text-white/15 text-xs">Click cards to add them</p>
+              </motion.div>
+            ) : (
+              deckCards.map((card) => (
+                <DeckSlot key={card.id} card={card} onRemove={() => removeCard(card.id)} onViewDetail={() => setDetailCard(card)} />
+              ))
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* ── Quick Stats Row ── */}
+      <div className="grid grid-cols-4 gap-1.5">
+        <div className="text-center p-2 rounded-lg bg-white/[0.03] border border-white/[0.04]">
+          <p className="text-base font-bold" style={{ color: sinColor, fontFamily: "var(--font-heading)" }}>{deckStats.total}</p>
+          <p className="text-[8px] text-white/25 uppercase tracking-wider">Cards</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-white/[0.03] border border-white/[0.04]">
+          <p className="text-base font-bold text-amber-200/70" style={{ fontFamily: "var(--font-heading)" }}>{deckStats.avgCost.toFixed(1)}</p>
+          <p className="text-[8px] text-white/25 uppercase tracking-wider">Avg Cost</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-white/[0.03] border border-white/[0.04]">
+          <p className="text-base font-bold text-yellow-300/70" style={{ fontFamily: "var(--font-heading)" }}>{deckStats.skipQueue}</p>
+          <p className="text-[8px] text-white/25 uppercase tracking-wider">Priority</p>
+        </div>
+        <div className="text-center p-2 rounded-lg bg-white/[0.03] border border-white/[0.04]">
+          <div className="flex items-center justify-center gap-0.5">
+            <span className="text-[11px] font-bold" style={{ color: TIER_COLORS.epic }}>{deckStats.tiers.epic}</span>
+            <span className="text-white/10 text-[9px]">/</span>
+            <span className="text-[11px] font-bold" style={{ color: TIER_COLORS.rare }}>{deckStats.tiers.rare}</span>
+            <span className="text-white/10 text-[9px]">/</span>
+            <span className="text-[11px] font-bold" style={{ color: TIER_COLORS.common }}>{deckStats.tiers.common}</span>
+          </div>
+          <p className="text-[8px] text-white/25 uppercase tracking-wider">E/R/C</p>
+        </div>
+      </div>
+
+      {/* ── Mana Curve ── */}
+      <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+        <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Mana Curve</p>
+        <ManaCurve cards={deckCards} sinColor={sinColor} />
+      </div>
+
+      {/* ── Effect Distribution ── */}
+      {!isEmpty && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Effect Balance</p>
+          <div className="space-y-1.5">
+            {Object.entries(effectDist).map(([key, val]) => {
+              const maxCount = Math.max(...Object.values(effectDist).map((v) => v.count), 1);
+              return (
+                <div key={key} className="flex items-center gap-2">
+                  <span className="text-[9px] text-white/40 w-12 text-right shrink-0">{val.label}</span>
+                  <div className="flex-1 h-3 rounded-full bg-white/[0.03] overflow-hidden">
+                    <motion.div
+                      className="h-full rounded-full"
+                      style={{ background: `linear-gradient(90deg, ${val.color}60, ${val.color})` }}
+                      initial={{ width: 0 }}
+                      animate={{ width: val.count > 0 ? `${(val.count / maxCount) * 100}%` : "0%" }}
+                      transition={{ duration: 0.5, delay: 0.1 }}
+                    />
+                  </div>
+                  <span className="text-[9px] text-white/30 w-4 text-right font-mono">{val.count}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Archetype Analysis ── */}
+      {!isEmpty && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Archetype</p>
+          <div className="text-center mb-2">
+            <p className="text-sm font-bold" style={{ color: sinColor, fontFamily: "var(--font-heading)" }}>{archetype.label}</p>
+            <p className="text-[10px] text-white/30 italic" style={{ fontFamily: "var(--font-body)" }}>{archetype.desc}</p>
+          </div>
+          <div className="flex items-center gap-1 h-3 rounded-full overflow-hidden bg-white/[0.03]">
+            <motion.div className="h-full" style={{ background: "#ef4444" }} animate={{ width: `${archetype.aggro}%` }} transition={{ duration: 0.5 }} />
+            <motion.div className="h-full" style={{ background: "#22c55e" }} animate={{ width: `${archetype.defense}%` }} transition={{ duration: 0.5 }} />
+            <motion.div className="h-full" style={{ background: "#c084fc" }} animate={{ width: `${archetype.control}%` }} transition={{ duration: 0.5 }} />
+          </div>
+          <div className="flex justify-between mt-1">
+            <span className="text-[8px] text-red-400/50">Aggro {Math.round(archetype.aggro)}%</span>
+            <span className="text-[8px] text-green-400/50">Defense {Math.round(archetype.defense)}%</span>
+            <span className="text-[8px] text-purple-400/50">Control {Math.round(archetype.control)}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Compound Pattern Mix ── */}
+      {!isEmpty && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Compound Patterns</p>
+          <div className="grid grid-cols-3 gap-2">
+            {([
+              { key: "standard" as const, label: "◆ Steady", color: "#60a5fa", desc: "Fibonacci growth" },
+              { key: "aggressive" as const, label: "🔥 Volatile", color: "#ef4444", desc: "Exponential burst" },
+              { key: "slowburn" as const, label: "⌛ Patient", color: "#a855f7", desc: "Gradual pressure" },
+            ]).map((p) => (
+              <div key={p.key} className="text-center p-2 rounded-lg" style={{ background: patternDist[p.key] > 0 ? `${p.color}10` : "rgba(255,255,255,0.01)", border: `1px solid ${patternDist[p.key] > 0 ? `${p.color}20` : "rgba(255,255,255,0.03)"}` }}>
+                <p className="text-sm font-bold" style={{ color: patternDist[p.key] > 0 ? p.color : "rgba(255,255,255,0.15)" }}>{patternDist[p.key]}</p>
+                <p className="text-[8px] text-white/30 mt-0.5">{p.label}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Synergy Score ── */}
+      {!isEmpty && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Synergy Score</p>
+          <div className="flex items-center justify-center gap-3">
+            <div className="relative w-16 h-16">
+              <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
+                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="3" />
+                <motion.circle
+                  cx="18" cy="18" r="15.9" fill="none"
+                  stroke={synergyScore >= 70 ? "#22c55e" : synergyScore >= 40 ? "#eab308" : "#ef4444"}
+                  strokeWidth="3" strokeLinecap="round"
+                  strokeDasharray="100" strokeDashoffset={100 - synergyScore}
+                  initial={{ strokeDashoffset: 100 }}
+                  animate={{ strokeDashoffset: 100 - synergyScore }}
+                  transition={{ duration: 1, delay: 0.2 }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-lg font-black" style={{ color: synergyScore >= 70 ? "#22c55e" : synergyScore >= 40 ? "#eab308" : "#ef4444", fontFamily: "var(--font-heading)" }}>
+                  {synergyScore}
+                </span>
+              </div>
+            </div>
+            <div className="text-left">
+              <p className="text-xs font-semibold" style={{ color: synergyScore >= 70 ? "#22c55e" : synergyScore >= 40 ? "#eab308" : "#ef4444" }}>
+                {synergyScore >= 80 ? "Masterful" : synergyScore >= 60 ? "Strong" : synergyScore >= 40 ? "Developing" : "Fragmented"}
+              </p>
+              <p className="text-[9px] text-white/25 max-w-[120px] leading-relaxed">
+                {synergyScore >= 70 ? "Excellent effect diversity and curve balance" : synergyScore >= 40 ? "Good foundation, consider more variety" : "Add more cards for better synergy"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Matchup Predictions ── */}
+      {matchups.length > 0 && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Matchup Forecast</p>
+          <div className="space-y-1.5">
+            {matchups.map((m) => (
+              <div key={m.faction} className="flex items-center gap-2">
+                <span className="text-[9px] font-semibold w-14 text-right capitalize" style={{ color: m.color }}>{m.faction}</span>
+                <div className="flex-1 h-2.5 rounded-full bg-white/[0.03] overflow-hidden relative">
+                  {/* Center line */}
+                  <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10" />
+                  <motion.div
+                    className="h-full rounded-full absolute top-0"
+                    style={{
+                      background: m.advantage >= 50
+                        ? `linear-gradient(90deg, transparent, ${sinColor})`
+                        : `linear-gradient(270deg, transparent, ${m.color})`,
+                      left: m.advantage >= 50 ? "50%" : `${m.advantage}%`,
+                      width: m.advantage >= 50 ? `${m.advantage - 50}%` : `${50 - m.advantage}%`,
+                    }}
+                    initial={{ width: 0 }}
+                    animate={{ width: m.advantage >= 50 ? `${m.advantage - 50}%` : `${50 - m.advantage}%` }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  />
+                </div>
+                <span className="text-[9px] font-mono w-8 text-right" style={{ color: m.advantage >= 55 ? "#22c55e" : m.advantage <= 45 ? "#ef4444" : "#eab308" }}>
+                  {m.advantage}%
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="text-[8px] text-white/15 text-center mt-1.5 italic">Based on deck composition heuristics</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Mana Curve Chart ───────────────────────────────────────
 function ManaCurve({ cards, sinColor }: { cards: CardDefinition[]; sinColor: string }) {
   const curve = useMemo(() => {
@@ -800,12 +1154,29 @@ export default function DeckBuilder() {
 
     try {
       if (user) {
-        await trpcMutate("deck.create", {
-          supabaseUserId: user.id,
-          name: deck.name,
-          faction: deck.faction,
-          cardIds: JSON.stringify(deck.cardIds),
-        });
+        // Check if this is an update to an existing DB deck (numeric ID from server)
+        const isExistingDbDeck = activeDeckId && !String(activeDeckId).startsWith("deck_");
+        if (isExistingDbDeck) {
+          // Update existing deck in Supabase
+          await trpcMutate("deck.update", {
+            deckId: typeof activeDeckId === "string" ? parseInt(activeDeckId, 10) : activeDeckId,
+            supabaseUserId: user.id,
+            name: deck.name,
+            cardIds: JSON.stringify(deck.cardIds),
+          });
+        } else {
+          // Create new deck in Supabase
+          const result = await trpcMutate("deck.create", {
+            supabaseUserId: user.id,
+            name: deck.name,
+            faction: deck.faction,
+            cardIds: JSON.stringify(deck.cardIds),
+          });
+          // Use the server-assigned ID so future saves become updates
+          if (result?.id) {
+            deck.id = String(result.id);
+          }
+        }
       }
 
       const updated = activeDeckId
@@ -1226,17 +1597,16 @@ export default function DeckBuilder() {
           </AnimatePresence>
         </div>
 
-        {/* ─── Main Content ────────────────────────────────── */}
+        {/* ─── Main Content: 50/50 Split ────────────────────── */}
         <div className="flex-1 flex overflow-hidden">
-          {/* Card Browser (left/main) */}
-          <div className={`flex-1 overflow-y-auto p-3 sm:p-4 ${showDeckPanel ? "hidden lg:block" : ""}`}>
-
+          {/* Card Browser (left 50%) */}
+          <div className={`w-full lg:w-1/2 overflow-y-auto p-3 sm:p-4 ${showDeckPanel ? "hidden lg:block" : ""}`}>
             {filteredCards.length === 0 ? (
               <div className="flex items-center justify-center h-40">
                 <p className="text-white/20 text-base">No cards match your filters</p>
               </div>
             ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-2.5">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-2.5">
                 <AnimatePresence mode="popLayout">
                   {filteredCards.map((card) => (
                     <DeckCard
@@ -1254,97 +1624,23 @@ export default function DeckBuilder() {
             )}
           </div>
 
-          {/* Deck Panel (right/overlay on mobile) */}
+          {/* Dynamic Deck Insights Panel (right 50%) */}
           <div
             ref={deckPanelRef}
-            className={`w-full lg:w-80 xl:w-96 shrink-0 border-l border-white/5 bg-black/30 overflow-y-auto ${
+            className={`w-full lg:w-1/2 shrink-0 border-l border-white/[0.06] bg-gradient-to-b from-black/40 via-black/30 to-black/40 overflow-y-auto ${
               showDeckPanel ? "" : "hidden lg:block"
             }`}
           >
-            <div className="p-3 sm:p-4">
-              {/* Deck Stats */}
-              <div className="grid grid-cols-4 gap-2 mb-3">
-                <div className="text-center p-2 rounded-lg bg-white/5">
-                  <p className="text-lg font-bold" style={{ color: sinColor, fontFamily: "var(--font-heading)" }}>
-                    {deckStats.total}
-                  </p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-wider">Cards</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-white/5">
-                  <p className="text-lg font-bold text-amber-200/70" style={{ fontFamily: "var(--font-heading)" }}>
-                    {deckStats.avgCost.toFixed(1)}
-                  </p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-wider">Avg Cost</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-white/5">
-                  <p className="text-lg font-bold text-yellow-300/70" style={{ fontFamily: "var(--font-heading)" }}>
-                    {deckStats.skipQueue}
-                  </p>
-                  <p className="text-[9px] text-white/25 uppercase tracking-wider">Priority</p>
-                </div>
-                <div className="text-center p-2 rounded-lg bg-white/5">
-                  <div className="flex items-center justify-center gap-1">
-                    <span className="text-xs font-bold" style={{ color: TIER_COLORS.epic }}>{deckStats.tiers.epic}</span>
-                    <span className="text-white/10">/</span>
-                    <span className="text-xs font-bold" style={{ color: TIER_COLORS.rare }}>{deckStats.tiers.rare}</span>
-                    <span className="text-white/10">/</span>
-                    <span className="text-xs font-bold" style={{ color: TIER_COLORS.common }}>{deckStats.tiers.common}</span>
-                  </div>
-                  <p className="text-[9px] text-white/25 uppercase tracking-wider">E/R/C</p>
-                </div>
-              </div>
-
-              {/* Mana Curve */}
-              <div className="mb-3 p-2 rounded-lg bg-white/3">
-                <p className="text-[9px] text-white/25 uppercase tracking-wider mb-1 text-center">Mana Curve</p>
-                <ManaCurve cards={deckCards} sinColor={sinColor} />
-              </div>
-
-              {/* Progress bar */}
-              <div className="mb-3">
-                <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full"
-                    style={{ background: isFull ? "#22c55e" : sinColor }}
-                    animate={{ width: `${(deckCardIds.length / MAX_DECK_SIZE) * 100}%` }}
-                    transition={{ duration: 0.3 }}
-                  />
-                </div>
-                {isFull && (
-                  <p className="text-xs text-green-400/60 text-center mt-1" style={{ fontFamily: "var(--font-heading)" }}>
-                    Deck Complete
-                  </p>
-                )}
-              </div>
-
-              {/* Card list */}
-              <div className="space-y-1">
-                <AnimatePresence mode="popLayout">
-                  {deckCards.length === 0 ? (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-8"
-                    >
-                      <svg className="mx-auto mb-2 text-white/10" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                        <rect x="2" y="4" width="14" height="17" rx="2" />
-                        <path d="M8 4V2a1 1 0 0 1 1-1h10a2 2 0 0 1 2 2v14a1 1 0 0 1-1 1h-2" />
-                      </svg>
-                      <p className="text-white/15 text-sm">Click cards to add them</p>
-                    </motion.div>
-                  ) : (
-                    deckCards.map((card) => (
-                      <DeckSlot
-                        key={card.id}
-                        card={card}
-                        onRemove={() => removeCard(card.id)}
-                        onViewDetail={() => setDetailCard(card)}
-                      />
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
+            <DeckInsightsPanel
+              deckCards={deckCards}
+              deckCardIds={deckCardIds}
+              deckStats={deckStats}
+              sinColor={sinColor}
+              selectedFaction={selectedFaction}
+              isFull={isFull}
+              removeCard={removeCard}
+              setDetailCard={setDetailCard}
+            />
           </div>
         </div>
       </div>
