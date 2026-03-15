@@ -273,6 +273,9 @@ function CardPlayEntry({
   const casterSin = (caster?.chosenSin || card?.sin || "wrath") as SinType;
   const sinColor = SIN_COLORS[casterSin] || "#ef4444";
   const [previewCard, setPreviewCard] = useState<CardDefinition | null>(null);
+  const [previewMode, setPreviewMode] = useState<"hover" | "click">("hover");
+  const cardNameRef = useRef<HTMLDivElement>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Detect AOE/duo cards to show proper target label
   const hasAoe = card?.effects.some(e => e.targetMode === "aoe");
@@ -335,9 +338,20 @@ function CardPlayEntry({
           <div
             className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded cursor-pointer hover:ring-1 hover:ring-candle/30 transition-all"
             style={{ background: `${sinColor}15` }}
-            onClick={(e) => { e.stopPropagation(); if (card) setPreviewCard(card); }}
-            onMouseEnter={() => { if (card && window.innerWidth >= 768) setPreviewCard(card); }}
-            onMouseLeave={() => { if (window.innerWidth >= 768) setPreviewCard(null); }}
+            ref={cardNameRef}
+            onClick={(e) => { e.stopPropagation(); if (card) { setPreviewMode("click"); setPreviewCard(card); } }}
+            onMouseEnter={() => {
+              if (card && window.innerWidth >= 768) {
+                hoverTimerRef.current = setTimeout(() => {
+                  setPreviewMode("hover");
+                  setPreviewCard(card);
+                }, 150);
+              }
+            }}
+            onMouseLeave={() => {
+              if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+              if (previewMode === "hover") setPreviewCard(null);
+            }}
           >
             {cardArt && (
               <img
@@ -447,17 +461,117 @@ function CardPlayEntry({
         </div>
       )}
 
-      {/* Card Preview Popup */}
+      {/* Card Preview Popup — hover uses positioned tooltip, click uses full-screen */}
       <AnimatePresence>
-        {previewCard && (
+        {previewCard && previewMode === "click" && (
           <CardPreviewPopup card={previewCard} onClose={() => setPreviewCard(null)} />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {previewCard && previewMode === "hover" && cardNameRef.current && (
+          <CardHoverTooltip card={previewCard} anchorEl={cardNameRef.current} />
         )}
       </AnimatePresence>
     </motion.div>
   );
+}/* ─── Card Hover Tooltip (positioned near anchor) ─────────── */
+function CardHoverTooltip({ card, anchorEl }: { card: CardDefinition; anchorEl: HTMLElement }) {
+  const sinColor = SIN_COLORS[card.sin] || "#ef4444";
+  const art = CARD_ART_URLS[card.id];
+  const sinIcon = SIN_ARCHETYPE_ICONS[card.sin];
+  const rect = anchorEl.getBoundingClientRect();
+
+  // Position to the left of the battle log panel, vertically centered on the anchor
+  const top = Math.max(16, Math.min(rect.top - 100, window.innerHeight - 380));
+  const right = window.innerWidth - rect.left + 12;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 10 }}
+      animate={{ opacity: 1, x: 0 }}
+      exit={{ opacity: 0, x: 10 }}
+      transition={{ duration: 0.12 }}
+      className="fixed z-[90] pointer-events-none"
+      style={{ top, right, width: 260 }}
+    >
+      <div
+        className="rounded-xl overflow-hidden"
+        style={{
+          background: "oklch(0.12 0.02 280)",
+          border: `2px solid ${sinColor}50`,
+          boxShadow: `0 0 30px ${sinColor}20, 0 8px 32px oklch(0 0 0 / 0.6)`,
+        }}
+      >
+        {/* Card Art */}
+        {art && (
+          <div className="h-[140px] relative overflow-hidden">
+            <img src={art} alt={card.name} className="w-full h-full object-cover" />
+            <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, transparent 40%, oklch(0.12 0.02 280) 100%)` }} />
+          </div>
+        )}
+
+        <div className="p-3 space-y-2">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-black text-candle" style={{ fontFamily: "var(--font-heading)" }}>{card.name}</h3>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {sinIcon && <img src={sinIcon} alt="" className="w-3.5 h-3.5" />}
+                <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: sinColor }}>{card.sin}</span>
+                <span className="text-[10px] text-candle/40 uppercase">{card.tier}</span>
+              </div>
+            </div>
+            <div className="w-7 h-7 rounded-full flex items-center justify-center text-sm font-black" style={{
+              background: `${sinColor}20`, color: sinColor, border: `2px solid ${sinColor}50`,
+            }}>
+              {card.cost}
+            </div>
+          </div>
+
+          {/* Effects */}
+          <div className="space-y-1.5">
+            {card.effects.map((eff, i) => {
+              const iconUrl = getEffectIconUrl(eff.type, card.sin);
+              return (
+                <div key={i} className="flex items-start gap-1.5">
+                  {iconUrl ? (
+                    <img src={iconUrl} alt="" className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  ) : (
+                    <span className="text-xs mt-0.5">✦</span>
+                  )}
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold" style={{ color: sinColor }}>
+                        {EFFECT_NAMES[eff.type] || eff.type}
+                      </span>
+                      <span className="text-xs font-black text-candle">
+                        {eff.duration > 1
+                          ? `${getCompoundTickValue(eff.baseValue, card.compoundPattern, 0)}→${getCompoundTickValue(eff.baseValue, card.compoundPattern, eff.duration - 1)}`
+                          : eff.baseValue
+                        }
+                      </span>
+                      {eff.targetMode && eff.targetMode !== "single" && (
+                        <span className="text-[9px] text-candle/40 uppercase">{eff.targetMode}</span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-candle/45 leading-snug">{EFFECT_DESCS[eff.type] || ""}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Description */}
+          <p className="text-[10px] text-candle/35 italic leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+            {card.description}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  );
 }
 
-/* ─── Card Preview Popup ──────────────────────────────────── */
+/* ─── Card Preview Popup (full-screen, for click/mobile) ──── */
 const EFFECT_NAMES: Record<string, string> = {
   damage: "Hurt", self_damage: "Backlash", heal_gain: "Mend", heal_steal: "Siphon Life",
   shield_gain: "Ward", shield_steal: "Crack Ward", energy_gain: "Recharge", energy_steal: "Drain",

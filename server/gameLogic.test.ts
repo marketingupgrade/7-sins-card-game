@@ -10,24 +10,24 @@ import { ALL_CARDS, WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, PRIDE_CAR
 import { getCompoundTickValue, MAX_ROUNDS, STARTING_HP, HAND_SIZE, CARDS_PER_DECK, CompoundPattern } from "../shared/gameTypes";
 
 describe("Card Data Integrity (v4)", () => {
-  it("has exactly 54 wrath cards", () => {
-    expect(WRATH_CARDS).toHaveLength(54);
+  it("has correct wrath card count (v5.11)", () => {
+    expect(WRATH_CARDS).toHaveLength(60);
   });
 
-  it("has exactly 54 sloth cards", () => {
-    expect(SLOTH_CARDS).toHaveLength(54);
+  it("has correct sloth card count (v5.11)", () => {
+    expect(SLOTH_CARDS).toHaveLength(59);
   });
 
-  it("has 378 total cards (7 sins x 54)", () => {
-    expect(ALL_CARDS).toHaveLength(378);
+  it("has 424 total cards (v5.11 with zero-cost expansion)", () => {
+    expect(ALL_CARDS).toHaveLength(424);
   });
 
-  it("has exactly 54 greed cards", () => {
-    expect(GREED_CARDS).toHaveLength(54);
+  it("has correct greed card count (v5.11)", () => {
+    expect(GREED_CARDS).toHaveLength(61);
   });
 
-  it("has exactly 54 envy cards", () => {
-    expect(ENVY_CARDS).toHaveLength(54);
+  it("has correct envy card count (v5.11)", () => {
+    expect(ENVY_CARDS).toHaveLength(60);
   });
 
   it("all greed cards have sin=greed", () => {
@@ -110,8 +110,8 @@ describe("Card Data Integrity (v4)", () => {
 });
 
 describe("Card Registry", () => {
-  it("CARD_MAP contains all cards", () => {
-    expect(Object.keys(CARD_MAP)).toHaveLength(378);
+  it("CARD_MAP contains all 424 cards", () => {
+    expect(Object.keys(CARD_MAP)).toHaveLength(424);
   });
 
   it("getCardById returns correct card", () => {
@@ -125,11 +125,11 @@ describe("Card Registry", () => {
     expect(getCardById("nonexistent")).toBeUndefined();
   });
 
-  it("getDeckForSin returns 54 card IDs for each sin", () => {
+  it("getDeckForSin returns correct card IDs for each sin (v5.11)", () => {
     const sins = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"] as const;
     for (const sin of sins) {
       const deck = getDeckForSin(sin);
-      expect(deck).toHaveLength(54);
+      expect(deck.length).toBeGreaterThanOrEqual(59);
       deck.forEach((id) => {
         expect(id).toMatch(new RegExp(`^${sin}_`));
       });

@@ -1,0 +1,66 @@
+PLAYTEST FEEDBACK IMPLEMENTATION NOTES
+======================================
+
+1. TURN TIMER (10s after first lock)
+   - Server: lockInCards() in server/gameEngine.ts line 238
+   - When first player locks in (allConfirmed=false), need to start a 10s timer
+   - After 10s, auto-lock remaining players with empty selections (pass)
+   - Client: GameBoard.tsx needs countdown UI in the top bar
+   - Timer state: track in DB (first_lock_at timestamp on games table) or via setTimeout on server
+   - Best approach: Store first_lock_at in games table, client polls and shows countdown
+   - On server: check if 10s elapsed when any player locks in, auto-resolve if so
+
+2. GAME EXPLAINER (skippable tutorial)
+   - Already have TutorialContext.tsx and useTutorial hook
+   - Need a step-by-step overlay for first-time players
+   - Steps: card selection, targeting, energy, compounding, afflictions, passives
+   - Store skip preference in localStorage
+   - Show on first game entry
+
+3. ENERGY DEPLETION REBALANCE
+   - Pride has 8 energy_steal cards (not the most - Greed has 19!)
+   - But Pride's HUBRIS passive (×1.324 multiplier) amplifies everything
+   - Energy_steal values are all baseValue: 1-2, but with compound patterns they stack
+   - Problem: multiple energy_steal effects stacking = permanent energy lock
+   - Fix options:
+     a) Cap minimum energy at 1 (can always play a 1-cost card)
+     b) Reduce energy_steal duration from 2-3 to 1-2
+     c) Add energy_steal resistance that builds over time
+     d) Reduce number of energy_steal effects per faction
+   - Best: Implement minimum energy floor of 1 + reduce some durations
+
+4. COMEBACK MECHANISMS
+   - CATCHUP_HP_THRESHOLD = 133 (40% of 333 HP) defined but NOT USED in game engine!
+   - Need to actually implement catch-up bonuses:
+     a) Below threshold: +1 bonus energy per turn
+     b) Below threshold: +1 bonus card draw
+     c) Below threshold: 15% damage reduction
+   - These need to be in advanceRound() and resolveActiveEffects()
+
+5. CARD + TARGET SELECTION UX
+   - GameBoard.tsx line 1340-1425: action buttons area
+   - Currently shows "X cards selected · Y energy left" and LOCK IN / PASS buttons
+   - Need to add step indicators and no-target warning
+   - When a card needs a target but none selected, show warning before lock-in
+   - Highlight valid targets (opponent panels) when card is selected
+
+6. AFFLICTIONS TABLE
+   - PlayerAfflictionTable.tsx: only shows 7 effect types in EFFECT_COLUMNS
+   - Missing: shield_steal, shield_block, heal_block, energy_block, affliction_amplify, affliction_transfer, discard_burn, draw_boost, draw_reduction
+   - Also only projects 3 rounds ahead (maxProjection = currentRound + 3)
+   - Fix: Add all effect types to EFFECT_COLUMNS, increase projection range
+
+7. CARD REVEAL
+   - EpicCardReveal.tsx exists but only triggers for high-cost cards
+   - ResolutionReveal.tsx handles the resolution animation
+   - Issue: ResolutionReveal may not be triggering properly
+   - Need to check if cachedLockedPlays is being populated correctly
+
+8. BATTLE LOG HOVER
+   - BattleLog.tsx line 335-340: hover/click to preview card
+   - Uses onMouseEnter/onMouseLeave with setPreviewCard
+   - CardPreviewPopup is a fixed overlay (line 504: className="fixed inset-0 z-[100]")
+   - Problem: The popup covers the entire screen with bg-black/70 backdrop
+   - When mouse leaves the card name, onMouseLeave fires and closes the popup
+   - But the popup itself is not the hovered element, so it closes immediately
+   - Fix: Need to keep popup open while mouse is over the popup itself, or use a different approach

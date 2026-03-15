@@ -1,0 +1,25 @@
+CURRENT 0-COST CARDS PER FACTION:
+wrath: 6 (need 6 more) — damage focused, 5-9 base, 2-4 duration
+sloth: 7 (need 5 more) — shield/heal/draw focused, 4-5 base
+greed: 5 (need 7 more) — damage + energy_regen, 4-7 base
+envy: 6 (need 6 more) — damage + affliction_amplify + draw_reduction
+pride: 2 (need 10 more) — damage + shield, 3-9 base
+lust: 6 (need 6 more) — damage + heal, 2-5 base
+gluttony: 6 (need 6 more) — discard_burn + damage + heal + shield, 1-10 base
+
+POWER LEVEL BASELINE FOR 0-COST:
+- Damage: 2-9 base, 2-4 duration (mostly 3)
+- Shield: 5-10 base, 2-3 duration
+- Heal: 4-10 base, 2-3 duration
+- Utility: draw_boost 1x2, draw_reduction 1x2, energy_regen 1x2-3
+- Discard_burn: 1-2 base, 2-3 duration
+- Most are "common" tier, a few "rare"
+- Patterns: mostly "standard", some "slowburn"
+
+DESIGN PRINCIPLES FOR NEW 0-COST CARDS:
+- Keep power level consistent with existing 0-cost cards
+- Each faction should have a mix of: offense, defense, utility
+- Use faction-appropriate effect types
+- Names should fit the sin's thematic identity
+- Descriptions should be thematic
+- All common tier, standard or slowburn patterns

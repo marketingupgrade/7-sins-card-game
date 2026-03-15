@@ -458,7 +458,7 @@ export default function BalanceAnalysis() {
             headers={["Faction", "Passive", "Mechanic", "v4", "v5", "Change"]}
             rows={[
               [<FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "VENGEANCE", "Reflect % of incoming damage", "50.0%", "63.4%", <span className="text-green-400">+26.8%</span>],
-              [<FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "ENDURANCE", "Shield = energy x hand x mult", "x0.415", "x0.450", <span className="text-green-400">+8.4%</span>],
+              [<FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "ENDURANCE", "Shield + AOE dmg (energy×2)", "x0.415", "x0.500", <span className="text-green-400">+20.5%</span>],
               [<FactionBadge name="Greed" color={FACTION_COLORS.greed} />, "TAX", "Shield from tick-2 damage", "8.3%", "6.3%", <span className="text-red-400">-24.1%</span>],
               [<FactionBadge name="Envy" color={FACTION_COLORS.envy} />, "JEALOUSY", "Amplify worst affliction", "25.0%", "10.6%", <span className="text-red-400">-57.6%</span>],
               [<FactionBadge name="Pride" color={FACTION_COLORS.pride} />, "HUBRIS", "Multiply effects on highest cost", "x1.570", "x1.324", <span className="text-red-400">-15.7%</span>],
@@ -487,7 +487,7 @@ export default function BalanceAnalysis() {
           <DataTable
             headers={["Passive", "Trigger Frequency", "Per-Trigger Impact", "Effective Power"]}
             rows={[
-              ["Sloth ENDURANCE", "Every round (100%)", "Low (~8 shield)", "Consistent"],
+              ["Sloth ENDURANCE", "Every round (100%)", "Shield + AOE (energy×2)", "Consistent + Offensive"],
               ["Lust TEMPTATION", "Every tick (80%+)", "Very low (~2 HP)", "Accumulative"],
               ["Greed TAX", "Every tick-2 (60%+)", "Very low (~1.5 shield)", "Accumulative"],
               ["Envy JEALOUSY", "On damage dealt (70%+)", "Low (10.6% amplify)", "Scaling"],
@@ -516,10 +516,10 @@ export default function BalanceAnalysis() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
             {[
               { name: "Wrath", title: "The Glass Cannon", desc: "Pure aggression: 48 damage effects with 25 self-damage as the cost of power. Highest average base value (9.8) but pays with self-inflicted wounds.", color: FACTION_COLORS.wrath },
-              { name: "Sloth", title: "The Fortress", desc: "Most defensive faction with 29 shield_gain and 19 heal_gain effects. Slowburn pattern (27/50 cards) means power ramps slowly but overwhelms late.", color: FACTION_COLORS.sloth },
+              { name: "Sloth", title: "The Fortress", desc: "Most defensive faction with shield_gain and heal_gain effects. Slowburn pattern means power ramps slowly but overwhelms late. v5.11: ENDURANCE now also deals energy×2 AOE damage each turn.", color: FACTION_COLORS.sloth },
               { name: "Greed", title: "The Thief", desc: "Resource theft specialist: 18 energy_steal, 10 heal_steal, 10 shield_steal. Takes from opponents rather than generating its own resources.", color: FACTION_COLORS.greed },
               { name: "Envy", title: "The Amplifier", desc: "33 affliction_amplify effects make it the debuff specialist. Apply a few key afflictions, then amplify them exponentially.", color: FACTION_COLORS.envy },
-              { name: "Pride", title: "The Heavyweight", desc: "Highest average cost (3.42) and no 0-cost cards. Expensive but powerful, relying on the HUBRIS multiplier to compensate.", color: FACTION_COLORS.pride },
+              { name: "Pride", title: "The Heavyweight", desc: "Highest average cost with powerful high-cost cards. Expensive but powerful, relying on the HUBRIS multiplier to compensate. v5.11: Zero-cost cards added for energy safety net.", color: FACTION_COLORS.pride },
               { name: "Lust", title: "The Sustainer", desc: "Combines damage with healing: 20 heal_steal and 15 heal_gain effects. War of attrition where Lust slowly drains opponents.", color: FACTION_COLORS.lust },
               { name: "Gluttony", title: "The Destroyer", desc: "41 discard_burn effects for deck destruction. Burns cards from opponents' discard piles while gaining 1.585 energy per card.", color: FACTION_COLORS.gluttony },
             ].map((f) => (
@@ -718,7 +718,7 @@ export default function BalanceAnalysis() {
               <strong>3. Envy was the most overpowered faction.</strong> The JEALOUSY passive's 25% affliction amplification created exponential scaling in a compound-ticking game. Reducing it to 10.6% — a 57.6% nerf — was necessary to bring Envy in line.
             </p>
             <p>
-              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides only ~8 shield. The power budget must account for trigger frequency.
+              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy×2 to all enemies). The power budget must account for trigger frequency.
             </p>
             <p>
               <strong>5. 378 cards maintain balance.</strong> Expanding from 252 to 378 cards (including 28 skip-queue priority cards) did not destabilize the balance, suggesting the system is robust to card pool expansion.

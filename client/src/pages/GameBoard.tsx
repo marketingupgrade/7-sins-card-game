@@ -166,6 +166,15 @@ export default function GameBoard() {
   const [hoverPreviewPos, setHoverPreviewPos] = useState({ x: 0, y: 0 });
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Turn timer: 10s countdown after first opponent locks in
+  const TURN_TIMER_SECONDS = 10;
+  const [turnTimerActive, setTurnTimerActive] = useState(false);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState(TURN_TIMER_SECONDS);
+  const turnTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoLockTriggeredRef = useRef(false);
+  const handleLockInRef = useRef<() => void>(() => {});
+  const handlePassLockInRef = useRef<() => void>(() => {});
+
   // Phase 2: Impact VFX state
   const [impactVfxTrigger, setImpactVfxTrigger] = useState(0);
   const [impactVfxSin, setImpactVfxSin] = useState<SinType>('wrath');
@@ -223,7 +232,7 @@ export default function GameBoard() {
   useEffect(() => {
     if (!gameState) return;
     const lp = gameState.lockedPlays;
-    // When locked plays appear (during brief resolution phase), cache them
+    // When locked plays appear (during resolution or round_end phase), cache them
     if (lp && lp.length > 0 && !isShowingResolution) {
       setCachedLockedPlays([...lp]);
       setCachedResolutionPlayers([...gameState.players]);
@@ -357,8 +366,60 @@ export default function GameBoard() {
       setHasLockedIn(false);
       setSelectedCards([]);
       setHasConsumedThisRound(false); // Reset consume allowance each round
+      // Reset turn timer
+      setTurnTimerActive(false);
+      setTurnTimerSeconds(TURN_TIMER_SECONDS);
+      autoLockTriggeredRef.current = false;
+      if (turnTimerIntervalRef.current) {
+        clearInterval(turnTimerIntervalRef.current);
+        turnTimerIntervalRef.current = null;
+      }
     }
   }, [turnPhase, gameState?.currentRound]);
+
+  // Turn timer: Start countdown when any opponent locks in and we haven't
+  useEffect(() => {
+    if (!gameState || !myPlayer || hasLockedIn || turnPhase !== "selection") return;
+    const opponents = gameState.players.filter(p => p.id !== playerId && p.isAlive);
+    const anyOpponentLocked = opponents.some(p => p.hasLockedIn);
+    if (anyOpponentLocked && !turnTimerActive) {
+      setTurnTimerActive(true);
+      setTurnTimerSeconds(TURN_TIMER_SECONDS);
+      soundEngine.play("card_play"); // Subtle alert sound
+    }
+  }, [gameState?.players, hasLockedIn, turnPhase, turnTimerActive, playerId, myPlayer]);
+
+  // Turn timer: Tick down every second (uses refs to avoid declaration-order issues)
+  useEffect(() => {
+    if (!turnTimerActive || hasLockedIn) {
+      if (turnTimerIntervalRef.current) {
+        clearInterval(turnTimerIntervalRef.current);
+        turnTimerIntervalRef.current = null;
+      }
+      return;
+    }
+    turnTimerIntervalRef.current = setInterval(() => {
+      setTurnTimerSeconds(prev => {
+        if (prev <= 1) {
+          // Timer expired — auto lock-in
+          if (!autoLockTriggeredRef.current) {
+            autoLockTriggeredRef.current = true;
+            handleLockInRef.current();
+          }
+          return 0;
+        }
+        // Play tick sound at 3 seconds
+        if (prev === 4) soundEngine.play("turn_pass");
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (turnTimerIntervalRef.current) {
+        clearInterval(turnTimerIntervalRef.current);
+        turnTimerIntervalRef.current = null;
+      }
+    };
+  }, [turnTimerActive, hasLockedIn]);
 
   const myCards = useMemo(
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
@@ -630,6 +691,11 @@ export default function GameBoard() {
       setIsLockingIn(false);
     }
   }, [gameId, playerId, addMessage, addToActionFeed, myPlayer, refetch]);
+
+  // Keep refs in sync for turn timer auto-lock
+  useEffect(() => {
+    handleLockInRef.current = selectedCards.length > 0 ? handleLockIn : handlePassLockIn;
+  }, [selectedCards.length, handleLockIn, handlePassLockIn]);
 
   const handlePlayCard = useCallback(async (overrideTarget?: string) => {
     if (!gameId || !selectedCard) return;
@@ -993,7 +1059,7 @@ export default function GameBoard() {
         </div>
 
         <div className="flex items-center justify-center flex-1">
-          {(turnPhase === "resolution" || isShowingResolution) ? (
+          {(turnPhase === "resolution" || turnPhase === "round_end" || isShowingResolution) ? (
             <motion.div
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 0.8, repeat: Infinity }}
@@ -1347,11 +1413,126 @@ export default function GameBoard() {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-1.5 py-2"
             >
-              {selectedCards.length > 0 && (
-                <div className="text-sm md:text-base text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                  {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} selected {"\u00B7"} {energyRemaining} energy left
-                </div>
+              {/* Turn timer countdown */}
+              {turnTimerActive && !hasLockedIn && turnTimerSeconds > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="flex items-center gap-2 px-4 py-1.5 rounded-lg mb-1"
+                  style={{
+                    background: turnTimerSeconds <= 3
+                      ? "oklch(0.45 0.25 30 / 0.3)"
+                      : turnTimerSeconds <= 5
+                        ? "oklch(0.55 0.20 60 / 0.2)"
+                        : "oklch(0.30 0.05 85 / 0.3)",
+                    border: `1px solid ${
+                      turnTimerSeconds <= 3
+                        ? "oklch(0.65 0.25 30 / 0.5)"
+                        : turnTimerSeconds <= 5
+                          ? "oklch(0.65 0.20 60 / 0.4)"
+                          : "oklch(0.60 0.10 85 / 0.3)"
+                    }`,
+                  }}
+                >
+                  <motion.span
+                    animate={turnTimerSeconds <= 3 ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 0.5, repeat: Infinity }}
+                    className="text-lg font-black tabular-nums"
+                    style={{
+                      fontFamily: "var(--font-heading)",
+                      color: turnTimerSeconds <= 3
+                        ? "oklch(0.80 0.25 30)"
+                        : turnTimerSeconds <= 5
+                          ? "oklch(0.80 0.20 60)"
+                          : "oklch(0.80 0.12 85)",
+                    }}
+                  >
+                    {turnTimerSeconds}s
+                  </motion.span>
+                  <span className="text-xs font-bold" style={{
+                    fontFamily: "var(--font-body)",
+                    color: turnTimerSeconds <= 3 ? "oklch(0.70 0.20 30)" : "oklch(0.65 0.08 85)",
+                  }}>
+                    {turnTimerSeconds <= 3 ? "Hurry! Auto-lock imminent" : "Opponent locked in — your turn!"}
+                  </span>
+                  {/* Progress bar */}
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-lg overflow-hidden">
+                    <motion.div
+                      className="h-full"
+                      style={{
+                        background: turnTimerSeconds <= 3
+                          ? "oklch(0.70 0.25 30)"
+                          : "oklch(0.70 0.15 85)",
+                      }}
+                      initial={{ width: "100%" }}
+                      animate={{ width: `${(turnTimerSeconds / TURN_TIMER_SECONDS) * 100}%` }}
+                      transition={{ duration: 1, ease: "linear" }}
+                    />
+                  </div>
+                </motion.div>
               )}
+              {/* Step indicator for card → target flow */}
+              {selectedCards.length === 0 && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="flex items-center gap-2 text-sm text-candle/50"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/20 text-candle text-xs font-black">1</span>
+                  <span>Select cards from your hand</span>
+                  <span className="text-candle/20 mx-1">→</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/10 text-candle/30 text-xs font-black">2</span>
+                  <span className="text-candle/30">Choose targets</span>
+                  <span className="text-candle/20 mx-1">→</span>
+                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/10 text-candle/30 text-xs font-black">3</span>
+                  <span className="text-candle/30">Lock in</span>
+                </motion.div>
+              )}
+              {selectedCards.length > 0 && (() => {
+                const anyNeedsTarget = selectedCards.some(s => {
+                  const c = CARD_MAP[s.cardId];
+                  if (!c) return false;
+                  const needs = c.effects.some(e => e.targetMode === "single" || e.targetMode === "duo");
+                  return needs && !s.targetPlayerId;
+                });
+                const allHaveTargets = !anyNeedsTarget;
+                return (
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="text-sm md:text-base text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                      {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} {"\u00B7"} {energyRemaining} energy left
+                    </div>
+                    {/* Step indicator — highlight current step */}
+                    <div className="flex items-center gap-2 text-xs" style={{ fontFamily: "var(--font-body)" }}>
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-candle/20 text-candle text-[10px] font-black">✓</span>
+                      <span className="text-candle/40">Cards</span>
+                      <span className="text-candle/20">→</span>
+                      <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-black ${anyNeedsTarget ? 'bg-amber-500/30 text-amber-400 animate-pulse' : 'bg-candle/20 text-candle'}`}>{allHaveTargets ? '✓' : '2'}</span>
+                      <span className={anyNeedsTarget ? 'text-amber-400 font-bold' : 'text-candle/40'}>Targets</span>
+                      <span className="text-candle/20">→</span>
+                      <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-black ${allHaveTargets ? 'bg-candle/20 text-candle' : 'bg-candle/10 text-candle/30'}`}>3</span>
+                      <span className={allHaveTargets ? 'text-candle/60' : 'text-candle/30'}>Lock in</span>
+                    </div>
+                    {/* Warning: cards without targets will be skipped */}
+                    {anyNeedsTarget && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-bold"
+                        style={{
+                          background: "oklch(0.55 0.20 50 / 0.15)",
+                          color: "oklch(0.80 0.18 50)",
+                          border: "1px solid oklch(0.55 0.20 50 / 0.3)",
+                          fontFamily: "var(--font-body)",
+                        }}
+                      >
+                        <span>⚠</span>
+                        <span>Click an opponent to assign targets — untargeted cards won't play!</span>
+                      </motion.div>
+                    )}
+                  </div>
+                );
+              })()}
               <div className="flex justify-center gap-2 md:gap-3">
                 <motion.button
                   data-tutorial="lock-in-btn"
@@ -1432,7 +1613,7 @@ export default function GameBoard() {
               className="text-center text-base text-muted-foreground/60 py-2"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              {(turnPhase === "resolution" || isShowingResolution)
+              {(turnPhase === "resolution" || turnPhase === "round_end" || isShowingResolution)
                 ? "The sins are clashing..."
                 : hasLockedIn
                   ? "Locked in. Waiting on the others..."

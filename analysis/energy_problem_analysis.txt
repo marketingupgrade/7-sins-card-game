@@ -1,0 +1,106 @@
+ENERGY SYSTEM PROBLEM ANALYSIS
+==============================
+
+CURRENT SYSTEM:
+- Start: 2 energy
+- Each turn: refreshPlayerEnergy() resets to MAX_ENERGY (7) — NOT additive
+- Max: 7 energy
+- Card costs: 0-6 range (38 zero-cost, 88 one-cost, 75 two-cost...)
+- Energy steal: baseValue 1-2, compound over 2-3 rounds
+- Energy block: prevents energy gain for duration
+
+THE PROBLEM:
+Energy refreshes to 7 at start of each turn. BUT energy_steal effects fire
+DURING the resolution phase (via resolveActiveEffects), which happens AFTER
+the previous turn's cards resolve but BEFORE the new turn's energy refresh.
+
+Wait — actually looking at advanceRound():
+1. resolveActiveEffects(gameId, newRound)  ← energy_steal ticks fire here
+2. refreshPlayerEnergy(freshPlayer)         ← resets to 7 here
+3. drawCard(freshPlayer)
+
+So energy_steal ticks fire, drain energy, then refreshPlayerEnergy resets to 7.
+The steal effects are essentially wasted on the between-turn drain.
+
+BUT WAIT — energy_steal also fires as INSTANT effects during card resolution
+(resolveLockedPlays). So the flow is:
+1. Player A locks in cards
+2. Player B locks in cards  
+3. All confirmed → resolveLockedPlays fires
+4. Each card's effects apply instantly (including energy_steal)
+5. After all cards resolve → advanceRound()
+6. resolveActiveEffects (compound ticks fire, including energy_steal ticks)
+7. refreshPlayerEnergy (resets to 7)
+
+So the REAL problem is:
+- During step 4, energy_steal drains energy MID-RESOLUTION
+- If Player A plays 3 cards, and the first card's energy_steal drains Player B,
+  Player B's remaining cards in the queue still play (they were already locked in)
+- BUT the energy drain affects the NEXT turn's available energy only if it
+  somehow persists past the refresh
+
+ACTUALLY the real issue is simpler:
+- refreshPlayerEnergy sets energy to MAX_ENERGY (7) every turn
+- So energy_steal between turns is meaningless — it gets reset
+- The ONLY time energy_steal matters is WITHIN a turn:
+  - If you steal energy mid-resolution, the target has less for... nothing,
+    because locked cards already committed
+  - The steal only matters for the ATTACKER gaining energy (capped at 7)
+
+WAIT — let me re-read. The energy_steal fires as an instant effect during
+resolveLockedPlays (step 4). Cards are already locked. So draining someone's
+energy mid-resolution doesn't prevent their cards from playing.
+
+Then in resolveActiveEffects (step 6), compound energy_steal ticks fire.
+Then refreshPlayerEnergy (step 7) resets to 7.
+
+So... energy_steal compound ticks are COMPLETELY WASTED because they fire
+right before the energy reset. The only value is the attacker gaining energy.
+
+BUT — the user says "energy depletion was OP and killed the game for 1 player."
+This means something IS draining energy effectively. Let me check if
+refreshPlayerEnergy is actually called for all players...
+
+Looking at advanceRound lines 1089-1116:
+  for (const p of stillAlive) {
+    const freshPlayer = ... 
+    if (freshPlayer && freshPlayer.is_alive) {
+      // Sloth ENDURANCE passive
+      await refreshPlayerEnergy(freshPlayer);
+      await drawCard(freshPlayer);
+    }
+  }
+
+Yes, all alive players get refreshed. So energy should reset to 7 every turn.
+
+POSSIBLE EXPLANATIONS FOR THE USER'S EXPERIENCE:
+1. Energy_steal instant effects drain energy during resolution, and if a player
+   had multiple cards locked, the later cards still play but the VISUAL shows
+   0 energy, making it FEEL like they're locked out
+2. Energy_block effects prevent energy_gain, but refreshPlayerEnergy bypasses
+   this by directly setting current_energy = MAX_ENERGY (doesn't go through
+   applyInstantEffect). So energy_block is also broken/useless.
+3. The client-side game engine may have different logic that doesn't properly
+   reset energy
+4. The UI may show stale energy values
+
+SOLUTION APPROACH:
+Since energy resets to 7 every turn, the "energy depletion" problem is likely
+a PERCEPTION issue or a client-side bug. But we should still make the system
+more robust:
+
+1. MINIMUM ENERGY FLOOR: Ensure energy never drops below 1 (can always play
+   a 0-cost or 1-cost card)
+2. FIX ENERGY_BLOCK: Make it actually reduce max_energy temporarily instead
+   of being bypassed by refreshPlayerEnergy
+3. ENERGY_STEAL REWORK: Instead of draining current energy (useless), make it
+   reduce the target's energy regen next turn (e.g., target gets 5 instead of 7)
+4. Or simpler: energy_steal reduces max_energy for 1 turn
+
+RECOMMENDED FIX:
+- Add MIN_ENERGY = 1 constant
+- In refreshPlayerEnergy: set to max(MAX_ENERGY - energyDebuff, MIN_ENERGY)
+- energy_steal: reduce target's next-turn regen by stolen amount (stored as
+  energy_debt on game_players)
+- energy_block: reduce max_energy by 2 for duration
+- This makes energy management strategic without ever locking someone out

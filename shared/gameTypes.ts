@@ -182,7 +182,7 @@ export interface CardDefinition {
  *
  * Sin-specific passives (v5 balanced — Monte Carlo 500K games, 1.23% max deviation):
  * - Wrath:    VENGEANCE — When taking damage, reflect 63.4% back to attacker
- * - Sloth:    ENDURANCE — Start of turn: gain shield = energy × handSize × 0.45 (cap 44)
+ * - Sloth:    ENDURANCE — Start of turn: gain shield = energy × handSize × 0.45 (cap 44) + deal energy × 2 AOE damage to all enemies
  * - Greed:    TAX — On tick-2 of compound damage dealt, gain shield = 6.3% of damage
  * - Envy:     JEALOUSY — When dealing damage, amplify target's worst affliction by 10.6%
  * - Pride:    HUBRIS — If you played the highest-cost card this round (ties count), all your effects get ×1.324
@@ -203,6 +203,7 @@ export const CONSUME_ENERGY_REFUND = 1; // +1 energy when banishing a card (max 
 export const WRATH_VENGEANCE_PCT = 0.634;
 export const SLOTH_ENDURANCE_MULT = 0.45;
 export const SLOTH_ENDURANCE_CAP = 44; // Scaled from 25 proportional to 333/200 HP increase
+export const SLOTH_ENDURANCE_AOE_MULT = 2; // Additionally deal energy × 2 AOE damage to all enemies each turn
 export const GREED_TAX_PCT = 0.063;
 export const GREED_TAX_TICK = 2; // triggers on tick index 2
 export const ENVY_JEALOUSY_PCT = 0.106;
@@ -213,12 +214,71 @@ export const GLUTTONY_DEVOURER_ENERGY = 1.585;
 // Passive info for UI tooltips
 export const PASSIVE_INFO: Record<SinType, { name: string; description: string; icon: string }> = {
   wrath: { name: "VENGEANCE", description: "Strike me and feel the wound twice. Reflects damage back to the attacker.", icon: "⚔" },
-  sloth: { name: "ENDURANCE", description: "Patience is armor. Generates shield each turn from stored energy and cards in hand.", icon: "🛡" },
+  sloth: { name: "ENDURANCE", description: "Patience is armor. Generates shield and deals AOE damage each turn based on stored energy.", icon: "🛡" },
   greed: { name: "TAX", description: "Every wound you deal fills my coffers. Damage ticks generate protective shields.", icon: "💰" },
   envy: { name: "JEALOUSY", description: "Your suffering looks good on you. Dealing damage deepens the target's worst affliction.", icon: "👁" },
   pride: { name: "HUBRIS", description: "Assert dominance. Playing the most expensive card amplifies all your effects.", icon: "👑" },
   lust: { name: "TEMPTATION", description: "Your pain is my pleasure. Damage over time heals you as it hurts them.", icon: "❤" },
   gluttony: { name: "DEVOURER", description: "Consume their arsenal. Destroying enemy cards feeds your energy.", icon: "🔥" },
+};
+
+// Faction SWOT analysis for lobby info display
+export const FACTION_SWOT: Record<SinType, {
+  strengths: string[];
+  weaknesses: string[];
+  opportunities: string[];
+  threats: string[];
+  playstyle: string;
+}> = {
+  wrath: {
+    strengths: ["Highest raw damage output", "Vengeance passive punishes attackers", "Many low-cost aggressive cards"],
+    weaknesses: ["Low survivability — burns bright but burns out", "Self-damage cards are risky at low HP", "Weak shields and healing"],
+    opportunities: ["Punish greedy players who stack effects", "Snowball early leads with relentless pressure"],
+    threats: ["Sloth’s shields absorb your burst", "Lust heals through your damage ticks"],
+    playstyle: "Aggressive berserker. Hit hard, hit fast, make them regret attacking you.",
+  },
+  sloth: {
+    strengths: ["Strongest passive shields in the game", "AOE damage scales with energy reserves", "Excellent survivability and endurance"],
+    weaknesses: ["Low direct damage output", "Slow to build momentum", "Energy drain cripples your passive"],
+    opportunities: ["Outlast aggressive factions in long games", "Final Reckoning favors high-HP survivors"],
+    threats: ["Pride’s burst bypasses gradual defenses", "Envy amplifies your afflictions"],
+    playstyle: "Patient tank. Build shields, radiate AOE damage, and outlast everyone.",
+  },
+  greed: {
+    strengths: ["Energy generation and resource advantage", "Tax passive creates shields from damage dealt", "Strong economy enables expensive combos"],
+    weaknesses: ["Moderate direct damage", "Relies on compound ticks for Tax value", "Vulnerable to energy steal"],
+    opportunities: ["Outvalue opponents over long games", "Fund expensive cards others can’t afford"],
+    threats: ["Wrath’s burst kills before Tax generates value", "Gluttony burns your hand"],
+    playstyle: "Resource engine. Tax everything, hoard energy, and buy your way to victory.",
+  },
+  envy: {
+    strengths: ["Affliction amplification compounds damage", "Steal and copy opponent advantages", "Strong disruption and debuffs"],
+    weaknesses: ["Needs existing afflictions to amplify", "Lower base damage than Wrath", "Weak self-sustain"],
+    opportunities: ["Punish factions that stack effects", "Compound amplification snowballs in long games"],
+    threats: ["Sloth’s shields resist affliction damage", "Gluttony’s discard burn removes your tools"],
+    playstyle: "Saboteur. Steal what they have, amplify what hurts them, and watch them crumble.",
+  },
+  pride: {
+    strengths: ["Hubris multiplier amplifies all effects", "Strong energy drain shuts down opponents", "High-cost cards with massive payoffs"],
+    weaknesses: ["Expensive cards need energy to function", "Hubris only triggers on highest-cost plays", "Vulnerable when energy-starved"],
+    opportunities: ["Dominate rounds with Hubris-boosted plays", "Energy drain locks opponents out of responses"],
+    threats: ["Greed’s energy generation resists your drain", "Wrath’s low-cost aggression ignores your economy"],
+    playstyle: "Dominator. Play the biggest card, drain their energy, and assert supremacy.",
+  },
+  lust: {
+    strengths: ["Temptation passive heals through damage ticks", "Sustain and drain simultaneously", "Strong duo-target cards spread pressure"],
+    weaknesses: ["Lowest per-hit damage", "Healing is tied to dealing damage", "Weak burst potential"],
+    opportunities: ["Outlast burst factions through sustain", "Spread damage across multiple targets"],
+    threats: ["Heal block shuts down your core mechanic", "Envy amplifies your own afflictions"],
+    playstyle: "Sustain predator. Drain life from every wound you inflict and never stop.",
+  },
+  gluttony: {
+    strengths: ["Discard burn destroys enemy hands", "Devourer passive converts burns to energy", "Strong AOE damage and self-healing"],
+    weaknesses: ["Discard burn is less effective vs large hands", "Passive value drops in short games", "Predictable strategy"],
+    opportunities: ["Starve opponents of options in late game", "Energy from burns funds expensive plays"],
+    threats: ["Wrath kills you before burns matter", "Sloth’s draw boost resists hand destruction"],
+    playstyle: "Consumer. Devour their cards, feast on the chaos, and grow stronger from the wreckage.",
+  },
 };
 
 // Legacy compat (old constants kept for any UI references)
@@ -355,8 +415,9 @@ export interface GameLogEntry {
 export const MAX_ROUNDS = 20;
 export const STARTING_HP = 333;
 export const HAND_SIZE = 5;
+export const MAX_HAND_SIZE = 10;
 export const CARDS_PER_DECK = 30;
-export const MAX_FACTION_CARDS = 54;
+export const MAX_FACTION_CARDS = 64; // Pride has the most cards
 export const ROUND_16_DOUBLING = 16; // All afflictions double at round 16
 export const CATCHUP_HP_THRESHOLD = 133; // 40% of 333 HP
 export const FINAL_RECKONING_ROUND = 20; // Round 20: all cards in hand played, highest HP wins

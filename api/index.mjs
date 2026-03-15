@@ -1673,6 +1673,66 @@ var WRATH_CARDS = [
     effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "Attack is the best defense \u2014 but a little armor doesn't hurt.",
     skipQueue: true
+  },
+  {
+    id: "wrath_55",
+    name: "Smolder",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "single" }],
+    description: "A slow burn that never stops."
+  },
+  {
+    id: "wrath_56",
+    name: "Spite Spark",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "Fury forges its own armor."
+  },
+  {
+    id: "wrath_57",
+    name: "Temper Flare",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }],
+    description: "Quick and vicious."
+  },
+  {
+    id: "wrath_58",
+    name: "Ash Breath",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    description: "Everyone chokes."
+  },
+  {
+    id: "wrath_59",
+    name: "Grudge",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 6, duration: 4, targetMode: "single" }],
+    description: "Wrath remembers."
+  },
+  {
+    id: "wrath_60",
+    name: "Scorch Mark",
+    sin: "wrath",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Pain fuels the fire."
   }
 ];
 var SLOTH_CARDS = [
@@ -2220,6 +2280,56 @@ var SLOTH_CARDS = [
     effects: [{ type: "heal_gain", baseValue: 10, duration: 2, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Do nothing, gain everything. The slothful way.",
     skipQueue: true
+  },
+  {
+    id: "sloth_55",
+    name: "Doze",
+    sin: "sloth",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    description: "Sleep heals all wounds."
+  },
+  {
+    id: "sloth_56",
+    name: "Lazy Block",
+    sin: "sloth",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    description: "Too tired to dodge, too stubborn to fall."
+  },
+  {
+    id: "sloth_57",
+    name: "Sluggish Curse",
+    sin: "sloth",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "slowburn",
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    description: "Your hands grow heavy."
+  },
+  {
+    id: "sloth_58",
+    name: "Nap Time",
+    sin: "sloth",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "A quick rest never hurt."
+  },
+  {
+    id: "sloth_59",
+    name: "Heavy Eyelids",
+    sin: "sloth",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "Even sloth can sting."
   }
 ];
 var GREED_CARDS = [
@@ -2767,6 +2877,76 @@ var GREED_CARDS = [
     effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "Collect interest before the debt is even owed.",
     skipQueue: true
+  },
+  {
+    id: "greed_55",
+    name: "Pocket Change",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Every coin counts."
+  },
+  {
+    id: "greed_56",
+    name: "Skim",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "A little off the top."
+  },
+  {
+    id: "greed_57",
+    name: "Hoard",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    description: "Pile it higher."
+  },
+  {
+    id: "greed_58",
+    name: "Bargain",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Buy low, sell high."
+  },
+  {
+    id: "greed_59",
+    name: "Tax Bite",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "The collector always comes."
+  },
+  {
+    id: "greed_60",
+    name: "Loose Change",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Shake the couch cushions."
+  },
+  {
+    id: "greed_61",
+    name: "Nickel and Dime",
+    sin: "greed",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "aoe" }],
+    description: "Death by a thousand fees."
   }
 ];
 var ENVY_CARDS = [
@@ -3314,6 +3494,66 @@ var ENVY_CARDS = [
     effects: [{ type: "shield_steal", baseValue: 9, duration: 2, targetMode: "single" }, { type: "damage", baseValue: 4, duration: 2, targetMode: "single" }],
     description: "Your protection becomes my weapon.",
     skipQueue: true
+  },
+  {
+    id: "envy_55",
+    name: "Covet",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 1, targetMode: "single" }],
+    description: "I want what you have."
+  },
+  {
+    id: "envy_56",
+    name: "Bitter Glance",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "If looks could kill."
+  },
+  {
+    id: "envy_57",
+    name: "Resentment",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "slowburn",
+    effects: [{ type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
+    description: "It festers."
+  },
+  {
+    id: "envy_58",
+    name: "Petty Theft",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    description: "If I can't have it, neither can you."
+  },
+  {
+    id: "envy_59",
+    name: "Scowl",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Your joy offends me."
+  },
+  {
+    id: "envy_60",
+    name: "Jealous Whisper",
+    sin: "envy",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "duo" }],
+    description: "Spread the misery."
   }
 ];
 var PRIDE_CARDS = [
@@ -3861,6 +4101,106 @@ var PRIDE_CARDS = [
     effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "Pride demands the opening move \u2014 and the energy to back it up.",
     skipQueue: true
+  },
+  {
+    id: "pride_55",
+    name: "Sneer",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }],
+    description: "Beneath contempt."
+  },
+  {
+    id: "pride_56",
+    name: "Posture",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
+    description: "Stand tall. Look down."
+  },
+  {
+    id: "pride_57",
+    name: "Condescend",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "You're not worth my time."
+  },
+  {
+    id: "pride_58",
+    name: "Self-Admire",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Perfection heals itself."
+  },
+  {
+    id: "pride_59",
+    name: "Belittle",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "affliction_amplify", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Small words, deep cuts."
+  },
+  {
+    id: "pride_60",
+    name: "Preen",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Admire the plumage."
+  },
+  {
+    id: "pride_61",
+    name: "Scoff",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }],
+    description: "Is that all?"
+  },
+  {
+    id: "pride_62",
+    name: "Vainglory",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 4, duration: 4, targetMode: "single" }],
+    description: "The mirror never lies."
+  },
+  {
+    id: "pride_63",
+    name: "Haughty Gaze",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "aoe" }],
+    description: "All are beneath me."
+  },
+  {
+    id: "pride_64",
+    name: "Ego Boost",
+    sin: "pride",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }, { type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Confidence is power."
   }
 ];
 var LUST_CARDS = [
@@ -4408,6 +4748,66 @@ var LUST_CARDS = [
     effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "Desire sharpened to a point \u2014 it strikes before reason.",
     skipQueue: true
+  },
+  {
+    id: "lust_55",
+    name: "Wink",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    description: "A glance that lingers."
+  },
+  {
+    id: "lust_56",
+    name: "Caress",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Gentle but relentless."
+  },
+  {
+    id: "lust_57",
+    name: "Tease",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Come closer. No, not yet."
+  },
+  {
+    id: "lust_58",
+    name: "Blush",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Flushed with power."
+  },
+  {
+    id: "lust_59",
+    name: "Whisper",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 2, duration: 2, targetMode: "duo" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Sweet nothings that sting."
+  },
+  {
+    id: "lust_60",
+    name: "Longing",
+    sin: "lust",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 3, duration: 4, targetMode: "single" }],
+    description: "Desire is patient."
   }
 ];
 var GLUTTONY_CARDS = [
@@ -4955,6 +5355,66 @@ var GLUTTONY_CARDS = [
     effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "The hunger strikes before the feast begins.",
     skipQueue: true
+  },
+  {
+    id: "gluttony_55",
+    name: "Snack",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }, { type: "discard_burn", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "A bite between meals."
+  },
+  {
+    id: "gluttony_56",
+    name: "Burp",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "aoe" }],
+    description: "Excuse me."
+  },
+  {
+    id: "gluttony_57",
+    name: "Chew",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }],
+    description: "Slowly devoured."
+  },
+  {
+    id: "gluttony_58",
+    name: "Gorge",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 8, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    description: "Stuff yourself. Feel invincible."
+  },
+  {
+    id: "gluttony_59",
+    name: "Crumb Trail",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "draw_boost", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Follow the crumbs."
+  },
+  {
+    id: "gluttony_60",
+    name: "Taste",
+    sin: "gluttony",
+    cost: 0,
+    tier: "common",
+    compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "Just a sample."
   }
 ];
 var ALL_DECKS = {
@@ -5011,6 +5471,7 @@ var CONSUME_ENERGY_REFUND = 1;
 var WRATH_VENGEANCE_PCT = 0.634;
 var SLOTH_ENDURANCE_MULT = 0.45;
 var SLOTH_ENDURANCE_CAP = 44;
+var SLOTH_ENDURANCE_AOE_MULT = 2;
 var GREED_TAX_PCT = 0.063;
 var GREED_TAX_TICK = 2;
 var ENVY_JEALOUSY_PCT = 0.106;
@@ -5020,6 +5481,7 @@ var STARTING_ENERGY = 2;
 var MAX_ROUNDS = 20;
 var STARTING_HP = 333;
 var HAND_SIZE = 5;
+var MAX_HAND_SIZE = 10;
 var CARDS_PER_DECK = 30;
 var ROUND_16_DOUBLING = 16;
 var FINAL_RECKONING_ROUND = 20;
@@ -5204,8 +5666,40 @@ async function lockInCards(gameId, playerId, selections) {
     return pLocked.length > 0;
   });
   if (allConfirmed) {
+    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
+    const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
+    const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+    const resolutionPlayers = (preResPlayers || []).map((gp) => {
+      const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
+      return {
+        id: gp.player_id,
+        gamePlayerId: gp.id,
+        username: gp.players?.username || "Unknown",
+        seatIndex: gp.seat_index,
+        chosenSin: gp.chosen_sin,
+        currentHp: gp.current_hp,
+        maxHp: gp.max_hp,
+        isAlive: gp.is_alive,
+        hand: gp.hand || [],
+        deckSize: (gp.deck || []).length,
+        discardSize: (gp.discard_pile || []).length,
+        currentEnergy: gp.current_energy ?? 0,
+        maxEnergy: gp.max_energy ?? 0,
+        bonusEnergy: gp.bonus_energy ?? 0,
+        lockedCards: playerLocked,
+        hasLockedIn: playerLocked.length > 0,
+        consumedThisRound: gp.consumed_this_round ?? false
+      };
+    });
     await sb.from("games").update({ turn_phase: "resolution" }).eq("id", gameId);
     await resolveLockedPlays(gameId);
+    const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
+    return {
+      success: true,
+      narratorQuip: quip2,
+      resolvedPlays: preResLocked,
+      resolutionPlayers
+    };
   }
   const quip = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
   return { success: true, narratorQuip: quip };
@@ -5656,9 +6150,14 @@ async function drawCard(player) {
     deck = shuffleDeck(discard);
     discard = [];
   }
+  if (hand.length >= MAX_HAND_SIZE) return;
   if (deck.length > 0) {
     const drawn = deck.shift();
     hand.push(drawn);
+    while (hand.length > MAX_HAND_SIZE) {
+      const overflow = hand.pop();
+      discard.push(overflow);
+    }
     await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
   }
 }
@@ -5757,20 +6256,43 @@ async function advanceRound(gameId) {
             card_id: "sloth-endurance-v5"
           });
         }
+        const aoeDmg = Math.round(energy * SLOTH_ENDURANCE_AOE_MULT);
+        if (aoeDmg > 0) {
+          const enemies = stillAlive.filter((e) => e.id !== freshPlayer.id);
+          for (const enemy of enemies) {
+            const { data: enemyFresh } = await sb.from("game_players").select("*").eq("id", enemy.id).single();
+            if (enemyFresh && enemyFresh.is_alive) {
+              await applyInstantEffect("damage", aoeDmg, enemyFresh, gameId, freshPlayer.player_id);
+            }
+          }
+        }
       }
       await refreshPlayerEnergy(freshPlayer);
       await drawCard(freshPlayer);
     }
   }
   for (const p of allPlayers) {
-    await sb.from("game_players").update({ locked_cards: [], consumed_this_round: false }).eq("id", p.id);
+    await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
   }
   await sb.from("games").update({
     current_round: newRound,
     current_player_index: 0,
-    turn_phase: "selection",
-    locked_plays: []
+    turn_phase: "round_end"
+    // Keep locked_plays intact so non-triggering clients can read them
   }).eq("id", gameId);
+  setTimeout(async () => {
+    try {
+      await sb.from("games").update({
+        turn_phase: "selection",
+        locked_plays: []
+      }).eq("id", gameId);
+      for (const p of allPlayers) {
+        await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
+      }
+    } catch (e) {
+      console.error("[advanceRound] delayed clear failed:", e);
+    }
+  }, 4e3);
 }
 async function refreshPlayerEnergy(player) {
   const sb = getServerSupabase();

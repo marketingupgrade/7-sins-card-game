@@ -40,6 +40,7 @@ interface EffectColumn {
 }
 
 const EFFECT_COLUMNS: EffectColumn[] = [
+  // Offensive / Negative effects
   {
     type: "damage",
     label: "Hurt",
@@ -68,6 +69,15 @@ const EFFECT_COLUMNS: EffectColumn[] = [
     sign: "-",
   },
   {
+    type: "shield_steal",
+    label: "Crack",
+    shortLabel: "Crk",
+    color: "oklch(0.55 0.18 220)",
+    textClass: "text-sky-300",
+    icon: ICON_URLS.shield_generic,
+    sign: "-",
+  },
+  {
     type: "energy_steal",
     label: "Drain",
     shortLabel: "Drn",
@@ -76,6 +86,54 @@ const EFFECT_COLUMNS: EffectColumn[] = [
     icon: ICON_URLS.energy_generic,
     sign: "-",
   },
+  // Block effects
+  {
+    type: "heal_block",
+    label: "Cursed",
+    shortLabel: "Crs",
+    color: "oklch(0.55 0.25 25)",
+    textClass: "text-red-500",
+    icon: ICON_URLS.damage_wrath,
+    sign: "-",
+  },
+  {
+    type: "shield_block",
+    label: "Shatter",
+    shortLabel: "Sht",
+    color: "oklch(0.50 0.20 300)",
+    textClass: "text-purple-500",
+    icon: ICON_URLS.shield_generic,
+    sign: "-",
+  },
+  {
+    type: "energy_block",
+    label: "Exhaust",
+    shortLabel: "Exh",
+    color: "oklch(0.45 0.10 260)",
+    textClass: "text-gray-400",
+    icon: ICON_URLS.energy_generic,
+    sign: "-",
+  },
+  // Amplify / Transfer
+  {
+    type: "affliction_amplify",
+    label: "Intensify",
+    shortLabel: "Amp",
+    color: "oklch(0.60 0.25 0)",
+    textClass: "text-red-400",
+    icon: ICON_URLS.damage_wrath,
+    sign: "-",
+  },
+  {
+    type: "affliction_transfer",
+    label: "Redirect",
+    shortLabel: "Rdr",
+    color: "oklch(0.60 0.18 60)",
+    textClass: "text-amber-400",
+    icon: ICON_URLS.buff_generic,
+    sign: "-",
+  },
+  // Positive / Defensive effects
   {
     type: "heal_gain",
     label: "Mend",
@@ -103,6 +161,43 @@ const EFFECT_COLUMNS: EffectColumn[] = [
     icon: ICON_URLS.energy_generic,
     sign: "+",
   },
+  // Utility effects
+  {
+    type: "discard_burn",
+    label: "Devour",
+    shortLabel: "Dev",
+    color: "oklch(0.55 0.20 50)",
+    textClass: "text-amber-600",
+    icon: ICON_URLS.damage_wrath,
+    sign: "-",
+  },
+  {
+    type: "energy_regen",
+    label: "Sustain",
+    shortLabel: "Sus",
+    color: "oklch(0.60 0.15 160)",
+    textClass: "text-teal-400",
+    icon: ICON_URLS.energy_generic,
+    sign: "+",
+  },
+  {
+    type: "draw_boost",
+    label: "Insight",
+    shortLabel: "Ins",
+    color: "oklch(0.65 0.12 250)",
+    textClass: "text-blue-300",
+    icon: ICON_URLS.buff_generic,
+    sign: "+",
+  },
+  {
+    type: "draw_reduction",
+    label: "Fog",
+    shortLabel: "Fog",
+    color: "oklch(0.40 0.08 260)",
+    textClass: "text-gray-500",
+    icon: ICON_URLS.buff_generic,
+    sign: "-",
+  },
 ];
 
 // All possible effect types for Record initialization
@@ -110,6 +205,7 @@ const ALL_EFFECT_TYPES: EffectType[] = [
   "damage", "self_damage", "heal_gain", "heal_steal", "shield_gain",
   "shield_steal", "energy_gain", "energy_steal", "heal_block",
   "shield_block", "energy_block", "affliction_amplify", "affliction_transfer",
+  "discard_burn", "energy_regen", "draw_boost", "draw_reduction",
 ];
 
 // ─── Projection logic ───────────────────────────────────────

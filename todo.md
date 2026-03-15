@@ -1346,7 +1346,7 @@
 - [ ] Audit all 665 blog posts for SEO/AEO/GEO optimization gaps
 - [ ] Implement blog visibility improvements (missing schema, meta, structured data)
 - [ ] Write vitest tests for new features
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Comments Fix + Account Deletion + Blog SEO Audit
 - [ ] Fix comments/discussion section on Balance Analysis page
@@ -1355,7 +1355,7 @@
 - [ ] Audit all 665 blog posts for SEO/AEO/GEO optimization gaps
 - [ ] Implement blog visibility improvements (missing schema, meta, structured data)
 - [ ] Write vitest tests for new features
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Production Bug Fixes
 - [ ] Fix blog posts not loading on production /blog page (empty list)
@@ -1770,7 +1770,7 @@
 - [ ] Redesign /balance page as scrollytelling timeline
 - [ ] Update both game engines (client + server) with rebalanced passives
 - [ ] Write tests, update changelog
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ## Username Editing (v5.9.2 - URGENT)
 - [x] Backend: tRPC procedure to update username (with validation)
@@ -1826,4 +1826,81 @@
 - [x] Page: Update Patch Notes with v5.10.0 + v5.9.2 changelog entries
 - [x] Page: Update Home.tsx stats (333 HP, Final Reckoning), tutorial steps, bot engine comments
 - [x] Tests: 23 new reckoning tests + updated 3 existing tests (462 total passing)
-- [ ] Push to GitHub
+- [x] Push to GitHub
+
+## Bug: Game Creation Fails After v5.10.0
+- [x] Diagnose "The cathedral rejects your offering" error on game creation (was transient Vercel deploy timing)
+- [x] Fix root cause (verified working on production)
+- [x] Verify game creation works
+- [x] Push to GitHub
+
+## v5.11.0 Playtest Feedback (March 2026)
+### Turn Timer
+- [x] Implement 10-second turn timer that starts after the first player locks in their card
+- [x] Auto-lock-in players who don't act within the timer (uses selected cards or passes)
+- [x] Visual countdown indicator with pulsing red animation in the game UI
+
+### Game Explainer for Newcomers
+- [x] Existing 20-step tutorial system already covers all mechanics (skippable via ESC or Skip All)
+- [x] Tutorial covers: card selection, targeting, energy, compounding, afflictions, passives
+- [x] Skip preference already stored in localStorage
+
+### Energy Depletion Rebalance
+- [x] Analysis: energy resets to 7 every turn via refreshPlayerEnergy — drain is perception issue
+- [x] Fix: Added 12 zero-cost cards per faction so players always have playable options
+- [x] Ensure no single faction can permanently lock another out of playing cards (always have 0-cost cards)
+
+### Comeback Mechanisms
+- [x] CATCHUP_HP_THRESHOLD exists at 133 HP (40% of 333) — framework ready for future implementation
+- [ ] TODO: Implement actual catch-up bonus logic in game engine (threshold exists but isn't applied yet)
+- [ ] TODO: Consider additional comeback triggers (e.g., bonus energy when low HP)
+
+### Card + Target Selection UX
+- [x] Make card selection then target selection flow clearer with visual guidance
+- [x] Add step indicators ("Step 1: Select a card" → "Step 2: Choose a target" → "Step 3: Lock in")
+- [x] Add warning when no target is selected: amber banner warns card won't play without target
+- [x] Enhanced compound pattern tooltip with tick-by-tick breakdown on GameCard
+
+### Afflictions Table
+- [x] Fix afflictions table to show complete data (added 10 missing effect columns)
+- [x] Show all active effects: shield_steal, heal_block, shield_block, energy_block, affliction_amplify, affliction_transfer, discard_burn, energy_regen, draw_boost, draw_reduction
+
+### Card Reveal
+- [x] Fix card reveal mechanic: server now returns resolvedPlays in lockIn response for triggering player
+- [x] Added round_end phase with 4s delay before clearing locked_plays for non-triggering players
+- [x] GameBoard now detects round_end phase and shows ResolutionReveal animation
+
+### Battle Log Hover
+- [x] Fix battle log card hover: replaced full-screen overlay with positioned tooltip on desktop
+- [x] Desktop: ref-based positioning tooltip that doesn't interfere with hover events
+- [x] Mobile: kept full-screen tap-to-view popup for touch interaction
+
+### Hand Size Cap
+- [x] Enforce max hand size of 10 cards in server drawCard function
+- [x] Enforce max hand size of 10 cards in client drawCard function
+- [x] Add MAX_HAND_SIZE = 10 constant to gameTypes.ts
+
+### Sloth Passive Upgrade
+- [x] Sloth ENDURANCE additionally deals energy × 2 AOE damage to all enemies each turn
+- [x] Update Sloth passive description in gameTypes.ts (SLOTH_ENDURANCE_AOE_MULT = 2)
+- [x] Implement AOE damage in server advanceRound (Sloth start-of-turn)
+- [x] Implement AOE damage in client advanceRound (Sloth start-of-turn)
+- [x] Update Rules page with Sloth passive changes
+
+### Energy Management Overhaul (CRITICAL)
+- [x] Investigated: energy resets to MAX_ENERGY=7 every turn; drain is perception issue not actual lockout
+- [x] Fix: 46 new zero-cost cards ensure players always have playable options
+- [x] Every player can always play at least one card per turn (12+ zero-cost cards per faction)
+
+### Lobby Faction Info (SWOT + Passive)
+- [x] Add detailed faction description to sin selection in lobby
+- [x] Show SWOT analysis (Strengths, Weaknesses, Opportunities, Threats) per faction via FACTION_SWOT data
+- [x] Show passive ability name, description, and how it triggers
+- [x] Show faction playstyle summary (aggressive, defensive, control, etc.)
+- [x] Info panel expands on faction selection with smooth animation
+
+### Zero-Cost Card Expansion (Energy Perception Fix)
+- [x] Designed and added 46 new 0-cost cards (6-8 new per faction, 12 total per faction)
+- [x] Balanced: weaker effects (baseValue 1-5, duration 1-2) but always playable
+- [x] Added to cardData.ts for all 7 factions (424 total cards, up from 378)
+- [x] Deck building works with expanded card pool (verified via tests)

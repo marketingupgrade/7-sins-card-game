@@ -24,6 +24,7 @@ import {
   STARTING_HP,
   MAX_ROUNDS,
   HAND_SIZE,
+  MAX_HAND_SIZE,
   CARDS_PER_DECK,
   MAX_ENERGY,
   STARTING_ENERGY,
@@ -34,6 +35,7 @@ import {
   WRATH_VENGEANCE_PCT,
   SLOTH_ENDURANCE_MULT,
   SLOTH_ENDURANCE_CAP,
+  SLOTH_ENDURANCE_AOE_MULT,
   GREED_TAX_PCT,
   ENVY_JEALOUSY_PCT,
   PRIDE_HUBRIS_MULT,
@@ -210,9 +212,9 @@ function PassiveCard({ sin }: { sin: SinType }) {
     },
     sloth: {
       mechanic: "Shield Generation",
-      value: `Shield = energy × hand size × ${SLOTH_ENDURANCE_MULT} (cap ${SLOTH_ENDURANCE_CAP})`,
+      value: `Shield = energy × hand size × ${SLOTH_ENDURANCE_MULT} (cap ${SLOTH_ENDURANCE_CAP}) + AOE damage = energy × ${SLOTH_ENDURANCE_AOE_MULT}`,
       trigger: "Start of every turn (100% activation)",
-      synergy: "Rewards holding cards and conserving energy. Slowburn compound pattern ramps power over time while shields absorb early aggression.",
+      synergy: "Rewards holding cards and conserving energy. Slowburn compound pattern ramps power over time while shields absorb early aggression. AOE damage punishes all enemies each turn based on stored energy.",
     },
     greed: {
       mechanic: "Damage-to-Shield Conversion",
@@ -230,7 +232,7 @@ function PassiveCard({ sin }: { sin: SinType }) {
       mechanic: "Effect Multiplier",
       value: `×${PRIDE_HUBRIS_MULT} multiplier on all effects`,
       trigger: "When playing the highest-cost card in the round (ties count, ~45% activation)",
-      synergy: "Highest average card cost (3.42) with no 0-cost cards. Build energy, then play expensive cards for massive multiplied effects.",
+      synergy: "Highest average card cost with powerful high-cost cards. Build energy, then play expensive cards for massive multiplied effects.",
     },
     lust: {
       mechanic: "Lifesteal",
@@ -439,7 +441,7 @@ export default function GameRules() {
               </p>
               <p>
                 Each player draws from a <strong>{CARDS_PER_DECK}-card faction deck</strong> and holds
-                up to <strong>{HAND_SIZE} cards</strong> in hand. Cards are drawn at the start of each
+                up to <strong>{HAND_SIZE} cards</strong> in hand (maximum hand size: <strong>{MAX_HAND_SIZE}</strong>). Cards are drawn at the start of each
                 round. When the deck runs out, the discard pile is reshuffled into the deck.
               </p>
             </div>

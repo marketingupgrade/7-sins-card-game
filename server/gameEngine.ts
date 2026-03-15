@@ -18,6 +18,7 @@ import {
   CompoundPattern,
   GameState,
   HAND_SIZE,
+  MAX_HAND_SIZE,
   LockedPlay,
   MAX_ROUNDS,
   MAX_ENERGY,
@@ -32,6 +33,7 @@ import {
   WRATH_VENGEANCE_PCT,
   SLOTH_ENDURANCE_MULT,
   SLOTH_ENDURANCE_CAP,
+  SLOTH_ENDURANCE_AOE_MULT,
   GREED_TAX_PCT,
   GREED_TAX_TICK,
   ENVY_JEALOUSY_PCT,
@@ -239,7 +241,7 @@ export async function lockInCards(
   gameId: string,
   playerId: string,
   selections: Array<{ cardId: string; targetPlayerId?: string }>
-): Promise<{ success: boolean; narratorQuip: string }> {
+): Promise<{ success: boolean; narratorQuip: string; resolvedPlays?: LockedPlay[]; resolutionPlayers?: PlayerState[] }> {
   const sb = getServerSupabase();
 
   const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
@@ -308,8 +310,54 @@ export async function lockInCards(
   });
 
   if (allConfirmed) {
+    // Capture the full locked plays + player state BEFORE resolution clears them
+    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
+    const preResLocked: LockedPlay[] = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
+
+    const { data: preResPlayers } = await sb
+      .from("game_players")
+      .select("*, players(username)")
+      .eq("game_id", gameId)
+      .order("seat_index");
+
+    const resolutionPlayers: PlayerState[] = (preResPlayers || []).map((gp: any) => {
+      const playerLocked = preResLocked.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
+      return {
+        id: gp.player_id,
+        gamePlayerId: gp.id,
+        username: gp.players?.username || "Unknown",
+        seatIndex: gp.seat_index,
+        chosenSin: gp.chosen_sin,
+        currentHp: gp.current_hp,
+        maxHp: gp.max_hp,
+        isAlive: gp.is_alive,
+        hand: gp.hand || [],
+        deckSize: (gp.deck || []).length,
+        discardSize: (gp.discard_pile || []).length,
+        currentEnergy: gp.current_energy ?? 0,
+        maxEnergy: gp.max_energy ?? 0,
+        bonusEnergy: gp.bonus_energy ?? 0,
+        lockedCards: playerLocked,
+        hasLockedIn: playerLocked.length > 0,
+        consumedThisRound: gp.consumed_this_round ?? false,
+      };
+    });
+
     await sb.from("games").update({ turn_phase: "resolution" }).eq("id", gameId);
     await resolveLockedPlays(gameId);
+
+    const quip = selections.length === 0
+      ? "Choosing to do nothing? Bold strategy."
+      : selections.length === 1
+        ? "One card locked. Let fate decide."
+        : `${selections.length} cards locked. The arena trembles.`;
+
+    return {
+      success: true,
+      narratorQuip: quip,
+      resolvedPlays: preResLocked,
+      resolutionPlayers: resolutionPlayers,
+    };
   }
 
   const quip = selections.length === 0
@@ -964,9 +1012,17 @@ async function drawCard(player: any): Promise<void> {
     discard = [];
   }
 
+  // Enforce hand cap — don't draw if hand is already at MAX_HAND_SIZE
+  if (hand.length >= MAX_HAND_SIZE) return;
+
   if (deck.length > 0) {
     const drawn = deck.shift()!;
     hand.push(drawn);
+    // Trim excess if somehow over cap
+    while (hand.length > MAX_HAND_SIZE) {
+      const overflow = hand.pop()!;
+      discard.push(overflow);
+    }
     await sb
       .from("game_players")
       .update({ hand, deck, discard_pile: discard })
@@ -1093,10 +1149,11 @@ async function advanceRound(gameId: string): Promise<void> {
       .eq("id", p.id)
       .single();
     if (freshPlayer && freshPlayer.is_alive) {
-      // SLOTH ENDURANCE (v5): Start of turn, gain shield = energy × handSize × 0.45 (cap 25)
+      // SLOTH ENDURANCE (v5.11): Start of turn, gain shield + deal energy × 2 AOE damage
       if (freshPlayer.chosen_sin === "sloth") {
         const energy = freshPlayer.current_energy ?? 0;
         const handSize = (freshPlayer.hand || []).length;
+        // Shield component: energy × handSize × 0.45 (cap 44)
         const shieldVal = Math.min(Math.round(energy * handSize * SLOTH_ENDURANCE_MULT), SLOTH_ENDURANCE_CAP);
         if (shieldVal > 0) {
           await sb.from("active_effects").insert({
@@ -1110,6 +1167,17 @@ async function advanceRound(gameId: string): Promise<void> {
             card_id: "sloth-endurance-v5",
           });
         }
+        // AOE damage component: energy × 2 to all enemies
+        const aoeDmg = Math.round(energy * SLOTH_ENDURANCE_AOE_MULT);
+        if (aoeDmg > 0) {
+          const enemies = stillAlive.filter(e => e.id !== freshPlayer.id);
+          for (const enemy of enemies) {
+            const { data: enemyFresh } = await sb.from("game_players").select("*").eq("id", enemy.id).single();
+            if (enemyFresh && enemyFresh.is_alive) {
+              await applyInstantEffect("damage", aoeDmg, enemyFresh, gameId, freshPlayer.player_id);
+            }
+          }
+        }
       }
       await refreshPlayerEnergy(freshPlayer);
       await drawCard(freshPlayer);
@@ -1117,15 +1185,33 @@ async function advanceRound(gameId: string): Promise<void> {
   }
 
   for (const p of allPlayers) {
-    await sb.from("game_players").update({ locked_cards: [], consumed_this_round: false }).eq("id", p.id);
+    await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
   }
 
+  // Two-phase update: first set round_end (keeping locked_plays for client animation),
+  // then after a delay, transition to selection and clear locked_plays.
   await sb.from("games").update({
     current_round: newRound,
     current_player_index: 0,
-    turn_phase: "selection",
-    locked_plays: [],
+    turn_phase: "round_end",
+    // Keep locked_plays intact so non-triggering clients can read them
   }).eq("id", gameId);
+
+  // Give clients 4 seconds to read the resolution data before clearing
+  setTimeout(async () => {
+    try {
+      await sb.from("games").update({
+        turn_phase: "selection",
+        locked_plays: [],
+      }).eq("id", gameId);
+      // Also clear locked_cards on all players
+      for (const p of allPlayers) {
+        await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
+      }
+    } catch (e) {
+      console.error("[advanceRound] delayed clear failed:", e);
+    }
+  }, 4000);
 }
 
 // ─── Helper: Refresh Player Energy (v4 — fixed 3/turn) ──────

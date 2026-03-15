@@ -52,15 +52,15 @@ describe("v5.10 Game Constants", () => {
 });
 
 describe("v5.10 Card Data Integrity", () => {
-  it("every faction has 54 card definitions", () => {
+  it("every faction has at least 59 card definitions (v5.11 zero-cost expansion)", () => {
     for (const sin of ALL_SINS) {
       const deck = getDeckForSin(sin);
-      expect(deck).toHaveLength(54);
+      expect(deck.length).toBeGreaterThanOrEqual(59);
     }
   });
 
-  it("total card pool is 378 (7 factions × 54)", () => {
-    expect(ALL_CARDS).toHaveLength(378);
+  it("total card pool is 424 (v5.11 with zero-cost expansion)", () => {
+    expect(ALL_CARDS).toHaveLength(424);
   });
 
   it("every card has at least one effect", () => {

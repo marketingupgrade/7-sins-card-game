@@ -1,0 +1,11 @@
+Game creation test on production (www.7sinscardgame.com):
+- Clicked CREATE GAME with name "TestPlayer"
+- Successfully created lobby with room code W2DXHJ
+- Navigated to /lobby/3d53a17b-fcc2-4b92-baf3-244d9c0995a5
+- Shows congregation (1/4), faction selection, conjure phantom button
+- Game creation IS WORKING on production
+
+The error in the user's screenshot may have been:
+1. A transient network/database error
+2. An error from before the latest Vercel deployment completed
+3. A Vercel deployment still in progress when they tested

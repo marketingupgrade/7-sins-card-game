@@ -84,6 +84,26 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.11.0",
+    date: "March 2026",
+    title: "The Crucible",
+    summary: "Massive playtest-driven update. Hand cap at 10, Sloth AOE passive upgrade, 46 new zero-cost cards across all factions, 10-second turn timer, card+target selection UX overhaul, complete afflictions table, card reveal fix, battle log hover fix, and detailed faction SWOT info in the lobby.",
+    major: true,
+    changes: [
+      { category: "breaking", text: "Maximum hand size capped at 10 cards — excess cards are discarded when drawing", factions: ["Wrath", "Sloth", "Greed", "Envy", "Pride", "Lust", "Gluttony"] },
+      { category: "breaking", text: "Sloth ENDURANCE passive upgraded: now also deals energy × 2 AOE damage to all enemies each turn", factions: ["Sloth"] },
+      { category: "balance", text: "46 new zero-cost cards added (6-8 per faction) — ensures players always have something to play even when energy-starved", factions: ["Wrath", "Sloth", "Greed", "Envy", "Pride", "Lust", "Gluttony"] },
+      { category: "feature", text: "10-second turn timer: countdown starts when any opponent locks in, auto-locks your current selection when time runs out" },
+      { category: "feature", text: "Step-by-step targeting indicator: clear visual guide showing Step 1 (select card) → Step 2 (select target) → Step 3 (lock in)" },
+      { category: "feature", text: "No-target warning: orange banner warns when a card requires a target but none is selected" },
+      { category: "feature", text: "Enhanced compound effect tooltips: tick-by-tick breakdown showing exact damage per round" },
+      { category: "feature", text: "Detailed faction info in lobby: SWOT analysis and passive description visible when selecting a sin" },
+      { category: "fix", text: "Card reveal (ResolutionReveal) now reliably triggers for all players — server keeps locked_plays visible during round_end phase for 4 seconds before clearing" },
+      { category: "fix", text: "Battle log card hover: desktop uses positioned tooltip instead of full-screen overlay, preventing flicker and maintaining card visibility" },
+      { category: "fix", text: "Afflictions table now shows all effect types including shield_steal, heal_block, shield_block, energy_block, affliction_amplify, affliction_transfer, and more" },
+    ],
+  },
+  {
     version: "5.10.0",
     date: "March 2026",
     title: "The Reckoning",

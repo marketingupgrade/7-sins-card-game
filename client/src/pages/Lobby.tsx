@@ -27,6 +27,7 @@ import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
+import { PASSIVE_INFO, FACTION_SWOT } from "@shared/gameTypes";
 
 const LobbyBabylonScene = lazy(() => import("@/components/LobbyBabylonScene"));
 
@@ -586,6 +587,9 @@ export default function Lobby() {
                   );
                 }
 
+                const passive = PASSIVE_INFO[sin];
+                const swot = FACTION_SWOT[sin];
+
                 return (
                   <motion.button
                     key={sin}
@@ -627,13 +631,60 @@ export default function Lobby() {
                         </div>
                       </div>
 
-                      {/* Description */}
+                      {/* Description + Passive */}
                       <div className="p-3 pt-2">
                         <p className="text-xs text-foreground/60 leading-relaxed mb-2"
                           style={{ fontFamily: "var(--font-body)" }}>
                           {cfg.desc}
                         </p>
-                        <div className="flex items-center justify-between">
+
+                        {/* Passive ability */}
+                        <div className="mb-2 p-2 rounded-lg border border-candle/10 bg-candle/5">
+                          <p className="text-[10px] tracking-[0.2em] text-candle/50 uppercase mb-1"
+                            style={{ fontFamily: "var(--font-heading)" }}>
+                            {passive.icon} Passive: {passive.name}
+                          </p>
+                          <p className="text-[11px] text-candle/70 leading-snug"
+                            style={{ fontFamily: "var(--font-body)" }}>
+                            {passive.description}
+                          </p>
+                        </div>
+
+                        {/* SWOT mini-grid — visible on hover */}
+                        <div className="hidden group-hover:block">
+                          <div className="grid grid-cols-2 gap-1 mb-2">
+                            <div className="p-1.5 rounded bg-green-900/20 border border-green-500/10">
+                              <p className="text-[9px] text-green-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Strengths</p>
+                              {swot.strengths.slice(0, 2).map((s, i) => (
+                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
+                              ))}
+                            </div>
+                            <div className="p-1.5 rounded bg-red-900/20 border border-red-500/10">
+                              <p className="text-[9px] text-red-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Weaknesses</p>
+                              {swot.weaknesses.slice(0, 2).map((s, i) => (
+                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
+                              ))}
+                            </div>
+                            <div className="p-1.5 rounded bg-blue-900/20 border border-blue-500/10">
+                              <p className="text-[9px] text-blue-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Opportunities</p>
+                              {swot.opportunities.slice(0, 1).map((s, i) => (
+                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
+                              ))}
+                            </div>
+                            <div className="p-1.5 rounded bg-amber-900/20 border border-amber-500/10">
+                              <p className="text-[9px] text-amber-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Threats</p>
+                              {swot.threats.slice(0, 1).map((s, i) => (
+                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-[10px] text-candle/50 italic leading-snug"
+                            style={{ fontFamily: "var(--font-body)" }}>
+                            {swot.playstyle}
+                          </p>
+                        </div>
+
+                        <div className="flex items-center justify-between mt-1">
                           <span className="text-[10px] text-candle/40 uppercase tracking-[0.2em]"
                             style={{ fontFamily: "var(--font-heading)" }}>
                             {cfg.subtitle}

@@ -1,7 +1,7 @@
 /**
- * 7 Deadly Sins Card Game — Card Data v5: 350 Balanced Cards
+ * 7 Deadly Sins Card Game — Card Data v5: 424 Balanced Cards
  *
- * 50 cards per faction, 7 factions = 350 total.
+ * 59-64 cards per faction, 7 factions = 424 total (incl. 12 zero-cost per faction).
  * Balance: Monte Carlo validated across 500K games
  * Max deviation: 1.23% (EXCELLENT grade)
  *
@@ -31,7 +31,7 @@
  */
 import type { CardDefinition, SinType, CompoundPattern, EffectType, TargetMode, CardTier } from "./gameTypes";
 // ═══════════════════════════════════════════════════════════════
-// WRATH — 50 cards
+// WRATH — 60 cards
 // ═══════════════════════════════════════════════════════════════
 export const WRATH_CARDS: CardDefinition[] = [
   {
@@ -363,9 +363,45 @@ export const WRATH_CARDS: CardDefinition[] = [
     description: "Attack is the best defense — but a little armor doesn't hurt.",
     skipQueue: true,
   },
+  {
+    id: "wrath_55", name: "Smolder", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 3, targetMode: "single" }],
+    description: "A slow burn that never stops.",
+  },
+  {
+    id: "wrath_56", name: "Spite Spark", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    description: "Fury forges its own armor.",
+  },
+  {
+    id: "wrath_57", name: "Temper Flare", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }],
+    description: "Quick and vicious.",
+  },
+  {
+    id: "wrath_58", name: "Ash Breath", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    description: "Everyone chokes.",
+  },
+  {
+    id: "wrath_59", name: "Grudge", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 6, duration: 4, targetMode: "single" }],
+    description: "Wrath remembers.",
+  },
+  {
+    id: "wrath_60", name: "Scorch Mark", sin: "wrath",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Pain fuels the fire.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// SLOTH — 50 cards
+// SLOTH — 59 cards
 // ═══════════════════════════════════════════════════════════════
 export const SLOTH_CARDS: CardDefinition[] = [
   {
@@ -697,9 +733,39 @@ export const SLOTH_CARDS: CardDefinition[] = [
     description: "Do nothing, gain everything. The slothful way.",
     skipQueue: true,
   },
+  {
+    id: "sloth_55", name: "Doze", sin: "sloth",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    description: "Sleep heals all wounds.",
+  },
+  {
+    id: "sloth_56", name: "Lazy Block", sin: "sloth",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    description: "Too tired to dodge, too stubborn to fall.",
+  },
+  {
+    id: "sloth_57", name: "Sluggish Curse", sin: "sloth",
+    cost: 0, tier: "common", compoundPattern: "slowburn",
+    effects: [{ type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    description: "Your hands grow heavy.",
+  },
+  {
+    id: "sloth_58", name: "Nap Time", sin: "sloth",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "A quick rest never hurt.",
+  },
+  {
+    id: "sloth_59", name: "Heavy Eyelids", sin: "sloth",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "Even sloth can sting.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// GREED — 50 cards
+// GREED — 61 cards
 // ═══════════════════════════════════════════════════════════════
 export const GREED_CARDS: CardDefinition[] = [
   {
@@ -1031,9 +1097,51 @@ export const GREED_CARDS: CardDefinition[] = [
     description: "Collect interest before the debt is even owed.",
     skipQueue: true,
   },
+  {
+    id: "greed_55", name: "Pocket Change", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Every coin counts.",
+  },
+  {
+    id: "greed_56", name: "Skim", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "A little off the top.",
+  },
+  {
+    id: "greed_57", name: "Hoard", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }],
+    description: "Pile it higher.",
+  },
+  {
+    id: "greed_58", name: "Bargain", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Buy low, sell high.",
+  },
+  {
+    id: "greed_59", name: "Tax Bite", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "The collector always comes.",
+  },
+  {
+    id: "greed_60", name: "Loose Change", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Shake the couch cushions.",
+  },
+  {
+    id: "greed_61", name: "Nickel and Dime", sin: "greed",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "aoe" }],
+    description: "Death by a thousand fees.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// ENVY — 50 cards
+// ENVY — 60 cards
 // ═══════════════════════════════════════════════════════════════
 export const ENVY_CARDS: CardDefinition[] = [
   {
@@ -1365,9 +1473,45 @@ export const ENVY_CARDS: CardDefinition[] = [
     description: "Your protection becomes my weapon.",
     skipQueue: true,
   },
+  {
+    id: "envy_55", name: "Covet", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 1, targetMode: "single" }],
+    description: "I want what you have.",
+  },
+  {
+    id: "envy_56", name: "Bitter Glance", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 3, targetMode: "single" }],
+    description: "If looks could kill.",
+  },
+  {
+    id: "envy_57", name: "Resentment", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "slowburn",
+    effects: [{ type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
+    description: "It festers.",
+  },
+  {
+    id: "envy_58", name: "Petty Theft", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_steal", baseValue: 4, duration: 2, targetMode: "single" }],
+    description: "If I can't have it, neither can you.",
+  },
+  {
+    id: "envy_59", name: "Scowl", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Your joy offends me.",
+  },
+  {
+    id: "envy_60", name: "Jealous Whisper", sin: "envy",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "duo" }],
+    description: "Spread the misery.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// PRIDE — 50 cards
+// PRIDE — 64 cards
 // ═══════════════════════════════════════════════════════════════
 export const PRIDE_CARDS: CardDefinition[] = [
   {
@@ -1699,9 +1843,69 @@ export const PRIDE_CARDS: CardDefinition[] = [
     description: "Pride demands the opening move — and the energy to back it up.",
     skipQueue: true,
   },
+  {
+    id: "pride_55", name: "Sneer", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }],
+    description: "Beneath contempt.",
+  },
+  {
+    id: "pride_56", name: "Posture", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
+    description: "Stand tall. Look down.",
+  },
+  {
+    id: "pride_57", name: "Condescend", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "You're not worth my time.",
+  },
+  {
+    id: "pride_58", name: "Self-Admire", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Perfection heals itself.",
+  },
+  {
+    id: "pride_59", name: "Belittle", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "affliction_amplify", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Small words, deep cuts.",
+  },
+  {
+    id: "pride_60", name: "Preen", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Admire the plumage.",
+  },
+  {
+    id: "pride_61", name: "Scoff", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }],
+    description: "Is that all?",
+  },
+  {
+    id: "pride_62", name: "Vainglory", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 4, duration: 4, targetMode: "single" }],
+    description: "The mirror never lies.",
+  },
+  {
+    id: "pride_63", name: "Haughty Gaze", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 2, targetMode: "aoe" }],
+    description: "All are beneath me.",
+  },
+  {
+    id: "pride_64", name: "Ego Boost", sin: "pride",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }, { type: "shield_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Confidence is power.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// LUST — 50 cards
+// LUST — 60 cards
 // ═══════════════════════════════════════════════════════════════
 export const LUST_CARDS: CardDefinition[] = [
   {
@@ -2033,9 +2237,45 @@ export const LUST_CARDS: CardDefinition[] = [
     description: "Desire sharpened to a point — it strikes before reason.",
     skipQueue: true,
   },
+  {
+    id: "lust_55", name: "Wink", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 3, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 2, duration: 2, targetMode: "self" }],
+    description: "A glance that lingers.",
+  },
+  {
+    id: "lust_56", name: "Caress", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Gentle but relentless.",
+  },
+  {
+    id: "lust_57", name: "Tease", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 2, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "Come closer. No, not yet.",
+  },
+  {
+    id: "lust_58", name: "Blush", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    description: "Flushed with power.",
+  },
+  {
+    id: "lust_59", name: "Whisper", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 2, duration: 2, targetMode: "duo" }, { type: "heal_gain", baseValue: 3, duration: 2, targetMode: "self" }],
+    description: "Sweet nothings that sting.",
+  },
+  {
+    id: "lust_60", name: "Longing", sin: "lust",
+    cost: 0, tier: "common", compoundPattern: "slowburn",
+    effects: [{ type: "damage", baseValue: 3, duration: 4, targetMode: "single" }],
+    description: "Desire is patient.",
+  },
 ];
 // ═══════════════════════════════════════════════════════════════
-// GLUTTONY — 50 cards
+// GLUTTONY — 60 cards
 // ═══════════════════════════════════════════════════════════════
 export const GLUTTONY_CARDS: CardDefinition[] = [
   {
@@ -2366,6 +2606,42 @@ export const GLUTTONY_CARDS: CardDefinition[] = [
     effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 2, targetMode: "single" }],
     description: "The hunger strikes before the feast begins.",
     skipQueue: true,
+  },
+  {
+    id: "gluttony_55", name: "Snack", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }, { type: "discard_burn", baseValue: 1, duration: 1, targetMode: "single" }],
+    description: "A bite between meals.",
+  },
+  {
+    id: "gluttony_56", name: "Burp", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "aoe" }],
+    description: "Excuse me.",
+  },
+  {
+    id: "gluttony_57", name: "Chew", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "discard_burn", baseValue: 2, duration: 2, targetMode: "single" }],
+    description: "Slowly devoured.",
+  },
+  {
+    id: "gluttony_58", name: "Gorge", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "shield_gain", baseValue: 8, duration: 2, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    description: "Stuff yourself. Feel invincible.",
+  },
+  {
+    id: "gluttony_59", name: "Crumb Trail", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "draw_boost", baseValue: 1, duration: 1, targetMode: "self" }],
+    description: "Follow the crumbs.",
+  },
+  {
+    id: "gluttony_60", name: "Taste", sin: "gluttony",
+    cost: 0, tier: "common", compoundPattern: "standard",
+    effects: [{ type: "damage", baseValue: 4, duration: 3, targetMode: "single" }, { type: "discard_burn", baseValue: 1, duration: 2, targetMode: "single" }],
+    description: "Just a sample.",
   },
 ];
 

@@ -98,10 +98,10 @@ const targetDisplayNames: Record<string, string> = {
   duo: "x2 targets",
 };
 
-const patternLabels: Record<CompoundPattern, { label: string; title: string; desc: string }> = {
-  standard: { label: "◆", title: "Steady", desc: "Grows at a steady pace. Nothing fancy, just reliable." },
-  aggressive: { label: "🔥", title: "Volatile", desc: "Starts tame, then goes nuclear. High risk, high reward." },
-  slowburn: { label: "⌛", title: "Patient", desc: "Barely a scratch at first. Then it really kicks in." },
+const patternLabels: Record<CompoundPattern, { label: string; title: string; desc: string; mechanic: string }> = {
+  standard: { label: "◆", title: "Steady", desc: "Grows at a steady pace. Nothing fancy, just reliable.", mechanic: "Each tick = base × (tick+1). Linear growth over rounds." },
+  aggressive: { label: "🔥", title: "Volatile", desc: "Starts tame, then goes nuclear. High risk, high reward.", mechanic: "Fibonacci scaling: 1×, 1×, 2×, 3×, 5×... Explodes late." },
+  slowburn: { label: "⌛", title: "Patient", desc: "Barely a scratch at first. Then it really kicks in.", mechanic: "Exponential: base × 2^tick. Doubles every round." },
 };
 
 const tierStyles: Record<string, { border: string; badge: string; glow: string }> = {
@@ -280,9 +280,19 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
                 {pattern.label}
               </span>
             </TooltipTrigger>
-            <TooltipContent side="bottom" className="max-w-[220px] bg-[#1a1520] border border-white/10 text-white/90 p-3">
+            <TooltipContent side="bottom" className="max-w-[260px] bg-[#1a1520] border border-white/10 text-white/90 p-3">
               <p className="font-bold text-sm mb-1" style={{ fontFamily: "var(--font-heading)", color: "oklch(0.7 0.15 80)" }}>{pattern.title}</p>
-              <p className="text-xs text-white/60 leading-relaxed">{pattern.desc}</p>
+              <p className="text-xs text-white/60 leading-relaxed mb-2">{pattern.desc}</p>
+              <p className="text-[10px] text-amber-400/70 leading-relaxed font-mono" style={{ borderTop: "1px solid rgba(255,255,255,0.1)", paddingTop: "6px" }}>
+                {pattern.mechanic}
+              </p>
+              {card.effects[0] && card.effects[0].duration > 1 && (
+                <p className="text-[10px] text-white/40 mt-1 font-mono">
+                  Example: {Array.from({ length: Math.min(card.effects[0].duration, 4) }, (_, t) =>
+                    getCompoundTickValue(card.effects[0].baseValue, card.compoundPattern, t)
+                  ).join(" → ")}{card.effects[0].duration > 4 ? " → ..." : ""}
+                </p>
+              )}
             </TooltipContent>
           </Tooltip>
           {card.tier !== "common" && (
