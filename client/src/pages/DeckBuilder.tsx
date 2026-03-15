@@ -12,7 +12,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef, memo, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "wouter";
+import { Link, useSearch } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_CARDS } from "@shared/cardData";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
@@ -1102,6 +1102,8 @@ function ManaCurve({ cards, sinColor }: { cards: CardDefinition[]; sinColor: str
 // ─── Main Component ─────────────────────────────────────────
 export default function DeckBuilder() {
   const { user } = useSupabaseAuth();
+  const searchString = useSearch();
+  const urlImportProcessed = useRef(false);
 
   // State
   const [selectedFaction, setSelectedFaction] = useState<SinType | null>(null);
@@ -1119,6 +1121,33 @@ export default function DeckBuilder() {
   const [isLoadingDecks, setIsLoadingDecks] = useState(false);
   const [detailCard, setDetailCard] = useState<CardDefinition | null>(null);
   const deckPanelRef = useRef<HTMLDivElement>(null);
+
+  // Auto-import from URL query parameter (?import=W:01,02,...)
+  useEffect(() => {
+    if (urlImportProcessed.current) return;
+    const params = new URLSearchParams(searchString);
+    const importParam = params.get("import");
+    if (!importParam) return;
+    urlImportProcessed.current = true;
+    const validation = validateDeckCode(importParam);
+    if (!validation.valid) {
+      setSaveMessage(`Invalid deck link: ${validation.error}`);
+      setTimeout(() => setSaveMessage(null), 4000);
+      return;
+    }
+    const result = decodeDeck(importParam);
+    if (!result) {
+      setSaveMessage("Failed to decode deck from link");
+      setTimeout(() => setSaveMessage(null), 4000);
+      return;
+    }
+    setSelectedFaction(result.faction);
+    setDeckCardIds(result.cardIds.slice(0, MAX_DECK_SIZE));
+    setSaveMessage(`Imported ${result.cardIds.length} ${result.faction.charAt(0).toUpperCase() + result.faction.slice(1)} cards from shared link!`);
+    setTimeout(() => setSaveMessage(null), 4000);
+    // Clean URL
+    window.history.replaceState({}, "", window.location.pathname);
+  }, [searchString]);
 
   // Load saved decks on mount
   useEffect(() => {
@@ -1995,7 +2024,7 @@ export default function DeckBuilder() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-sm font-bold text-amber-200/80 mb-3 tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)" }}>Export Deck</h3>
-              <p className="text-[10px] text-white/30 mb-3">Share this code with friends to let them import your deck build.</p>
+              <p className="text-[10px] text-white/30 mb-2">Share this code or a direct link with friends.</p>
               <div
                 className="relative rounded-lg px-3 py-2.5 cursor-pointer group"
                 style={{
@@ -2005,6 +2034,27 @@ export default function DeckBuilder() {
                 onClick={copyExportCode}
               >
                 <p className="text-xs text-cyan-300/70 font-mono break-all pr-8">{exportCode}</p>
+                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-hover:text-white/50 transition-colors">
+                  {exportCopied ? "\u2713 Copied!" : "Click to copy"}
+                </span>
+              </div>
+              {/* Share Link */}
+              <p className="text-[9px] text-white/20 mt-3 mb-1.5 uppercase tracking-wider">Direct Link</p>
+              <div
+                className="relative rounded-lg px-3 py-2 cursor-pointer group"
+                style={{
+                  background: "rgba(255,255,255,0.02)",
+                  border: "1px solid rgba(255,255,255,0.04)",
+                }}
+                onClick={() => {
+                  const url = `${window.location.origin}/deck-builder?import=${encodeURIComponent(exportCode)}`;
+                  navigator.clipboard.writeText(url).then(() => {
+                    setExportCopied(true);
+                    setTimeout(() => setExportCopied(false), 2000);
+                  });
+                }}
+              >
+                <p className="text-[10px] text-emerald-300/50 font-mono break-all pr-8 truncate">{window.location.origin}/deck-builder?import={exportCode}</p>
                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-white/20 group-hover:text-white/50 transition-colors">
                   {exportCopied ? "\u2713 Copied!" : "Click to copy"}
                 </span>
@@ -2022,6 +2072,19 @@ export default function DeckBuilder() {
                   style={{ fontFamily: "var(--font-heading)" }}
                 >
                   {exportCopied ? "Copied!" : "Copy Code"}
+                </button>
+                <button
+                  onClick={() => {
+                    const url = `${window.location.origin}/deck-builder?import=${encodeURIComponent(exportCode)}`;
+                    navigator.clipboard.writeText(url).then(() => {
+                      setExportCopied(true);
+                      setTimeout(() => setExportCopied(false), 2000);
+                    });
+                  }}
+                  className="px-4 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300/80 hover:bg-emerald-500/25 border border-emerald-500/25 transition-all"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  {exportCopied ? "Link Copied!" : "Share Link"}
                 </button>
               </div>
             </motion.div>

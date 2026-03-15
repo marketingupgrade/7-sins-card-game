@@ -1619,4 +1619,25 @@
 - [x] 6 vitest tests for matchup data consistency (symmetry, no dominance, range)
 - [x] Full test suite: 361 tests, 21 files, 0 failures
 - [x] Update patch notes (v5.7.7 'The Diplomat's Decree')
+- [x] Save checkpoint and push to GitHub
+
+## URL-Based Deck Sharing (v5.7.8)
+- [x] Parse ?import= query parameter on DeckBuilder page load via useSearch()
+- [x] Auto-decode and load the deck from the URL parameter with toast feedback
+- [x] Add "Share Link" button to export modal that copies full URL with deck code
+- [x] Clear the query parameter after successful import (history.replaceState)
+- [x] Handle invalid URL codes gracefully with error toast
+
+## Matchup Matrix Drill-Down (v5.7.8)
+- [x] Make each non-mirror cell in the matchup matrix clickable (cursor-pointer)
+- [x] Show drill-down modal via createPortal with spring animation
+- [x] 12 detailed matchup entries with passive interaction, strengths, key cards, counter strategies
+- [x] Faction portraits, win rates, and "Favored" badge in modal header
+- [x] Passive abilities reference at bottom of each drill-down
+- [x] Fallback text for matchups without detailed data
+- [x] "Tap any cell for details" hint in legend
+- [x] Mobile-friendly: scrollable modal, touch-friendly close button
+- [x] 10 vitest tests for URL sharing + drill-down data validation (urlDeckSharing.test.ts)
+- [x] Full test suite: 371 tests, 22 files, 0 failures
+- [x] Update patch notes (v5.7.8 'The Strategist's Lens')
 - [ ] Save checkpoint and push to GitHub

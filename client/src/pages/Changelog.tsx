@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.8",
+    date: "March 2026",
+    title: "The Strategist's Lens",
+    summary: "Deck builds are now shareable via URL — export a deck and share a clickable link that auto-imports the build. The matchup matrix gains interactive drill-down modals explaining why each faction matchup plays out the way it does, with passive interactions, key cards, and counter-strategies. 371 tests passing.",
+    major: false,
+    changes: [
+      { category: "feature", text: "URL Deck Sharing: Export modal now includes a 'Share Link' button that copies a full URL (e.g., /deck-builder?import=W:01,03,...) for one-click deck sharing" },
+      { category: "feature", text: "URL Deck Import: Opening a shared link auto-decodes the deck code, sets the faction, loads the cards, and shows a success toast" },
+      { category: "feature", text: "URL cleanup: Query parameter is cleared after successful import via history.replaceState to keep the URL clean" },
+      { category: "feature", text: "Matchup Matrix Drill-Down: Tap/click any cell to open a detailed modal explaining the matchup dynamics" },
+      { category: "feature", text: "Drill-down shows: passive ability interaction, attacker/defender strengths, key cards, and counter-strategy for 12 major matchups" },
+      { category: "feature", text: "Faction portraits, win rates, and 'Favored' badge in drill-down header with spring animation" },
+      { category: "feature", text: "Fallback text for matchups without detailed data, 'Tap any cell for details' legend hint" },
+      { category: "feature", text: "10 new vitest tests for URL sharing roundtrips and drill-down data validation" },
+    ],
+  },
+  {
     version: "5.7.7",
     date: "March 2026",
     title: "The Diplomat's Decree",

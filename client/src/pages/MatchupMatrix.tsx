@@ -14,6 +14,7 @@
  */
 
 import { useState, useMemo, memo, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { SinType, PASSIVE_INFO } from "@shared/gameTypes";
@@ -124,6 +125,118 @@ const MATCHUP_DATA: Record<SinType, Record<SinType, number>> = {
 };
 
 /**
+ * Detailed matchup drill-down data — explains WHY each matchup favors one faction.
+ * Includes passive interaction, archetype strengths, and counter-strategies.
+ */
+interface MatchupDetail {
+  summary: string;
+  passiveInteraction: string;
+  attackerStrengths: string[];
+  defenderStrengths: string[];
+  keyCards: string;
+  counterStrategy: string;
+}
+
+const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
+  "wrath-sloth": {
+    summary: "Sloth's shields absorb Wrath's burst, winning the attrition war.",
+    passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields — reflected damage is absorbed before it can threaten Sloth's HP.",
+    attackerStrengths: ["High burst damage in early rounds", "VENGEANCE punishes attackers", "Aggressive compound patterns escalate fast"],
+    defenderStrengths: ["ENDURANCE generates shields each turn", "Slowburn pattern scales into late game", "Shield stacking absorbs burst windows"],
+    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields, but Sloth's Torpor Shield and Lethargy Wall regenerate faster than Wrath can burn through.",
+    counterStrategy: "As Wrath: focus single-target burst to break shields before they stack. As Sloth: conserve energy for shield generation, avoid trading early.",
+  },
+  "wrath-envy": {
+    summary: "Wrath's high burst overwhelms Envy before affliction stacking escalates.",
+    passiveInteraction: "VENGEANCE reflect punishes Envy's damage-to-amplify loop — Envy takes reflected damage while trying to deepen afflictions.",
+    attackerStrengths: ["Fast burst kills before afflictions compound", "VENGEANCE reflects Envy's own damage", "AoE cards spread pressure"],
+    defenderStrengths: ["JEALOUSY deepens afflictions over time", "Affliction amplification scales exponentially", "Duo targeting spreads debuffs"],
+    keyCards: "Wrath's Wrathful Cry (AoE burst) can eliminate Envy before afflictions stack. Envy's Jealous Gaze needs 3+ rounds to outscale.",
+    counterStrategy: "As Wrath: rush Envy down in rounds 1-5. As Envy: survive early burst with heal cards, then out-scale in rounds 10+.",
+  },
+  "wrath-lust": {
+    summary: "Lust's lifesteal directly counters Wrath's aggression — every hit heals Lust.",
+    passiveInteraction: "TEMPTATION converts Wrath's damage into healing. The more Wrath attacks, the more Lust sustains — a fundamental counter.",
+    attackerStrengths: ["Highest raw damage output", "VENGEANCE reflect adds chip damage", "Aggressive patterns close games fast"],
+    defenderStrengths: ["TEMPTATION heals from damage ticks", "Lifesteal negates burst damage", "Sustain outlasts aggression"],
+    keyCards: "Lust's Seductive Drain turns Wrath's Inferno Wave into a massive heal. Wrath needs shield-piercing or heal-block effects to counter.",
+    counterStrategy: "As Wrath: include heal_block cards to shut down TEMPTATION. As Lust: maximize damage-over-time to trigger more lifesteal.",
+  },
+  "sloth-pride": {
+    summary: "Pride's HUBRIS burst can overwhelm shields, but Sloth's consistency keeps it close.",
+    passiveInteraction: "HUBRIS multiplier (x1.324) on expensive cards can punch through ENDURANCE shields in a single round, but only when triggered.",
+    attackerStrengths: ["ENDURANCE generates consistent shields", "Slowburn compounds over time", "High survivability in long games"],
+    defenderStrengths: ["HUBRIS amplifies expensive card effects", "Single massive burst rounds", "High-tier cards have outsized impact"],
+    keyCards: "Pride's Crown of Thorns with HUBRIS can deal 40+ damage in one round, breaking Sloth's shield stack. Sloth needs to spread shields across rounds.",
+    counterStrategy: "As Sloth: maintain shield buffer above 30 HP equivalent. As Pride: save expensive cards for burst rounds.",
+  },
+  "greed-gluttony": {
+    summary: "Greed's resource theft disrupts Gluttony's burn chains, creating a resource war.",
+    passiveInteraction: "TAX shields from damage ticks provide passive defense, while Greed's energy steal disrupts DEVOURER's energy generation loop.",
+    attackerStrengths: ["TAX generates shields from damage", "Energy steal disrupts opponents", "Resource denial slows enemy plans"],
+    defenderStrengths: ["DEVOURER gains energy from card destruction", "Deck burn removes key cards", "Self-sustaining energy loop"],
+    keyCards: "Greed's Golden Siphon steals the energy Gluttony needs for burn chains. Gluttony's Ravenous Maw can destroy Greed's high-value cards.",
+    counterStrategy: "As Greed: steal energy early to prevent burn chains. As Gluttony: prioritize deck burn over direct damage.",
+  },
+  "lust-sloth": {
+    summary: "Lust's lifesteal slowly erodes Sloth's shields in a battle of sustain.",
+    passiveInteraction: "TEMPTATION healing outpaces ENDURANCE shield generation in long games — Lust heals while dealing damage, Sloth only shields.",
+    attackerStrengths: ["TEMPTATION heals while dealing damage", "Lifesteal bypasses shield regeneration", "Sustain advantage in 15+ round games"],
+    defenderStrengths: ["ENDURANCE shields absorb damage", "Slowburn pattern delays Lust's scaling", "Shield stacking buys time"],
+    keyCards: "Lust's Charming Whisper deals damage AND heals, slowly outpacing Sloth's shield generation. Sloth needs burst damage to threaten Lust.",
+    counterStrategy: "As Lust: play for the long game, maximize damage ticks. As Sloth: include offensive cards to pressure Lust's HP directly.",
+  },
+  "envy-lust": {
+    summary: "Envy's affliction amplification disrupts Lust's sustain loop.",
+    passiveInteraction: "JEALOUSY deepens afflictions faster than TEMPTATION can heal — amplified afflictions deal escalating damage that outpaces lifesteal.",
+    attackerStrengths: ["JEALOUSY amplifies afflictions exponentially", "Affliction stacking bypasses healing", "Duo targeting spreads debuffs"],
+    defenderStrengths: ["TEMPTATION provides consistent healing", "Lifesteal from damage ticks", "Sustain in long games"],
+    keyCards: "Envy's Jealous Gaze + affliction_amplify cards create a damage spiral that TEMPTATION can't out-heal past round 8.",
+    counterStrategy: "As Envy: stack afflictions early, amplify in mid-game. As Lust: include affliction_cleanse or heal_block to disrupt the loop.",
+  },
+  "gluttony-wrath": {
+    summary: "Gluttony's deck destruction removes Wrath's high-damage cards from circulation.",
+    passiveInteraction: "DEVOURER energy gain from card destruction sustains Gluttony's pressure, while removing Wrath's best burst cards.",
+    attackerStrengths: ["Deck burn removes key damage cards", "DEVOURER generates energy from destruction", "Sustained pressure through card denial"],
+    defenderStrengths: ["High burst damage if cards survive", "VENGEANCE reflects damage", "Aggressive early game"],
+    keyCards: "Gluttony's Consume targets Wrath's highest-cost cards first, removing burst potential. Wrath needs to play aggressively before cards are burned.",
+    counterStrategy: "As Gluttony: burn Wrath's deck early to remove burst cards. As Wrath: play high-damage cards immediately, don't hold them.",
+  },
+  "gluttony-sloth": {
+    summary: "Gluttony's deck burn disrupts Sloth's slowburn strategy by removing late-game cards.",
+    passiveInteraction: "DEVOURER energy sustains burn pressure while removing the compound cards Sloth needs for late-game scaling.",
+    attackerStrengths: ["Deck burn removes compound cards", "DEVOURER self-sustains energy", "Disrupts slowburn scaling"],
+    defenderStrengths: ["ENDURANCE shields buy time", "Slowburn compounds if cards survive", "High survivability"],
+    keyCards: "Gluttony's Ravenous Maw destroys Sloth's key slowburn cards before they can compound. Sloth needs early shield stacking to survive.",
+    counterStrategy: "As Gluttony: target Sloth's compound cards for burn. As Sloth: play compound cards early before they're destroyed.",
+  },
+  "gluttony-envy": {
+    summary: "The strongest matchup — Gluttony's deck destruction removes cards Envy needs for affliction stacking.",
+    passiveInteraction: "DEVOURER energy gain outpaces JEALOUSY's gradual amplification. Card destruction removes the affliction cards Envy depends on.",
+    attackerStrengths: ["Deck burn removes affliction cards", "DEVOURER generates massive energy", "Card denial prevents stacking"],
+    defenderStrengths: ["JEALOUSY amplifies afflictions", "Duo targeting spreads debuffs", "Exponential scaling if cards survive"],
+    keyCards: "Gluttony's Consume removes Envy's affliction_amplify cards, preventing the exponential scaling that makes Envy dangerous.",
+    counterStrategy: "As Gluttony: prioritize burning Envy's amplify cards. As Envy: front-load afflictions before deck burn takes effect.",
+  },
+  "pride-envy": {
+    summary: "Pride's expensive cards trigger HUBRIS reliably, overwhelming Envy's gradual amplification.",
+    passiveInteraction: "HUBRIS x1.324 multiplier on expensive cards delivers burst damage faster than JEALOUSY can stack afflictions.",
+    attackerStrengths: ["HUBRIS amplifies expensive cards", "Single-round burst damage", "High-tier cards have outsized impact"],
+    defenderStrengths: ["JEALOUSY deepens afflictions", "Affliction stacking scales over time", "Duo targeting spreads pressure"],
+    keyCards: "Pride's Crown of Thorns with HUBRIS deals 40+ burst damage before Envy's afflictions can compound past round 5.",
+    counterStrategy: "As Pride: play expensive cards early for HUBRIS burst. As Envy: survive burst rounds with heal cards, then out-scale.",
+  },
+  "lust-pride": {
+    summary: "Lust's sustained lifesteal outlasts Pride's burst windows.",
+    passiveInteraction: "TEMPTATION heals consistently each round, while HUBRIS only triggers on expensive card plays — Lust wins between burst windows.",
+    attackerStrengths: ["TEMPTATION provides consistent healing", "Lifesteal from every damage tick", "Sustained advantage between bursts"],
+    defenderStrengths: ["HUBRIS burst can one-shot through healing", "Expensive cards deal massive damage", "High single-round impact"],
+    keyCards: "Lust's sustained healing between Pride's HUBRIS rounds creates a net HP advantage. Pride needs consecutive burst rounds to close.",
+    counterStrategy: "As Lust: maximize damage ticks for healing between bursts. As Pride: chain expensive cards in consecutive rounds.",
+  },
+};
+
+/**
  * Matchup flavor text — short analysis for notable matchups.
  * Explains the strategic dynamics behind the numbers.
  */
@@ -170,19 +283,22 @@ const HeatmapCell = memo(function HeatmapCell({
   value,
   isHovered,
   onHover,
+  onClick,
 }: {
   attacker: SinType;
   defender: SinType;
   value: number;
   isHovered: boolean;
   onHover: (key: string | null) => void;
+  onClick: (key: string) => void;
 }) {
   const isDiagonal = attacker === defender;
   const key = `${attacker}-${defender}`;
+  const hasDetail = !isDiagonal && (MATCHUP_DETAILS[key] || MATCHUP_DETAILS[`${defender}-${attacker}`]);
 
   return (
     <td
-      className="relative text-center transition-all duration-150"
+      className={`relative text-center transition-all duration-150 ${hasDetail ? "cursor-pointer" : ""}`}
       style={{
         background: isDiagonal ? "rgba(255, 255, 255, 0.02)" : getHeatColor(value),
         borderBottom: "1px solid rgba(255, 255, 255, 0.04)",
@@ -191,6 +307,7 @@ const HeatmapCell = memo(function HeatmapCell({
       }}
       onMouseEnter={() => !isDiagonal && onHover(key)}
       onMouseLeave={() => onHover(null)}
+      onClick={() => !isDiagonal && onClick(key)}
     >
       <div
         className={`w-full h-full flex items-center justify-center py-3 px-2 sm:py-4 sm:px-3 transition-all duration-150 ${
@@ -211,6 +328,213 @@ const HeatmapCell = memo(function HeatmapCell({
     </td>
   );
 });
+
+/* ─── Matchup Drill-Down Modal ─────────────────────────────── */
+function MatchupDrillDown({
+  attacker,
+  defender,
+  onClose,
+}: {
+  attacker: SinType;
+  defender: SinType;
+  onClose: () => void;
+}) {
+  const rate = MATCHUP_DATA[attacker][defender];
+  const reverseRate = MATCHUP_DATA[defender][attacker];
+  const key = `${attacker}-${defender}`;
+  const reverseKey = `${defender}-${attacker}`;
+  const detail = MATCHUP_DETAILS[key] || MATCHUP_DETAILS[reverseKey];
+  const isReversed = !MATCHUP_DETAILS[key] && !!MATCHUP_DETAILS[reverseKey];
+  const analysis = MATCHUP_ANALYSIS[key] || MATCHUP_ANALYSIS[reverseKey];
+
+  // If detail is reversed, swap attacker/defender strengths
+  const atkStrengths = detail ? (isReversed ? detail.defenderStrengths : detail.attackerStrengths) : [];
+  const defStrengths = detail ? (isReversed ? detail.attackerStrengths : detail.defenderStrengths) : [];
+
+  const winner = rate > 50 ? attacker : rate < 50 ? defender : null;
+  const winnerColor = winner ? FACTION_COLORS[winner] : "rgba(255,255,255,0.4)";
+
+  return createPortal(
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+        className="w-full max-w-lg max-h-[85vh] overflow-y-auto rounded-xl"
+        style={{
+          background: "linear-gradient(135deg, rgba(20, 16, 12, 0.98), rgba(12, 10, 8, 0.98))",
+          border: "1px solid rgba(245, 158, 11, 0.15)",
+          boxShadow: "0 25px 60px rgba(0,0,0,0.6), 0 0 40px rgba(245, 158, 11, 0.05)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="p-5 pb-0">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-2">
+              <img src={SIN_ARCHETYPE_ICONS[attacker]} alt="" className="w-8 h-8" />
+              <div>
+                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: FACTION_COLORS[attacker], fontFamily: "var(--font-heading)" }}>
+                  {FACTION_LABELS[attacker]}
+                </span>
+                <p className="text-[9px] text-white/25">{PASSIVE_INFO[attacker].name}</p>
+              </div>
+            </div>
+            <div className="flex flex-col items-center mx-2">
+              <span className="text-lg font-mono font-bold" style={{ color: getTextColor(rate) }}>
+                {rate.toFixed(1)}%
+              </span>
+              <span className="text-[8px] text-white/20">vs</span>
+              <span className="text-sm font-mono" style={{ color: getTextColor(reverseRate) }}>
+                {reverseRate.toFixed(1)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="text-right">
+                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: FACTION_COLORS[defender], fontFamily: "var(--font-heading)" }}>
+                  {FACTION_LABELS[defender]}
+                </span>
+                <p className="text-[9px] text-white/25">{PASSIVE_INFO[defender].name}</p>
+              </div>
+              <img src={SIN_ARCHETYPE_ICONS[defender]} alt="" className="w-8 h-8" />
+            </div>
+            <button
+              onClick={onClose}
+              className="ml-auto text-white/20 hover:text-white/50 transition-colors text-lg leading-none"
+            >
+              \u00d7
+            </button>
+          </div>
+
+          {/* Winner badge */}
+          {winner && (
+            <div className="flex items-center justify-center gap-2 mt-3 mb-1">
+              <div className="h-px flex-1" style={{ background: `${winnerColor}20` }} />
+              <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: winnerColor, fontFamily: "var(--font-heading)" }}>
+                {FACTION_LABELS[winner]} Favored
+              </span>
+              <div className="h-px flex-1" style={{ background: `${winnerColor}20` }} />
+            </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="p-5 space-y-4">
+          {/* Summary */}
+          {detail && (
+            <p className="text-xs text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+              {detail.summary}
+            </p>
+          )}
+
+          {/* Passive Interaction */}
+          {detail && (
+            <div className="rounded-lg p-3" style={{ background: "rgba(245, 158, 11, 0.05)", border: "1px solid rgba(245, 158, 11, 0.1)" }}>
+              <h4 className="text-[10px] uppercase tracking-wider text-amber-200/60 mb-1.5 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Passive Interaction
+              </h4>
+              <p className="text-[11px] text-white/45 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                {detail.passiveInteraction}
+              </p>
+            </div>
+          )}
+
+          {/* Strengths comparison */}
+          {detail && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <h4 className="text-[10px] uppercase tracking-wider mb-2 font-bold" style={{ color: FACTION_COLORS[attacker], fontFamily: "var(--font-heading)" }}>
+                  {FACTION_LABELS[attacker]} Strengths
+                </h4>
+                <ul className="space-y-1">
+                  {atkStrengths.map((s, i) => (
+                    <li key={i} className="text-[10px] text-white/35 leading-relaxed flex gap-1.5">
+                      <span style={{ color: FACTION_COLORS[attacker] }}>\u25B8</span>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-[10px] uppercase tracking-wider mb-2 font-bold" style={{ color: FACTION_COLORS[defender], fontFamily: "var(--font-heading)" }}>
+                  {FACTION_LABELS[defender]} Strengths
+                </h4>
+                <ul className="space-y-1">
+                  {defStrengths.map((s, i) => (
+                    <li key={i} className="text-[10px] text-white/35 leading-relaxed flex gap-1.5">
+                      <span style={{ color: FACTION_COLORS[defender] }}>\u25B8</span>
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {/* Key Cards */}
+          {detail && (
+            <div className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+              <h4 className="text-[10px] uppercase tracking-wider text-white/40 mb-1.5 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Key Card Interactions
+              </h4>
+              <p className="text-[10px] text-white/35 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                {detail.keyCards}
+              </p>
+            </div>
+          )}
+
+          {/* Counter Strategy */}
+          {detail && (
+            <div className="rounded-lg p-3" style={{ background: "rgba(34, 197, 94, 0.03)", border: "1px solid rgba(34, 197, 94, 0.08)" }}>
+              <h4 className="text-[10px] uppercase tracking-wider text-emerald-300/50 mb-1.5 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
+                Counter Strategies
+              </h4>
+              <p className="text-[10px] text-white/35 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                {detail.counterStrategy}
+              </p>
+            </div>
+          )}
+
+          {/* Fallback if no detail data */}
+          {!detail && analysis && (
+            <div className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.04)" }}>
+              <p className="text-xs text-white/45 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                {analysis}
+              </p>
+            </div>
+          )}
+
+          {!detail && !analysis && (
+            <div className="text-center py-4">
+              <p className="text-xs text-white/25" style={{ fontFamily: "var(--font-body)" }}>
+                This is a relatively even matchup with no dominant strategic pattern. Both factions perform similarly against each other.
+              </p>
+            </div>
+          )}
+
+          {/* Passive abilities reference */}
+          <div className="grid grid-cols-2 gap-3 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            {[attacker, defender].map((f) => (
+              <div key={f} className="text-[9px] text-white/20">
+                <span className="font-bold uppercase" style={{ color: `${FACTION_COLORS[f]}80` }}>{PASSIVE_INFO[f].name}</span>
+                <span className="ml-1">{PASSIVE_INFO[f].description.split(".")[0]}.</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </motion.div>,
+    document.body
+  );
+}
 
 /* ─── Key Dynamics Card ─────────────────────────────────────── */
 function DynamicCard({
@@ -260,6 +584,7 @@ function DynamicCard({
 /* ─── Main Page ─────────────────────────────────────────────── */
 export default function MatchupMatrix() {
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
+  const [drilldownCell, setDrilldownCell] = useState<string | null>(null);
 
   // Compute strongest/weakest matchups for each faction
   const factionStats = useMemo(() => {
@@ -277,6 +602,10 @@ export default function MatchupMatrix() {
 
   const handleHover = useCallback((key: string | null) => {
     setHoveredCell(key);
+  }, []);
+
+  const handleCellClick = useCallback((key: string) => {
+    setDrilldownCell(key);
   }, []);
 
   // Get tooltip info for hovered cell
@@ -424,6 +753,7 @@ export default function MatchupMatrix() {
                             value={MATCHUP_DATA[attacker][defender]}
                             isHovered={hoveredCell === `${attacker}-${defender}`}
                             onHover={handleHover}
+                            onClick={handleCellClick}
                           />
                         ))}
                       </tr>
@@ -434,7 +764,7 @@ export default function MatchupMatrix() {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center justify-center gap-4 mt-4 text-[10px] text-white/30">
+            <div className="flex flex-wrap items-center justify-center gap-4 mt-4 text-[10px] text-white/30">
               <div className="flex items-center gap-1.5">
                 <div className="w-4 h-3 rounded" style={{ background: "rgba(239, 68, 68, 0.25)" }} />
                 <span>Disadvantage (&lt;50%)</span>
@@ -446,6 +776,9 @@ export default function MatchupMatrix() {
               <div className="flex items-center gap-1.5">
                 <div className="w-4 h-3 rounded" style={{ background: "rgba(34, 197, 94, 0.25)" }} />
                 <span>Advantage (&gt;50%)</span>
+              </div>
+              <div className="flex items-center gap-1.5 text-amber-200/30">
+                <span>Tap any cell for details</span>
               </div>
             </div>
 
@@ -636,6 +969,18 @@ export default function MatchupMatrix() {
           </p>
         </div>
       </footer>
+
+      {/* Drill-Down Modal */}
+      {drilldownCell && (() => {
+        const [att, def] = drilldownCell.split("-") as [SinType, SinType];
+        return (
+          <MatchupDrillDown
+            attacker={att}
+            defender={def}
+            onClose={() => setDrilldownCell(null)}
+          />
+        );
+      })()}
     </div>
   );
 }
