@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.4.0",
+    date: "March 2026",
+    title: "The Purification",
+    summary: "64 card artworks reforged. Deck Builder split into a dual-pane war room. Saving your decks actually works now. The cathedral grows sharper.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Deck Builder redesigned with 50/50 split layout: card grid on the left, dynamic Deck Insights panel on the right" },
+      { category: "feature", text: "Deck Insights panel: live mana curve histogram, effect balance radar, tier breakdown, archetype detection (Aggressor/Controller/Hybrid/Balanced), compound pattern analysis, synergy score (0-100), and matchup forecast against all 6 opposing factions" },
+      { category: "feature", text: "Deck Insights updates dynamically as you add or remove cards, giving real-time strategic feedback" },
+      { category: "feature", text: "Added 10 vitest integration tests covering full deck CRUD lifecycle: create, list, get, update, delete, ownership validation, card count enforcement, and JSON validation" },
+      { category: "fix", text: "Fixed deck save for logged-in users: saving an existing deck now correctly calls update instead of always creating a new one. Server-assigned IDs are preserved for subsequent saves" },
+      { category: "fix", text: "Regenerated 64 card art images (17% of 378 total) that had quality issues: white borders, ornate frames baked in, text overlays, visible hands, or blank/gray backgrounds", factions: ["Wrath", "Sloth", "Envy", "Greed", "Pride", "Lust", "Gluttony"] },
+      { category: "fix", text: "Wrath had the most art issues (19 cards, 35% of faction). All regenerated with proper edge-to-edge dark gothic compositions" , factions: ["Wrath"] },
+      { category: "fix", text: "Lust cards lust_42 and lust_52 required a second regeneration pass to remove persistent frame artifacts", factions: ["Lust"] },
+    ],
+  },
+  {
     version: "5.3.0",
     date: "March 2026",
     title: "The Consume Rite",

@@ -1420,3 +1420,7 @@
 ## Deck Saving Verification
 - [x] Triple-check that logged-in users can save decks to Supabase — 10 vitest tests pass (CRUD + validation + auth)
 - [x] Verify saved decks persist and load correctly after page refresh — fixed create vs update bug, server IDs now used
+
+## Patch Notes Update
+- [x] Update patch notes page with latest changes (card art regeneration, deck save fix, deck CRUD tests)
+- [ ] Push updated code to GitHub for Vercel deployment
