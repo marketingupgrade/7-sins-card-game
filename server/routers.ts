@@ -62,6 +62,9 @@ import {
   getRelatedPosts,
   getAllBlogSlugs,
   getBlogCategoryCounts,
+  getPlayerProfile,
+  getPlayerAllMatchHistory,
+  getPlayerByGamertag,
 } from "./db-supabase";
 
 export const appRouter = router({
@@ -460,6 +463,42 @@ export const appRouter = router({
       )
       .query(async ({ input }) => {
         return getPlayerDeckHistory(input.deckId, input.playerId, input.limit);
+      }),
+  }),
+
+  /** Player profile - public profile pages */
+  profile: router({
+    /** Get a player's profile by ID */
+    get: publicProcedure
+      .input(z.object({ playerId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return getPlayerProfile(input.playerId);
+      }),
+
+    /** Get a player's published decks (reuses community helper) */
+    decks: publicProcedure
+      .input(z.object({ playerId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return getPlayerCommunityDecks(input.playerId);
+      }),
+
+    /** Get a player's recent match history across all decks */
+    matchHistory: publicProcedure
+      .input(
+        z.object({
+          playerId: z.string().min(1).max(64),
+          limit: z.number().int().min(1).max(50).default(30),
+        })
+      )
+      .query(async ({ input }) => {
+        return getPlayerAllMatchHistory(input.playerId, input.limit);
+      }),
+
+    /** Look up a player by gamertag (for URL routing) */
+    byGamertag: publicProcedure
+      .input(z.object({ gamertag: z.string().min(1).max(30) }))
+      .query(async ({ input }) => {
+        return getPlayerByGamertag(input.gamertag);
       }),
   }),
 

@@ -585,9 +585,9 @@ function CommentRow({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-amber-400/80 font-mono text-[11px] font-medium">
+            <a href={`/player/${encodeURIComponent(comment.gamertag)}`} className="text-amber-400/80 font-mono text-[11px] font-medium hover:text-amber-300 hover:underline transition-colors">
               {comment.gamertag}
-            </span>
+            </a>
             <span className="text-zinc-600 text-[10px]">
               {new Date(comment.createdAt).toLocaleDateString("en-US", {
                 month: "short",
@@ -942,7 +942,7 @@ const DeckCard = memo(function DeckCard({
           <div className="flex-1 min-w-0">
             <h3 className="text-white font-semibold text-sm truncate">{deck.deckName}</h3>
             <p className="text-zinc-400 text-xs mt-0.5">
-              by <span className="text-amber-400/80 font-mono">{deck.gamertag}</span>
+              by <a href={`/player/${encodeURIComponent(deck.gamertag)}`} className="text-amber-400/80 font-mono hover:text-amber-300 hover:underline transition-colors" onClick={(e) => e.stopPropagation()}>{deck.gamertag}</a>
               <span className="mx-1.5 text-zinc-600">&middot;</span>
               {createdDate}
             </p>

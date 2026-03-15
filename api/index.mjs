@@ -492,6 +492,53 @@ async function getPlayerDeckHistory(deckId, playerId, limit = 20) {
   if (error || !data) return [];
   return data.map(mapMatchResult);
 }
+async function getPlayerProfile(playerId) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data: player, error: playerErr } = await sb.from("players").select("id, gamertag, created_at").eq("id", playerId).single();
+  if (playerErr || !player) return null;
+  const { count: decksPublished } = await sb.from("community_decks").select("id", { count: "exact", head: true }).eq("player_id", playerId);
+  const { data: deckLikes } = await sb.from("community_decks").select("likes").eq("player_id", playerId);
+  const totalLikesReceived = (deckLikes || []).reduce((sum, d) => sum + (d.likes || 0), 0);
+  const { data: matchResults } = await sb.from("deck_match_results").select("result").eq("player_id", playerId);
+  const matchesPlayed = matchResults?.length || 0;
+  const matchesWon = (matchResults || []).filter((r) => r.result === "win").length;
+  const overallWinRate = matchesPlayed > 0 ? Math.round(matchesWon / matchesPlayed * 100) : 0;
+  return {
+    playerId: player.id,
+    gamertag: player.gamertag || null,
+    joinedAt: new Date(player.created_at),
+    decksPublished: decksPublished ?? 0,
+    totalLikesReceived,
+    matchesPlayed,
+    matchesWon,
+    overallWinRate
+  };
+}
+async function getPlayerAllMatchHistory(playerId, limit = 30) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data: results, error } = await sb.from("deck_match_results").select("*").eq("player_id", playerId).order("created_at", { ascending: false }).limit(limit);
+  if (error || !results) return [];
+  const deckIds = Array.from(new Set(results.map((r) => r.deck_id)));
+  const { data: decks } = await sb.from("community_decks").select("id, deck_name, faction").in("id", deckIds);
+  const deckMap = new Map((decks || []).map((d) => [d.id, { name: d.deck_name, faction: d.faction }]));
+  return results.map((row) => {
+    const deck = deckMap.get(row.deck_id);
+    return {
+      ...mapMatchResult(row),
+      deckName: deck?.name || "Unknown Deck",
+      faction: deck?.faction || "unknown"
+    };
+  });
+}
+async function getPlayerByGamertag(gamertag) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from("players").select("id, gamertag").eq("gamertag", gamertag).single();
+  if (error || !data) return null;
+  return { id: data.id, gamertag: data.gamertag };
+}
 async function upsertUser(_user) {
   return;
 }
@@ -6054,6 +6101,30 @@ var appRouter = router({
       })
     ).query(async ({ input }) => {
       return getPlayerDeckHistory(input.deckId, input.playerId, input.limit);
+    })
+  }),
+  /** Player profile - public profile pages */
+  profile: router({
+    /** Get a player's profile by ID */
+    get: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
+      return getPlayerProfile(input.playerId);
+    }),
+    /** Get a player's published decks (reuses community helper) */
+    decks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
+      return getPlayerCommunityDecks(input.playerId);
+    }),
+    /** Get a player's recent match history across all decks */
+    matchHistory: publicProcedure.input(
+      z3.object({
+        playerId: z3.string().min(1).max(64),
+        limit: z3.number().int().min(1).max(50).default(30)
+      })
+    ).query(async ({ input }) => {
+      return getPlayerAllMatchHistory(input.playerId, input.limit);
+    }),
+    /** Look up a player by gamertag (for URL routing) */
+    byGamertag: publicProcedure.input(z3.object({ gamertag: z3.string().min(1).max(30) })).query(async ({ input }) => {
+      return getPlayerByGamertag(input.gamertag);
     })
   }),
   /** User account management — data purge for GDPR compliance */

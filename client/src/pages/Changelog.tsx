@@ -84,6 +84,25 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.9.0",
+    date: "March 2026",
+    title: "The Sinners' Gallery",
+    summary: "Public player profile pages bring identity and reputation to the community. Every gamertag is now clickable — on deck cards and comments — linking to a full profile showing published decks, total likes received, match history, faction performance breakdown, and overall win rate. Profiles feature rank badges, animated stat cards, and tabbed navigation between Decks, Matches, and Stats views. 414 tests passing across 24 files.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Player Profile Pages: Public profiles at /player/:gamertag showing gamertag, rank tier, join date, and community stats" },
+      { category: "feature", text: "Profile Stats Dashboard: Decks published, total likes received, matches played, and matches won displayed as animated stat cards" },
+      { category: "feature", text: "Win Rate Ring: SVG circular progress ring showing overall win rate, color-coded (green/yellow/red)" },
+      { category: "feature", text: "Faction Performance Breakdown: Horizontal bar chart showing wins/losses and win rate per faction played" },
+      { category: "feature", text: "Deck Performance Summary: All published decks listed with likes count and win-rate data" },
+      { category: "feature", text: "Match History Timeline: Chronological list of recent matches with result indicators, deck info, and opponent faction" },
+      { category: "feature", text: "Clickable Gamertags: All gamertags on community deck cards and comments now link to the player's profile" },
+      { category: "feature", text: "Rank Tiers: Novice Sinner → Corruption Initiate → Cardinal Sin → Archdevil → The Mortal Sin, based on community match wins" },
+      { category: "feature", text: "Tabbed Navigation: Decks / Matches / Stats tabs with animated transitions and count badges" },
+      { category: "feature", text: "9 new vitest tests for profile lookup, stats aggregation, deck listing, and match history" },
+    ],
+  },
+  {
     version: "5.8.1",
     date: "March 2026",
     title: "The Arena Ledger",

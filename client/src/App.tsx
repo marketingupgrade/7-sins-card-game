@@ -48,6 +48,7 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Brandbook = lazy(() => import("./pages/Brandbook"));
 const CommunityDecks = lazy(() => import("./pages/CommunityDecks"));
+const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -112,6 +113,7 @@ function Router() {
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/brandbook" component={Brandbook} />
         <Route path="/community" component={CommunityDecks} />
+        <Route path="/player/:gamertag" component={PlayerProfile} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />
       </Switch>

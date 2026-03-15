@@ -1713,3 +1713,26 @@
 - [x] Update Changelog.tsx with v5.8.1 'The Arena Ledger' entry
 - [x] Full test suite: 405 tests, 23 files, 0 failures
 - [x] Save checkpoint
+
+## Player Profile Pages (v5.9.0)
+- [x] DB helper: getPlayerProfile (gamertag, join date, published deck count, total likes received, total matches played, win rate)
+- [x] DB helper: getPlayerCommunityDecks (all decks by a player with like counts)
+- [x] DB helper: getPlayerAllMatchHistory (recent match results across all decks with deck name/faction)
+- [x] DB helper: getPlayerByGamertag (resolve gamertag to player ID for URL routing)
+- [x] tRPC procedure: profile.get (by player ID) - public
+- [x] tRPC procedure: profile.decks (published decks by player) - public
+- [x] tRPC procedure: profile.matchHistory (recent matches by player, limit param) - public
+- [x] tRPC procedure: profile.byGamertag (resolve gamertag to player) - public
+- [x] Frontend: /player/:gamertag route with PlayerProfile page
+- [x] Frontend: Profile header (gamertag, rank badge, avatar, join date)
+- [x] Frontend: Published decks tab with deck cards, win-rate badges, and import buttons
+- [x] Frontend: Match history tab with result indicators, deck info, and opponent faction
+- [x] Frontend: Stats tab with win-rate ring, faction performance breakdown, deck performance summary
+- [x] Frontend: Clickable gamertags on community deck cards → player profile
+- [x] Frontend: Clickable gamertags on comments → player profile
+- [x] Frontend: Breadcrumb navigation (Community / gamertag)
+- [x] Frontend: Animated stat cards, staggered card animations, tab transitions
+- [x] Write 9 vitest tests for profile procedures (lookup, stats, decks, match history)
+- [x] Update Changelog.tsx with v5.9.0 'The Sinners' Gallery' entry
+- [x] Full test suite: 414 tests, 24 files, 0 failures
+- [x] Push to GitHub for Vercel deployment

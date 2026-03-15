@@ -950,6 +950,114 @@ export async function getPlayerDeckHistory(
   return data.map(mapMatchResult);
 }
 
+// ─── Player Profile ──────────────────────────────────────────
+
+export interface PlayerProfile {
+  playerId: string;
+  gamertag: string | null;
+  joinedAt: Date;
+  decksPublished: number;
+  totalLikesReceived: number;
+  matchesPlayed: number;
+  matchesWon: number;
+  overallWinRate: number;
+}
+
+/** Get a player's full profile with aggregated stats */
+export async function getPlayerProfile(playerId: string): Promise<PlayerProfile | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+
+  // Get player record
+  const { data: player, error: playerErr } = await sb
+    .from("players")
+    .select("id, gamertag, created_at")
+    .eq("id", playerId)
+    .single();
+  if (playerErr || !player) return null;
+
+  // Count published decks
+  const { count: decksPublished } = await sb
+    .from("community_decks")
+    .select("id", { count: "exact", head: true })
+    .eq("player_id", playerId);
+
+  // Sum total likes across all published decks
+  const { data: deckLikes } = await sb
+    .from("community_decks")
+    .select("likes")
+    .eq("player_id", playerId);
+  const totalLikesReceived = (deckLikes || []).reduce((sum: number, d: any) => sum + (d.likes || 0), 0);
+
+  // Count matches played and won
+  const { data: matchResults } = await sb
+    .from("deck_match_results")
+    .select("result")
+    .eq("player_id", playerId);
+  const matchesPlayed = matchResults?.length || 0;
+  const matchesWon = (matchResults || []).filter((r: any) => r.result === "win").length;
+  const overallWinRate = matchesPlayed > 0 ? Math.round((matchesWon / matchesPlayed) * 100) : 0;
+
+  return {
+    playerId: player.id,
+    gamertag: player.gamertag || null,
+    joinedAt: new Date(player.created_at),
+    decksPublished: decksPublished ?? 0,
+    totalLikesReceived,
+    matchesPlayed,
+    matchesWon,
+    overallWinRate,
+  };
+}
+
+/** Get a player's recent match history across all their decks */
+export async function getPlayerAllMatchHistory(
+  playerId: string,
+  limit = 30
+): Promise<(DeckMatchResult & { deckName?: string; faction?: string })[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+
+  // Get recent match results
+  const { data: results, error } = await sb
+    .from("deck_match_results")
+    .select("*")
+    .eq("player_id", playerId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !results) return [];
+
+  // Get deck names for context
+  const deckIds = Array.from(new Set(results.map((r: any) => r.deck_id)));
+  const { data: decks } = await sb
+    .from("community_decks")
+    .select("id, deck_name, faction")
+    .in("id", deckIds);
+  const deckMap = new Map((decks || []).map((d: any) => [d.id, { name: d.deck_name, faction: d.faction }]));
+
+  return results.map((row: any) => {
+    const deck = deckMap.get(row.deck_id);
+    return {
+      ...mapMatchResult(row),
+      deckName: deck?.name || "Unknown Deck",
+      faction: deck?.faction || "unknown",
+    };
+  });
+}
+
+/** Look up a player by gamertag (for profile URL routing) */
+export async function getPlayerByGamertag(gamertag: string): Promise<{ id: string; gamertag: string } | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("players")
+    .select("id, gamertag")
+    .eq("gamertag", gamertag)
+    .single();
+  if (error || !data) return null;
+  return { id: data.id, gamertag: data.gamertag };
+}
+
 // ─── User Management (stubs for Manus OAuth compat) ────────
 // These are used by the Manus OAuth flow in the bundled serverless function.
 // On Vercel with Supabase Auth, these are no-ops but must exist to avoid
