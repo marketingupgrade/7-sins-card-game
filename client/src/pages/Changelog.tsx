@@ -84,6 +84,21 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.4",
+    date: "March 2026",
+    title: "Target Mode Everywhere",
+    summary: "Target mode badges now appear on every card surface: Collection gallery grid, Collection detail modal, and mobile card zoom sheet. A new shared utility (targetModeUtils.ts) ensures consistent badge styling across all 4 UI surfaces. 304 tests passing.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Collection MiniCard: Compact target mode badge (AOE, DUO, 1v1, SELF, MIX) in the bottom-left corner of each card thumbnail" },
+      { category: "feature", text: "Collection CardDetailModal: Full target mode label in the header badge row alongside sin, tier, and priority tags" },
+      { category: "feature", text: "MobileCardZoom: Full target mode label in the card header, visible when tapping a card during gameplay on mobile" },
+      { category: "feature", text: "Shared targetModeUtils.ts: Extracted getCardTargetMode into a reusable utility with TargetModeInfo type, replacing inline implementations" },
+      { category: "fix", text: "CardHoverPreview refactored to use shared utility instead of its own inline getCardTargetMode function" },
+      { category: "feature", text: "9 new vitest tests validating target mode detection against all 378 cards in the card pool" },
+    ],
+  },
+  {
     version: "5.7.3",
     date: "March 2026",
     title: "The Clarity Patch",

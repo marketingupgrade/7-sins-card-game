@@ -16,6 +16,7 @@ import { getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
 import { getSinCssVar } from "@/lib/sinColors";
+import { getCardTargetMode } from "@/lib/targetModeUtils";
 
 interface MobileCardZoomProps {
   card: CardDefinition | null;
@@ -203,6 +204,21 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                     >
                       {PATTERN_LABELS[pattern] || pattern}
                     </span>
+                    {(() => {
+                      const tm = getCardTargetMode(card);
+                      return tm ? (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide"
+                          style={{
+                            color: tm.color,
+                            background: tm.bgColor,
+                            border: `1px solid ${tm.color}30`,
+                          }}
+                        >
+                          {tm.label}
+                        </span>
+                      ) : null;
+                    })()}
                   </div>
                 </div>
                 {/* Energy Cost — corruption orb */}

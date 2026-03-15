@@ -20,6 +20,7 @@ import {
   PASSIVE_INFO,
   getCompoundTickValue,
 } from "@shared/gameTypes";
+import { getCardTargetMode } from "@/lib/targetModeUtils";
 
 // ─── Constants ──────────────────────────────────────────────
 const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -155,6 +156,18 @@ const MiniCard = memo(function MiniCard({
             Priority
           </div>
         )}
+        {/* Target mode badge */}
+        {(() => {
+          const tm = getCardTargetMode(card);
+          return tm ? (
+            <div
+              className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide"
+              style={{ color: tm.color, background: tm.bgColor, border: `1px solid ${tm.color}30` }}
+            >
+              {tm.shortLabel}
+            </div>
+          ) : null;
+        })()}
       </div>
       {/* Info */}
       <div className="p-2 flex flex-col gap-0.5">
@@ -261,6 +274,17 @@ function CardDetailModal({
                   Priority
                 </span>
               )}
+              {(() => {
+                const tm = getCardTargetMode(card);
+                return tm ? (
+                  <span
+                    className="px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wide"
+                    style={{ color: tm.color, background: tm.bgColor, border: `1px solid ${tm.color}30` }}
+                  >
+                    {tm.label}
+                  </span>
+                ) : null;
+              })()}
             </div>
             <h2 className="text-xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
               {card.name}

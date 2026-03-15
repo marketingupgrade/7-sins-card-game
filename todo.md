@@ -1508,12 +1508,11 @@
 - [x] Save checkpoint and push to GitHub
 
 ## Desktop Card Hover Cue (v5.7.2)
-- [ ] Review existing card interaction hints (mobile tap hint, desktop hover preview)
-- [ ] Add visual hover cue on desktop cards showing they can be hovered for details
-- [ ] Ensure cue is subtle and doesn't obstruct card art
-- [ ] Cue should disappear after first hover interaction (learned behavior)
-- [ ] Update patch notes
-- [ ] Save checkpoint and push to GitHub
+- [x] Review existing card interaction hints (mobile tap hint, desktop hover preview)
+- [x] Add visual hover cue on desktop cards showing they can be hovered for details (already existed in GameCard.tsx)
+- [x] Ensure cue is subtle and doesn't obstruct card art (existing implementation confirmed)
+- [x] Cue disappears after first hover interaction (existing implementation confirmed)
+- [x] Skipped: feature already implemented in prior version
 
 ## Multi-Target / AoE Target Avatar Badge (v5.7.2)
 - [x] Investigate if TargetAvatarBadge shows all targets for multi-target/AoE cards
@@ -1537,4 +1536,16 @@
 - [x] Priority logic: aoe > duo > single+self > single > self
 - [x] 19 vitest tests for getCardTargetMode logic (cardHoverTargetMode.test.ts)
 - [x] Update patch notes (v5.7.3 'The Clarity Patch')
+- [x] Save checkpoint and push to GitHub
+
+## Target Mode Badges — Collection Page & Mobile Detail (v5.7.4)
+- [x] Created shared targetModeUtils.ts (getCardTargetMode + TargetModeInfo type)
+- [x] Refactored CardHoverPreview to use shared utility instead of inline function
+- [x] Add target mode badge to Collection MiniCard (shortLabel: AOE, DUO, 1v1, SELF, MIX)
+- [x] Add target mode badge to Collection CardDetailModal (full label in header)
+- [x] Add target mode badge to MobileCardZoom (full label in header)
+- [x] Consistent styling across all 4 surfaces (color-coded badges with border)
+- [x] 9 vitest tests for shared utility against ALL_CARDS (targetModeUtils.test.ts)
+- [x] Full test suite: 304 tests, 18 files, 0 failures
+- [x] Update patch notes (v5.7.4 'Target Mode Everywhere')
 - [ ] Save checkpoint and push to GitHub
