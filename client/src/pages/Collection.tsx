@@ -479,6 +479,7 @@ export default function Collection() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCard, setSelectedCard] = useState<CardDefinition | null>(null);
   const [showPriorityOnly, setShowPriorityOnly] = useState(false);
+  const [selectedTargetMode, setSelectedTargetMode] = useState<"all" | "aoe" | "duo" | "mixed" | "single" | "self">("all");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Get all unique effect types present in cards
@@ -498,6 +499,10 @@ export default function Collection() {
       if (selectedEffect !== "all") {
         if (!card.effects.some((eff) => eff.type === selectedEffect)) return false;
       }
+      if (selectedTargetMode !== "all") {
+        const tm = getCardTargetMode(card);
+        if (!tm || tm.mode !== selectedTargetMode) return false;
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         if (
@@ -509,7 +514,7 @@ export default function Collection() {
       }
       return true;
     });
-  }, [selectedSin, selectedTier, selectedEffect, selectedPattern, searchQuery, showPriorityOnly]);
+  }, [selectedSin, selectedTier, selectedEffect, selectedPattern, searchQuery, showPriorityOnly, selectedTargetMode]);
 
   // Stats
   const stats = useMemo(() => {
@@ -534,6 +539,7 @@ export default function Collection() {
     setSelectedTier("all");
     setSelectedEffect("all");
     setSelectedPattern("all");
+    setSelectedTargetMode("all");
     setSearchQuery("");
     setShowPriorityOnly(false);
   }, []);
@@ -543,6 +549,7 @@ export default function Collection() {
     selectedTier !== "all" ||
     selectedEffect !== "all" ||
     selectedPattern !== "all" ||
+    selectedTargetMode !== "all" ||
     searchQuery !== "" ||
     showPriorityOnly;
 
@@ -698,6 +705,36 @@ export default function Collection() {
                     onClick={() => setSelectedPattern(selectedPattern === p ? "all" : p)}
                   />
                 ))}
+              </div>
+            </div>
+
+            {/* Target Mode */}
+            <div className="space-y-1.5">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-white/40">Target</h3>
+              <div className="flex flex-wrap gap-1.5">
+                <FilterPill
+                  label="All"
+                  active={selectedTargetMode === "all"}
+                  onClick={() => setSelectedTargetMode("all")}
+                />
+                {(["single", "aoe", "duo", "self", "mixed"] as const).map((mode) => {
+                  const info: Record<string, { label: string; color: string }> = {
+                    single: { label: "Single", color: "#3b82f6" },
+                    aoe: { label: "AoE", color: "#f97316" },
+                    duo: { label: "Duo", color: "#a855f7" },
+                    self: { label: "Self", color: "#22c55e" },
+                    mixed: { label: "Mixed", color: "#22c55e" },
+                  };
+                  return (
+                    <FilterPill
+                      key={mode}
+                      label={info[mode].label}
+                      active={selectedTargetMode === mode}
+                      color={info[mode].color}
+                      onClick={() => setSelectedTargetMode(selectedTargetMode === mode ? "all" : mode)}
+                    />
+                  );
+                })}
               </div>
             </div>
 

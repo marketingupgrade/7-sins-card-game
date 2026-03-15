@@ -26,6 +26,7 @@ import {
   getCompoundTickValue,
 } from "@shared/gameTypes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
+import { getCardTargetMode } from "@/lib/targetModeUtils";
 
 // ─── Constants ──────────────────────────────────────────────
 const MAX_DECK_SIZE = 30;
@@ -674,6 +675,55 @@ function DeckInsightsPanel({
     return counts;
   }, [deckCards]);
 
+  // Target mode distribution
+  const targetModeDist = useMemo(() => {
+    const counts = { single: 0, aoe: 0, duo: 0, self: 0, mixed: 0 };
+    deckCards.forEach((c) => {
+      const tm = getCardTargetMode(c);
+      if (tm) counts[tm.mode]++;
+    });
+    return counts;
+  }, [deckCards]);
+
+  // Target mode synergy warnings
+  const targetWarnings = useMemo(() => {
+    if (deckCards.length < 5) return [];
+    const warnings: { type: "danger" | "caution" | "tip"; message: string; icon: string }[] = [];
+    const offensiveCards = targetModeDist.single + targetModeDist.aoe + targetModeDist.duo + targetModeDist.mixed;
+    const selfOnlyCards = targetModeDist.self;
+    const aoeCards = targetModeDist.aoe;
+    const total = deckCards.length;
+
+    // All self-target = no offense
+    if (offensiveCards === 0 && selfOnlyCards > 0) {
+      warnings.push({ type: "danger", message: "No offensive cards! Your deck can't deal damage to opponents.", icon: "⚠" });
+    } else if (offensiveCards <= 2 && total >= 10) {
+      warnings.push({ type: "caution", message: "Very few offensive cards. Consider adding damage dealers.", icon: "⚡" });
+    }
+
+    // No AoE = no crowd control
+    if (aoeCards === 0 && total >= 10) {
+      warnings.push({ type: "caution", message: "No AoE cards. You may struggle in multi-opponent fights.", icon: "🎯" });
+    }
+
+    // All AoE = no focused damage
+    if (aoeCards > 0 && targetModeDist.single === 0 && targetModeDist.duo === 0 && total >= 10) {
+      warnings.push({ type: "caution", message: "No single-target cards. You can't focus down priority threats.", icon: "🔍" });
+    }
+
+    // No self-target = no sustain
+    if (selfOnlyCards === 0 && targetModeDist.mixed === 0 && total >= 10) {
+      warnings.push({ type: "tip", message: "No self-targeting cards. Consider adding heals or shields.", icon: "💡" });
+    }
+
+    // Good balance
+    if (warnings.length === 0 && total >= 15 && aoeCards >= 2 && targetModeDist.single >= 3 && (selfOnlyCards + targetModeDist.mixed) >= 2) {
+      warnings.push({ type: "tip", message: "Great target coverage! Your deck handles all combat scenarios.", icon: "✓" });
+    }
+
+    return warnings;
+  }, [deckCards, targetModeDist]);
+
   // Synergy score (0-100)
   const synergyScore = useMemo(() => {
     if (deckCards.length < 3) return 0;
@@ -870,6 +920,77 @@ function DeckInsightsPanel({
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* ── Target Coverage ── */}
+      {!isEmpty && (
+        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+          <p className="text-[10px] text-white/30 uppercase tracking-wider font-semibold mb-2 text-center">Target Coverage</p>
+          <div className="grid grid-cols-5 gap-1">
+            {([
+              { key: "single" as const, label: "Single", color: "#3b82f6" },
+              { key: "aoe" as const, label: "AoE", color: "#f97316" },
+              { key: "duo" as const, label: "Duo", color: "#a855f7" },
+              { key: "self" as const, label: "Self", color: "#22c55e" },
+              { key: "mixed" as const, label: "Mix", color: "#22c55e" },
+            ]).map((t) => (
+              <div
+                key={t.key}
+                className="text-center p-1.5 rounded-lg"
+                style={{
+                  background: targetModeDist[t.key] > 0 ? `${t.color}10` : "rgba(255,255,255,0.01)",
+                  border: `1px solid ${targetModeDist[t.key] > 0 ? `${t.color}25` : "rgba(255,255,255,0.03)"}`,
+                }}
+              >
+                <p
+                  className="text-sm font-bold"
+                  style={{
+                    color: targetModeDist[t.key] > 0 ? t.color : "rgba(255,255,255,0.15)",
+                    fontFamily: "var(--font-heading)",
+                  }}
+                >
+                  {targetModeDist[t.key]}
+                </p>
+                <p className="text-[7px] text-white/30 mt-0.5">{t.label}</p>
+              </div>
+            ))}
+          </div>
+          {/* Synergy warnings */}
+          {targetWarnings.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {targetWarnings.map((w, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-1.5 px-2 py-1.5 rounded-md text-[9px] leading-tight"
+                  style={{
+                    background:
+                      w.type === "danger"
+                        ? "rgba(239,68,68,0.08)"
+                        : w.type === "caution"
+                          ? "rgba(234,179,8,0.08)"
+                          : "rgba(34,197,94,0.08)",
+                    border: `1px solid ${
+                      w.type === "danger"
+                        ? "rgba(239,68,68,0.15)"
+                        : w.type === "caution"
+                          ? "rgba(234,179,8,0.15)"
+                          : "rgba(34,197,94,0.15)"
+                    }`,
+                    color:
+                      w.type === "danger"
+                        ? "#fca5a5"
+                        : w.type === "caution"
+                          ? "#fde68a"
+                          : "#86efac",
+                  }}
+                >
+                  <span className="shrink-0 mt-px">{w.icon}</span>
+                  <span className="opacity-80">{w.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -1548,4 +1548,23 @@
 - [x] 9 vitest tests for shared utility against ALL_CARDS (targetModeUtils.test.ts)
 - [x] Full test suite: 304 tests, 18 files, 0 failures
 - [x] Update patch notes (v5.7.4 'Target Mode Everywhere')
+- [x] Save checkpoint and push to GitHub
+
+## Collection Target Mode Filter (v5.7.5)
+- [x] Add target mode filter pills (Single/AoE/Duo/Self/Mixed) to Collection page
+- [x] Integrate with existing sin, tier, pattern, and effect filters
+- [x] Filter works on both desktop and mobile (collapsible filter section)
+- [x] Added selectedTargetMode state, filter logic, clearFilters, hasActiveFilters
+
+## Deck Builder Synergy Hints (v5.7.5)
+- [x] Add Target Coverage section to DeckInsightsPanel with 5-column grid (Single/AoE/Duo/Self/Mix)
+- [x] Warn 'danger' when deck has no offensive cards (all self-target)
+- [x] Warn 'caution' when deck has no AoE cards (no crowd control)
+- [x] Warn 'caution' when deck has only AoE (no single-target focus)
+- [x] Warn 'tip' when deck has no self-targeting cards (no sustain)
+- [x] Show positive feedback for well-balanced decks
+- [x] Color-coded warning cards (red danger, yellow caution, green tip)
+- [x] 14 vitest tests for filter logic and synergy warnings (deckSynergy.test.ts)
+- [x] Full test suite: 318 tests, 19 files, 0 failures
+- [x] Update patch notes (v5.7.5 'The Strategist's Toolkit')
 - [ ] Save checkpoint and push to GitHub
