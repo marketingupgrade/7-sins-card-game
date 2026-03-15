@@ -1,0 +1,13 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS community_likes (\n  id BIGSERIAL PRIMARY KEY,\n  deck_id BIGINT NOT NULL REFERENCES community_decks(id) ON DELETE CASCADE,\n  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  UNIQUE(deck_id, player_id)\n);\nCREATE INDEX IF NOT EXISTS idx_community_likes_deck ON community_likes(deck_id);\nCREATE INDEX IF NOT EXISTS idx_community_likes_player ON community_likes(player_id);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3hEXs4XeXQE4Mk2.56c7ce483aa5 --database o77RcHv9EmwRBvLHbxTivs --execute CREATE TABLE IF NOT EXISTS community_likes (\n  id BIGSERIAL PRIMARY KEY,\n  deck_id BIGINT NOT NULL REFERENCES community_decks(id) ON DELETE CASCADE,\n  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,\n  created_at TIMESTAMPTZ DEFAULT NOW(),\n  UNIQUE(deck_id, player_id)\n);\nCREATE INDEX IF NOT EXISTS idx_community_likes_deck ON community_likes(deck_id);\nCREATE INDEX IF NOT EXISTS idx_community_likes_player ON community_likes(player_id);",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1064 (42000) at line 1: You have an error in your SQL syntax; check the manual that corresponds to your TiDB version for the right syntax to use line 2 column 15 near \"BIGSERIAL PRIMARY KEY,",
+    "  deck_id BIGINT NOT NULL REFERENCES community_decks(id) ON DELETE CASCADE,",
+    "  player_id UUID NOT NULL REFERENCES players(id) ON DELETE CASCADE,",
+    "  created_at TIMESTAMPTZ DEFAULT NOW(),",
+    "  UNIQUE(deck_id, player_id)",
+    ")\""
+  ]
+}

@@ -46,8 +46,13 @@ import {
   listCommunityDecks,
   getCommunityDeck,
   unpublishCommunityDeck,
-  likeCommunityDeck,
+  toggleCommunityLike,
+  getPlayerLikedDeckIds,
   getPlayerCommunityDecks,
+  listDeckComments,
+  addDeckComment,
+  deleteDeckComment,
+  getDeckCommentCounts,
   getBlogPosts,
   getBlogPostBySlug,
   getRelatedPosts,
@@ -309,11 +314,72 @@ export const appRouter = router({
         return unpublishCommunityDeck(input.deckId, input.playerId);
       }),
 
-    /** Like a community deck */
-    like: publicProcedure
-      .input(z.object({ deckId: z.number().int().positive() }))
+    /** Toggle like on a community deck (per-player rate-limited) */
+    toggleLike: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+        })
+      )
       .mutation(async ({ input }) => {
-        return likeCommunityDeck(input.deckId);
+        return toggleCommunityLike(input.deckId, input.playerId);
+      }),
+
+    /** Get deck IDs the player has liked (for rendering filled hearts) */
+    likedDeckIds: publicProcedure
+      .input(z.object({ playerId: z.string().min(1).max(64) }))
+      .query(async ({ input }) => {
+        return getPlayerLikedDeckIds(input.playerId);
+      }),
+
+    /** List comments for a community deck */
+    comments: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          limit: z.number().int().min(1).max(100).default(50),
+        })
+      )
+      .query(async ({ input }) => {
+        return listDeckComments(input.deckId, input.limit);
+      }),
+
+    /** Add a comment to a community deck */
+    addComment: publicProcedure
+      .input(
+        z.object({
+          deckId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+          gamertag: z.string().min(3).max(30),
+          content: z
+            .string()
+            .min(1)
+            .max(500)
+            .transform((s) => s.replace(/[<>"']/g, "")),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return addDeckComment(input);
+      }),
+
+    /** Delete a comment (only the author) */
+    deleteComment: publicProcedure
+      .input(
+        z.object({
+          commentId: z.number().int().positive(),
+          playerId: z.string().min(1).max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        return deleteDeckComment(input.commentId, input.playerId);
+      }),
+
+    /** Get comment counts for multiple decks (for badge display) */
+    commentCounts: publicProcedure
+      .input(z.object({ deckIds: z.array(z.number().int().positive()).max(50) }))
+      .query(async ({ input }) => {
+        return getDeckCommentCounts(input.deckIds);
       }),
 
     /** Get the current player's gamertag */

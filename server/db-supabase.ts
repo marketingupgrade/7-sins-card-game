@@ -630,22 +630,173 @@ export async function unpublishCommunityDeck(deckId: number, playerId: string): 
   return true;
 }
 
-/** Like a community deck (increment likes) */
-export async function likeCommunityDeck(deckId: number): Promise<boolean> {
+/**
+ * Toggle like on a community deck (per-player, one like per deck).
+ * Uses the community_likes junction table for rate-limiting.
+ * Returns { liked: boolean, newCount: number } so the UI can update instantly.
+ */
+export async function toggleCommunityLike(
+  deckId: number,
+  playerId: string
+): Promise<{ liked: boolean; newCount: number }> {
+  const sb = getSupabase();
+  if (!sb) return { liked: false, newCount: 0 };
+
+  // Check if the player already liked this deck
+  const { data: existing } = await sb
+    .from("community_likes")
+    .select("id")
+    .eq("deck_id", deckId)
+    .eq("player_id", playerId)
+    .maybeSingle();
+
+  if (existing) {
+    // Unlike: remove the like row and decrement
+    await sb.from("community_likes").delete().eq("id", existing.id);
+    const { data: current } = await sb
+      .from("community_decks")
+      .select("likes")
+      .eq("id", deckId)
+      .single();
+    const newCount = Math.max(0, (current?.likes || 1) - 1);
+    await sb.from("community_decks").update({ likes: newCount }).eq("id", deckId);
+    return { liked: false, newCount };
+  } else {
+    // Like: insert a like row and increment
+    await sb.from("community_likes").insert({ deck_id: deckId, player_id: playerId });
+    const { data: current } = await sb
+      .from("community_decks")
+      .select("likes")
+      .eq("id", deckId)
+      .single();
+    const newCount = (current?.likes || 0) + 1;
+    await sb.from("community_decks").update({ likes: newCount }).eq("id", deckId);
+    return { liked: true, newCount };
+  }
+}
+
+/** Check which deck IDs a player has liked (for rendering filled hearts) */
+export async function getPlayerLikedDeckIds(playerId: string): Promise<number[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("community_likes")
+    .select("deck_id")
+    .eq("player_id", playerId);
+  if (error || !data) return [];
+  return data.map((r: any) => r.deck_id);
+}
+
+// ─── Community Comments ────────────────────────────────────
+
+export interface CommunityComment {
+  id: number;
+  deckId: number;
+  playerId: string;
+  gamertag: string;
+  content: string;
+  createdAt: Date;
+}
+
+function mapCommunityComment(row: any): CommunityComment {
+  return {
+    id: row.id,
+    deckId: row.deck_id,
+    playerId: row.player_id,
+    gamertag: row.gamertag,
+    content: row.content,
+    createdAt: new Date(row.created_at),
+  };
+}
+
+/** List comments for a community deck, newest first */
+export async function listDeckComments(
+  deckId: number,
+  limit = 50
+): Promise<CommunityComment[]> {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb
+    .from("community_comments")
+    .select("*")
+    .eq("deck_id", deckId)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error || !data) return [];
+  return data.map(mapCommunityComment);
+}
+
+/** Add a comment to a community deck */
+export async function addDeckComment(input: {
+  deckId: number;
+  playerId: string;
+  gamertag: string;
+  content: string;
+}): Promise<CommunityComment | null> {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb
+    .from("community_comments")
+    .insert({
+      deck_id: input.deckId,
+      player_id: input.playerId,
+      gamertag: input.gamertag,
+      content: input.content,
+    })
+    .select("*")
+    .single();
+  if (error || !data) {
+    console.error("[Supabase] Failed to add comment:", error?.message);
+    return null;
+  }
+  return mapCommunityComment(data);
+}
+
+/** Delete a comment (only the author can delete) */
+export async function deleteDeckComment(
+  commentId: number,
+  playerId: string
+): Promise<boolean> {
   const sb = getSupabase();
   if (!sb) return false;
-  const { data: current } = await sb
-    .from("community_decks")
-    .select("likes")
-    .eq("id", deckId)
-    .single();
-  if (!current) return false;
   const { error } = await sb
-    .from("community_decks")
-    .update({ likes: (current.likes || 0) + 1 })
-    .eq("id", deckId);
-  if (error) return false;
+    .from("community_comments")
+    .delete()
+    .eq("id", commentId)
+    .eq("player_id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to delete comment:", error.message);
+    return false;
+  }
   return true;
+}
+
+/** Get comment count for a deck (for badge display) */
+export async function getDeckCommentCount(deckId: number): Promise<number> {
+  const sb = getSupabase();
+  if (!sb) return 0;
+  const { count, error } = await sb
+    .from("community_comments")
+    .select("id", { count: "exact", head: true })
+    .eq("deck_id", deckId);
+  if (error) return 0;
+  return count ?? 0;
+}
+
+/** Get comment counts for multiple decks at once (batch) */
+export async function getDeckCommentCounts(deckIds: number[]): Promise<Record<number, number>> {
+  const sb = getSupabase();
+  if (!sb || deckIds.length === 0) return {};
+  const { data, error } = await sb
+    .from("community_comments")
+    .select("deck_id")
+    .in("deck_id", deckIds);
+  if (error || !data) return {};
+  const counts: Record<number, number> = {};
+  for (const row of data) {
+    counts[row.deck_id] = (counts[row.deck_id] || 0) + 1;
+  }
+  return counts;
 }
 
 /** Get community decks published by a specific player */

@@ -329,14 +329,83 @@ async function unpublishCommunityDeck(deckId, playerId) {
   }
   return true;
 }
-async function likeCommunityDeck(deckId) {
+async function toggleCommunityLike(deckId, playerId) {
+  const sb = getSupabase();
+  if (!sb) return { liked: false, newCount: 0 };
+  const { data: existing } = await sb.from("community_likes").select("id").eq("deck_id", deckId).eq("player_id", playerId).maybeSingle();
+  if (existing) {
+    await sb.from("community_likes").delete().eq("id", existing.id);
+    const { data: current } = await sb.from("community_decks").select("likes").eq("id", deckId).single();
+    const newCount = Math.max(0, (current?.likes || 1) - 1);
+    await sb.from("community_decks").update({ likes: newCount }).eq("id", deckId);
+    return { liked: false, newCount };
+  } else {
+    await sb.from("community_likes").insert({ deck_id: deckId, player_id: playerId });
+    const { data: current } = await sb.from("community_decks").select("likes").eq("id", deckId).single();
+    const newCount = (current?.likes || 0) + 1;
+    await sb.from("community_decks").update({ likes: newCount }).eq("id", deckId);
+    return { liked: true, newCount };
+  }
+}
+async function getPlayerLikedDeckIds(playerId) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("community_likes").select("deck_id").eq("player_id", playerId);
+  if (error || !data) return [];
+  return data.map((r) => r.deck_id);
+}
+function mapCommunityComment(row) {
+  return {
+    id: row.id,
+    deckId: row.deck_id,
+    playerId: row.player_id,
+    gamertag: row.gamertag,
+    content: row.content,
+    createdAt: new Date(row.created_at)
+  };
+}
+async function listDeckComments(deckId, limit = 50) {
+  const sb = getSupabase();
+  if (!sb) return [];
+  const { data, error } = await sb.from("community_comments").select("*").eq("deck_id", deckId).order("created_at", { ascending: false }).limit(limit);
+  if (error || !data) return [];
+  return data.map(mapCommunityComment);
+}
+async function addDeckComment(input) {
+  const sb = getSupabase();
+  if (!sb) return null;
+  const { data, error } = await sb.from("community_comments").insert({
+    deck_id: input.deckId,
+    player_id: input.playerId,
+    gamertag: input.gamertag,
+    content: input.content
+  }).select("*").single();
+  if (error || !data) {
+    console.error("[Supabase] Failed to add comment:", error?.message);
+    return null;
+  }
+  return mapCommunityComment(data);
+}
+async function deleteDeckComment(commentId, playerId) {
   const sb = getSupabase();
   if (!sb) return false;
-  const { data: current } = await sb.from("community_decks").select("likes").eq("id", deckId).single();
-  if (!current) return false;
-  const { error } = await sb.from("community_decks").update({ likes: (current.likes || 0) + 1 }).eq("id", deckId);
-  if (error) return false;
+  const { error } = await sb.from("community_comments").delete().eq("id", commentId).eq("player_id", playerId);
+  if (error) {
+    console.error("[Supabase] Failed to delete comment:", error.message);
+    return false;
+  }
   return true;
+}
+async function getDeckCommentCounts(deckIds) {
+  const sb = getSupabase();
+  if (!sb || deckIds.length === 0) return {};
+  const { data, error } = await sb.from("community_comments").select("deck_id").in("deck_id", deckIds);
+  if (error || !data) return {};
+  const counts = {};
+  for (const row of data) {
+    counts[row.deck_id] = (counts[row.deck_id] || 0) + 1;
+  }
+  return counts;
 }
 async function getPlayerCommunityDecks(playerId) {
   const sb = getSupabase();
@@ -5811,9 +5880,51 @@ var appRouter = router({
     ).mutation(async ({ input }) => {
       return unpublishCommunityDeck(input.deckId, input.playerId);
     }),
-    /** Like a community deck */
-    like: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).mutation(async ({ input }) => {
-      return likeCommunityDeck(input.deckId);
+    /** Toggle like on a community deck (per-player rate-limited) */
+    toggleLike: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64)
+      })
+    ).mutation(async ({ input }) => {
+      return toggleCommunityLike(input.deckId, input.playerId);
+    }),
+    /** Get deck IDs the player has liked (for rendering filled hearts) */
+    likedDeckIds: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
+      return getPlayerLikedDeckIds(input.playerId);
+    }),
+    /** List comments for a community deck */
+    comments: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        limit: z3.number().int().min(1).max(100).default(50)
+      })
+    ).query(async ({ input }) => {
+      return listDeckComments(input.deckId, input.limit);
+    }),
+    /** Add a comment to a community deck */
+    addComment: publicProcedure.input(
+      z3.object({
+        deckId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64),
+        gamertag: z3.string().min(3).max(30),
+        content: z3.string().min(1).max(500).transform((s) => s.replace(/[<>"']/g, ""))
+      })
+    ).mutation(async ({ input }) => {
+      return addDeckComment(input);
+    }),
+    /** Delete a comment (only the author) */
+    deleteComment: publicProcedure.input(
+      z3.object({
+        commentId: z3.number().int().positive(),
+        playerId: z3.string().min(1).max(64)
+      })
+    ).mutation(async ({ input }) => {
+      return deleteDeckComment(input.commentId, input.playerId);
+    }),
+    /** Get comment counts for multiple decks (for badge display) */
+    commentCounts: publicProcedure.input(z3.object({ deckIds: z3.array(z3.number().int().positive()).max(50) })).query(async ({ input }) => {
+      return getDeckCommentCounts(input.deckIds);
     }),
     /** Get the current player's gamertag */
     getGamertag: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {

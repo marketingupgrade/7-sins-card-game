@@ -84,6 +84,26 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.8.0",
+    date: "March 2026",
+    title: "The Social Crucible",
+    summary: "Community decks now feature per-player like rate-limiting and threaded comments. The like system uses a junction table so each player can only like a deck once (toggle on/off). Comments let players discuss strategies, share feedback, and build social bonds around published decks. Animated heart toggle with optimistic updates, expandable comment sections, and batch comment count badges. 395 tests passing across 23 files.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Toggle-Like System: Per-player rate-limited likes via community_likes junction table — one like per player per deck, toggle on/off" },
+      { category: "feature", text: "Animated Heart: Filled heart with scale-bounce microinteraction (Saffer model) for instant visual feedback on like/unlike" },
+      { category: "feature", text: "Optimistic Updates: Like toggles update UI instantly (<100ms) then reconcile with server truth" },
+      { category: "feature", text: "Liked Deck Tracking: Backend returns which decks a player has liked for rendering filled hearts on page load" },
+      { category: "feature", text: "Community Comments: Threaded comment system on each published deck — add, view, and delete comments" },
+      { category: "feature", text: "Comment Section: Expandable per-deck comment panel with animated transitions, newest-first ordering" },
+      { category: "feature", text: "Comment Count Badges: Batch-loaded comment counts displayed on each deck card for social proof" },
+      { category: "feature", text: "Author-Only Delete: Comment deletion restricted to the original author (server-side enforcement)" },
+      { category: "feature", text: "Character Limit: Comments capped at 500 characters with live counter and input sanitization" },
+      { category: "feature", text: "Gamertag Avatars: Color-coded initial avatars derived from gamertag for visual identity in comments" },
+      { category: "feature", text: "11 new vitest tests for toggle-like, liked deck IDs, cross-player independence, comment CRUD, and access control" },
+    ],
+  },
+  {
     version: "5.7.9",
     date: "March 2026",
     title: "The Community Forge",

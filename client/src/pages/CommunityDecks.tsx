@@ -1,15 +1,21 @@
 /**
  * CommunityDecks — Browse & Share Player-Built Decks
  *
- * Features:
+ * v5.8.0 Features:
  * - Browse published decks from the community
  * - Filter by faction, sort by newest/most liked
  * - Publish your own decks with gamertag (not real name)
  * - Import community decks into the deck builder
- * - Like community decks
+ * - Toggle-like with per-player rate-limiting (one like per deck)
+ * - Animated heart fill for liked state (microinteraction)
+ * - Threaded comments on each deck (social influence / Core Drive 5)
+ * - Comment count badges for social proof
  * - Gamertag setup prompt for first-time publishers
+ *
+ * UX: Follows Saffer's microinteraction model (Trigger → Rules → Feedback → Loops)
+ * Behavioral: Octalysis CD5 (Social Influence) + CD2 (Accomplishment via likes)
  */
-import { useState, useMemo, useCallback, useEffect, memo } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
@@ -67,6 +73,44 @@ interface CommunityDeck {
   updatedAt: string;
 }
 
+interface Comment {
+  id: number;
+  deckId: number;
+  playerId: string;
+  gamertag: string;
+  content: string;
+  createdAt: string;
+}
+
+// ─── Animated Heart Icon ────────────────────────────────────
+// Microinteraction: Trigger (click) → Rules (toggle) → Feedback (fill animation + scale bounce)
+function HeartIcon({ filled, size = 14 }: { filled: boolean; size?: number }) {
+  return (
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill={filled ? "currentColor" : "none"}
+      stroke="currentColor"
+      strokeWidth="2"
+      initial={false}
+      animate={filled ? { scale: [1, 1.3, 1] } : { scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+    </motion.svg>
+  );
+}
+
+// ─── Comment Bubble Icon ────────────────────────────────────
+function CommentIcon({ size = 14 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  );
+}
+
 // ─── Gamertag Setup Modal ───────────────────────────────────
 function GamertagModal({
   currentTag,
@@ -117,7 +161,7 @@ function GamertagModal({
       >
         <h3 className="font-['Cinzel'] text-xl text-amber-400 mb-2">Choose Your Gamertag</h3>
         <p className="text-zinc-400 text-sm mb-4">
-          This name will be displayed on your published decks. It must be unique and 3-30 characters
+          This name will be displayed on your published decks and comments. It must be unique and 3-30 characters
           (letters, numbers, underscores, hyphens).
         </p>
 
@@ -277,88 +321,267 @@ function PublishModal({
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm font-medium truncate">{deck.name}</div>
-                    <div className="text-zinc-400 text-xs capitalize">{deck.faction}</div>
+                    <div className="text-zinc-500 text-xs capitalize">{deck.faction}</div>
                   </div>
-                  <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ color: SIN_COLORS[deck.faction as SinType], borderColor: SIN_COLORS[deck.faction as SinType], borderWidth: 1 }}
-                  >
-                    30 cards
-                  </span>
                 </button>
               ))}
             </div>
 
-            {selectedDeckIdx >= 0 && (
-              <>
-                <label className="block text-zinc-300 text-sm mb-1 font-semibold">Deck Name</label>
-                <input
-                  type="text"
-                  value={deckName}
-                  onChange={(e) => setDeckName(e.target.value)}
-                  placeholder="Give your deck a name..."
-                  maxLength={100}
-                  className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white
-                             placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-4 text-sm"
-                />
+            <label className="block text-zinc-300 text-sm mb-1.5 font-semibold">Deck Name</label>
+            <input
+              type="text"
+              value={deckName}
+              onChange={(e) => setDeckName(e.target.value)}
+              placeholder="Give your deck a name..."
+              maxLength={100}
+              className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
+                         placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-3"
+            />
 
-                <label className="block text-zinc-300 text-sm mb-1 font-semibold">
-                  Strategy Description <span className="text-zinc-500 font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={strategy}
-                  onChange={(e) => setStrategy(e.target.value)}
-                  placeholder="Describe your deck's strategy, key combos, and win conditions..."
-                  maxLength={500}
-                  rows={3}
-                  className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2 text-white
-                             placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-4 text-sm resize-none"
-                />
-              </>
-            )}
+            <label className="block text-zinc-300 text-sm mb-1.5 font-semibold">Strategy Notes (optional)</label>
+            <textarea
+              value={strategy}
+              onChange={(e) => setStrategy(e.target.value)}
+              placeholder="Describe your deck's strategy, key combos, or playstyle..."
+              maxLength={500}
+              rows={3}
+              className="w-full bg-zinc-800 border border-zinc-600 rounded-lg px-3 py-2.5 text-white text-sm
+                         placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/50 mb-4 resize-none"
+            />
+
+            <div className="flex gap-3">
+              <button
+                onClick={onClose}
+                className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-600 text-zinc-300
+                           hover:bg-zinc-800 transition-colors text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePublish}
+                disabled={selectedDeckIdx < 0 || !deckName.trim()}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold
+                           hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
+              >
+                Publish
+              </button>
+            </div>
           </>
         )}
-
-        <div className="flex gap-3 mt-2">
-          <button
-            onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-lg border border-zinc-600 text-zinc-300
-                       hover:bg-zinc-800 transition-colors text-sm"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={selectedDeckIdx < 0 || !deckName.trim()}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-amber-600 text-white font-semibold
-                       hover:bg-amber-500 transition-colors disabled:opacity-40 disabled:cursor-not-allowed text-sm"
-          >
-            Publish Deck
-          </button>
-        </div>
       </motion.div>
     </div>,
     document.body
   );
 }
 
+// ─── Comment Section (expandable per deck) ──────────────────
+// Behavioral: CD5 Social Influence — low-friction social interactions (social prods)
+function CommentSection({
+  deckId,
+  currentUserId,
+  gamertag,
+  onRequireGamertag,
+  showToast,
+}: {
+  deckId: number;
+  currentUserId: string | null;
+  gamertag: string | null;
+  onRequireGamertag: () => void;
+  showToast: (msg: string, type: "success" | "error") => void;
+}) {
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [newComment, setNewComment] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load comments
+  useEffect(() => {
+    trpcQuery("community.comments", { deckId })
+      .then((data: Comment[]) => {
+        setComments(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [deckId]);
+
+  const handleSubmit = async () => {
+    if (!currentUserId) {
+      showToast("Sign in to comment", "error");
+      return;
+    }
+    if (!gamertag) {
+      onRequireGamertag();
+      return;
+    }
+    if (!newComment.trim()) return;
+    setSubmitting(true);
+    try {
+      const comment = await trpcMutate("community.addComment", {
+        deckId,
+        playerId: currentUserId,
+        gamertag,
+        content: newComment.trim(),
+      });
+      if (comment) {
+        setComments((prev) => [comment, ...prev]);
+        setNewComment("");
+      }
+    } catch (err: any) {
+      showToast(err.message || "Failed to post comment", "error");
+    }
+    setSubmitting(false);
+  };
+
+  const handleDelete = async (commentId: number) => {
+    if (!currentUserId) return;
+    try {
+      await trpcMutate("community.deleteComment", {
+        commentId,
+        playerId: currentUserId,
+      });
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+    } catch {
+      showToast("Failed to delete comment", "error");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  return (
+    <div className="border-t border-zinc-800/60 px-4 pb-4 pt-3">
+      {/* Comment input */}
+      <div className="flex gap-2 mb-3">
+        <textarea
+          ref={inputRef}
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value.slice(0, 500))}
+          onKeyDown={handleKeyDown}
+          placeholder={currentUserId ? "Share your thoughts..." : "Sign in to comment"}
+          disabled={!currentUserId || submitting}
+          rows={1}
+          className="flex-1 bg-zinc-800/60 border border-zinc-700/50 rounded-lg px-3 py-2 text-white text-xs
+                     placeholder:text-zinc-500 focus:outline-none focus:border-amber-500/40
+                     disabled:opacity-40 resize-none"
+        />
+        <button
+          onClick={handleSubmit}
+          disabled={!currentUserId || !newComment.trim() || submitting}
+          className="px-3 py-2 rounded-lg bg-amber-600/20 border border-amber-600/30
+                     text-amber-400 hover:bg-amber-600/30 transition-colors text-xs font-medium
+                     disabled:opacity-30 disabled:cursor-not-allowed whitespace-nowrap"
+        >
+          {submitting ? "..." : "Post"}
+        </button>
+      </div>
+
+      {/* Character count */}
+      {newComment.length > 0 && (
+        <div className="text-right -mt-2 mb-2">
+          <span className={`text-[10px] ${newComment.length > 450 ? "text-amber-400" : "text-zinc-600"}`}>
+            {newComment.length}/500
+          </span>
+        </div>
+      )}
+
+      {/* Comments list */}
+      {loading ? (
+        <div className="text-zinc-500 text-xs py-2">Loading comments...</div>
+      ) : comments.length === 0 ? (
+        <div className="text-zinc-600 text-xs py-1 text-center italic">
+          No comments yet — be the first to share your thoughts
+        </div>
+      ) : (
+        <div className="space-y-2.5 max-h-48 overflow-y-auto pr-1">
+          <AnimatePresence initial={false}>
+            {comments.map((comment) => (
+              <motion.div
+                key={comment.id}
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="group"
+              >
+                <div className="flex items-start gap-2">
+                  {/* Avatar placeholder */}
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5"
+                    style={{
+                      backgroundColor: `${SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]]}25`,
+                      color: SIN_COLORS[SINS[comment.gamertag.charCodeAt(0) % 7]],
+                    }}
+                  >
+                    {comment.gamertag[0].toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-amber-400/80 font-mono text-[11px] font-medium">
+                        {comment.gamertag}
+                      </span>
+                      <span className="text-zinc-600 text-[10px]">
+                        {new Date(comment.createdAt).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </span>
+                      {currentUserId === comment.playerId && (
+                        <button
+                          onClick={() => handleDelete(comment.id)}
+                          className="opacity-0 group-hover:opacity-100 text-zinc-600 hover:text-red-400
+                                     transition-all text-[10px] ml-auto"
+                          title="Delete comment"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-zinc-300 text-xs leading-relaxed mt-0.5">{comment.content}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Deck Card (Community Deck Display) ─────────────────────
+// Behavioral: CD2 Accomplishment (like count as social proof) + CD5 Social Influence (comments)
 const DeckCard = memo(function DeckCard({
   deck,
   currentUserId,
+  isLiked,
+  commentCount,
+  gamertag,
   onImport,
-  onLike,
+  onToggleLike,
   onUnpublish,
+  onRequireGamertag,
+  showToast,
 }: {
   deck: CommunityDeck;
   currentUserId: string | null;
+  isLiked: boolean;
+  commentCount: number;
+  gamertag: string | null;
   onImport: (deck: CommunityDeck) => void;
-  onLike: (deckId: number) => void;
+  onToggleLike: (deckId: number) => void;
   onUnpublish: (deckId: number) => void;
+  onRequireGamertag: () => void;
+  showToast: (msg: string, type: "success" | "error") => void;
 }) {
   const faction = deck.faction as SinType;
   const sinColor = SIN_COLORS[faction] || "#888";
   const isOwner = currentUserId === deck.playerId;
+  const [showComments, setShowComments] = useState(false);
 
   // Parse card IDs for preview
   let cardIds: string[] = [];
@@ -378,7 +601,7 @@ const DeckCard = memo(function DeckCard({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-zinc-900/80 border border-zinc-700/60 rounded-xl overflow-hidden hover:border-zinc-500/60 transition-colors group"
+      className="bg-zinc-900/80 border border-zinc-700/60 rounded-xl overflow-hidden hover:border-zinc-500/60 transition-colors group flex flex-col"
     >
       {/* Card art preview strip */}
       <div className="relative h-24 overflow-hidden">
@@ -408,7 +631,7 @@ const DeckCard = memo(function DeckCard({
       </div>
 
       {/* Content */}
-      <div className="p-4">
+      <div className="p-4 flex-1 flex flex-col">
         <div className="flex items-start justify-between mb-2">
           <div className="flex-1 min-w-0">
             <h3 className="text-white font-semibold text-sm truncate">{deck.deckName}</h3>
@@ -424,20 +647,39 @@ const DeckCard = memo(function DeckCard({
           <p className="text-zinc-400 text-xs leading-relaxed mb-3 line-clamp-2">{deck.strategy}</p>
         )}
 
-        {/* Actions */}
+        {/* Actions — Microinteraction: immediate visual feedback on every tap */}
         <div className="flex items-center gap-2 mt-auto">
+          {/* Like toggle button */}
           <button
-            onClick={() => onLike(deck.id)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-zinc-700
-                       text-zinc-300 hover:border-red-500/40 hover:text-red-400 transition-colors text-xs"
-            title="Like this deck"
+            onClick={() => onToggleLike(deck.id)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-xs
+              ${isLiked
+                ? "border-red-500/40 bg-red-500/10 text-red-400"
+                : "border-zinc-700 text-zinc-300 hover:border-red-500/40 hover:text-red-400"
+              }`}
+            title={isLiked ? "Unlike this deck" : "Like this deck"}
+            aria-label={isLiked ? `Unlike deck, ${deck.likes} likes` : `Like deck, ${deck.likes} likes`}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-            </svg>
-            <span>{deck.likes}</span>
+            <HeartIcon filled={isLiked} />
+            <span className="tabular-nums">{deck.likes}</span>
           </button>
 
+          {/* Comment toggle button */}
+          <button
+            onClick={() => setShowComments(!showComments)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border transition-all text-xs
+              ${showComments
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                : "border-zinc-700 text-zinc-300 hover:border-amber-500/40 hover:text-amber-400"
+              }`}
+            title="View comments"
+            aria-label={`${commentCount} comments`}
+          >
+            <CommentIcon />
+            <span className="tabular-nums">{commentCount}</span>
+          </button>
+
+          {/* Import button */}
           <button
             onClick={() => onImport(deck)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-600/20 border border-amber-600/30
@@ -468,6 +710,27 @@ const DeckCard = memo(function DeckCard({
           )}
         </div>
       </div>
+
+      {/* Expandable comment section */}
+      <AnimatePresence>
+        {showComments && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <CommentSection
+              deckId={deck.id}
+              currentUserId={currentUserId}
+              gamertag={gamertag}
+              onRequireGamertag={onRequireGamertag}
+              showToast={showToast}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 });
@@ -489,15 +752,20 @@ export default function CommunityDecks() {
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
   const [publishing, setPublishing] = useState(false);
+  const [likedDeckIds, setLikedDeckIds] = useState<Set<number>>(new Set());
+  const [commentCounts, setCommentCounts] = useState<Record<number, number>>({});
 
   const LIMIT = 12;
   const totalPages = Math.ceil(total / LIMIT);
 
-  // Load gamertag for logged-in user
+  // Load gamertag + liked deck IDs for logged-in user
   useEffect(() => {
     if (!user) return;
     trpcQuery("community.getGamertag", { playerId: user.id })
       .then((result: any) => setGamertag(result.gamertag))
+      .catch(() => {});
+    trpcQuery("community.likedDeckIds", { playerId: user.id })
+      .then((ids: number[]) => setLikedDeckIds(new Set(ids)))
       .catch(() => {});
   }, [user]);
 
@@ -513,6 +781,14 @@ export default function CommunityDecks() {
       });
       setDecks(result.decks);
       setTotal(result.total);
+
+      // Load comment counts for visible decks (batch query for efficiency)
+      if (result.decks.length > 0) {
+        const deckIds = result.decks.map((d: CommunityDeck) => d.id);
+        trpcQuery("community.commentCounts", { deckIds })
+          .then((counts: Record<number, number>) => setCommentCounts(counts))
+          .catch(() => {});
+      }
     } catch (err) {
       console.error("Failed to load community decks:", err);
     }
@@ -587,16 +863,65 @@ export default function CommunityDecks() {
     }
   }, [navigate, showToast]);
 
-  const handleLike = useCallback(async (deckId: number) => {
-    try {
-      await trpcMutate("community.like", { deckId });
-      setDecks((prev) =>
-        prev.map((d) => (d.id === deckId ? { ...d, likes: d.likes + 1 } : d))
-      );
-    } catch {
-      showToast("Failed to like deck", "error");
+  // Toggle like with optimistic update (microinteraction: instant feedback < 100ms)
+  const handleToggleLike = useCallback(async (deckId: number) => {
+    if (!user) {
+      showToast("Sign in to like decks", "error");
+      return;
     }
-  }, [showToast]);
+
+    // Optimistic update — instant visual feedback
+    const wasLiked = likedDeckIds.has(deckId);
+    setLikedDeckIds((prev) => {
+      const next = new Set(prev);
+      if (wasLiked) next.delete(deckId);
+      else next.add(deckId);
+      return next;
+    });
+    setDecks((prev) =>
+      prev.map((d) =>
+        d.id === deckId
+          ? { ...d, likes: wasLiked ? Math.max(0, d.likes - 1) : d.likes + 1 }
+          : d
+      )
+    );
+
+    try {
+      const result = await trpcMutate("community.toggleLike", {
+        deckId,
+        playerId: user.id,
+      });
+      // Reconcile with server truth
+      setDecks((prev) =>
+        prev.map((d) => (d.id === deckId ? { ...d, likes: result.newCount } : d))
+      );
+      if (result.liked !== !wasLiked) {
+        // Server disagreed — rollback
+        setLikedDeckIds((prev) => {
+          const next = new Set(prev);
+          if (result.liked) next.add(deckId);
+          else next.delete(deckId);
+          return next;
+        });
+      }
+    } catch {
+      // Rollback on error
+      setLikedDeckIds((prev) => {
+        const next = new Set(prev);
+        if (wasLiked) next.add(deckId);
+        else next.delete(deckId);
+        return next;
+      });
+      setDecks((prev) =>
+        prev.map((d) =>
+          d.id === deckId
+            ? { ...d, likes: wasLiked ? d.likes + 1 : Math.max(0, d.likes - 1) }
+            : d
+        )
+      );
+      showToast("Failed to update like", "error");
+    }
+  }, [user, likedDeckIds, showToast]);
 
   const handleUnpublish = useCallback(async (deckId: number) => {
     if (!user) return;
@@ -609,6 +934,10 @@ export default function CommunityDecks() {
       showToast("Failed to remove deck", "error");
     }
   }, [user, showToast, loadDecks]);
+
+  const handleRequireGamertag = useCallback(() => {
+    setShowGamertagModal(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -752,9 +1081,14 @@ export default function CommunityDecks() {
                   key={deck.id}
                   deck={deck}
                   currentUserId={user?.id ?? null}
+                  isLiked={likedDeckIds.has(deck.id)}
+                  commentCount={commentCounts[deck.id] || 0}
+                  gamertag={gamertag}
                   onImport={handleImport}
-                  onLike={handleLike}
+                  onToggleLike={handleToggleLike}
                   onUnpublish={handleUnpublish}
+                  onRequireGamertag={handleRequireGamertag}
+                  showToast={showToast}
                 />
               ))}
             </div>

@@ -1665,3 +1665,27 @@
 - [x] Add 11 new MATCHUP_ANALYSIS flavor text entries
 - [x] Full test suite: 384 tests, 23 files, 0 failures
 - [x] Save checkpoint and push to GitHub
+
+#### Per-Player Like Rate-Limiting (v5.8.0)
+- [x] Create community_likes junction table in Supabase (player_id + deck_id unique constraint)
+- [x] Refactor like procedure to toggle (like/unlike) using community_likes table
+- [x] Add likedDeckIds query to return which decks current player has liked
+- [x] Update frontend like button to show toggle state with animated heart (filled/unfilled)
+- [x] Prevent duplicate likes at DB level via unique constraint
+- [x] Optimistic updates on like toggle (<100ms visual feedback)
+- [x] Write tests for like toggle behavior (6 tests: like, unlike, cross-player independence, liked IDs)
+## Community Deck Comments (v5.8.0)
+- [x] Create community_comments table in Supabase (deck_id, player_id, gamertag, content, created_at)
+- [x] tRPC procedure: addComment — add a comment to a community deck (requires gamertag)
+- [x] tRPC procedure: comments — list comments for a deck (newest first, paginated)
+- [x] tRPC procedure: deleteComment — delete own comment (server-side author check)
+- [x] tRPC procedure: commentCounts — batch comment counts for deck cards
+- [x] Frontend: expandable comment section on each deck card with animated transitions
+- [x] Frontend: comment input with gamertag display, 500-char limit with live counter
+- [x] Frontend: delete own comments (hover-reveal delete button)
+- [x] Frontend: color-coded gamertag avatars in comment list
+- [x] Write tests for comment CRUD procedures (5 tests: add, list, counts, author-only delete, char limit)
+## Patch Notes & Changelog (v5.8.0)
+- [x] Update Changelog.tsx with v5.8.0 'The Social Crucible' entry
+- [x] Full test suite: 395 tests, 23 files, 0 failures
+- [x] Save checkpoint and push to GitHub
