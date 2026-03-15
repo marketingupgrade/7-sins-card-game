@@ -52,7 +52,7 @@ describe("Blog Featured Images", () => {
     // All posts should have a featuredImage
     for (const post of posts) {
       expect(post.featuredImage).toBeTruthy();
-      expect(post.featuredImage).toContain("cloudfront.net");
+      expect(post.featuredImage).toContain("supabase.co");
     }
   });
 
@@ -69,6 +69,6 @@ describe("Blog Featured Images", () => {
     const data = await res.json();
     const post = data.result.data.json;
     expect(post.featuredImage).toBeTruthy();
-    expect(post.featuredImage).toContain("cloudfront.net");
+    expect(post.featuredImage).toContain("supabase.co");
   });
 });

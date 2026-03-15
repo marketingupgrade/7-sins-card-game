@@ -69,9 +69,9 @@ describe("Balance Analysis Chart Assets", () => {
     });
   });
 
-  it("all chart URLs should use CloudFront CDN", () => {
+  it("all chart URLs should use Supabase storage", () => {
     Object.values(CHARTS).forEach((url) => {
-      expect(url).toContain("cloudfront.net");
+      expect(url).toContain("supabase.co/storage");
     });
   });
 });

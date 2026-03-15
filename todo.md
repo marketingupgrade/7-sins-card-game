@@ -1523,4 +1523,18 @@
 - [x] Updated getCardTargetInfo to detect AoE/duo/mixed target modes
 - [x] Write 19 vitest tests for multi-target logic (targetAvatarBadge.test.ts)
 - [x] Update patch notes (v5.7.2 'The All-Seeing Target')
+- [x] Save checkpoint and push to GitHub
+
+## Fix Pre-Existing Test Failures (v5.7.3)
+- [x] Fix balance-menu test: updated chart URL assertions from cloudfront.net to supabase.co/storage
+- [x] Fix rss-featured test: updated featuredImage assertions from cloudfront.net to supabase.co
+- [x] Fix user.purge test: corrected vi.mock path from ./db to ./db-supabase (where deleteAllUserData is actually imported)
+- [x] All 295 tests passing (17 test files, 0 failures)
+
+## CardHoverPreview Target Mode Tags (v5.7.3)
+- [x] Add card-level target mode badge (AOE/DUO/SINGLE/SELF/SELF+TARGET) to CardHoverPreview header
+- [x] Color-coded badges: orange AOE, purple DUO, blue SINGLE, green SELF
+- [x] Priority logic: aoe > duo > single+self > single > self
+- [x] 19 vitest tests for getCardTargetMode logic (cardHoverTargetMode.test.ts)
+- [x] Update patch notes (v5.7.3 'The Clarity Patch')
 - [ ] Save checkpoint and push to GitHub

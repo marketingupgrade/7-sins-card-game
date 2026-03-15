@@ -84,6 +84,21 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.3",
+    date: "March 2026",
+    title: "The Clarity Patch",
+    summary: "Test suite fully green (295/295), plus a new card-level target mode badge on the hover preview. Cards now show a color-coded AOE, DUO, SINGLE, SELF, or SELF + TARGET tag so you know the targeting type at a glance before selecting.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Target Mode Badge: CardHoverPreview now shows a prominent color-coded badge in the card header — orange AOE, purple DUO, blue SINGLE, green SELF, or green SELF + TARGET" },
+      { category: "feature", text: "Badge uses priority logic (aoe > duo > mixed > single > self) to show the most impactful targeting mode when a card has multiple effect types" },
+      { category: "fix", text: "balance-menu tests: Updated chart URL assertions from cloudfront.net to supabase.co/storage to match actual asset hosting" },
+      { category: "fix", text: "rss-featured tests: Updated featuredImage assertions from cloudfront.net to supabase.co to match actual blog image URLs" },
+      { category: "fix", text: "user.purge test: Corrected vi.mock path from './db' to './db-supabase' — deleteAllUserData is imported from db-supabase in routers.ts, so the mock was never intercepting the call" },
+      { category: "feature", text: "Full test suite now passes: 295 tests across 17 files with 0 failures" },
+    ],
+  },
+  {
     version: "5.7.2",
     date: "March 2026",
     title: "The All-Seeing Target",

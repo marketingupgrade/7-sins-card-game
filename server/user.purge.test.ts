@@ -10,9 +10,10 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
-// Mock the db module so we don't need a real database
-vi.mock("./db", async () => {
-  const actual = await vi.importActual("./db");
+// Mock the db-supabase module so we don't need a real database
+// Note: deleteAllUserData is imported from ./db-supabase in routers.ts
+vi.mock("./db-supabase", async () => {
+  const actual = await vi.importActual("./db-supabase");
   return {
     ...actual,
     deleteAllUserData: vi.fn().mockResolvedValue({

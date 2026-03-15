@@ -63,6 +63,20 @@ const SIN_COLORS: Record<string, string> = {
   pride: "#f0f0f0", lust: "#ec4899", gluttony: "#b45309",
 };
 
+/**
+ * Derive the dominant target mode for a card from its effects.
+ * Priority: aoe > duo > single > self (most impactful shown first).
+ */
+function getCardTargetMode(card: CardDefinition): { mode: string; label: string; color: string; bgColor: string } | null {
+  const modes = new Set(card.effects.map(e => e.targetMode).filter(Boolean));
+  if (modes.has("aoe")) return { mode: "aoe", label: "AOE", color: "#f97316", bgColor: "rgba(249,115,22,0.15)" };
+  if (modes.has("duo")) return { mode: "duo", label: "DUO", color: "#a855f7", bgColor: "rgba(168,85,247,0.15)" };
+  if (modes.has("single") && modes.has("self")) return { mode: "mixed", label: "SELF + TARGET", color: "#22c55e", bgColor: "rgba(34,197,94,0.15)" };
+  if (modes.has("single")) return { mode: "single", label: "SINGLE", color: "#3b82f6", bgColor: "rgba(59,130,246,0.15)" };
+  if (modes.has("self")) return { mode: "self", label: "SELF", color: "#22c55e", bgColor: "rgba(34,197,94,0.15)" };
+  return null;
+}
+
 export const CardHoverPreview = memo(function CardHoverPreview({
   card,
   position,
@@ -73,6 +87,7 @@ export const CardHoverPreview = memo(function CardHoverPreview({
 
   const sinColor = SIN_COLORS[card.sin] || "#ef4444";
   const sinCssVar = getSinCssVar(card.sin);
+  const targetMode = getCardTargetMode(card);
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const pattern = card.compoundPattern || "standard";
   const patternInfo = PATTERN_LABELS[pattern] || PATTERN_LABELS.standard;
@@ -157,6 +172,18 @@ export const CardHoverPreview = memo(function CardHoverPreview({
                     {card.skipQueue && (
                       <span className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase bg-amber-500/90 text-black">
                         PRIORITY
+                      </span>
+                    )}
+                    {targetMode && (
+                      <span
+                        className="text-[10px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide"
+                        style={{
+                          color: targetMode.color,
+                          background: targetMode.bgColor,
+                          border: `1px solid ${targetMode.color}30`,
+                        }}
+                      >
+                        {targetMode.label}
                       </span>
                     )}
                   </div>
