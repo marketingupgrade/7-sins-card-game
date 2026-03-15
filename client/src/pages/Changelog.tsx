@@ -84,6 +84,21 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.7.1",
+    date: "March 2026",
+    title: "The Revelation",
+    summary: "Critical bug fix: the Resolution Reveal card animation and Round End prompt were never rendering due to 18 lazy-loaded components missing React Suspense boundaries. All lazy components now properly wrapped, and two core components (DeckPile, PlayerAfflictionTable) converted to direct imports for reliability.",
+    major: false,
+    changes: [
+      { category: "fix", text: "Resolution Reveal animation now plays correctly after each round resolves — cards flip and animate in priority order (skip-queue first, then lowest HP, then seat index)" },
+      { category: "fix", text: "Round End prompt ('View Battle Log' / 'Continue') now appears after the resolution animation completes, with 6-second auto-dismiss" },
+      { category: "fix", text: "Root cause: 18 React.lazy() components were rendered without <Suspense> boundaries, causing silent React errors that prevented rendering. All lazy components now wrapped in <Suspense fallback={null}>" },
+      { category: "fix", text: "DeckPile and PlayerAfflictionTable converted from lazy to direct imports — these core components are used 6+ times each and should load with the main bundle" },
+      { category: "fix", text: "GameOverScreen, VictoryCinematic, DeathSequence, CorruptionCascade, CinematicFlash, ComboChainBanner, EpicCardReveal, CardPlayArc, and BattleLog all wrapped in proper Suspense boundaries" },
+      { category: "feature", text: "Added 22 new vitest tests covering resolution reveal data flow: play filtering, sort order, animation timing, player snapshot integrity, state transitions, and edge cases" },
+    ],
+  },
+  {
     version: "5.7.0",
     date: "March 2026",
     title: "The Optimization",

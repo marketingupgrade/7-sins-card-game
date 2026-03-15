@@ -1488,3 +1488,21 @@
 - [x] Re-test Lighthouse — A11y improved 78->91, Perf dev-mode variance (production gains from lazy-loading)
 - [x] Update patch notes with v5.7.0 'The Optimization'
 - [x] Save checkpoint and push to GitHub
+
+### End-of-Round Battle Log Prompt
+- [x] Add end-of-round prompt offering "View Battle Log" or "Skip" after resolution phase
+- [x] Desktop: Show as modal/overlay with battle log summary
+- [x] Mobile: Show as bottom sheet prompt
+- [x] Auto-dismiss after timeout or when next round starts
+- [x] Update patch notes
+- [ ] Save checkpoint and push to GitHub
+## Resolution Reveal Animation Bug (v5.7.1)
+- [x] Debug why ResolutionReveal animation never shows on desktop or mobile
+- [x] Root cause: 18 lazy-loaded components missing React <Suspense> boundaries
+- [x] Fix: Wrapped all lazy components in <Suspense fallback={null}>
+- [x] Fix: Converted DeckPile + PlayerAfflictionTable from lazy to direct imports (core components used 6+ times)
+- [x] Fix the trigger logic so card reveal animation plays after each round resolves
+- [x] Verify round-end prompt appears after the reveal animation completes
+- [x] Write 22 vitest tests for resolution reveal data flow (resolutionReveal.test.ts)
+- [x] Update patch notes (v5.7.1 'The Revelation')
+- [ ] Save checkpoint and push to GitHub

@@ -58,8 +58,8 @@ const SinShaderOverlay = lazy(() => import("@/components/WebGLSinShaders"));
 import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
 const CorruptionCascade = lazy(() => import("@/components/CorruptionCascade"));
-const PlayerAfflictionTable = lazy(() => import("@/components/PlayerAfflictionTable"));
-const DeckPile = lazy(() => import("@/components/DeckPile"));
+import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
+import DeckPile from "@/components/DeckPile";
 const CinematicFlash = lazy(() => import("@/components/CinematicFlash"));
 const ComboChainBanner = lazy(() => import("@/components/ComboChainBanner"));
 const EpicCardReveal = lazy(() => import("@/components/EpicCardReveal"));
@@ -74,6 +74,7 @@ import CardHoverPreview from "@/components/CardHoverPreview";
 import TargetAvatarBadge from "@/components/TargetAvatarBadge";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 const BattleLog = lazy(() => import("@/components/BattleLog"));
+const RoundEndPrompt = lazy(() => import("@/components/RoundEndPrompt"));
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { getSinHexColor, getSinCssVar } from "@/lib/sinColors";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
@@ -179,13 +180,43 @@ export default function GameBoard() {
   const resolutionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevRoundRef = useRef<number>(0);
 
+  // End-of-round prompt state
+  const [showRoundEndPrompt, setShowRoundEndPrompt] = useState(false);
+  const roundEndPromptTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => { setCurrentPage("game"); }, [setCurrentPage]);
 
-  // Resolution complete callback — called by ResolutionReveal when animation finishes
-  const handleResolutionComplete = useCallback(() => {
+  // Dismiss the round-end prompt and proceed to next round
+  const dismissRoundEndPrompt = useCallback(() => {
+    setShowRoundEndPrompt(false);
     setIsShowingResolution(false);
     setCachedLockedPlays([]);
     setCachedResolutionPlayers([]);
+    if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+  }, []);
+
+  // Open battle log from the round-end prompt
+  const viewBattleLogFromPrompt = useCallback(() => {
+    setShowRoundEndPrompt(false);
+    setIsShowingResolution(false);
+    setCachedLockedPlays([]);
+    setCachedResolutionPlayers([]);
+    if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+    setShowLog(true);
+  }, []);
+
+  // Resolution complete callback — called by ResolutionReveal when animation finishes
+  // Now shows the round-end prompt instead of immediately clearing
+  const handleResolutionComplete = useCallback(() => {
+    setShowRoundEndPrompt(true);
+    // Auto-dismiss after 6 seconds if user doesn't interact
+    if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+    roundEndPromptTimerRef.current = setTimeout(() => {
+      setShowRoundEndPrompt(false);
+      setIsShowingResolution(false);
+      setCachedLockedPlays([]);
+      setCachedResolutionPlayers([]);
+    }, 6000);
   }, []);
 
   // Resolution Reveal: Cache lockedPlays when they appear, show animation even after server clears them
@@ -201,14 +232,21 @@ export default function GameBoard() {
       if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
       const maxDuration = Math.max(8000, lp.filter(p => !('pass' in p) && p.cardId).length * 3500 + 3000);
       resolutionTimerRef.current = setTimeout(() => {
-        setIsShowingResolution(false);
-        setCachedLockedPlays([]);
-        setCachedResolutionPlayers([]);
+        // Show round-end prompt instead of immediately clearing
+        setShowRoundEndPrompt(true);
+        if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+        roundEndPromptTimerRef.current = setTimeout(() => {
+          setShowRoundEndPrompt(false);
+          setIsShowingResolution(false);
+          setCachedLockedPlays([]);
+          setCachedResolutionPlayers([]);
+        }, 6000);
       }, maxDuration);
     }
     prevRoundRef.current = gameState.currentRound;
     return () => {
       if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
+      if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
     };
   }, [gameState?.lockedPlays, gameState?.currentRound, gameState?.players, isShowingResolution]);
 
@@ -266,9 +304,14 @@ export default function GameBoard() {
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
         const maxDuration = Math.max(8000, plays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
         resolutionTimerRef.current = setTimeout(() => {
-          setIsShowingResolution(false);
-          setCachedLockedPlays([]);
-          setCachedResolutionPlayers([]);
+          setShowRoundEndPrompt(true);
+          if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+          roundEndPromptTimerRef.current = setTimeout(() => {
+            setShowRoundEndPrompt(false);
+            setIsShowingResolution(false);
+            setCachedLockedPlays([]);
+            setCachedResolutionPlayers([]);
+          }, 6000);
         }, maxDuration);
       }
     },
@@ -480,9 +523,14 @@ export default function GameBoard() {
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
         const maxDuration = Math.max(8000, result.resolvedPlays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
         resolutionTimerRef.current = setTimeout(() => {
-          setIsShowingResolution(false);
-          setCachedLockedPlays([]);
-          setCachedResolutionPlayers([]);
+          setShowRoundEndPrompt(true);
+          if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+          roundEndPromptTimerRef.current = setTimeout(() => {
+            setShowRoundEndPrompt(false);
+            setIsShowingResolution(false);
+            setCachedLockedPlays([]);
+            setCachedResolutionPlayers([]);
+          }, 6000);
         }, maxDuration);
       }
 
@@ -516,9 +564,14 @@ export default function GameBoard() {
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
         const maxDuration = Math.max(8000, result.resolvedPlays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
         resolutionTimerRef.current = setTimeout(() => {
-          setIsShowingResolution(false);
-          setCachedLockedPlays([]);
-          setCachedResolutionPlayers([]);
+          setShowRoundEndPrompt(true);
+          if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
+          roundEndPromptTimerRef.current = setTimeout(() => {
+            setShowRoundEndPrompt(false);
+            setIsShowingResolution(false);
+            setCachedLockedPlays([]);
+            setCachedResolutionPlayers([]);
+          }, 6000);
         }, maxDuration);
       }
 
@@ -727,29 +780,33 @@ export default function GameBoard() {
   // Victory cinematic → then game over screen
   if (gameState?.status === "finished" && !victoryCinematicShow && showGameOver) {
     return (
-      <GameOverScreen
-        players={gameState.players}
-        winnerId={gameState.winnerId}
-        currentPlayerId={playerId}
-        currentRound={gameState.currentRound}
-        gameId={gameId}
-        onRematch={() => {
-          setLocation("/");
-        }}
-      />
+      <Suspense fallback={null}>
+        <GameOverScreen
+          players={gameState.players}
+          winnerId={gameState.winnerId}
+          currentPlayerId={playerId}
+          currentRound={gameState.currentRound}
+          gameId={gameId}
+          onRematch={() => {
+            setLocation("/");
+          }}
+        />
+      </Suspense>
     );
   }
 
   if (gameState?.status === "finished" && victoryCinematicShow) {
     const winner = gameState.players.find(p => p.id === gameState.winnerId);
     return (
-      <VictoryCinematic
-        show={victoryCinematicShow}
-        isWinner={gameState.winnerId === playerId}
-        winnerName={winner?.username || "Unknown"}
-        winnerSin={(winner?.chosenSin as SinType) || 'wrath'}
-        onComplete={() => { setVictoryCinematicShow(false); setShowGameOver(true); }}
-      />
+      <Suspense fallback={null}>
+        <VictoryCinematic
+          show={victoryCinematicShow}
+          isWinner={gameState.winnerId === playerId}
+          winnerName={winner?.username || "Unknown"}
+          winnerSin={(winner?.chosenSin as SinType) || 'wrath'}
+          onComplete={() => { setVictoryCinematicShow(false); setShowGameOver(true); }}
+        />
+      </Suspense>
     );
   }
 
@@ -812,23 +869,29 @@ export default function GameBoard() {
       />
 
       {/* Feature: Cinematic Flash on heavy damage (20+) */}
-      <CinematicFlash
-        trigger={cinematicFlashTrigger}
-        color={cinematicFlashColor}
-        intensity="epic"
-      />
+      <Suspense fallback={null}>
+        <CinematicFlash
+          trigger={cinematicFlashTrigger}
+          color={cinematicFlashColor}
+          intensity="epic"
+        />
+      </Suspense>
 
       {/* Feature: Combo Chain Banner */}
-      <ComboChainBanner combo={comboChain} sin={comboSin} />
+      <Suspense fallback={null}>
+        <ComboChainBanner combo={comboChain} sin={comboSin} />
+      </Suspense>
 
       {/* Feature: Epic Card Reveal for high-cost cards */}
-      <EpicCardReveal
-        show={epicRevealShow}
-        cardName={epicRevealCard}
-        sin={epicRevealSin}
-        energyCost={epicRevealEnergy}
-        onComplete={() => setEpicRevealShow(false)}
-      />
+      <Suspense fallback={null}>
+        <EpicCardReveal
+          show={epicRevealShow}
+          cardName={epicRevealCard}
+          sin={epicRevealSin}
+          energyCost={epicRevealEnergy}
+          onComplete={() => setEpicRevealShow(false)}
+        />
+      </Suspense>
 
       {/* Targeting Tracer — node connector line from card to target */}
       {/* Canvas targeting tracer — desktop only (mobile uses highlight borders instead) */}
@@ -1022,14 +1085,25 @@ export default function GameBoard() {
           <div className="col-start-2 row-start-2 flex flex-col items-center justify-center relative gap-3">
             {/* Resolution card reveal overlay */}
             {isShowingResolution && cachedLockedPlays.length > 0 && (
-              <ResolutionReveal
-                lockedPlays={cachedLockedPlays}
-                players={cachedResolutionPlayers}
-                currentRound={gameState.currentRound}
-                isResolving={isShowingResolution}
-                onComplete={handleResolutionComplete}
-              />
+              <Suspense fallback={null}>
+                <ResolutionReveal
+                  lockedPlays={cachedLockedPlays}
+                  players={cachedResolutionPlayers}
+                  currentRound={gameState.currentRound}
+                  isResolving={isShowingResolution}
+                  onComplete={handleResolutionComplete}
+                />
+              </Suspense>
             )}
+            {/* End-of-round prompt: View Battle Log or Continue */}
+            <Suspense fallback={null}>
+              <RoundEndPrompt
+                isOpen={showRoundEndPrompt}
+                currentRound={gameState.currentRound}
+                onViewBattleLog={viewBattleLogFromPrompt}
+                onContinue={dismissRoundEndPrompt}
+              />
+            </Suspense>
             {/* Compact ritual circle */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full border-2 border-candle/30 flex items-center justify-center relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 20px oklch(0.75 0.12 70 / 0.1)' }}>
@@ -1176,15 +1250,27 @@ export default function GameBoard() {
             {/* Mobile Resolution Reveal — overlays the battle overview */}
             {isShowingResolution && cachedLockedPlays.length > 0 && (
               <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
-                <ResolutionReveal
-                  lockedPlays={cachedLockedPlays}
-                  players={cachedResolutionPlayers}
-                  currentRound={gameState.currentRound}
-                  isResolving={isShowingResolution}
-                  onComplete={handleResolutionComplete}
-                />
+                <Suspense fallback={null}>
+                  <ResolutionReveal
+                    lockedPlays={cachedLockedPlays}
+                    players={cachedResolutionPlayers}
+                    currentRound={gameState.currentRound}
+                    isResolving={isShowingResolution}
+                    onComplete={handleResolutionComplete}
+                  />
+                </Suspense>
               </div>
             )}
+            {/* Mobile End-of-round prompt */}
+            <Suspense fallback={null}>
+              <RoundEndPrompt
+                isOpen={showRoundEndPrompt}
+                currentRound={gameState.currentRound}
+                onViewBattleLog={viewBattleLogFromPrompt}
+                onContinue={dismissRoundEndPrompt}
+                isMobile
+              />
+            </Suspense>
           </div>
 
           {/* My player bar */}
@@ -1525,20 +1611,24 @@ export default function GameBoard() {
       </div>
 
       {/* Tier 2: Death Sequence */}
-    <DeathSequence
-      show={deathShow}
-      playerName={deathPlayerName}
-      sin={deathSin}
-      lethalBlow={deathLethalBlow}
-      killerCardName={deathKillerCard}
-      onComplete={() => { setDeathShow(false); setDeathLethalBlow(false); setDeathKillerCard(undefined); }}
-    />
+    <Suspense fallback={null}>
+      <DeathSequence
+        show={deathShow}
+        playerName={deathPlayerName}
+        sin={deathSin}
+        lethalBlow={deathLethalBlow}
+        killerCardName={deathKillerCard}
+        onComplete={() => { setDeathShow(false); setDeathLethalBlow(false); setDeathKillerCard(undefined); }}
+      />
+    </Suspense>
 
     {/* Tier 2: Corruption Cascade — CD3 reward for 3+ cards in one turn */}
-    <CorruptionCascade
-      trigger={corruptionCascadeTrigger}
-      sin={(myPlayer?.chosenSin || 'wrath') as SinType}
-    />
+    <Suspense fallback={null}>
+      <CorruptionCascade
+        trigger={corruptionCascadeTrigger}
+        sin={(myPlayer?.chosenSin || 'wrath') as SinType}
+      />
+    </Suspense>
 
     {/* Phase 2: GPU Particle Impact VFX */}
     <Suspense fallback={null}>
@@ -1566,14 +1656,16 @@ export default function GameBoard() {
     </Suspense>
 
     {/* Tier 3: Card Play Arc */}
-    <CardPlayArc
-      show={cardArcShow}
-      cardName={cardArcName}
-      sinColor={cardArcColor}
-      startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 160 }}
-      endPosition={cardArcEndPos}
-      onComplete={() => setCardArcShow(false)}
-    />
+    <Suspense fallback={null}>
+      <CardPlayArc
+        show={cardArcShow}
+        cardName={cardArcName}
+        sinColor={cardArcColor}
+        startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 160 }}
+        endPosition={cardArcEndPos}
+        onComplete={() => setCardArcShow(false)}
+      />
+    </Suspense>
 
     {/* Tier 3: Web Speech Narrator */}
     <WebSpeechNarrator
@@ -1597,13 +1689,15 @@ export default function GameBoard() {
       />
 
     {/* Battle Log Panel */}
-    <BattleLog
-      isOpen={showLog}
-      onClose={() => setShowLog(false)}
-      logEntries={logEntries}
-      players={gameState.players}
-      currentRound={gameState.currentRound}
-    />
+    <Suspense fallback={null}>
+      <BattleLog
+        isOpen={showLog}
+        onClose={() => setShowLog(false)}
+        logEntries={logEntries}
+        players={gameState.players}
+        currentRound={gameState.currentRound}
+      />
+    </Suspense>
     </div>
     </ScreenShake>
   );
