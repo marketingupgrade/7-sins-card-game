@@ -1,8 +1,9 @@
 /**
- * Account Management — Profile, Decks, and Data Purge
+ * Account Management — Profile, Gamertag Editing, Decks, and Data Purge
  *
  * GDPR-compliant account page where authenticated users can:
  * - View their profile (avatar, name, email, provider)
+ * - Edit their gamertag (with profanity/racism filter)
  * - See and manage their saved decks
  * - Purge ALL their data (real deletion, not fake)
  * - Sign out
@@ -11,13 +12,14 @@
  * Route: /account
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { getClientSupabase } from "../../../shared/supabaseClient";
 import { ALL_CARDS } from "@shared/cardData";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
+import { trpc } from "@/lib/trpc";
 import type { SinType, CardDefinition } from "@shared/gameTypes";
 
 // ─── Constants ──────────────────────────────────────────────
@@ -64,6 +66,153 @@ async function trpcMutate(path: string, input: unknown) {
   const data = await res.json();
   if (data?.result?.data?.json) return data.result.data.json;
   throw new Error(data?.error?.message || "Mutation failed");
+}
+
+// ─── Gamertag Editor Component ──────────────────────────────
+function GamertagEditor({ playerId, currentTag }: { playerId: string; currentTag: string | null }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(currentTag || "");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+  const [savedTag, setSavedTag] = useState(currentTag);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const updateMutation = trpc.community.updateGamertag.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        setSavedTag(data.gamertag);
+        setIsEditing(false);
+        setError(null);
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        setError(data.reason);
+      }
+    },
+    onError: (err) => {
+      setError(err.message || "Something went wrong.");
+    },
+  });
+
+  const handleStartEdit = () => {
+    setDraft(savedTag || "");
+    setError(null);
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 50);
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setError(null);
+    setDraft(savedTag || "");
+  };
+
+  const handleSave = () => {
+    const trimmed = draft.trim();
+    if (!trimmed || trimmed === savedTag) {
+      setIsEditing(false);
+      return;
+    }
+    setError(null);
+    updateMutation.mutate({ playerId, newGamertag: trimmed });
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleSave();
+    if (e.key === "Escape") handleCancel();
+  };
+
+  return (
+    <div className="mt-3 pt-3 border-t border-white/5">
+      <div className="flex items-center gap-2 mb-1">
+        <span className="text-[10px] text-white/30 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
+          Gamertag
+        </span>
+        {success && (
+          <motion.span
+            initial={{ opacity: 0, x: -5 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-[10px] text-green-400/70"
+          >
+            ✓ Updated
+          </motion.span>
+        )}
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={draft}
+              onChange={(e) => {
+                setDraft(e.target.value);
+                setError(null);
+              }}
+              onKeyDown={handleKeyDown}
+              maxLength={24}
+              placeholder="Enter gamertag..."
+              className="flex-1 px-3 py-2 rounded-lg bg-black/40 border border-amber-500/20 text-amber-200/90 text-sm placeholder-white/15 focus:outline-none focus:border-amber-500/40 transition-colors"
+              style={{ fontFamily: "var(--font-heading)" }}
+            />
+            <button
+              onClick={handleSave}
+              disabled={updateMutation.isPending || !draft.trim() || draft.trim() === savedTag}
+              className="px-3 py-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-200/70 text-xs font-bold uppercase tracking-wider hover:bg-amber-500/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              {updateMutation.isPending ? "..." : "Save"}
+            </button>
+            <button
+              onClick={handleCancel}
+              disabled={updateMutation.isPending}
+              className="px-3 py-2 rounded-lg border border-white/10 text-white/30 text-xs hover:text-white/50 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-white/15">
+              {draft.trim().length}/24 · Letters, numbers, underscores, hyphens, dots, spaces
+            </span>
+          </div>
+          <AnimatePresence>
+            {error && (
+              <motion.p
+                initial={{ opacity: 0, y: -5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="text-xs text-red-400/80 bg-red-500/5 border border-red-500/10 rounded-lg px-3 py-2"
+              >
+                {error}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 group">
+          <span
+            className="text-sm font-bold text-amber-200/70"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            {savedTag || "Not set"}
+          </span>
+          <button
+            onClick={handleStartEdit}
+            className="text-white/20 hover:text-amber-200/60 transition-colors opacity-0 group-hover:opacity-100"
+            title="Edit gamertag"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // ─── Confirmation Dialog ────────────────────────────────────
@@ -200,6 +349,12 @@ export default function Account() {
   const [purgeResult, setPurgeResult] = useState<string | null>(null);
   const [deletingDeckId, setDeletingDeckId] = useState<string | null>(null);
 
+  // Fetch current gamertag from server
+  const gamertagQuery = trpc.community.getGamertag.useQuery(
+    { playerId: user?.id || "" },
+    { enabled: !!user?.id }
+  );
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
@@ -275,7 +430,7 @@ export default function Account() {
       setTimeout(() => navigate("/"), 3000);
     } catch (err: any) {
       console.error("[Purge]", err);
-      setPurgeResult("Purge failed. Please try again or contact support.");
+      setPurgeResult("Purge failed. Please try again or contact sinners@7sinscardgame.com.");
     } finally {
       setIsPurging(false);
       setShowPurgeDialog(false);
@@ -376,6 +531,14 @@ export default function Account() {
               </div>
             </div>
           </div>
+
+          {/* Gamertag Editor */}
+          {user.id && (
+            <GamertagEditor
+              playerId={user.id}
+              currentTag={gamertagQuery.data?.gamertag ?? null}
+            />
+          )}
 
           {/* Sign out */}
           <div className="mt-4 pt-4 border-t border-white/5 flex justify-end">

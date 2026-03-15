@@ -2,7 +2,7 @@
  * Privacy Policy Page
  * 
  * Accurate privacy policy reflecting:
- * - Manus OAuth login, Supabase DB, user accounts
+ * - Email/OAuth login, Supabase DB, user accounts
  * - Minimal analytics (Umami), session cookies
  * - No third-party tracking, no ad networks
  * Dark gothic branding, mobile responsive.
@@ -53,10 +53,10 @@ export default function Privacy() {
                 TL;DR
               </h2>
               <p className="text-sm text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                If you play as a guest, we store almost nothing — just a temporary player ID in your browser.
-                If you sign in with Manus, we store your user ID, name, and email to manage your account and saved decks.
+                Games should be for fun, not extraction. If you play as a guest, we store almost nothing — just a temporary player ID in your browser.
+                If you create an account, we store your user ID, name, and email to manage your account and saved decks.
                 We use privacy-friendly analytics (no personal tracking). We don't sell data. We don't use ad networks.
-                We don't use Google Analytics or Facebook Pixel.
+                We don't use Google Analytics or Facebook Pixel. Your data exists to make the game work, not to make money.
               </p>
             </div>
           </section>
@@ -73,17 +73,17 @@ export default function Privacy() {
                 localStorage. This data never leaves your device.
               </p>
               <p>
-                <strong className="text-white/60">Signed-in users (Manus OAuth):</strong> When you sign in, we receive and
-                store the following from your Manus account:
+                <strong className="text-white/60">Signed-in users:</strong> When you create an account or sign in, we receive and
+                store the following:
               </p>
               <ul className="list-none space-y-2 ml-2">
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Manus User ID (open_id):</strong> A unique identifier from Manus OAuth</span>
+                  <span><strong className="text-white/60">User ID:</strong> A unique identifier for your account</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Display name:</strong> Your Manus account display name</span>
+                  <span><strong className="text-white/60">Display name:</strong> Your chosen username</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
@@ -91,8 +91,8 @@ export default function Privacy() {
                 </li>
               </ul>
               <p>
-                This data is stored in our Supabase (PostgreSQL) database and is used solely to manage your account,
-                associate your saved decks, and display your name in-game.
+                This data is stored in our <strong className="text-white/60">Supabase (PostgreSQL) database hosted in the EU</strong> and is used solely to manage your account,
+                associate your saved decks, and display your name in-game. We chose Supabase for its transparency and open-source foundation.
               </p>
             </div>
           </section>
@@ -240,11 +240,11 @@ export default function Privacy() {
               <ul className="list-none space-y-2 ml-2">
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Manus OAuth:</strong> For user authentication. Governed by Manus's privacy policy.</span>
+                  <span><strong className="text-white/60">Supabase Auth:</strong> For user authentication (email, social login). Governed by <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">Supabase's Privacy Policy</a>.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>
-                  <span><strong className="text-white/60">Supabase:</strong> For database hosting and real-time multiplayer. Data is stored in Supabase's infrastructure.</span>
+                  <span><strong className="text-white/60">Supabase:</strong> For database hosting and real-time multiplayer. Data is stored on Supabase's EU-based infrastructure (PostgreSQL). Supabase is open-source and you can review their practices at <a href="https://supabase.com/privacy" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">supabase.com/privacy</a>.</span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-white/20 shrink-0">&mdash;</span>

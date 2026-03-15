@@ -5823,6 +5823,88 @@ async function resolveActiveEffects(gameId, currentRound) {
   }
 }
 
+// server/profanityFilter.ts
+import leoProfanity from "leo-profanity";
+var BANNED_SUBSTRINGS = [
+  // Common profanity (substring match catches embedded words)
+  "fuck",
+  "shit",
+  "cunt",
+  "cock",
+  "dick",
+  "pussy",
+  "bitch",
+  "asshole",
+  "bastard",
+  "whore",
+  "slut",
+  "penis",
+  "vagina",
+  // Racial slurs & hate speech
+  "nigger",
+  "nigga",
+  "negro",
+  "nazi",
+  "hitler",
+  "kkk",
+  "whitesupremacy",
+  "whitepower",
+  "heil",
+  "jihad",
+  "faggot",
+  "fag",
+  "dyke",
+  "tranny",
+  "retard",
+  "chink",
+  "gook",
+  "spic",
+  "wetback",
+  "kike",
+  // Impersonation
+  "admin",
+  "moderator",
+  "developer",
+  "official",
+  "system",
+  "support",
+  "staff",
+  "gamemaster"
+];
+var MIN_LENGTH = 3;
+var MAX_LENGTH = 24;
+var VALID_CHARS = /^[a-zA-Z0-9_\-. ]+$/;
+var NO_CONSECUTIVE_SPECIALS = /[_\-. ]{2,}/;
+var STARTS_ENDS_ALNUM = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
+function validateGamertag(tag) {
+  const trimmed = tag.trim();
+  if (trimmed.length < MIN_LENGTH) {
+    return { ok: false, reason: `Must be at least ${MIN_LENGTH} characters.` };
+  }
+  if (trimmed.length > MAX_LENGTH) {
+    return { ok: false, reason: `Must be ${MAX_LENGTH} characters or fewer.` };
+  }
+  if (!VALID_CHARS.test(trimmed)) {
+    return { ok: false, reason: "Only letters, numbers, underscores, hyphens, dots, and spaces allowed." };
+  }
+  if (NO_CONSECUTIVE_SPECIALS.test(trimmed)) {
+    return { ok: false, reason: "No consecutive special characters (_, -, ., space)." };
+  }
+  if (trimmed.length >= 2 && !STARTS_ENDS_ALNUM.test(trimmed)) {
+    return { ok: false, reason: "Must start and end with a letter or number." };
+  }
+  const normalized = trimmed.toLowerCase().replace(/[_\-. ]/g, "");
+  if (leoProfanity.check(normalized) || leoProfanity.check(trimmed)) {
+    return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+  }
+  for (const banned of BANNED_SUBSTRINGS) {
+    if (normalized.includes(banned)) {
+      return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+    }
+  }
+  return { ok: true };
+}
+
 // server/routers.ts
 var appRouter = router({
   system: systemRouter,
@@ -6080,6 +6162,27 @@ var appRouter = router({
     ).query(async ({ input }) => {
       const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
       return { available: !taken };
+    }),
+    /** Update a player's gamertag with profanity/racism filter */
+    updateGamertag: publicProcedure.input(
+      z3.object({
+        playerId: z3.string().min(1).max(64),
+        newGamertag: z3.string().min(3).max(24)
+      })
+    ).mutation(async ({ input }) => {
+      const filterResult = validateGamertag(input.newGamertag);
+      if (!filterResult.ok) {
+        return { success: false, reason: filterResult.reason };
+      }
+      const taken = await isGamertagTaken(input.newGamertag, input.playerId);
+      if (taken) {
+        return { success: false, reason: "That gamertag is already taken." };
+      }
+      const ok = await setPlayerGamertag(input.playerId, input.newGamertag);
+      if (!ok) {
+        return { success: false, reason: "Failed to update. Please try again." };
+      }
+      return { success: true, gamertag: input.newGamertag };
     }),
     /** Get all community decks published by a specific player */
     myDecks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {

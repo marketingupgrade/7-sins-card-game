@@ -1757,3 +1757,38 @@
 - [x] Run full test suite: 414 tests, 24 files, 0 failures
 - [x] Update Changelog.tsx with v5.9.1 'The Iron Ward' entry
 - [x] Push to GitHub
+
+## Matchup & Balance Matrix Update + Multiplayer Rebalance (v5.9.2)
+- [ ] Review current passives in both game engines (client + server)
+- [ ] Analyze healing/shielding values for multiplayer focus-fire (3v1) viability
+- [ ] Rebalance healing/shielding passives so defensive factions can survive focus-fire
+- [ ] Verify passives in simulation match latest codebase passives
+- [ ] Rerun 66.6K simulations with rebalanced passives (max 1.5% variance)
+- [ ] Update matchup matrix data with new simulation results
+- [ ] Update balance matrix data with new simulation results
+- [ ] Redesign /matchups page as scrollytelling timeline
+- [ ] Redesign /balance page as scrollytelling timeline
+- [ ] Update both game engines (client + server) with rebalanced passives
+- [ ] Write tests, update changelog
+- [ ] Push to GitHub
+
+## Username Editing (v5.9.2 - URGENT)
+- [x] Backend: tRPC procedure to update username (with validation)
+- [x] Backend: DB helper to update player username in Supabase
+- [x] Backend: Profanity and racism filter on username changes (leo-profanity + custom substring matching)
+- [x] Frontend: Editable username field on Account page with inline edit button
+- [x] Frontend: Validation (min 3 chars, max 24 chars, alphanumeric + dots/underscores/hyphens/spaces)
+- [x] Frontend: Clear error messages for rejected usernames
+- [x] Write tests for username update procedure (25 tests)
+- [ ] Push to GitHub
+
+## Legal Pages Update (v5.9.2)
+- [x] Remove all "Manus account" references from Terms & Conditions
+- [x] Remove all "Manus account" references from Privacy Policy
+- [x] Remove all "Manus account" references from Cookie Policy
+- [x] Update to say users create an account directly on the game site
+- [x] Add Supabase EU hosting transparency to Terms, Privacy, and Cookie pages
+- [x] Add privacy-first philosophy ("games should be for fun, not extraction") to all legal pages
+- [x] Ensure all legal pages are accurate and up to date
+- [x] Add Buy Me a Coffee link (https://buymeacoffee.com/jojovh) to Donations section in T&S (already present)
+- [ ] Push to GitHub

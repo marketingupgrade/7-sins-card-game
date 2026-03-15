@@ -2,7 +2,7 @@
  * Cookie Policy Page
  * 
  * Accurate cookie policy reflecting:
- * - Session cookie from Manus OAuth (JWT)
+ * - Session cookie from authentication (JWT)
  * - localStorage usage for game state
  * - No tracking cookies, no ad cookies
  * Dark gothic branding, mobile responsive.
@@ -66,7 +66,7 @@ export default function Cookies() {
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                If you sign in with your Manus account, we set a single <strong className="text-white/60">session cookie</strong>
+                If you sign in to your account, we set a single <strong className="text-white/60">session cookie</strong>
                 {" "}containing a JWT (JSON Web Token). This cookie:
               </p>
               <ul className="list-none space-y-2 ml-2">
@@ -211,8 +211,8 @@ export default function Cookies() {
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                We have no plans to add tracking, analytics, or advertising cookies. This game exists for the love
-                of gaming, not for harvesting data. If this policy ever changes, we'll update this page and add a
+                We have no plans to add tracking, analytics, or advertising cookies. Games should be for fun, not extraction.
+                This game exists for the love of gaming, not for harvesting data. If this policy ever changes, we'll update this page and add a
                 proper consent mechanism if required.
               </p>
             </div>

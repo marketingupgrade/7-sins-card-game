@@ -2,7 +2,7 @@
  * Terms & Conditions Page
  * 
  * Accurate terms reflecting the game's current features:
- * - Manus OAuth login, Supabase DB, saved decks, user accounts
+ * - Email/OAuth login, Supabase DB, saved decks, user accounts
  * - AI artwork, sound assets, analytics
  * Dark gothic branding, mobile responsive.
  */
@@ -52,8 +52,9 @@ export default function Terms() {
                 TL;DR
               </h2>
               <p className="text-sm text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                This game is free to play. You can sign in with a Manus account to save decks and track your games,
-                or play as a guest with limited features. We use minimal analytics to improve the game. Card artwork
+                This game is free to play. You can create an account to save decks and track your games,
+                or play as a guest with limited features. We believe games should be for fun, not extraction.
+                We use minimal analytics to improve the game. Card artwork
                 is AI-generated. Don't be a jerk in the comments. That's the gist.
               </p>
             </div>
@@ -84,9 +85,10 @@ export default function Terms() {
             </h2>
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
-                You may sign in using <strong className="text-white/60">Manus OAuth</strong> to unlock additional features
+                You may create an account using <strong className="text-white/60">email or social login</strong> to unlock additional features
                 such as saving multiple decks, persistent game history, and account management. Authentication is handled
-                securely through Manus's OAuth infrastructure — we never see or store your password.
+                securely through <strong className="text-white/60">Supabase Auth</strong> — we never see or store your password.
+                Your account lives on this game's own infrastructure, not through any third-party platform account.
               </p>
               <p>
                 <strong className="text-white/60">Guest access</strong> is available with limited features: you can play
@@ -94,7 +96,7 @@ export default function Terms() {
                 creating an account.
               </p>
               <p>
-                When you sign in, we store your Manus user ID, display name, and email address in our database to
+                When you sign in, we store your user ID, display name, and email address in our database to
                 associate your saved decks and game data with your account. You can request deletion of your account
                 data at any time.
               </p>
@@ -186,9 +188,14 @@ export default function Terms() {
             <div className="text-sm text-white/40 leading-relaxed space-y-3" style={{ fontFamily: "var(--font-body)" }}>
               <p>
                 Game data (user accounts, saved decks, game logs) is stored in a{" "}
-                <strong className="text-white/60">Supabase</strong> (PostgreSQL) database. Real-time multiplayer
+                <strong className="text-white/60">Supabase</strong> (PostgreSQL) database{" "}
+                <strong className="text-white/60">hosted in the EU</strong>. Real-time multiplayer
                 communication uses Supabase Realtime channels. The application is hosted on{" "}
-                <strong className="text-white/60">Vercel</strong>.
+                <strong className="text-white/60">Vercel</strong>. Supabase is open-source, so you can verify
+                exactly what powers your data at{" "}
+                <a href="https://github.com/supabase/supabase" target="_blank" rel="noopener noreferrer" className="text-white/50 underline hover:text-white/70 transition-colors">
+                  github.com/supabase
+                </a>.
               </p>
               <p>
                 Static assets (card artwork, icons) are served via CDN. No user-uploaded content is stored —
@@ -209,7 +216,7 @@ export default function Terms() {
                 </p>
                 <p>
                   This game is and will always be completely free. You owe nothing. But if you're feeling generous
-                  and want to buy me a coffee — hey, whatever floats your boat. Happy gaming!
+                  and want to <a href="https://buymeacoffee.com/jojovh" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2 transition-colors">buy me a coffee</a> — hey, whatever floats your boat. Happy gaming!
                 </p>
               </div>
             </div>

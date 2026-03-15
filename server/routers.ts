@@ -66,6 +66,7 @@ import {
   getPlayerAllMatchHistory,
   getPlayerByGamertag,
 } from "./db-supabase";
+import { validateGamertag } from "./profanityFilter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -418,6 +419,36 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
         return { available: !taken };
+      }),
+
+    /** Update a player's gamertag with profanity/racism filter */
+    updateGamertag: publicProcedure
+      .input(
+        z.object({
+          playerId: z.string().min(1).max(64),
+          newGamertag: z.string().min(3).max(24),
+        })
+      )
+      .mutation(async ({ input }) => {
+        // Run profanity/racism filter
+        const filterResult = validateGamertag(input.newGamertag);
+        if (!filterResult.ok) {
+          return { success: false as const, reason: filterResult.reason! };
+        }
+
+        // Check uniqueness
+        const taken = await isGamertagTaken(input.newGamertag, input.playerId);
+        if (taken) {
+          return { success: false as const, reason: "That gamertag is already taken." };
+        }
+
+        // Update
+        const ok = await setPlayerGamertag(input.playerId, input.newGamertag);
+        if (!ok) {
+          return { success: false as const, reason: "Failed to update. Please try again." };
+        }
+
+        return { success: true as const, gamertag: input.newGamertag };
       }),
 
     /** Get all community decks published by a specific player */
