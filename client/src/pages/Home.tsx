@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "wouter";
-import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn } from "lucide-react";
+import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn, Swords } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
@@ -474,6 +474,7 @@ export default function Home() {
 
                 {/* Buttons */}
                 <div className="space-y-3">
+                  {/* ─── Primary CTA: Create Game ─── */}
                   <motion.button
                     data-tutorial="create-game"
                     whileHover={{ scale: 1.02, y: -1 }}
@@ -492,56 +493,58 @@ export default function Home() {
                     {isCreating ? "OPENING THE GATES..." : "CREATE GAME"}
                   </motion.button>
 
+                  {/* ─── Secondary CTAs: Sign In + Deck Builder side by side ─── */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {!authLoading && !authUser ? (
+                      <Link href="/login">
+                        <motion.div
+                          whileHover={{ scale: 1.02, y: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full rounded-xl py-3 px-4 text-sm font-bold tracking-wider border border-amber-500/30 text-amber-200/70 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          <LogIn className="w-4 h-4" />
+                          SIGN IN
+                        </motion.div>
+                      </Link>
+                    ) : (
+                      <Link href="/collection">
+                        <motion.div
+                          whileHover={{ scale: 1.02, y: -1 }}
+                          whileTap={{ scale: 0.98 }}
+                          className="w-full rounded-xl py-3 px-4 text-sm font-bold tracking-wider border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          style={{ fontFamily: "var(--font-heading)" }}
+                        >
+                          <BookOpen className="w-4 h-4" />
+                          COLLECTION
+                        </motion.div>
+                      </Link>
+                    )}
+                    <Link href="/deck-builder">
+                      <motion.div
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full rounded-xl py-3 px-4 text-sm font-bold tracking-wider border border-white/15 text-white/70 hover:bg-white/5 hover:border-white/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        <Swords className="w-4 h-4" />
+                        DECK BUILDER
+                      </motion.div>
+                    </Link>
+                  </div>
+
+                  {/* ─── Tertiary: How to Play ─── */}
                   <motion.button
                     data-tutorial="how-to-play"
                     whileHover={{ scale: 1.02, y: -1 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => startTutorial("home")}
-                    className="w-full rounded-xl py-2.5 px-6 text-sm border border-white/10 text-white/50 hover:bg-white/5 hover:border-white/20 transition-all flex items-center justify-center gap-2"
+                    className="w-full rounded-xl py-2 px-6 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2"
                     style={{ fontFamily: "var(--font-heading)" }}
                   >
                     <GraduationCap className="w-3.5 h-3.5" />
                     HOW TO PLAY
                   </motion.button>
-
-                  <Link href="/collection">
-                    <motion.div
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full rounded-xl py-2.5 px-6 text-sm border border-amber-500/20 text-amber-200/60 hover:bg-amber-500/5 hover:border-amber-500/30 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      <BookOpen className="w-3.5 h-3.5" />
-                      CARD COLLECTION
-                    </motion.div>
-                  </Link>
-
-                  {/* Sign-in Prompt (inline) */}
-                  {!authLoading && !authUser && (
-                    <div className="my-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="flex-1 h-px bg-white/8" />
-                        <span className="text-xs tracking-[0.15em] text-white/25 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                          Claim your soul
-                        </span>
-                        <div className="flex-1 h-px bg-white/8" />
-                      </div>
-                      <p className="text-xs text-white/40 mb-2 leading-relaxed text-center" style={{ fontFamily: "var(--font-body)" }}>
-                        Sign in to save your custom decks, track your match history, and unlock faction achievements.
-                      </p>
-                      <Link href="/login">
-                        <motion.div
-                          whileHover={{ scale: 1.02, y: -1 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="w-full rounded-xl py-2.5 px-6 text-sm border border-amber-500/30 text-amber-200/70 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                          style={{ fontFamily: "var(--font-heading)" }}
-                        >
-                          <LogIn className="w-3.5 h-3.5" />
-                          SIGN IN / REGISTER
-                        </motion.div>
-                      </Link>
-                    </div>
-                  )}
 
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />

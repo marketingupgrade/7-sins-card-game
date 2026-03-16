@@ -1972,3 +1972,6 @@
 - [x] Update Changelog page (v5.12 entry already present)
 - [x] Update other main pages (Brandbook passives, Terms, SigilMenu version)
 - [x] Push to GitHub
+
+### Homepage Button Fix
+- [x] Fix homepage buttons: Create Game, Sign In/Register, Deck Builder
