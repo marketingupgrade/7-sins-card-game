@@ -169,7 +169,8 @@ export default function GameBoard() {
 
   // Turn timer: countdown based on server-side selectionDeadline
   const [turnTimerActive, setTurnTimerActive] = useState(false);
-  const [turnTimerSeconds, setTurnTimerSeconds] = useState(SERVER_TURN_TIMER_SECONDS);
+  const configuredTimer = gameState?.turnTimerSeconds ?? SERVER_TURN_TIMER_SECONDS;
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState(configuredTimer);
   const turnTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoLockTriggeredRef = useRef(false);
   const handleLockInRef = useRef<() => void>(() => {});
@@ -372,7 +373,7 @@ export default function GameBoard() {
       setHasConsumedThisRound(false); // Reset consume allowance each round
       // Reset turn timer
       setTurnTimerActive(false);
-      setTurnTimerSeconds(SERVER_TURN_TIMER_SECONDS);
+      setTurnTimerSeconds(configuredTimer);
       autoLockTriggeredRef.current = false;
       if (turnTimerIntervalRef.current) {
         clearInterval(turnTimerIntervalRef.current);
@@ -393,11 +394,11 @@ export default function GameBoard() {
       soundEngine.play("card_play"); // Subtle alert sound
     } else if (!gameState.selectionDeadline && !turnTimerActive) {
       // Fallback: check if any opponent locked in (for backward compat)
-      const opponents = gameState.players.filter(p => p.id !== playerId && p.isAlive);
+      const opponents = gameState.players.filter((p: PlayerState) => p.id !== playerId && p.isAlive);
       const anyOpponentLocked = opponents.some(p => p.hasLockedIn);
       if (anyOpponentLocked) {
         setTurnTimerActive(true);
-        setTurnTimerSeconds(SERVER_TURN_TIMER_SECONDS);
+        setTurnTimerSeconds(configuredTimer);
         soundEngine.play("card_play");
       }
     }
@@ -1512,7 +1513,7 @@ export default function GameBoard() {
                           : "oklch(0.70 0.15 85)",
                       }}
                       initial={{ width: "100%" }}
-                      animate={{ width: `${(turnTimerSeconds / SERVER_TURN_TIMER_SECONDS) * 100}%` }}
+                       animate={{ width: `${(turnTimerSeconds / configuredTimer) * 100}%` }}
                       transition={{ duration: 1, ease: "linear" }}
                     />
                   </div>

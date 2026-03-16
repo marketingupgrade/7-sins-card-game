@@ -189,6 +189,23 @@ export async function setCustomDeck(
   if (error) throw new Error(`Failed to set deck: ${error.message}`);
 }
 
+// ─── Set Turn Timer ─────────────────────────────────────────
+/**
+ * Host sets the turn timer duration for this game (lobby only).
+ * Updates the turn_timer_seconds column on the games table.
+ */
+export async function setTurnTimer(
+  gameId: string,
+  seconds: number
+): Promise<void> {
+  const sb = getClientSupabase();
+  const { error } = await sb
+    .from("games")
+    .update({ turn_timer_seconds: seconds })
+    .eq("id", gameId);
+  if (error) throw new Error(`Failed to set turn timer: ${error.message}`);
+}
+
 // ─── Start Game ──────────────────────────────────────────────
 export async function startGame(gameId: string): Promise<void> {
   const sb = getClientSupabase();
@@ -323,7 +340,9 @@ export async function lockInCards(
   // Server-side turn timer: set selection_deadline when the first player locks in
   const gameUpdate: Record<string, any> = { locked_plays: allLocked };
   if (!game.selection_deadline) {
-    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1000).toISOString();
+    // Use the game's configured timer (set by host in lobby)
+    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
+    const deadline = new Date(Date.now() + timerSeconds * 1000).toISOString();
     gameUpdate.selection_deadline = deadline;
   }
   await sb.from("games").update(gameUpdate).eq("id", gameId);
@@ -644,6 +663,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
     activeEffects,
     winnerId: game.winner_id,
     selectionDeadline: game.selection_deadline ?? null,
+    turnTimerSeconds: game.turn_timer_seconds ?? 15,
   };
 }
 

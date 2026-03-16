@@ -5653,7 +5653,8 @@ async function lockInCards(gameId, playerId, selections) {
   const allLocked = [...existingLocked, ...lockedPlays];
   const gameUpdate = { locked_plays: allLocked };
   if (!game.selection_deadline) {
-    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1e3).toISOString();
+    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
+    const deadline = new Date(Date.now() + timerSeconds * 1e3).toISOString();
     gameUpdate.selection_deadline = deadline;
   }
   await sb.from("games").update(gameUpdate).eq("id", gameId);
@@ -5855,7 +5856,8 @@ async function getGameState(gameId) {
     players,
     activeEffects,
     winnerId: game.winner_id,
-    selectionDeadline: game.selection_deadline ?? null
+    selectionDeadline: game.selection_deadline ?? null,
+    turnTimerSeconds: game.turn_timer_seconds ?? 15
   };
 }
 async function getGameLog(gameId) {

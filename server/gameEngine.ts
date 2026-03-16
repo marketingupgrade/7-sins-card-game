@@ -291,8 +291,9 @@ export async function lockInCards(
   // Server-side turn timer: set selection_deadline when the first player locks in
   const gameUpdate: Record<string, any> = { locked_plays: allLocked };
   if (!game.selection_deadline) {
-    // First lock-in this round — set the deadline
-    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1000).toISOString();
+    // First lock-in this round — set the deadline using the game's configured timer
+    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
+    const deadline = new Date(Date.now() + timerSeconds * 1000).toISOString();
     gameUpdate.selection_deadline = deadline;
   }
   await sb.from("games").update(gameUpdate).eq("id", gameId);
@@ -586,6 +587,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
     activeEffects,
     winnerId: game.winner_id,
     selectionDeadline: game.selection_deadline ?? null,
+    turnTimerSeconds: game.turn_timer_seconds ?? 15,
   };
 }
 

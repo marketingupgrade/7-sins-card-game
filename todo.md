@@ -1993,3 +1993,17 @@
 - [x] Write 27 unit tests for timer logic
 - [x] All 519 tests passing, zero TypeScript errors
 - [x] Push to GitHub
+
+### Configurable Turn Timer per Lobby
+- [x] Add turn_timer_seconds column to Supabase games table (default 15)
+- [x] Add TIMER_OPTIONS constant (10s/15s/30s), DEFAULT_TURN_TIMER, and TimerOptionValue type to shared types
+- [x] Create setTurnTimer() function in client engine to update games table
+- [x] Add turnTimerSeconds field to GameState interface (client + server getGameState)
+- [x] Add animated timer selector UI in lobby (host-only, StonePanel with 3 options)
+- [x] Show current timer setting to non-host players
+- [x] Wire turn_timer_seconds into deadline calculation in both client and server engines
+- [x] Update GameBoard progress bar to use configuredTimer from game state
+- [x] Sync timer selection from game state when lobby loads
+- [x] Write 7 new unit tests for configurable timer (34 total in turnTimer.test.ts)
+- [x] All 526 tests passing, zero TypeScript errors
+- [x] Push to GitHub

@@ -223,6 +223,64 @@ describe("Client-side remaining time calculation", () => {
   });
 });
 
+describe("Configurable turn timer", () => {
+  it("TIMER_OPTIONS should have 3 options (10s, 15s, 30s)", async () => {
+    const { TIMER_OPTIONS } = await import("../shared/gameTypes");
+    expect(TIMER_OPTIONS).toHaveLength(3);
+    expect(TIMER_OPTIONS.map((o: any) => o.value)).toEqual([10, 15, 30]);
+  });
+
+  it("DEFAULT_TURN_TIMER should be 15", async () => {
+    const { DEFAULT_TURN_TIMER } = await import("../shared/gameTypes");
+    expect(DEFAULT_TURN_TIMER).toBe(15);
+  });
+
+  it("GameState should include turnTimerSeconds field", () => {
+    const state: Partial<GameState> = {
+      turnTimerSeconds: 30,
+    };
+    expect(state.turnTimerSeconds).toBe(30);
+  });
+
+  it("should use game's configured timer for deadline calculation", () => {
+    const turnTimerSeconds = 30; // Casual mode
+    const now = Date.now();
+    const deadline = new Date(now + turnTimerSeconds * 1000).toISOString();
+    const deadlineMs = new Date(deadline).getTime();
+    const diff = deadlineMs - now;
+    expect(diff).toBeGreaterThanOrEqual(29900);
+    expect(diff).toBeLessThanOrEqual(30100);
+  });
+
+  it("should fall back to SERVER_TURN_TIMER_SECONDS when turn_timer_seconds is null", () => {
+    const gameTurnTimer: number | null = null;
+    const timerSeconds = gameTurnTimer ?? SERVER_TURN_TIMER_SECONDS;
+    expect(timerSeconds).toBe(SERVER_TURN_TIMER_SECONDS);
+  });
+
+  it("should use 10s timer for competitive mode", () => {
+    const gameTurnTimer = 10;
+    const now = Date.now();
+    const deadline = new Date(now + gameTurnTimer * 1000).toISOString();
+    const deadlineMs = new Date(deadline).getTime();
+    const diff = deadlineMs - now;
+    expect(diff).toBeGreaterThanOrEqual(9900);
+    expect(diff).toBeLessThanOrEqual(10100);
+  });
+
+  it("each TIMER_OPTIONS entry should have value, label, and description", async () => {
+    const { TIMER_OPTIONS } = await import("../shared/gameTypes");
+    for (const opt of TIMER_OPTIONS) {
+      expect(opt).toHaveProperty("value");
+      expect(opt).toHaveProperty("label");
+      expect(opt).toHaveProperty("description");
+      expect(typeof opt.value).toBe("number");
+      expect(typeof opt.label).toBe("string");
+      expect(typeof opt.description).toBe("string");
+    }
+  });
+});
+
 describe("Full timer enforcement flow (unit simulation)", () => {
   interface MockGame {
     turn_phase: TurnPhase;

@@ -337,8 +337,24 @@ export interface LockedPlay {
 /** Selection timer duration in seconds (client-side visual countdown) */
 export const SELECTION_TIMER_SECONDS = 10;
 
-/** Server-side turn timer enforcement: auto-pass idle players after this many seconds */
+/** Server-side turn timer enforcement: auto-pass idle players after this many seconds (default) */
 export const SERVER_TURN_TIMER_SECONDS = 12;
+
+/**
+ * Configurable turn timer options for lobby settings.
+ * Each option has a label, value (seconds), and description.
+ * The host selects one before starting the game.
+ */
+export const TIMER_OPTIONS = [
+  { value: 10, label: "10s", description: "Competitive — think fast or perish" },
+  { value: 15, label: "15s", description: "Standard — balanced judgment" },
+  { value: 30, label: "30s", description: "Casual — contemplate your sins" },
+] as const;
+
+export type TimerOptionValue = typeof TIMER_OPTIONS[number]["value"];
+
+/** Default turn timer if not configured in lobby */
+export const DEFAULT_TURN_TIMER = 15;
 
 // ─── Game State ──────────────────────────────────────────────
 export type GameStatus = "lobby" | "draft" | "active" | "finished";
@@ -399,6 +415,8 @@ export interface GameState {
   winnerId: string | null;
   /** ISO timestamp deadline for selection phase — set when first player locks in (server-side timer enforcement) */
   selectionDeadline: string | null;
+  /** Configured turn timer duration in seconds (set by host in lobby) */
+  turnTimerSeconds: number;
 }
 
 // ─── Game Actions ────────────────────────────────────────────

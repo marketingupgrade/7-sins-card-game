@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock } from "lucide-react";
+import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock, Timer } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
@@ -21,13 +21,13 @@ import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { chooseSin, startGame, getGameState, setCustomDeck } from "@/lib/gameEngine";
+import { chooseSin, startGame, getGameState, setCustomDeck, setTurnTimer } from "@/lib/gameEngine";
 import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
-import { PASSIVE_INFO, FACTION_SWOT } from "@shared/gameTypes";
+import { PASSIVE_INFO, FACTION_SWOT, TIMER_OPTIONS, DEFAULT_TURN_TIMER } from "@shared/gameTypes";
 
 const LobbyBabylonScene = lazy(() => import("@/components/LobbyBabylonScene"));
 
@@ -191,6 +191,7 @@ export default function Lobby() {
   const factionUnlocks = useFactionUnlocks();
   const [showDeckPicker, setShowDeckPicker] = useState(false);
   const [selectedDeckName, setSelectedDeckName] = useState<string | null>(null);
+  const [selectedTimer, setSelectedTimer] = useState<number>(DEFAULT_TURN_TIMER);
 
   useEffect(() => { setCurrentPage("lobby"); }, [setCurrentPage]);
   useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
@@ -204,6 +205,8 @@ export default function Lobby() {
     try {
       const gs = await getGameState(gameId);
       setState(gs);
+      // Sync timer from game state
+      if (gs.turnTimerSeconds) setSelectedTimer(gs.turnTimerSeconds);
       if (gs.status === "active") setLocation(`/game/${gameId}`);
     } catch (err: any) { console.error("[LoadState]", err); setError("Failed to load the lobby. Please refresh the page."); }
   }, [gameId, setLocation]);
@@ -277,6 +280,20 @@ export default function Lobby() {
       await loadState();
     } catch (err: any) { console.error("[AddBot]", err); setError("The shadows refuse to answer. Try summoning again."); }
     finally { setIsAddingBot(false); }
+  };
+
+  const handleTimerChange = async (seconds: number) => {
+    if (!gameId) return;
+    soundEngine.play("ui_click");
+    setSelectedTimer(seconds);
+    try {
+      await setTurnTimer(gameId, seconds);
+      const opt = TIMER_OPTIONS.find(o => o.value === seconds);
+      addMessage(opt ? `Turn timer set to ${opt.label}. ${opt.description}.` : `Timer set to ${seconds}s.`, "info");
+    } catch (err: any) {
+      console.error("[SetTimer]", err);
+      setError("Failed to set the timer. Try again.");
+    }
   };
 
   const handleStart = async () => {
@@ -877,6 +894,92 @@ export default function Lobby() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Turn Timer Selector — Host Only */}
+        {isHost && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="w-full max-w-lg mb-6"
+          >
+            <StonePanel className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Timer className="w-3.5 h-3.5 text-candle/60" />
+                <h3
+                  className="text-xs tracking-[0.25em] text-candle/60 uppercase"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  Turn Timer
+                </h3>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {TIMER_OPTIONS.map((opt) => {
+                  const isActive = selectedTimer === opt.value;
+                  return (
+                    <motion.button
+                      key={opt.value}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => handleTimerChange(opt.value)}
+                      className={`relative py-3 px-2 rounded-lg border text-center transition-all duration-200 ${
+                        isActive
+                          ? "bg-candle/15 border-candle/40 shadow-[0_0_15px_oklch(0.55_0.12_60/0.15)]"
+                          : "bg-candle/5 border-candle/15 hover:bg-candle/10 hover:border-candle/25"
+                      }`}
+                    >
+                      <span
+                        className={`block text-lg font-black tracking-wider ${
+                          isActive ? "text-candle" : "text-candle/50"
+                        }`}
+                        style={{ fontFamily: "var(--font-display)" }}
+                      >
+                        {opt.label}
+                      </span>
+                      <span
+                        className={`block text-[10px] mt-0.5 ${
+                          isActive ? "text-candle/70" : "text-candle/30"
+                        }`}
+                        style={{ fontFamily: "var(--font-body)" }}
+                      >
+                        {opt.description}
+                      </span>
+                      {isActive && (
+                        <motion.div
+                          layoutId="timer-indicator"
+                          className="absolute inset-0 rounded-lg border-2 border-candle/30"
+                          transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
+                        />
+                      )}
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </StonePanel>
+          </motion.div>
+        )}
+
+        {/* Timer display for non-host players */}
+        {!isHost && state && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="w-full max-w-lg mb-6"
+          >
+            <StonePanel className="p-3">
+              <div className="flex items-center justify-center gap-2">
+                <Timer className="w-3.5 h-3.5 text-candle/50" />
+                <span
+                  className="text-xs tracking-[0.2em] text-candle/50 uppercase"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  Turn Timer: <span className="text-candle/80 font-bold">{selectedTimer}s</span>
+                </span>
+              </div>
+            </StonePanel>
+          </motion.div>
+        )}
 
         {/* Start Button — Ritual Activation */}
         {isHost && allChosen && (
