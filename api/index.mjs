@@ -6280,19 +6280,18 @@ async function advanceRound(gameId) {
     turn_phase: "round_end"
     // Keep locked_plays intact so non-triggering clients can read them
   }).eq("id", gameId);
-  setTimeout(async () => {
-    try {
-      await sb.from("games").update({
-        turn_phase: "selection",
-        locked_plays: []
-      }).eq("id", gameId);
-      for (const p of allPlayers) {
-        await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-      }
-    } catch (e) {
-      console.error("[advanceRound] delayed clear failed:", e);
+  await new Promise((resolve) => setTimeout(resolve, 4e3));
+  try {
+    await sb.from("games").update({
+      turn_phase: "selection",
+      locked_plays: []
+    }).eq("id", gameId);
+    for (const p of allPlayers) {
+      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
     }
-  }, 4e3);
+  } catch (e) {
+    console.error("[advanceRound] delayed clear failed:", e);
+  }
 }
 async function refreshPlayerEnergy(player) {
   const sb = getServerSupabase();

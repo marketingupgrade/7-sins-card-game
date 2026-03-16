@@ -1198,20 +1198,20 @@ async function advanceRound(gameId: string): Promise<void> {
   }).eq("id", gameId);
 
   // Give clients 4 seconds to read the resolution data before clearing
-  setTimeout(async () => {
-    try {
-      await sb.from("games").update({
-        turn_phase: "selection",
-        locked_plays: [],
-      }).eq("id", gameId);
-      // Also clear locked_cards on all players
-      for (const p of allPlayers) {
-        await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-      }
-    } catch (e) {
-      console.error("[advanceRound] delayed clear failed:", e);
+  // Use awaited delay instead of setTimeout to prevent orphaned callbacks
+  await new Promise(resolve => setTimeout(resolve, 4000));
+  try {
+    await sb.from("games").update({
+      turn_phase: "selection",
+      locked_plays: [],
+    }).eq("id", gameId);
+    // Also clear locked_cards on all players
+    for (const p of allPlayers) {
+      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
     }
-  }, 4000);
+  } catch (e) {
+    console.error("[advanceRound] delayed clear failed:", e);
+  }
 }
 
 // ─── Helper: Refresh Player Energy (v4 — fixed 3/turn) ──────

@@ -1975,3 +1975,9 @@
 
 ### Homepage Button Fix
 - [x] Fix homepage buttons: Create Game, Sign In/Register, Deck Builder
+
+### Bug Fix — Game Freezes at Round 13
+- [x] Investigate game engine resolution logic freezing at round 13 "RESOLVING..." state
+- [x] Fix the root cause: replaced unreliable setTimeout(4000) with awaited Promise delay in both client (clientEngine.ts) and server (gameEngine.ts) engines
+- [x] Add self-healing watchdog in useGameState hook: detects stuck round_end/resolution for >15s and forces transition to selection phase
+- [x] All 492 tests passing, zero TypeScript errors
