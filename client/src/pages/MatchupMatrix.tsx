@@ -2,7 +2,7 @@
  * Matchup Matrix Page — 7x7 Faction Win Rate Heatmap
  *
  * Visualizes pairwise faction matchup dynamics in a 4-player FFA context.
- * Data derived from Monte Carlo simulation (v5.11 balance: 333 HP, ×1.75 defense, Final Reckoning, Sloth AOE passive, 10-card hand cap).
+ * Data derived from Monte Carlo simulation (v5.12 balance: 333 HP, x1.75 defense, Final Reckoning, 59 rebalanced cards, 7 retuned passives).
  *
  * Features:
  * - Interactive 7x7 heatmap grid with color-coded cells
@@ -20,6 +20,8 @@ import { motion } from "framer-motion";
 import { SinType, PASSIVE_INFO } from "@shared/gameTypes";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import EmberField from "@/components/EmberField";
+import PageTransition from "@/components/PageTransition";
+import ScrollReveal from "@/components/ScrollReveal";
 
 /* ─── Faction Config ────────────────────────────────────────── */
 const FACTIONS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -50,9 +52,8 @@ const FACTION_LABELS: Record<SinType, string> = {
  * In a 4-player FFA, "matchup" measures how often faction A finishes
  * ahead of faction B when both are in the same game. 50% = perfectly even.
  *
- * Data from v5.11 Monte Carlo simulation (1.26M games, 333 HP, ×1.75 defense, Final Reckoning).
- * v5.11 changes: Sloth ENDURANCE now deals energy x2 AOE damage per turn, hand cap at 10, 46 new zero-cost cards.
- * These values reflect the compound-ticking dynamics, passive interactions,
+ * Data from v5.12 Monte Carlo simulation (2M games, 333 HP, x1.75 defense, Final Reckoning).
+   * v5.12 changes: 59 cards rebalanced, 7 passives retuned. Lust TEMPTATION nerfed 25% to 1%, Envy JEALOUSY buffed 10.6% to 47.6%.* These values reflect the compound-ticking dynamics, passive interactions,
  * the simultaneous-resolution turn structure, and the Final Reckoning at round 20.
  *
  * Methodology note: Since this is a 4-player game (not 1v1), pairwise
@@ -62,65 +63,65 @@ const FACTION_LABELS: Record<SinType, string> = {
 const MATCHUP_DATA: Record<SinType, Record<SinType, number>> = {
   wrath: {
     wrath: 50.0,
-    sloth: 47.8,
-    greed: 50.5,
-    envy: 51.5,
-    pride: 50.7,
-    lust: 47.4,
-    gluttony: 48.0,
+    sloth: 43.1,
+    greed: 43.9,
+    envy: 50.5,
+    pride: 51.7,
+    lust: 39.5,
+    gluttony: 49.3,
   },
   sloth: {
-    wrath: 52.2,
+    wrath: 56.9,
     sloth: 50.0,
-    greed: 50.6,
-    envy: 49.8,
-    pride: 49.6,
-    lust: 48.8,
-    gluttony: 47.9,
+    greed: 49.6,
+    envy: 48.2,
+    pride: 52.2,
+    lust: 43.3,
+    gluttony: 51.0,
   },
   greed: {
-    wrath: 49.5,
-    sloth: 49.4,
+    wrath: 56.1,
+    sloth: 50.4,
     greed: 50.0,
-    envy: 51.4,
-    pride: 49.9,
-    lust: 49.1,
-    gluttony: 50.8,
+    envy: 55.7,
+    pride: 53.8,
+    lust: 43.9,
+    gluttony: 52.9,
   },
   envy: {
-    wrath: 48.5,
-    sloth: 50.2,
-    greed: 48.6,
+    wrath: 49.5,
+    sloth: 51.8,
+    greed: 44.3,
     envy: 50.0,
-    pride: 48.5,
-    lust: 50.5,
-    gluttony: 47.1,
+    pride: 50.9,
+    lust: 40.5,
+    gluttony: 48.8,
   },
   pride: {
-    wrath: 49.3,
-    sloth: 50.4,
-    greed: 50.1,
-    envy: 51.5,
+    wrath: 48.3,
+    sloth: 47.8,
+    greed: 46.2,
+    envy: 49.1,
     pride: 50.0,
-    lust: 48.2,
-    gluttony: 47.8,
+    lust: 41.4,
+    gluttony: 49.4,
   },
   lust: {
-    wrath: 52.6,
-    sloth: 51.2,
-    greed: 50.9,
-    envy: 49.5,
-    pride: 51.8,
+    wrath: 60.5,
+    sloth: 56.7,
+    greed: 56.1,
+    envy: 59.5,
+    pride: 58.6,
     lust: 50.0,
-    gluttony: 49.9,
+    gluttony: 58.1,
   },
   gluttony: {
-    wrath: 52.0,
-    sloth: 52.1,
-    greed: 49.2,
-    envy: 52.9,
-    pride: 52.2,
-    lust: 50.1,
+    wrath: 50.7,
+    sloth: 49.0,
+    greed: 47.1,
+    envy: 51.2,
+    pride: 50.6,
+    lust: 41.9,
     gluttony: 50.0,
   },
 };
@@ -140,11 +141,11 @@ interface MatchupDetail {
 
 const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   "wrath-sloth": {
-    summary: "Sloth's shields absorb Wrath's burst while ENDURANCE AOE (energy x2) chips away at Wrath's HP each turn.",
-    passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields. Meanwhile, Sloth's new AOE passive (energy x2 damage per turn) adds unavoidable chip damage that compounds over time.",
+    summary: "Sloth's shields absorb Wrath's burst while ENDURANCE AOE (energy x1.029) adds chip damage. v5.12 nerfed Sloth's shield cap to 23 and AOE to x1.029.",
+    passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields. Sloth's AOE passive (energy x1.029 per turn) adds chip damage, reduced from x2.0 in v5.12.",
     attackerStrengths: ["High burst damage in early rounds", "VENGEANCE punishes attackers", "Aggressive compound patterns escalate fast"],
-    defenderStrengths: ["ENDURANCE generates shields AND deals AOE damage each turn", "Slowburn pattern scales into late game", "AOE passive punishes all opponents simultaneously"],
-    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields, but Sloth's Torpor Shield regenerates while ENDURANCE AOE deals 8-14 damage per turn to all enemies.",
+    defenderStrengths: ["ENDURANCE generates shields AND deals AOE chip damage", "Slowburn pattern scales into late game", "Shield cap 23 limits burst absorption"],
+    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields. Sloth's ENDURANCE AOE now deals 2-7 damage per turn (down from 8-14 in v5.11).",
     counterStrategy: "As Wrath: focus single-target burst to kill Sloth before AOE damage accumulates. As Sloth: conserve energy to maximize both shield generation and AOE output.",
   },
   "wrath-envy": {
@@ -157,7 +158,7 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   },
   "wrath-lust": {
     summary: "Lust's lifesteal directly counters Wrath's aggression — every hit heals Lust.",
-    passiveInteraction: "TEMPTATION converts Wrath's damage into healing. The more Wrath attacks, the more Lust sustains — a fundamental counter.",
+    passiveInteraction: "Despite TEMPTATION being nerfed to 1% lifesteal, Lust's raw card damage and heal_steal effects still dominate Wrath's glass cannon approach. Lust wins 60.5% head-to-head.",
     attackerStrengths: ["Highest raw damage output", "VENGEANCE reflect adds chip damage", "Aggressive patterns close games fast"],
     defenderStrengths: ["TEMPTATION heals from damage ticks", "Lifesteal negates burst damage", "Sustain outlasts aggression"],
     keyCards: "Lust's Seductive Drain turns Wrath's Inferno Wave into a massive heal. Wrath needs shield-piercing or heal-block effects to counter.",
@@ -165,11 +166,11 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   },
   "sloth-pride": {
     summary: "Pride's HUBRIS burst can overwhelm shields, but Sloth's AOE passive and consistency keep the pressure on.",
-    passiveInteraction: "HUBRIS multiplier (x1.324) on expensive cards can punch through ENDURANCE shields, but Sloth's AOE passive (energy x2) deals unavoidable damage every turn.",
+    passiveInteraction: "HUBRIS multiplier (x1.590) on expensive cards can punch through ENDURANCE shields, but Sloth's AOE passive (energy x1.029) deals chip damage every turn.",
     attackerStrengths: ["ENDURANCE generates shields AND deals AOE damage", "Slowburn compounds over time", "AOE passive creates a damage clock Pride must race against"],
     defenderStrengths: ["HUBRIS amplifies expensive card effects", "Single massive burst rounds", "High-tier cards have outsized impact"],
-    keyCards: "Pride's Crown of Thorns with HUBRIS can deal 40+ damage in one round, but Sloth's ENDURANCE AOE deals 8-14 damage per turn to all enemies, creating a race condition.",
-    counterStrategy: "As Sloth: maximize energy to boost both shields and AOE output. As Pride: burst early before Sloth's cumulative AOE damage becomes decisive.",
+    keyCards: "Pride's Crown of Thorns with HUBRIS (x1.590) can deal 50+ damage in one round. Sloth's ENDURANCE AOE deals 2-7 damage per turn, creating a race condition.",
+    counterStrategy: "As Sloth: maximize energy for shields and chip AOE. As Pride: burst early with HUBRIS (x1.590) before Sloth's cumulative damage adds up.",
   },
   "greed-gluttony": {
     summary: "Greed's resource theft disrupts Gluttony's burn chains, creating a resource war.",
@@ -180,19 +181,19 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     counterStrategy: "As Greed: steal energy early to prevent burn chains. As Gluttony: prioritize deck burn over direct damage.",
   },
   "lust-sloth": {
-    summary: "Lust's lifesteal vs Sloth's shields + AOE: a battle of sustain where Sloth's AOE passive tips the scales.",
-    passiveInteraction: "TEMPTATION healing competes with ENDURANCE shield generation, but Sloth's new AOE passive (energy x2) adds unavoidable damage that Lust must out-heal.",
+    summary: "Lust's 1% lifesteal vs Sloth's shields + AOE chip. Despite the massive TEMPTATION nerf (25% to 1%), Lust still wins 56.7% through raw card damage.",
+    passiveInteraction: "TEMPTATION at 1% lifesteal barely heals, but Lust's 20 heal_steal and 15 heal_gain card effects provide sustain that outpaces Sloth's reduced ENDURANCE (shield cap 23, AOE x1.029).",
     attackerStrengths: ["TEMPTATION heals while dealing damage", "Lifesteal bypasses shield regeneration", "Sustain advantage if AOE damage can be out-healed"],
     defenderStrengths: ["ENDURANCE shields absorb damage AND deals AOE", "AOE passive creates pressure Lust must out-heal", "Shield stacking + AOE is a dual threat"],
-    keyCards: "Lust's Charming Whisper deals damage AND heals, but must out-heal Sloth's ENDURANCE AOE (8-14 per turn). Sloth's dual threat of shields + AOE creates sustained pressure.",
+    keyCards: "Lust's Charming Whisper deals damage AND heals. Sloth's ENDURANCE AOE now only deals 2-7 per turn (down from 8-14), making Lust's sustain more effective.",
     counterStrategy: "As Lust: maximize lifesteal to out-heal AOE damage. As Sloth: maximize energy for both shield generation and AOE output.",
   },
   "envy-lust": {
     summary: "Envy's affliction amplification disrupts Lust's sustain loop.",
-    passiveInteraction: "JEALOUSY deepens afflictions faster than TEMPTATION can heal — amplified afflictions deal escalating damage that outpaces lifesteal.",
+    passiveInteraction: "JEALOUSY at 47.6% (up from 10.6%) deepens afflictions massively. TEMPTATION at 1% lifesteal can barely counter the amplified damage spiral.",
     attackerStrengths: ["JEALOUSY amplifies afflictions exponentially", "Affliction stacking bypasses healing", "Duo targeting spreads debuffs"],
     defenderStrengths: ["TEMPTATION provides consistent healing", "Lifesteal from damage ticks", "Sustain in long games"],
-    keyCards: "Envy's Jealous Gaze + affliction_amplify cards create a damage spiral that TEMPTATION can't out-heal past round 8.",
+    keyCards: "Envy's Jealous Gaze + 47.6% JEALOUSY create a damage spiral. Lust still wins 59.5% through raw card power despite the amplification.",
     counterStrategy: "As Envy: stack afflictions early, amplify in mid-game. As Lust: include affliction_cleanse or heal_block to disrupt the loop.",
   },
   "gluttony-wrath": {
@@ -221,15 +222,15 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   },
   "pride-envy": {
     summary: "Pride's expensive cards trigger HUBRIS reliably, overwhelming Envy's gradual amplification.",
-    passiveInteraction: "HUBRIS x1.324 multiplier on expensive cards delivers burst damage faster than JEALOUSY can stack afflictions.",
-    attackerStrengths: ["HUBRIS amplifies expensive cards", "Single-round burst damage", "High-tier cards have outsized impact"],
+    passiveInteraction: "HUBRIS x1.590 multiplier on expensive cards delivers burst damage faster than JEALOUSY (47.6%) can stack afflictions.",
+    attackerStrengths: ["HUBRIS x1.590 amplifies expensive cards", "Single-round burst damage", "High-tier cards have outsized impact"],
     defenderStrengths: ["JEALOUSY deepens afflictions", "Affliction stacking scales over time", "Duo targeting spreads pressure"],
-    keyCards: "Pride's Crown of Thorns with HUBRIS deals 40+ burst damage before Envy's afflictions can compound past round 5.",
+    keyCards: "Pride's Crown of Thorns with HUBRIS (x1.590) deals 50+ burst damage before Envy's 47.6% JEALOUSY can compound past round 5.",
     counterStrategy: "As Pride: play expensive cards early for HUBRIS burst. As Envy: survive burst rounds with heal cards, then out-scale.",
   },
   "lust-pride": {
     summary: "Lust's sustained lifesteal outlasts Pride's burst windows.",
-    passiveInteraction: "TEMPTATION heals consistently each round, while HUBRIS only triggers on expensive card plays — Lust wins between burst windows.",
+    passiveInteraction: "Despite TEMPTATION being nerfed to 1%, Lust's raw card healing (20 heal_steal + 15 heal_gain) outlasts Pride's conditional HUBRIS (x1.590) triggers. Lust wins 58.6%.",
     attackerStrengths: ["TEMPTATION provides consistent healing", "Lifesteal from every damage tick", "Sustained advantage between bursts"],
     defenderStrengths: ["HUBRIS burst can one-shot through healing", "Expensive cards deal massive damage", "High single-round impact"],
     keyCards: "Lust's sustained healing between Pride's HUBRIS rounds creates a net HP advantage. Pride needs consecutive burst rounds to close.",
@@ -247,7 +248,7 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     summary: "Wrath's consistent aggression outpaces Pride's conditional HUBRIS triggers.",
     passiveInteraction: "VENGEANCE reflects damage every round, while HUBRIS only amplifies when the most expensive card is played — Wrath's consistency beats Pride's conditionality.",
     attackerStrengths: ["Consistent damage every round", "VENGEANCE reflect punishes Pride's attacks", "Burst doesn't depend on card cost conditions"],
-    defenderStrengths: ["HUBRIS x1.324 multiplier creates massive burst rounds", "High-cost cards have outsized single-round impact", "Can one-shot through moderate HP pools"],
+    defenderStrengths: ["HUBRIS x1.590 multiplier creates massive burst rounds", "High-cost cards have outsized single-round impact", "Can one-shot through moderate HP pools"],
     keyCards: "Wrath's Wrathful Cry deals reliable AoE damage every round. Pride's Crown of Thorns needs HUBRIS to trigger for maximum impact, which isn't guaranteed.",
     counterStrategy: "As Wrath: maintain pressure every round to prevent Pride from setting up HUBRIS combos. As Pride: save expensive cards for back-to-back HUBRIS rounds.",
   },
@@ -285,9 +286,9 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
   },
   "greed-pride": {
     summary: "A razor-thin matchup where Pride's HUBRIS burst barely edges Greed's resource control.",
-    passiveInteraction: "HUBRIS amplifies expensive cards while TAX generates shields from damage — Pride's burst can overwhelm TAX shields in single rounds, but Greed's energy steal delays HUBRIS triggers.",
+    passiveInteraction: "HUBRIS x1.590 amplifies expensive cards while TAX generates shields from damage — Pride's burst can overwhelm TAX shields in single rounds, but Greed's energy steal delays HUBRIS triggers.",
     attackerStrengths: ["TAX shields provide passive defense", "Energy steal delays HUBRIS-eligible plays", "Resource denial disrupts expensive card timing"],
-    defenderStrengths: ["HUBRIS x1.324 multiplier on expensive cards", "Single burst rounds can break through TAX shields", "High-cost cards have outsized impact"],
+    defenderStrengths: ["HUBRIS x1.590 multiplier on expensive cards", "Single burst rounds can break through TAX shields", "High-cost cards have outsized impact"],
     keyCards: "Pride's Crown of Thorns with HUBRIS can deal 40+ damage, overwhelming TAX shields in one round. Greed's Golden Siphon can steal the energy needed for expensive plays.",
     counterStrategy: "As Greed: steal energy aggressively to prevent Pride from playing expensive cards. As Pride: hold expensive cards for a decisive HUBRIS burst round.",
   },
@@ -316,26 +317,26 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
 const MATCHUP_ANALYSIS: Record<string, string> = {
   "wrath-envy": "Wrath's high burst overwhelms Envy before affliction stacking can escalate. VENGEANCE reflect punishes Envy's damage-to-amplify loop.",
   "wrath-lust": "Lust's TEMPTATION lifesteal directly counters Wrath's aggression — every hit heals Lust while VENGEANCE only reflects a portion.",
-  "wrath-sloth": "Sloth's ENDURANCE shields absorb Wrath's burst while the new AOE passive (energy x2) chips away at Wrath's HP every turn.",
-  "sloth-pride": "Pride's HUBRIS burst can overwhelm Sloth's shields, but Sloth's ENDURANCE AOE passive (energy x2) creates a damage clock Pride must race against.",
+  "wrath-sloth": "Sloth's ENDURANCE shields absorb Wrath's burst while the AOE passive (energy x1.029) adds chip damage. Sloth wins 56.9% head-to-head.",
+  "sloth-pride": "Pride's HUBRIS (x1.590) burst can overwhelm Sloth's shields, but Sloth's ENDURANCE AOE passive (energy x1.029) creates a chip damage clock.",
   "greed-gluttony": "Greed's resource theft disrupts Gluttony's discard_burn chains, but Gluttony's DEVOURER energy gain can outpace the theft.",
-  "lust-wrath": "Lust's TEMPTATION converts Wrath's aggression into sustain. The more Wrath attacks, the more Lust heals.",
+  "lust-wrath": "Despite TEMPTATION being nerfed to 1%, Lust's raw card healing dominates Wrath's glass cannon approach. Lust wins 60.5%.",
   "envy-gluttony": "Gluttony's discard_burn removes cards Envy needs for affliction stacking. DEVOURER energy gain outpaces JEALOUSY scaling.",
-  "pride-envy": "Pride's expensive cards trigger HUBRIS more reliably, and the x1.324 multiplier overwhelms Envy's gradual amplification.",
+  "pride-envy": "Pride's expensive cards trigger HUBRIS (x1.590) reliably, overwhelming Envy's 47.6% JEALOUSY amplification.",
   "gluttony-wrath": "Gluttony's deck destruction removes Wrath's high-damage cards from circulation. DEVOURER energy sustains the burn chain.",
-  "lust-sloth": "Lust's lifesteal vs Sloth's shields + AOE passive. TEMPTATION must now out-heal ENDURANCE AOE (energy x2) in addition to eroding shields.",
-  "envy-lust": "Envy's JEALOUSY affliction amplification disrupts Lust's sustain loop — amplified afflictions deal more than TEMPTATION can heal.",
-  "gluttony-sloth": "Gluttony's deck burn disrupts Sloth's slowburn, but Sloth's AOE passive (energy x2) provides card-independent damage even when the deck is thinned.",
+  "lust-sloth": "Despite TEMPTATION being nerfed to 1%, Lust's card-based healing outpaces Sloth's reduced ENDURANCE (shield cap 23, AOE x1.029). Lust wins 56.7%.",
+  "envy-lust": "Envy's 47.6% JEALOUSY disrupts Lust's sustain, but Lust's raw card healing still wins 59.5% despite TEMPTATION being nerfed to 1%.",
+  "gluttony-sloth": "Gluttony's deck burn disrupts Sloth's slowburn. Sloth's reduced AOE (x1.029) provides less card-independent damage, making this matchup closer (51.0% vs 49.0%).",
   "wrath-greed": "Wrath's AoE burst generates fewer TAX shield ticks than single-target attacks. VENGEANCE reflect adds chip damage that Greed's shields can't fully absorb.",
   "wrath-pride": "Wrath's consistent round-over-round damage outpaces Pride's conditional HUBRIS triggers. VENGEANCE reflect punishes Pride's own attacks.",
-  "sloth-greed": "Sloth's ENDURANCE shields + AOE passive outscale TAX shields. Greed's energy steal is critical: it weakens both Sloth's shields AND AOE output.",
-  "sloth-envy": "Envy's JEALOUSY afflictions bypass shields, but Sloth's AOE passive (energy x2) creates a damage race. Whoever scales faster wins.",
+  "sloth-greed": "Sloth's ENDURANCE shields + AOE vs TAX shields. Greed slightly edges Sloth 50.4% through energy steal that weakens both shields AND AOE.",
+  "sloth-envy": "Envy's 47.6% JEALOUSY afflictions bypass shields. Envy edges 51.8% with the buffed amplification vs Sloth's reduced AOE (x1.029).",
   "greed-envy": "Greed's energy steal starves Envy's affliction_amplify engine. TAX shields absorb the damage ticks that JEALOUSY needs to deepen.",
-  "greed-lust": "Lust's TEMPTATION lifesteal outpaces TAX shield generation in longer games. Greed needs early aggression to prevent Lust's sustain from taking over.",
-  "greed-pride": "Pride's HUBRIS burst can overwhelm TAX shields in single rounds, but Greed's energy steal delays the expensive card plays HUBRIS needs.",
-  "lust-gluttony": "The closest matchup in the game. Gluttony's DEVOURER burns Lust's healing cards while TEMPTATION tries to out-sustain the attrition.",
-  "gluttony-pride": "Gluttony's deck burn removes Pride's expensive cards, eliminating HUBRIS triggers. DEVOURER energy gain funds the destruction chain.",
-  "lust-pride": "Lust's TEMPTATION heals consistently between Pride's conditional HUBRIS bursts, creating a net HP advantage over 20 rounds.",
+  "greed-lust": "Despite TEMPTATION being nerfed to 1%, Lust's raw card healing outpaces TAX shields. Lust wins 56.1%.",
+  "greed-pride": "Greed's energy steal and TAX shields edge Pride 53.8% by delaying HUBRIS (x1.590) triggers.",
+  "lust-gluttony": "Lust dominates 58.1% through raw card healing. Gluttony's DEVOURER burns healing cards but can't keep up with Lust's sustain.",
+  "gluttony-pride": "Gluttony's deck burn removes Pride's expensive cards, but the matchup is near-even at 50.6%. HUBRIS (x1.590) punishes if cards survive.",
+  "lust-pride": "Despite TEMPTATION being nerfed to 1%, Lust's card healing outlasts Pride's conditional HUBRIS (x1.590) bursts. Lust wins 58.6%.",
 };
 
 /* ─── Color Interpolation ───────────────────────────────────── */
@@ -393,8 +394,8 @@ const HeatmapCell = memo(function HeatmapCell({
       onClick={() => !isDiagonal && onClick(key)}
     >
       <div
-        className={`w-full h-full flex items-center justify-center py-3 px-2 sm:py-4 sm:px-3 transition-all duration-150 ${
-          isHovered ? "scale-110 z-10" : ""
+        className={`w-full h-full flex items-center justify-center py-3 px-2 sm:py-4 sm:px-3 transition-all duration-200 ease-out ${
+          isHovered ? "scale-[1.12] z-10 ring-1 ring-white/20 rounded-sm shadow-lg" : ""
         }`}
       >
         {isDiagonal ? (
@@ -745,7 +746,7 @@ export default function MatchupMatrix() {
               className="text-sm sm:text-base text-white/40 max-w-xl mx-auto leading-relaxed"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Pairwise faction win rates from 1.26M simulated games (v5.11). Each cell shows how often the
+              Pairwise faction win rates from 2M simulated games (v5.12). Each cell shows how often the
               row faction finishes ahead of the column faction in 4-player free-for-all.
             </p>
           </motion.div>
@@ -964,6 +965,7 @@ export default function MatchupMatrix() {
       </section>
 
       {/* Key Dynamics */}
+      <ScrollReveal direction="up" delay={0} distance={30}>
       <section className="relative z-10 px-4 pb-16">
         <div className="max-w-5xl mx-auto">
           <h2
@@ -979,38 +981,40 @@ export default function MatchupMatrix() {
             <DynamicCard
               title="Gluttony Devours Envy"
               factions={["gluttony", "envy"]}
-              description="The strongest matchup in the game. Gluttony's deck destruction removes cards Envy needs for affliction stacking, while DEVOURER energy gain outpaces JEALOUSY's gradual amplification."
+              description="Gluttony's deck destruction removes cards Envy needs for affliction stacking (51.2% vs 48.8%). Despite JEALOUSY being buffed to 47.6%, DEVOURER energy gain still outpaces the amplification engine."
             />
             <DynamicCard
               title="Lust Dominates Wrath"
               factions={["lust", "wrath"]}
-              description="Lust's TEMPTATION lifesteal directly counters Wrath's aggression. Every hit heals Lust while VENGEANCE only reflects a portion — creating a net-positive exchange for Lust."
+              description="The strongest matchup in v5.12 (60.5% vs 39.5%). Despite TEMPTATION being nerfed to 1%, Lust's 20 heal_steal and 15 heal_gain card effects dominate Wrath's glass cannon approach."
             />
             <DynamicCard
               title="Sloth Walls Wrath"
               factions={["sloth", "wrath"]}
-              description="Sloth's ENDURANCE shields absorb Wrath's burst while the new AOE passive (energy x2) chips away at Wrath's HP every turn. The dual threat of shields + AOE outlasts Wrath's aggression."
+              description="Sloth's ENDURANCE shields absorb Wrath's burst (56.9% vs 43.1%). Despite the v5.12 AOE nerf (x2.0 to x1.029) and shield cap reduction (44 to 23), Sloth's defensive consistency still outlasts Wrath."
             />
             <DynamicCard
               title="Envy Disrupts Lust"
               factions={["envy", "lust"]}
-              description="Envy's JEALOUSY affliction amplification disrupts Lust's sustain loop — amplified afflictions deal more damage than TEMPTATION can heal, breaking the attrition advantage."
+              description="Envy's 47.6% JEALOUSY (up from 10.6%) creates devastating affliction spirals, but Lust's raw card healing still wins 59.5%. The matchup shifted toward Lust after TEMPTATION was nerfed but card values were preserved."
             />
             <DynamicCard
               title="Gluttony Burns Sloth"
               factions={["gluttony", "sloth"]}
-              description="Gluttony's deck burn disrupts Sloth's slowburn strategy by removing key compound cards. However, Sloth's AOE passive (energy x2) provides card-independent damage even when the deck is thinned."
+              description="Gluttony's deck burn disrupts Sloth's slowburn by removing compound cards. With Sloth's AOE nerfed to x1.029, this matchup is now much closer (51.0% vs 49.0%) than in v5.11."
             />
             <DynamicCard
               title="Greed Checks Gluttony"
               factions={["greed", "gluttony"]}
-              description="Greed's resource theft disrupts Gluttony's discard_burn chains. TAX shields provide passive defense while Greed steals the energy Gluttony needs."
+              description="Greed dominates Gluttony 52.9% to 47.1% through resource denial. TAX shields provide passive defense while energy steal disrupts DEVOURER's self-sustaining burn chain."
             />
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* Methodology Note */}
+      <ScrollReveal direction="up" delay={50} distance={20}>
       <section className="relative z-10 px-4 pb-16">
         <div className="max-w-5xl mx-auto">
           <div
@@ -1027,7 +1031,7 @@ export default function MatchupMatrix() {
               Methodology Note
             </h3>
             <p className="text-xs text-white/35 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-              Pairwise matchup rates are measured across 1.26M simulated 4-player FFA games using the v5.11 balanced parameters (333 HP, ×1.75 defense, Final Reckoning at round 20, Sloth AOE passive, 10-card hand cap, 424 cards including 46 zero-cost).
+              Pairwise matchup rates are measured across 2M simulated 4-player FFA games using the v5.12 balanced parameters (333 HP, x1.75 defense, Final Reckoning at round 20, 59 rebalanced cards, 7 retuned passives, 424 cards including 46 zero-cost). v5.12 key changes: Lust TEMPTATION 25% to 1%, Envy JEALOUSY 10.6% to 47.6%, Pride HUBRIS x1.324 to x1.590, Sloth ENDURANCE cap 44 to 23 / AOE x2.0 to x1.029.
               Each cell represents the probability that the row faction finishes with a higher placement than the column faction
               when both appear in the same game. Because this is a 4-player format (not 1v1), matchup dynamics are influenced
               by the other two factions present — a faction may perform differently against the same opponent depending on the
@@ -1036,6 +1040,7 @@ export default function MatchupMatrix() {
           </div>
         </div>
       </section>
+      </ScrollReveal>
 
       {/* Footer */}
       <footer className="relative z-10 px-4 pb-8">
@@ -1048,7 +1053,7 @@ export default function MatchupMatrix() {
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-amber-500/20" />
           </div>
           <p className="text-center text-[10px] text-white/15" style={{ fontFamily: "var(--font-heading)" }}>
-            7 Deadly Sins — Matchup Matrix v5.11 — 1.26M Game Simulation
+            7 Deadly Sins - Matchup Matrix v5.12 - 2M Game Simulation
           </p>
         </div>
       </footer>

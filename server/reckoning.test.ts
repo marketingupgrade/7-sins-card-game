@@ -38,10 +38,10 @@ describe("v5.10 Game Constants", () => {
     expect(FINAL_RECKONING_ROUND).toBe(MAX_ROUNDS);
   });
 
-  it("SLOTH_ENDURANCE_CAP is 44 (scaled from 25 proportional to 333/200)", () => {
-    expect(SLOTH_ENDURANCE_CAP).toBe(44);
-    // Verify the scaling math: 25 * (333/200) ≈ 41.6, rounded up to 44
-    expect(SLOTH_ENDURANCE_CAP).toBeGreaterThanOrEqual(Math.round(25 * (333 / 200)));
+  it("SLOTH_ENDURANCE_CAP is 23 (v5.12 rebalanced from 44)", () => {
+    expect(SLOTH_ENDURANCE_CAP).toBe(23);
+    // v5.12: reduced from 44 to 23 based on 2M-game Monte Carlo simulation
+    expect(SLOTH_ENDURANCE_CAP).toBeGreaterThan(0);
   });
 
   it("CATCHUP_HP_THRESHOLD is 133 (40% of 333)", () => {

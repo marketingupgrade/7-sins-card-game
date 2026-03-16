@@ -659,7 +659,7 @@ export const SLOTH_CARDS: CardDefinition[] = [
   {
     id: "sloth_43", name: "Impenetrable Wall", sin: "sloth",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 18, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 17, duration: 4, targetMode: "self" }, { type: "heal_gain", baseValue: 9, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Time itself seems to slow around the slothful",
   },
   {
@@ -1201,7 +1201,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_10", name: "Grudge", sin: "envy",
     cost: 2, tier: "common", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }],
     description: "A common envy card",
   },
   {
@@ -1267,7 +1267,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_21", name: "Doppelganger", sin: "envy",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "A rare envy card",
   },
   {
@@ -1285,7 +1285,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_24", name: "Schadenfreude", sin: "envy",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 3, duration: 2, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 3, duration: 2, targetMode: "duo" }],
     description: "A rare envy card",
   },
   {
@@ -1297,7 +1297,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_26", name: "Plagiarize", sin: "envy",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 15, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 13, duration: 3, targetMode: "single" }],
     description: "A rare envy card",
   },
   {
@@ -1309,13 +1309,13 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_28", name: "Jealous Rage", sin: "envy",
     cost: 3, tier: "rare", compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 2, targetMode: "single" }, { type: "self_damage", baseValue: 2, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 2, targetMode: "single" }, { type: "self_damage", baseValue: 2, duration: 2, targetMode: "self" }],
     description: "A rare envy card",
   },
   {
     id: "envy_29", name: "Parasitic Link", sin: "envy",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }],
     description: "A rare envy card",
   },
   {
@@ -1339,13 +1339,13 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_33", name: "Resentful Strike", sin: "envy",
     cost: 4, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 7, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A rare envy card",
   },
   {
     id: "envy_34", name: "Soul Siphon", sin: "envy",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 15, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }],
     description: "A rare envy card",
   },
   {
@@ -1369,19 +1369,19 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_38", name: "Equalizer", sin: "envy",
     cost: 4, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 3, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 3, duration: 3, targetMode: "aoe" }],
     description: "The equalizer ensures no one has more than you",
   },
   {
     id: "envy_39", name: "Pandemic", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "A pandemic of jealousy that infects all",
   },
   {
     id: "envy_40", name: "Identity Theft", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 18, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 18, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 20, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 20, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
     description: "Covetous eyes see every vulnerability",
   },
   {
@@ -1393,7 +1393,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_42", name: "Nemesis", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 16, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 18, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 13, duration: 2, targetMode: "single" }],
     description: "What they have, you want — and you'll take it",
   },
   {
@@ -1405,25 +1405,25 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_44", name: "Dread Mirror", sin: "envy",
     cost: 4, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "affliction_transfer", baseValue: 8, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
+    effects: [{ type: "affliction_transfer", baseValue: 8, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "single" }],
     description: "A mirror that reflects only the worst in others",
   },
   {
     id: "envy_45", name: "Existential Crisis", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 11, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 4, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }],
     description: "The curse of comparison amplifies all suffering",
   },
   {
     id: "envy_46", name: "Seven Deadly Sins", sin: "envy",
     cost: 6, tier: "epic", compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 7, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
     description: "Jealousy festers, turning small wounds into mortal ones",
   },
   {
     id: "envy_47", name: "Twisted Fate", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "damage", baseValue: 14, duration: 4, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    effects: [{ type: "affliction_amplify", baseValue: 8, duration: 4, targetMode: "single" }, { type: "damage", baseValue: 15, duration: 4, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
     description: "Everything they built, you'll tear down",
   },
   {
@@ -1435,13 +1435,13 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_49", name: "Envious Apocalypse", sin: "envy",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 11, duration: 4, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "discard_burn", baseValue: 1, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 4, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "discard_burn", baseValue: 1, duration: 2, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "A toxic comparison that poisons everything it touches",
   },
   {
     id: "envy_50", name: "Absolute Jealousy", sin: "envy",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 14, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 9, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 15, duration: 3, targetMode: "single" }, { type: "shield_steal", baseValue: 13, duration: 2, targetMode: "single" }],
     description: "In the end, envy consumes the envious most of all",
   },
   // ── Skip-Queue (Priority) Cards ──
@@ -1455,7 +1455,7 @@ export const ENVY_CARDS: CardDefinition[] = [
   {
     id: "envy_52", name: "Stolen Moment", sin: "envy",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 11, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
     description: "What's yours is mine — especially your health.",
     skipQueue: true,
   },
@@ -1625,7 +1625,7 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_19", name: "Crown Jewel", sin: "pride",
     cost: 3, tier: "common", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A common pride card",
   },
   {
@@ -1649,7 +1649,7 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_23", name: "Coronation", sin: "pride",
     cost: 4, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 15, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare pride card",
   },
   {
@@ -1667,7 +1667,7 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_26", name: "Majestic Barrier", sin: "pride",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare pride card",
   },
   {
@@ -1691,7 +1691,7 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_30", name: "Golden Throne", sin: "pride",
     cost: 5, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 17, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "A rare pride card",
   },
   {
@@ -1745,13 +1745,13 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_39", name: "God Complex", sin: "pride",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 14, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 15, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "A god complex made manifest in devastating power",
   },
   {
     id: "pride_40", name: "Manifest Destiny", sin: "pride",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "aoe" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "The crown weighs heavy but grants absolute authority",
   },
   {
@@ -1763,13 +1763,13 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_42", name: "Absolute Monarchy", sin: "pride",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 4, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "The pedestal grows higher with every victory",
   },
   {
     id: "pride_43", name: "Divine Right", sin: "pride",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Arrogance so pure it becomes a shield",
   },
   {
@@ -1781,25 +1781,25 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_45", name: "Zenith", sin: "pride",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 2, duration: 3, targetMode: "single" }],
     description: "Superiority isn't a complex — it's a fact",
   },
   {
     id: "pride_46", name: "Apotheosis", sin: "pride",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 14, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "heal_gain", baseValue: 15, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 17, duration: 4, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "aoe" }],
     description: "The throne demands sacrifice from all who approach",
   },
   {
     id: "pride_47", name: "Titan's Decree", sin: "pride",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 12, duration: 3, targetMode: "self" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_gain", baseValue: 13, duration: 3, targetMode: "self" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "aoe" }],
     description: "Vanity's mirror reflects only perfection",
   },
   {
     id: "pride_48", name: "Eternal Glory", sin: "pride",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 12, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 13, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 13, duration: 4, targetMode: "self" }],
     description: "The summit of pride — looking down on everything",
   },
   {
@@ -1811,14 +1811,14 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_50", name: "Narcissus Bloom", sin: "pride",
     cost: 4, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 12, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 13, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 13, duration: 4, targetMode: "self" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Pride goeth before destruction — but what a glorious fall",
   },
   // ── Skip-Queue (Priority) Cards ──
   {
     id: "pride_51", name: "Regal Decree", sin: "pride",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 10, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 11, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 11, duration: 2, targetMode: "self" }],
     description: "The king speaks first. Always.",
     skipQueue: true,
   },
@@ -1832,7 +1832,7 @@ export const PRIDE_CARDS: CardDefinition[] = [
   {
     id: "pride_53", name: "Dismissive Wave", sin: "pride",
     cost: 0, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "shield_gain", baseValue: 9, duration: 2, targetMode: "self" }],
+    effects: [{ type: "shield_gain", baseValue: 10, duration: 2, targetMode: "self" }],
     description: "You're not even worth my attention. But this shield is.",
     skipQueue: true,
   },
@@ -1947,7 +1947,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_07", name: "Passion Burn", sin: "lust",
     cost: 2, tier: "common", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A common lust card",
   },
   {
@@ -2007,7 +2007,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_17", name: "Caress", sin: "lust",
     cost: 1, tier: "common", compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 6, duration: 3, targetMode: "self" }],
     description: "A common lust card",
   },
   {
@@ -2031,7 +2031,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_21", name: "Succubus Kiss", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 14, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 8, duration: 3, targetMode: "single" }],
+    effects: [{ type: "heal_steal", baseValue: 13, duration: 3, targetMode: "single" }, { type: "damage", baseValue: 7, duration: 3, targetMode: "single" }],
     description: "A rare lust card",
   },
   {
@@ -2043,7 +2043,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_23", name: "Aphrodite's Wrath", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "duo" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
@@ -2061,13 +2061,13 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_26", name: "Crimson Kiss", sin: "lust",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 3, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
     id: "lust_27", name: "Passionate Fury", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "aggressive",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 5, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 5, duration: 2, targetMode: "single" }, { type: "energy_regen", baseValue: 1, duration: 2, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
@@ -2079,13 +2079,13 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_29", name: "Draining Embrace", sin: "lust",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 6, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
     id: "lust_30", name: "Irresistible", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "single" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
@@ -2097,7 +2097,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_32", name: "Love Triangle", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "duo" }, { type: "heal_steal", baseValue: 4, duration: 3, targetMode: "duo" }],
     description: "A rare lust card",
   },
   {
@@ -2109,7 +2109,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_34", name: "Broken Heart", sin: "lust",
     cost: 3, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 4, duration: 2, targetMode: "self" }],
     description: "A rare lust card",
   },
   {
@@ -2127,7 +2127,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_37", name: "Desire Unbound", sin: "lust",
     cost: 4, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 7, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "heal_gain", baseValue: 6, duration: 3, targetMode: "self" }],
     description: "An irresistible allure that drains the willing",
   },
   {
@@ -2145,25 +2145,25 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_40", name: "Lilith's Embrace", sin: "lust",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 13, duration: 4, targetMode: "single" }, { type: "shield_steal", baseValue: 5, duration: 2, targetMode: "single" }],
     description: "Desire made weapon — every touch steals life",
   },
   {
     id: "lust_41", name: "Mass Seduction", sin: "lust",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 5, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 5, duration: 3, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 2, targetMode: "aoe" }],
     description: "A seductive whisper that weakens all resolve",
   },
   {
     id: "lust_42", name: "Crimson Tide", sin: "lust",
     cost: 5, tier: "epic", compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 14, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 7, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 4, duration: 5, targetMode: "aoe" }, { type: "heal_gain", baseValue: 13, duration: 5, targetMode: "self" }, { type: "shield_gain", baseValue: 6, duration: 3, targetMode: "self" }],
     description: "The dance of temptation leaves only exhaustion",
   },
   {
     id: "lust_43", name: "Forbidden Love", sin: "lust",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 14, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 4, targetMode: "single" }, { type: "heal_steal", baseValue: 13, duration: 4, targetMode: "single" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "single" }, { type: "draw_reduction", baseValue: 1, duration: 3, targetMode: "single" }],
     description: "Obsession fuels an endless cycle of taking",
   },
   {
@@ -2175,51 +2175,51 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_45", name: "Aphrodisiac Storm", sin: "lust",
     cost: 6, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 9, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 4, duration: 2, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 8, duration: 3, targetMode: "aoe" }, { type: "heal_steal", baseValue: 6, duration: 3, targetMode: "aoe" }, { type: "shield_steal", baseValue: 4, duration: 2, targetMode: "aoe" }, { type: "energy_regen", baseValue: 2, duration: 3, targetMode: "self" }],
     description: "Infatuation blinds while lust devours",
   },
   {
     id: "lust_46", name: "Heartless", sin: "lust",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 13, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 7, duration: 3, targetMode: "single" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 12, duration: 3, targetMode: "single" }, { type: "heal_steal", baseValue: 6, duration: 3, targetMode: "single" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
     description: "A charm so potent it turns enemies into fuel",
   },
   {
     id: "lust_47", name: "Siren's Requiem", sin: "lust",
     cost: 4, tier: "epic", compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 7, duration: 4, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 3, duration: 5, targetMode: "aoe" }, { type: "draw_reduction", baseValue: 1, duration: 4, targetMode: "aoe" }, { type: "heal_gain", baseValue: 6, duration: 4, targetMode: "self" }],
     description: "The web of desire ensnares all who draw near",
   },
   {
     id: "lust_48", name: "Cupid's Arrow", sin: "lust",
     cost: 5, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 10, duration: 4, targetMode: "duo" }, { type: "heal_steal", baseValue: 7, duration: 4, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "duo" }],
+    effects: [{ type: "damage", baseValue: 9, duration: 4, targetMode: "duo" }, { type: "heal_steal", baseValue: 6, duration: 4, targetMode: "duo" }, { type: "affliction_amplify", baseValue: 2, duration: 3, targetMode: "duo" }],
     description: "Passion's fire burns brightest in the darkest moments",
   },
   {
     id: "lust_49", name: "Eternal Devotion", sin: "lust",
     cost: 4, tier: "epic", compoundPattern: "standard",
-    effects: [{ type: "heal_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 16, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
+    effects: [{ type: "heal_gain", baseValue: 15, duration: 4, targetMode: "self" }, { type: "shield_gain", baseValue: 15, duration: 4, targetMode: "self" }, { type: "damage", baseValue: 4, duration: 3, targetMode: "duo" }, { type: "draw_boost", baseValue: 1, duration: 3, targetMode: "self" }],
     description: "Every stolen glance becomes a stolen breath",
   },
   {
     id: "lust_50", name: "Lust Incarnate", sin: "lust",
     cost: 6, tier: "epic", compoundPattern: "slowburn",
-    effects: [{ type: "damage", baseValue: 8, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 5, targetMode: "aoe" }, { type: "heal_steal", baseValue: 6, duration: 5, targetMode: "aoe" }, { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "aoe" }, { type: "heal_block", baseValue: 1, duration: 3, targetMode: "aoe" }],
     description: "The ultimate seduction — life itself surrendered willingly",
   },
   // ── Skip-Queue (Priority) Cards ──
   {
     id: "lust_51", name: "Alluring Whisper", sin: "lust",
     cost: 1, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 6, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 5, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 6, duration: 2, targetMode: "self" }],
     description: "A sweet nothing that cuts like a blade.",
     skipQueue: true,
   },
   {
     id: "lust_52", name: "Seductive Feint", sin: "lust",
     cost: 2, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "heal_steal", baseValue: 12, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 7, duration: 2, targetMode: "self" }],
+    effects: [{ type: "heal_steal", baseValue: 11, duration: 2, targetMode: "single" }, { type: "shield_gain", baseValue: 6, duration: 2, targetMode: "self" }],
     description: "Draw them close, then take what you need.",
     skipQueue: true,
   },
@@ -2233,7 +2233,7 @@ export const LUST_CARDS: CardDefinition[] = [
   {
     id: "lust_54", name: "Passion's Edge", sin: "lust",
     cost: 1, tier: "rare", compoundPattern: "standard",
-    effects: [{ type: "damage", baseValue: 8, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
+    effects: [{ type: "damage", baseValue: 7, duration: 2, targetMode: "single" }, { type: "heal_gain", baseValue: 5, duration: 2, targetMode: "self" }],
     description: "Desire sharpened to a point — it strikes before reason.",
     skipQueue: true,
   },

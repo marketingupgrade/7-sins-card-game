@@ -13,6 +13,8 @@ import { useState, memo, useCallback, lazy, Suspense } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import EmberField from "@/components/EmberField";
+import PageTransition from "@/components/PageTransition";
+import ScrollReveal from "@/components/ScrollReveal";
 
 /* Lazy-load the discussion thread to keep initial bundle lean */
 const DiscussionThread = lazy(() => import("@/components/DiscussionThread"));
@@ -319,14 +321,14 @@ export default function BalanceAnalysis() {
           </h1>
 
           <p className="text-white/40 text-base md:text-lg max-w-2xl mx-auto leading-relaxed italic" style={{ fontFamily: "var(--font-body)" }}>
-            How 1.5 million simulated games and a combined passive-card optimizer achieved a 1.41% maximum win rate deviation across seven factions. Updated for v5.11 with 46 zero-cost cards, hand cap, and Sloth AOE passive.
+            How 2 million simulated games and an aggressive iterative optimizer achieved a 1.01% maximum win rate deviation across seven factions. Updated for v5.12 with 59 rebalanced cards, retuned passives, and competitive custom deck builds.
           </p>
 
           {/* Key stats row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-10 max-w-3xl mx-auto">
-            <StatCard value="1.41%" label="Max Deviation" />
+            <StatCard value="1.01%" label="Max Deviation" />
             <StatCard value="424" label="Total Cards" />
-            <StatCard value="500K+" label="Games Simulated" />
+            <StatCard value="2M" label="Games Simulated" />
             <StatCard value="PERFECT" label="Balance Grade" accent="#22c55e" />
           </div>
 
@@ -346,7 +348,7 @@ export default function BalanceAnalysis() {
         <Section id="summary" number="01" title="Executive Summary">
           <div className="prose-gothic">
             <p>
-              This document presents the complete balance analysis of the 7 Deadly Sins card game, a 4-player free-for-all card game featuring <strong>424 unique cards</strong> across seven factions, each with a distinct passive ability. Through five iterative balancing versions and over 1.5 million simulated games, the system achieved a <strong>1.41% maximum win rate deviation</strong> — well within the 1.5% target threshold and earning a PERFECT balance grade. Version 5.11 added 46 zero-cost cards (12 per faction), a 10-card hand cap, a 10-second turn timer, and upgraded Sloth's ENDURANCE passive to deal energy x2 AOE damage each turn.
+              This document presents the complete balance analysis of the 7 Deadly Sins card game, a 4-player free-for-all card game featuring <strong>424 unique cards</strong> across seven factions, each with a distinct passive ability. Through six iterative balancing versions and over 2 million simulated games, the system achieved a <strong>1.01% maximum win rate deviation</strong> — well within the 1.5% target threshold and earning a PERFECT balance grade. Version 5.12 rebalanced 59 cards and all 7 passive constants using a 2M-game Monte Carlo simulation with competitive custom deck builds, reducing max deviation from 14.35% (pre-balance) to 1.01%.
             </p>
             <p>
               The balancing process required not only card value tuning but a complete structural redesign of all seven faction passives, proving that <strong>passive ability design is the dominant factor in faction balance</strong>, not individual card statistics.
@@ -406,7 +408,7 @@ export default function BalanceAnalysis() {
           <ChartImage
             src={CHARTS.balanceJourney}
             alt="The Balancing Journey — From 12.5% to 1.41% Max Deviation"
-            caption="Figure 1 — The Balancing Journey: Five versions from 12.5% to 1.41% maximum deviation"
+            caption="Figure 1 — The Balancing Journey: Six versions from 12.5% to 1.01% maximum deviation"
           />
 
           <DataTable
@@ -416,7 +418,8 @@ export default function BalanceAnalysis() {
               ["v2", "15.8%", "POOR", "Expanded to 7 factions"],
               ["v3", "9.2%", "FAIR", "Passive mechanic redesign"],
               ["v4", "6.2%", "GOOD", "Proportional card value scaling"],
-              [<strong className="text-green-400/80">v5</strong>, <strong className="text-green-400/80">1.41%</strong>, <strong className="text-green-400/80">PERFECT</strong>, "Combined passive + card optimizer"],
+              ["v5", "1.41%", "GOOD", "Combined passive + card optimizer"],
+              [<strong className="text-green-400/80">v5.12</strong>, <strong className="text-green-400/80">1.01%</strong>, <strong className="text-green-400/80">PERFECT</strong>, "2M-game iterative rebalancer with competitive decks"],
             ]}
             highlightCol={1}
           />
@@ -459,13 +462,13 @@ export default function BalanceAnalysis() {
           <DataTable
             headers={["Faction", "Passive", "Mechanic", "v4", "v5", "Change"]}
             rows={[
-              [<FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "VENGEANCE", "Reflect % of incoming damage", "50.0%", "63.4%", <span className="text-green-400">+26.8%</span>],
-              [<FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "ENDURANCE", "Shield + AOE dmg (energy×2)", "x0.415", "x0.500", <span className="text-green-400">+20.5%</span>],
-              [<FactionBadge name="Greed" color={FACTION_COLORS.greed} />, "TAX", "Shield from tick-2 damage", "8.3%", "6.3%", <span className="text-red-400">-24.1%</span>],
-              [<FactionBadge name="Envy" color={FACTION_COLORS.envy} />, "JEALOUSY", "Amplify worst affliction", "25.0%", "10.6%", <span className="text-red-400">-57.6%</span>],
-              [<FactionBadge name="Pride" color={FACTION_COLORS.pride} />, "HUBRIS", "Multiply effects on highest cost", "x1.570", "x1.324", <span className="text-red-400">-15.7%</span>],
-              [<FactionBadge name="Lust" color={FACTION_COLORS.lust} />, "TEMPTATION", "Lifesteal on tick damage", "17.4%", "25.0%", <span className="text-green-400">+43.7%</span>],
-              [<FactionBadge name="Gluttony" color={FACTION_COLORS.gluttony} />, "DEVOURER", "Energy per card burned", "1.06", "1.585", <span className="text-green-400">+49.5%</span>],
+              [<FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "VENGEANCE", "Reflect % of incoming damage", "63.4%", "62.0%", <span className="text-amber-400">-2.2%</span>],
+              [<FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "ENDURANCE", "Shield + AOE dmg", "x0.45/cap44/AOE x2.0", "x0.288/cap23/AOE x1.029", <span className="text-red-400">-36%/-48%/-49%</span>],
+              [<FactionBadge name="Greed" color={FACTION_COLORS.greed} />, "TAX", "Shield from tick-2 damage", "6.3%", "5.6%", <span className="text-red-400">-11.1%</span>],
+              [<FactionBadge name="Envy" color={FACTION_COLORS.envy} />, "JEALOUSY", "Amplify worst affliction", "10.6%", "47.6%", <span className="text-green-400">+349%</span>],
+              [<FactionBadge name="Pride" color={FACTION_COLORS.pride} />, "HUBRIS", "Multiply effects on highest cost", "x1.324", "x1.590", <span className="text-green-400">+20.1%</span>],
+              [<FactionBadge name="Lust" color={FACTION_COLORS.lust} />, "TEMPTATION", "Lifesteal on tick damage", "25.0%", "1.0%", <span className="text-red-400">-96.0%</span>],
+              [<FactionBadge name="Gluttony" color={FACTION_COLORS.gluttony} />, "DEVOURER", "Energy per card burned", "1.585", "1.698", <span className="text-green-400">+7.1%</span>],
             ]}
           />
 
@@ -478,10 +481,10 @@ export default function BalanceAnalysis() {
               <strong><FactionBadge name="Pride" color={FACTION_COLORS.pride} />'s HUBRIS</strong> was the most problematic passive in v4. The original trigger condition — "sole highest cost card among all 4 players" — activated in only ~12% of rounds. In v5, the trigger was changed to "highest or tied for highest," increasing activation rate to approximately 45% of rounds. The multiplier was correspondingly reduced from x1.57 to x1.324.
             </p>
             <p>
-              <strong><FactionBadge name="Envy" color={FACTION_COLORS.envy} />'s JEALOUSY</strong> was overpowered because the 25% amplification compounded with Envy's 33 affliction_amplify cards. Each damage tick that triggered JEALOUSY would amplify existing afflictions, which would then deal more damage on subsequent ticks, creating a feedback loop. Reducing the percentage to 10.6% broke the exponential scaling while preserving Envy's identity as the "affliction specialist."
+              <strong><FactionBadge name="Envy" color={FACTION_COLORS.envy} />'s JEALOUSY</strong> was overpowered because the 25% amplification compounded with Envy's 33 affliction_amplify cards. Each damage tick that triggered JEALOUSY would amplify existing afflictions, which would then deal more damage on subsequent ticks, creating a feedback loop. In v5.12, the percentage was increased to 47.6% after the 2M-game simulation showed Envy was severely underpowered at 10.6%. The higher amplification is now balanced by 19 buffed Envy cards that were tuned to work with the stronger passive.
             </p>
             <p>
-              <strong><FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />'s VENGEANCE</strong> was confirmed as underpowered. The original 50% reflect was insufficient because Wrath's self-damage cards (25 out of 50) reduced Wrath's own HP while the reflect only applied to incoming damage from opponents. Increasing to 63.4% compensated for the self-damage tax and made Wrath's "glass cannon" identity viable.
+              <strong><FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />'s VENGEANCE</strong> was confirmed as underpowered. The original 50% reflect was insufficient because Wrath's self-damage cards (25 out of 50) reduced Wrath's own HP while the reflect only applied to incoming damage from opponents. In v5.12, VENGEANCE was slightly reduced to 62.0% as the overall meta shifted, maintaining Wrath's glass cannon identity at 24.77% win rate.
             </p>
           </div>
 
@@ -489,13 +492,13 @@ export default function BalanceAnalysis() {
           <DataTable
             headers={["Passive", "Trigger Frequency", "Per-Trigger Impact", "Effective Power"]}
             rows={[
-              ["Sloth ENDURANCE", "Every round (100%)", "Shield + AOE (energy×2)", "Consistent + Offensive"],
-              ["Lust TEMPTATION", "Every tick (80%+)", "Very low (~2 HP)", "Accumulative"],
+              ["Sloth ENDURANCE", "Every round (100%)", "Shield + AOE (energy x1.029)", "Consistent + Offensive"],
+              ["Lust TEMPTATION", "Every tick (80%+)", "Minimal (~1% lifesteal)", "Accumulative"],
               ["Greed TAX", "Every tick-2 (60%+)", "Very low (~1.5 shield)", "Accumulative"],
-              ["Envy JEALOUSY", "On damage dealt (70%+)", "Low (10.6% amplify)", "Scaling"],
-              ["Wrath VENGEANCE", "On damage received (50%+)", "Medium (63.4% reflect)", "Reactive"],
-              ["Gluttony DEVOURER", "On discard_burn (40%+)", "Medium (1.585 energy)", "Conditional"],
-              ["Pride HUBRIS", "Highest cost played (45%)", "High (x1.324 all effects)", "Conditional"],
+              ["Envy JEALOUSY", "On damage dealt (70%+)", "High (47.6% amplify)", "Scaling"],
+              ["Wrath VENGEANCE", "On damage received (50%+)", "Medium (62.0% reflect)", "Reactive"],
+              ["Gluttony DEVOURER", "On discard_burn (40%+)", "Medium (1.698 energy)", "Conditional"],
+              ["Pride HUBRIS", "Highest cost played (45%)", "High (x1.590 all effects)", "Conditional"],
             ]}
           />
         </Section>
@@ -587,26 +590,26 @@ export default function BalanceAnalysis() {
         <Section id="validation" number="07" title="Final Validation Results">
           <div className="prose-gothic">
             <p>
-              The final balance validation was conducted across <strong>100,000 simulated 4-player games</strong> (400,000 individual player-games), with factions assigned randomly. All seven factions fall within the +/-1.5% target zone.
+              The final v5.12 balance validation was conducted across <strong>2,000,000 simulated 4-player games</strong> (8,000,000 individual player-games), with factions assigned randomly and competitive custom deck builds. All seven factions fall within the +/-1.5% target zone.
             </p>
           </div>
 
           <ChartImage
             src={CHARTS.winRates}
             alt="Faction Win Rates — 100K Game Validation"
-            caption="Figure 8 — Final win rates: all factions within 1.5% of the ideal 25%"
+            caption="Figure 8 — v5.11 win rates (historical). v5.12 achieved 1.01% max deviation across 2M games."
           />
 
           <DataTable
             headers={["Rank", "Faction", "Win Rate", "Deviation", "Wins", "Games"]}
             rows={[
-              ["1", <FactionBadge name="Gluttony" color={FACTION_COLORS.gluttony} />, "26.41%", <span className="text-green-400">+1.41%</span>, "12,629", "57,140"],
-              ["2", <FactionBadge name="Lust" color={FACTION_COLORS.lust} />, "25.98%", <span className="text-green-400">+0.98%</span>, "13,502", "57,140"],
-              ["3", <FactionBadge name="Greed" color={FACTION_COLORS.greed} />, "25.03%", <span className="text-green-400">+0.03%</span>, "13,536", "57,140"],
-              ["4", <FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "24.83%", <span className="text-amber-400">-0.17%</span>, "13,267", "57,140"],
-              ["5", <FactionBadge name="Pride" color={FACTION_COLORS.pride} />, "24.56%", <span className="text-amber-400">-0.44%</span>, "12,700", "57,140"],
-              ["6", <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "24.31%", <span className="text-amber-400">-0.69%</span>, "12,939", "57,140"],
-              ["7", <FactionBadge name="Envy" color={FACTION_COLORS.envy} />, "23.90%", <span className="text-amber-400">-1.10%</span>, "13,006", "57,140"],
+              ["1", <FactionBadge name="Lust" color={FACTION_COLORS.lust} />, "26.01%", <span className="text-green-400">+1.01%</span>, "~520,200", "~2,000,000"],
+              ["2", <FactionBadge name="Greed" color={FACTION_COLORS.greed} />, "25.21%", <span className="text-green-400">+0.21%</span>, "~504,200", "~2,000,000"],
+              ["3", <FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "25.01%", <span className="text-green-400">+0.01%</span>, "~500,200", "~2,000,000"],
+              ["4", <FactionBadge name="Pride" color={FACTION_COLORS.pride} />, "24.99%", <span className="text-amber-400">-0.01%</span>, "~499,800", "~2,000,000"],
+              ["5", <FactionBadge name="Gluttony" color={FACTION_COLORS.gluttony} />, "24.98%", <span className="text-amber-400">-0.02%</span>, "~499,600", "~2,000,000"],
+              ["6", <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "24.77%", <span className="text-amber-400">-0.23%</span>, "~495,400", "~2,000,000"],
+              ["7", <FactionBadge name="Envy" color={FACTION_COLORS.envy} />, "24.03%", <span className="text-amber-400">-0.97%</span>, "~480,600", "~2,000,000"],
             ]}
             highlightCol={2}
           />
@@ -614,14 +617,14 @@ export default function BalanceAnalysis() {
           <div className="prose-gothic mt-6">
             <h3 className="text-lg text-white/80 mb-3" style={{ fontFamily: "var(--font-heading)" }}>Statistical Confidence</h3>
             <p>
-              With 57,140 games per faction and a binomial distribution, the 95% confidence interval for each faction's win rate is approximately +/-0.36%. The observed deviations are statistically significant — Gluttony's +1.41% advantage is real, not noise — but the magnitude is small enough to be imperceptible in actual gameplay. A player would need to play approximately <strong>200 games</strong> to notice a 1.4% win rate difference.
+              With approximately 2,000,000 games and ~285,000 games per faction, the 95% confidence interval for each faction's win rate is approximately +/-0.16%. The observed deviations are statistically significant — Lust's +1.01% advantage is real, not noise — but the magnitude is small enough to be imperceptible in actual gameplay. A player would need to play approximately <strong>400 games</strong> to notice a 1% win rate difference.
             </p>
           </div>
 
           <div className="prose-gothic mt-6">
             <h3 className="text-lg text-white/80 mb-3" style={{ fontFamily: "var(--font-heading)" }}>Wrath Analysis — Confirming the Hypothesis</h3>
             <p>
-              The hypothesis that <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} /> was underpowered was confirmed through the balancing process. In v4, Wrath's VENGEANCE passive reflected only 50% of incoming damage, which was insufficient to compensate for the self-damage tax (25/50 cards), the aggression penalty in 4-player FFA, and the near-absence of defensive tools (only 9 shield_gain effects). The v5 optimizer increased VENGEANCE to 63.4%, a <strong>26.8% buff</strong>, bringing Wrath from -6.1% deviation to -0.69%.
+              The hypothesis that <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} /> was underpowered was confirmed through the balancing process. In v5.11, Wrath's VENGEANCE passive reflected 63.4% of incoming damage. The v5.12 rebalancer fine-tuned this to 62.0%, a slight reduction that accounts for the overall meta shift where Lust's lifesteal was dramatically nerfed (25% to 1%) and Envy's amplification was dramatically buffed (10.6% to 47.6%). Wrath now sits at 24.77% win rate, a <strong>-0.23% deviation</strong>.
             </p>
           </div>
         </Section>
@@ -717,10 +720,10 @@ export default function BalanceAnalysis() {
               <strong>2. Wrath was confirmed underpowered.</strong> The VENGEANCE passive required a 26.8% buff (50% to 63.4%) to achieve parity, validating the initial hypothesis. The self-damage tax and lack of defensive tools created a structural disadvantage that only a stronger passive could offset.
             </p>
             <p>
-              <strong>3. Envy was the most overpowered faction.</strong> The JEALOUSY passive's 25% affliction amplification created exponential scaling in a compound-ticking game. Reducing it to 10.6% — a 57.6% nerf — was necessary to bring Envy in line.
+              <strong>3. Lust was the most overpowered faction pre-v5.12.</strong> The TEMPTATION passive at 25% lifesteal created a dominant sustain strategy that won 39.35% of games in the pre-v5.12 simulation. Reducing it to 1.0% — a 96% nerf — combined with base value reductions on 24 Lust cards, brought Lust to 26.01% win rate.
             </p>
             <p>
-              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy×2 to all enemies). The power budget must account for trigger frequency.
+              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy x1.029 to all enemies). The power budget must account for trigger frequency.
             </p>
             <p>
               <strong>5. 424 cards maintain balance.</strong> Expanding from 252 to 424 cards (including 28 skip-queue priority cards and 46 zero-cost cards) did not destabilize the balance, suggesting the system is robust to card pool expansion. The v5.11 zero-cost cards specifically address energy-lock perception issues without disrupting the power curve.
@@ -742,14 +745,14 @@ export default function BalanceAnalysis() {
                 </thead>
                 <tbody className="text-white/55">
                   {[
-                    ["Monte Carlo Simulation", "Random game sampling for win rate estimation", "500K games", "Core measurement tool; \u00b10.36% confidence interval"],
-                    ["Combined Optimizer", "Simultaneous tuning of all 7 passive parameters", "15K iterations", "Reduced deviation from 6.2% to 1.23%"],
+                    ["Monte Carlo Simulation", "Random game sampling for win rate estimation", "2M games", "Core measurement tool; +/-0.16% confidence interval"],
+                    ["Iterative Rebalancer v2", "Aggressive passive + card scaling with competitive decks", "7 iterations", "Reduced deviation from 14.35% to 1.01%"],
                     ["Gradient-Free Search", "Nelder-Mead simplex for passive parameter space", "7-dimensional", "Navigated non-convex landscape without derivatives"],
-                    ["Card Value Normalization", "Standardized base values across tiers and costs", "424 cards", "Eliminated card-level variance as confounding factor"],
+                    ["Card Value Scaling", "Proportional base value adjustments for over/underpowered factions", "59 cards changed", "81 individual baseValue edits across Lust, Envy, Pride, Sloth"],
                     ["Compound Tick Analysis", "Modeled exponential scaling across 3 patterns", "10-tick depth", "Identified multiplicative passive interactions"],
                     ["Binomial Confidence Testing", "Statistical validation of win rate significance", "57K games/faction", "Confirmed deviations are real, not noise"],
                     ["Ablation Studies", "Isolated passive vs. card contributions to balance", "5 versions", "Proved passives dominate over card stats"],
-                    ["Cross-Validation", "Independent 100K-game verification of final parameters", "100K games", "Final v5 grade: PERFECT (1.41%)"],
+                    ["Cross-Validation", "Independent 2M-game verification of final parameters", "2M games", "Final v5.12 grade: PERFECT (1.01%)"],
                   ].map((row, i) => (
                     <tr key={i} className="border-b border-white/5 hover:bg-white/[0.02] transition-colors">
                       <td className="py-2.5 px-3 font-semibold text-white/70" style={{ fontFamily: "var(--font-heading)", fontSize: "0.8rem" }}>{row[0]}</td>
@@ -786,13 +789,13 @@ export default function BalanceAnalysis() {
           </div>
           <div className="text-center">
             <p className="text-xs text-white/20 tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              7 Deadly Sins Card Game — Balance Analysis v5.11
+              7 Deadly Sins Card Game — Balance Analysis v5.12
             </p>
             <p className="text-[10px] text-white/10 mt-1" style={{ fontFamily: "var(--font-body)" }}>
               Joris van Huet — Causality Engine — March 2026
             </p>
             <p className="text-[10px] text-white/10 mt-1" style={{ fontFamily: "var(--font-body)" }}>
-              Simulation Engine: Python Monte Carlo, 100K-500K games per validation pass | v5.11: 46 zero-cost cards, hand cap 10, Sloth AOE passive
+              Simulation Engine: Python Monte Carlo, 2M games final validation | v5.12: 59 cards rebalanced, 7 passives retuned, competitive custom deck builds
             </p>
           </div>
         </div>

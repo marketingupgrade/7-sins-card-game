@@ -200,16 +200,16 @@ export const ENERGY_PER_TURN = 1; // +1 energy gained per round
 export const CONSUME_ENERGY_REFUND = 1; // +1 energy when banishing a card (max 1 consume per turn)
 
 // v5 Passive constants (tuned via combined optimizer)
-export const WRATH_VENGEANCE_PCT = 0.634;
-export const SLOTH_ENDURANCE_MULT = 0.45;
-export const SLOTH_ENDURANCE_CAP = 44; // Scaled from 25 proportional to 333/200 HP increase
-export const SLOTH_ENDURANCE_AOE_MULT = 2; // Additionally deal energy × 2 AOE damage to all enemies each turn
-export const GREED_TAX_PCT = 0.063;
+export const WRATH_VENGEANCE_PCT = 0.62;
+export const SLOTH_ENDURANCE_MULT = 0.288;
+export const SLOTH_ENDURANCE_CAP = 23; // Scaled from 25 proportional to 333/200 HP increase
+export const SLOTH_ENDURANCE_AOE_MULT = 1.029; // Additionally deal energy × 2 AOE damage to all enemies each turn
+export const GREED_TAX_PCT = 0.056;
 export const GREED_TAX_TICK = 2; // triggers on tick index 2
-export const ENVY_JEALOUSY_PCT = 0.106;
-export const PRIDE_HUBRIS_MULT = 1.324;
-export const LUST_TEMPTATION_PCT = 0.25;
-export const GLUTTONY_DEVOURER_ENERGY = 1.585;
+export const ENVY_JEALOUSY_PCT = 0.476;
+export const PRIDE_HUBRIS_MULT = 1.59;
+export const LUST_TEMPTATION_PCT = 0.01;
+export const GLUTTONY_DEVOURER_ENERGY = 1.698;
 
 // Passive info for UI tooltips
 export const PASSIVE_INFO: Record<SinType, { name: string; description: string; icon: string }> = {

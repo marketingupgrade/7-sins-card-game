@@ -21,6 +21,8 @@ import type { SinType } from "@shared/gameTypes";
 // HeroBabylonScene removed from homepage for performance (Babylon.js = 3MB+ bundle)
 // The EmberField CSS particle system provides the atmospheric background instead
 import EmberField from "@/components/EmberField";
+import PageTransition from "@/components/PageTransition";
+import ScrollReveal from "@/components/ScrollReveal";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
@@ -639,6 +641,7 @@ export default function Home() {
       </div>
 
       {/* ═══ Footer ═══ */}
+      <ScrollReveal direction="up" delay={100} distance={20}>
       <div className="relative z-10">
 
         {/* ─── Footer ─── */}
@@ -781,6 +784,7 @@ export default function Home() {
           </div>
         </footer>
       </div>
+      </ScrollReveal>
     </div>
   );
 }

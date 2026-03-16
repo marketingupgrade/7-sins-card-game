@@ -478,7 +478,7 @@ export default function SigilMenu() {
                     <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-500/20 to-transparent" />
                   </div>
                   <p className="text-[8px] tracking-[0.3em] text-white/15 text-center mt-2 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                    v5.11 — 424 Cards
+                    v5.12 — 424 Cards
                   </p>
                 </div>
               </div>

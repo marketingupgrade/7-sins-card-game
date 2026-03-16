@@ -939,13 +939,13 @@
   font-family: 'Cormorant Garamond', serif;
   font-size: 1rem;
   line-height: 1.8;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.55);
 }
 .prose-gothic p {
   margin-bottom: 1rem;
 }
 .prose-gothic strong {
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.82);
   font-weight: 600;
 }
 .prose-gothic h3 {
@@ -960,4 +960,89 @@
 }
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* ─── Button Active Press State — subtle scale for tactile feedback ── */
+.btn-wrath:active:not(:disabled),
+.btn-sloth:active:not(:disabled),
+.btn-greed:active:not(:disabled),
+.btn-envy:active:not(:disabled),
+.btn-candle:active:not(:disabled),
+.btn-cyan:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+  transition-duration: 0.08s;
+}
+
+/* ─── Enhanced Focus Rings — visible keyboard navigation ──────────── */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid oklch(0.7 0.15 80 / 0.6);
+  outline-offset: 2px;
+  border-radius: inherit;
+}
+
+/* ─── Smooth Scroll ──────────────────────────────────────────────── */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ─── Matchup Matrix Cell Hover ──────────────────────────────────── */
+.matchup-cell {
+  transition: transform 0.15s ease-out, box-shadow 0.15s ease-out;
+  cursor: pointer;
+}
+.matchup-cell:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 12px oklch(0.82 0.12 75 / 0.2);
+  z-index: 10;
+  position: relative;
+}
+
+/* ─── Card Hover Enhancement — lift + glow intensify ─────────────── */
+.card-hover-lift {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.card-hover-lift:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow:
+    0 8px 24px oklch(0 0 0 / 0.4),
+    0 0 16px oklch(0.82 0.12 75 / 0.08);
+}
+
+/* ─── Skeleton Loading Pulse — warm cathedral tone ───────────────── */
+.skeleton-pulse {
+  background: linear-gradient(
+    90deg,
+    oklch(0.14 0.02 30) 25%,
+    oklch(0.18 0.025 30) 50%,
+    oklch(0.14 0.02 30) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ─── Content Section Divider — animated golden line ─────────────── */
+.section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.7 0.15 80 / 0.25) 20%,
+    oklch(0.82 0.12 75 / 0.35) 50%,
+    oklch(0.7 0.15 80 / 0.25) 80%,
+    transparent 100%
+  );
+  margin: 2rem 0;
 }

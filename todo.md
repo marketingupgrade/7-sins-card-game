@@ -1920,3 +1920,17 @@
 - [x] Update GameRules.tsx: Selection phase description to mention 10-second turn timer
 - [x] Update Changelog.tsx: remove hardcoded 378 from v5.7.4 and v5.7.5 entries
 - [x] Update MatchupMatrix.tsx: methodology note, footer, header, key dynamics, all Sloth matchup descriptions for v5.11
+
+### v5.12 "The Crucible" — 2M Monte Carlo Rebalance + UX Overhaul
+- [x] Build competitive deck builder (faction-optimized deck strategies)
+- [x] Run 2M Monte Carlo simulation with competitive custom decks
+- [x] Analyze simulation results: faction win rates, card performance, matchup data
+- [x] Rebalance underperforming/overperforming cards based on data (max 1.5% variance target)
+- [x] Update cardData.ts with rebalanced values
+- [x] Update Balance Analysis page with new simulation data
+- [x] Update Matchup Matrix page with new pairwise win rates
+- [x] Read UX design skill references and audit current UI
+- [x] Implement UX improvements (visual hierarchy, accessibility, interactions, mobile)
+- [x] Update Changelog with v5.12 patch notes
+- [x] Run all tests and fix failures
+- [ ] Push to GitHub (pending)

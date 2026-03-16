@@ -36,8 +36,8 @@ describe("v5.11 Constants", () => {
     expect(MAX_HAND_SIZE).toBeGreaterThan(HAND_SIZE);
   });
 
-  it("SLOTH_ENDURANCE_AOE_MULT is 2", () => {
-    expect(SLOTH_ENDURANCE_AOE_MULT).toBe(2);
+  it("SLOTH_ENDURANCE_AOE_MULT is 1.029 (v5.12 rebalanced from 2.0)", () => {
+    expect(SLOTH_ENDURANCE_AOE_MULT).toBe(1.029);
   });
 
   it("STARTING_HP is 333 (v5.10 value maintained)", () => {
@@ -123,17 +123,17 @@ describe("Sloth ENDURANCE AOE passive", () => {
   it("AOE damage formula: energy × SLOTH_ENDURANCE_AOE_MULT", () => {
     const energy = 5;
     const aoeDamage = energy * SLOTH_ENDURANCE_AOE_MULT;
-    expect(aoeDamage).toBe(10);
+    expect(aoeDamage).toBeCloseTo(5 * 1.029, 1);
   });
 
   it("AOE damage at max energy", () => {
     const aoeDamage = MAX_ENERGY * SLOTH_ENDURANCE_AOE_MULT;
-    expect(aoeDamage).toBe(14); // 7 * 2
+    expect(aoeDamage).toBeCloseTo(7 * 1.029, 1); // 7 * 1.029 = 7.203
   });
 
   it("AOE damage at starting energy", () => {
     const aoeDamage = STARTING_ENERGY * SLOTH_ENDURANCE_AOE_MULT;
-    expect(aoeDamage).toBe(4); // 2 * 2
+    expect(aoeDamage).toBeCloseTo(2 * 1.029, 1); // 2 * 1.029 = 2.058
   });
 
   it("shield generation still works alongside AOE", () => {
