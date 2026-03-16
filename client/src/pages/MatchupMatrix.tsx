@@ -145,7 +145,7 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     passiveInteraction: "VENGEANCE reflect is wasted against ENDURANCE shields. Sloth's AOE passive (energy x1.029 per turn) adds chip damage, reduced from x2.0 in v5.12.",
     attackerStrengths: ["High burst damage in early rounds", "VENGEANCE punishes attackers", "Aggressive compound patterns escalate fast"],
     defenderStrengths: ["ENDURANCE generates shields AND deals AOE chip damage", "Slowburn pattern scales into late game", "Shield cap 23 limits burst absorption"],
-    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields. Sloth's ENDURANCE AOE now deals 2-7 damage per turn (down from 8-14 in v5.11).",
+    keyCards: "Wrath's Inferno Wave (AoE) can overwhelm shields. Sloth's ENDURANCE AOE now deals 2-7 damage per turn (v5.12 reduced shield/AOE multiplier from 0.150 to 0.103).",
     counterStrategy: "As Wrath: focus single-target burst to kill Sloth before AOE damage accumulates. As Sloth: conserve energy to maximize both shield generation and AOE output.",
   },
   "wrath-envy": {
@@ -185,7 +185,7 @@ const MATCHUP_DETAILS: Record<string, MatchupDetail> = {
     passiveInteraction: "TEMPTATION at 1% lifesteal barely heals, but Lust's 20 heal_steal and 15 heal_gain card effects provide sustain that outpaces Sloth's reduced ENDURANCE (shield cap 23, AOE x1.029).",
     attackerStrengths: ["TEMPTATION heals while dealing damage", "Lifesteal bypasses shield regeneration", "Sustain advantage if AOE damage can be out-healed"],
     defenderStrengths: ["ENDURANCE shields absorb damage AND deals AOE", "AOE passive creates pressure Lust must out-heal", "Shield stacking + AOE is a dual threat"],
-    keyCards: "Lust's Charming Whisper deals damage AND heals. Sloth's ENDURANCE AOE now only deals 2-7 per turn (down from 8-14), making Lust's sustain more effective.",
+    keyCards: "Lust's Charming Whisper deals damage AND heals. Sloth's ENDURANCE AOE now only deals 2-7 per turn (v5.12 nerf), making Lust's sustain more effective.",
     counterStrategy: "As Lust: maximize lifesteal to out-heal AOE damage. As Sloth: maximize energy for both shield generation and AOE output.",
   },
   "envy-lust": {
@@ -1001,7 +1001,7 @@ export default function MatchupMatrix() {
             <DynamicCard
               title="Gluttony Burns Sloth"
               factions={["gluttony", "sloth"]}
-              description="Gluttony's deck burn disrupts Sloth's slowburn by removing compound cards. With Sloth's AOE nerfed to x1.029, this matchup is now much closer (51.0% vs 49.0%) than in v5.11."
+              description="Gluttony's deck burn disrupts Sloth's slowburn by removing compound cards. With Sloth's AOE nerfed to x1.029, this matchup is now much closer (51.0% vs 49.0%) compared to pre-v5.12."
             />
             <DynamicCard
               title="Greed Checks Gluttony"

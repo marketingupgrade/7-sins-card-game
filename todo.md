@@ -1933,4 +1933,42 @@
 - [x] Implement UX improvements (visual hierarchy, accessibility, interactions, mobile)
 - [x] Update Changelog with v5.12 patch notes
 - [x] Run all tests and fix failures
-- [ ] Push to GitHub (pending)
+- [x] Push to GitHub
+
+### v5.12.1 — Envy Playtest + Balancing Analysis + Full Page Audit
+- [ ] Run targeted Envy Jealousy 47.6% playtest simulations (Envy-focused matchups)
+- [ ] Analyze Envy performance: is 47.6% Jealousy fair in actual gameplay scenarios?
+- [ ] Adjust Envy passive if needed and re-verify with simulation
+- [ ] Generate comprehensive balancing analysis document
+- [ ] Audit all main pages on www.7sinscardgame.com for v5.12 accuracy
+- [ ] Update Home page with v5.12 data
+- [ ] Update GameRules page with v5.12 passive values
+- [ ] Update Collection page with v5.12 card values
+- [ ] Update Balance Analysis page (charts, numbers, text)
+- [ ] Update Matchup Matrix page (all matchup descriptions)
+- [ ] Update Changelog page (if any new changes)
+- [ ] Update any other main pages (Terms, Privacy, Brandbook, etc.)
+- [ ] Run tests, save checkpoint, push to GitHub
+
+### v5.12.1 — Bidirectional Jealousy + Value Rebalance
+- [ ] Redesign Envy Jealousy: amplify ALL compound ticks (offensive dmg + defensive heal/shield)
+- [ ] Update game engines (server + client + bot) with bidirectional Jealousy
+- [ ] Run dual-format rebalancer (FFA + H2H) tuning passive values only
+- [ ] Verify FFA balance (max 1.5% deviation)
+- [ ] Verify H2H balance (max 15% deviation from 50/50)
+- [ ] Apply rebalanced values to game code
+- [ ] Generate comprehensive balancing analysis document
+- [ ] Audit and update all main pages on the site
+- [ ] Push to GitHub
+
+### v5.12 Final — Balancing Analysis + Full Site Update
+- [x] Generate comprehensive balancing analysis with charts and data visualizations
+- [x] Audit all main pages on www.7sinscardgame.com for v5.12 accuracy
+- [x] Update Home page (424 cards confirmed)
+- [x] Update Balance Analysis page (charts, passive table, conclusions, methodology)
+- [x] Update Matchup Matrix page (matchup details, key dynamics, methodology)
+- [x] Update Game Rules page (auto-imports v5.12 values from gameTypes)
+- [x] Update Collection page (header comment)
+- [x] Update Changelog page (v5.12 entry already present)
+- [x] Update other main pages (Brandbook passives, Terms, SigilMenu version)
+- [x] Push to GitHub

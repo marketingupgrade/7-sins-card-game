@@ -21,12 +21,12 @@ const DiscussionThread = lazy(() => import("@/components/DiscussionThread"));
 
 /* ─── Chart CDN URLs (webdev-persistent) ─────────────────────── */
 const CHARTS = {
-  winRates: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/01_win_rates_13adfa0c.png",
-  balanceJourney: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/02_balance_journey_141739dc.png",
-  passiveEvolution: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/03_passive_evolution_42231ce1.png",
-  costDistribution: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/04_cost_distribution_29837437.png",
-  factionRadar: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/05_faction_radar_54457a66.png",
-  costVsValue: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/06_cost_vs_value_c3c9c406.png",
+  winRates: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_winrates_v512_8da98a6f.png",
+  balanceJourney: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_balance_journey_v512_240af71d.png",
+  passiveEvolution: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_passives_v512_9d109061.png",
+  costDistribution: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_deviation_v512_74547832.png",
+  factionRadar: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_radar_v512_2a3939d8.png",
+  costVsValue: "https://d2xsxph8kpxj0f.cloudfront.net/310419663028555243/o77RcHv9EmwRBvLHbxTivs/chart_matchup_heatmap_v512_e6c0fd01.png",
   compoundPatterns: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/07_compound_patterns_67d0bc15.png",
   targetModes: "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/08_target_modes_4fe8d921.png",
 };
@@ -372,8 +372,8 @@ export default function BalanceAnalysis() {
               ["Cards per faction", "~60 (50 standard + 4 skip-queue + ~6 zero-cost)"],
               ["Total card pool", "424 (378 standard + 46 zero-cost)"],
               ["Starting HP", "333 (v5.10 — increased from 200)"],
-              ["Hand cap", "10 cards maximum (v5.11)"],
-              ["Turn timer", "10 seconds after first player locks in (v5.11)"],
+              ["Hand cap", "10 cards maximum (v5.11+)"],
+              ["Turn timer", "10 seconds after first player locks in (v5.11+)"],
               ["Starting energy", "3"],
               ["Rounds per game", "20"],
               ["Resolution order", "Skip-queue first, then lowest cost first"],
@@ -407,8 +407,8 @@ export default function BalanceAnalysis() {
 
           <ChartImage
             src={CHARTS.balanceJourney}
-            alt="The Balancing Journey — From 12.5% to 1.41% Max Deviation"
-            caption="Figure 1 — The Balancing Journey: Six versions from 12.5% to 1.01% maximum deviation"
+            alt="The Balancing Journey — From 12.5% to 1.01% Max Deviation"
+            caption="Figure 1 — The Balancing Journey: Six versions from 12.5% to 1.01% maximum deviation (v5.12)"
           />
 
           <DataTable
@@ -418,8 +418,8 @@ export default function BalanceAnalysis() {
               ["v2", "15.8%", "POOR", "Expanded to 7 factions"],
               ["v3", "9.2%", "FAIR", "Passive mechanic redesign"],
               ["v4", "6.2%", "GOOD", "Proportional card value scaling"],
-              ["v5", "1.41%", "GOOD", "Combined passive + card optimizer"],
-              [<strong className="text-green-400/80">v5.12</strong>, <strong className="text-green-400/80">1.01%</strong>, <strong className="text-green-400/80">PERFECT</strong>, "2M-game iterative rebalancer with competitive decks"],
+              ["v5.11", "1.41%", "GOOD", "Combined passive + card optimizer"],
+              [<strong className="text-green-400/80">v5.12</strong>, <strong className="text-green-400/80">1.01%</strong>, <strong className="text-green-400/80">PERFECT</strong>, "2M Monte Carlo + iterative rebalance"],
             ]}
             highlightCol={1}
           />
@@ -440,7 +440,7 @@ export default function BalanceAnalysis() {
               The v5 optimizer introduced a fundamentally different approach: <strong>simultaneous tuning of passive parameters and card values</strong>. Rather than treating passives as fixed constraints, the optimizer treated passive percentages, multipliers, and thresholds as continuous variables alongside card base values.
             </p>
             <p>
-              The optimizer used a damped gradient descent converging in 47 iterations (approximately 470K simulated games), achieving a final max deviation of 1.41%.
+              The v5.11 optimizer used a damped gradient descent converging in 47 iterations (approximately 470K simulated games), achieving 1.41% max deviation. The v5.12 rebalance then ran 2M Monte Carlo simulations with competitive deck builds, iteratively tuning 7 passive constants and 59 card base values to achieve the final 1.01% max deviation.
             </p>
           </div>
         </Section>
@@ -456,11 +456,11 @@ export default function BalanceAnalysis() {
           <ChartImage
             src={CHARTS.passiveEvolution}
             alt="Passive Parameter Evolution — Before vs After"
-            caption="Figure 2 — Passive parameter evolution: v4 vs v5 values showing the magnitude of required adjustments"
+            caption="Figure 2 — Passive constant tuning: v5.11 vs v5.12 values showing the magnitude of adjustments"
           />
 
           <DataTable
-            headers={["Faction", "Passive", "Mechanic", "v4", "v5", "Change"]}
+            headers={["Faction", "Passive", "Mechanic", "v5.11", "v5.12", "Change"]}
             rows={[
               [<FactionBadge name="Wrath" color={FACTION_COLORS.wrath} />, "VENGEANCE", "Reflect % of incoming damage", "63.4%", "62.0%", <span className="text-amber-400">-2.2%</span>],
               [<FactionBadge name="Sloth" color={FACTION_COLORS.sloth} />, "ENDURANCE", "Shield + AOE dmg", "x0.45/cap44/AOE x2.0", "x0.288/cap23/AOE x1.029", <span className="text-red-400">-36%/-48%/-49%</span>],
@@ -478,7 +478,7 @@ export default function BalanceAnalysis() {
               Three passives required fundamental mechanic changes, not just parameter tuning:
             </p>
             <p>
-              <strong><FactionBadge name="Pride" color={FACTION_COLORS.pride} />'s HUBRIS</strong> was the most problematic passive in v4. The original trigger condition — "sole highest cost card among all 4 players" — activated in only ~12% of rounds. In v5, the trigger was changed to "highest or tied for highest," increasing activation rate to approximately 45% of rounds. The multiplier was correspondingly reduced from x1.57 to x1.324.
+              <strong><FactionBadge name="Pride" color={FACTION_COLORS.pride} />'s HUBRIS</strong> was the most problematic passive in v4. The original trigger condition — "sole highest cost card among all 4 players" — activated in only ~12% of rounds. In v5, the trigger was changed to "highest or tied for highest," increasing activation rate to approximately 45% of rounds. The multiplier was correspondingly reduced from x1.57 to x1.324 in v5.11, then increased to x1.590 in v5.12.
             </p>
             <p>
               <strong><FactionBadge name="Envy" color={FACTION_COLORS.envy} />'s JEALOUSY</strong> was overpowered because the 25% amplification compounded with Envy's 33 affliction_amplify cards. Each damage tick that triggered JEALOUSY would amplify existing afflictions, which would then deal more damage on subsequent ticks, creating a feedback loop. In v5.12, the percentage was increased to 47.6% after the 2M-game simulation showed Envy was severely underpowered at 10.6%. The higher amplification is now balanced by 19 buffed Envy cards that were tuned to work with the stronger passive.
@@ -514,17 +514,17 @@ export default function BalanceAnalysis() {
           <ChartImage
             src={CHARTS.factionRadar}
             alt="Faction Identity — Effect Type Distribution"
-            caption="Figure 3 — Faction identity radar: each faction occupies a distinct strategic niche"
+            caption="Figure 3 — v5.12 faction profile radar: normalized metrics across win rate, passive power, card value, survivability, and aggression"
           />
 
           {/* Faction profiles */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
             {[
               { name: "Wrath", title: "The Glass Cannon", desc: "Pure aggression: 48 damage effects with 25 self-damage as the cost of power. Highest average base value (9.8) but pays with self-inflicted wounds.", color: FACTION_COLORS.wrath },
-              { name: "Sloth", title: "The Fortress", desc: "Most defensive faction with shield_gain and heal_gain effects. Slowburn pattern means power ramps slowly but overwhelms late. v5.11: ENDURANCE now also deals energy×2 AOE damage each turn.", color: FACTION_COLORS.sloth },
+              { name: "Sloth", title: "The Fortress", desc: "Most defensive faction with shield_gain and heal_gain effects. Slowburn pattern means power ramps slowly but overwhelms late. v5.12: ENDURANCE shield/AOE halved (mult 0.150 to 0.103) for balance.", color: FACTION_COLORS.sloth },
               { name: "Greed", title: "The Thief", desc: "Resource theft specialist: 18 energy_steal, 10 heal_steal, 10 shield_steal. Takes from opponents rather than generating its own resources.", color: FACTION_COLORS.greed },
               { name: "Envy", title: "The Amplifier", desc: "33 affliction_amplify effects make it the debuff specialist. Apply a few key afflictions, then amplify them exponentially.", color: FACTION_COLORS.envy },
-              { name: "Pride", title: "The Heavyweight", desc: "Highest average cost with powerful high-cost cards. Expensive but powerful, relying on the HUBRIS multiplier to compensate. v5.11: Zero-cost cards added for energy safety net.", color: FACTION_COLORS.pride },
+              { name: "Pride", title: "The Heavyweight", desc: "Highest average cost with powerful high-cost cards. Expensive but powerful, relying on the HUBRIS multiplier to compensate. v5.12: HUBRIS multiplier increased (1.32x to 1.59x) for late-game power.", color: FACTION_COLORS.pride },
               { name: "Lust", title: "The Sustainer", desc: "Combines damage with healing: 20 heal_steal and 15 heal_gain effects. War of attrition where Lust slowly drains opponents.", color: FACTION_COLORS.lust },
               { name: "Gluttony", title: "The Destroyer", desc: "41 discard_burn effects for deck destruction. Burns cards from opponents' discard piles while gaining 1.585 energy per card.", color: FACTION_COLORS.gluttony },
             ].map((f) => (
@@ -555,7 +555,7 @@ export default function BalanceAnalysis() {
           <ChartImage
             src={CHARTS.costVsValue}
             alt="Faction Power Economy — Cost vs. Value"
-            caption="Figure 4 — Power economy scatter: how each faction trades cost efficiency for raw power"
+            caption="Figure 4 — v5.12 pairwise matchup heatmap: win rates for all 21 faction matchups"
           />
         </Section>
 
@@ -563,14 +563,14 @@ export default function BalanceAnalysis() {
         <Section id="cardpool" number="06" title="Card Pool Statistics">
           <div className="prose-gothic">
             <p>
-              The 424-card pool (378 standard + 46 zero-cost) was carefully shaped to ensure each faction has a playable cost curve, appropriate compound pattern distribution, and meaningful target mode variety. In v5.11, 46 zero-cost cards were added (approximately 6-7 per faction) to prevent energy-lock situations where players have no playable cards.
+              The 424-card pool (378 standard + 46 zero-cost) was carefully shaped to ensure each faction has a playable cost curve, appropriate compound pattern distribution, and meaningful target mode variety. In v5.11, 46 zero-cost cards were added (approximately 6-7 per faction) to prevent energy-lock situations. The v5.12 rebalance then tuned all faction passives and 59 card base values using 2M Monte Carlo simulations.
             </p>
           </div>
 
           <ChartImage
             src={CHARTS.costDistribution}
             alt="Card Cost Distribution by Faction"
-            caption="Figure 5 — Cost distribution: bell curve centered around 2-3. v5.11 added 46 zero-cost cards across all factions for energy safety"
+            caption="Figure 5 — Balance deviation: v5.11 vs v5.12 showing the dramatic improvement from 14.35% to 1.01% max deviation"
           />
 
           <ChartImage
@@ -597,7 +597,7 @@ export default function BalanceAnalysis() {
           <ChartImage
             src={CHARTS.winRates}
             alt="Faction Win Rates — 100K Game Validation"
-            caption="Figure 8 — v5.11 win rates (historical). v5.12 achieved 1.01% max deviation across 2M games."
+            caption="Figure 8 — v5.12 win rates: all 7 factions within 1.01% of the 25% target across 2M Monte Carlo simulations"
           />
 
           <DataTable
@@ -624,7 +624,7 @@ export default function BalanceAnalysis() {
           <div className="prose-gothic mt-6">
             <h3 className="text-lg text-white/80 mb-3" style={{ fontFamily: "var(--font-heading)" }}>Wrath Analysis — Confirming the Hypothesis</h3>
             <p>
-              The hypothesis that <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} /> was underpowered was confirmed through the balancing process. In v5.11, Wrath's VENGEANCE passive reflected 63.4% of incoming damage. The v5.12 rebalancer fine-tuned this to 62.0%, a slight reduction that accounts for the overall meta shift where Lust's lifesteal was dramatically nerfed (25% to 1%) and Envy's amplification was dramatically buffed (10.6% to 47.6%). Wrath now sits at 24.77% win rate, a <strong>-0.23% deviation</strong>.
+              The hypothesis that <FactionBadge name="Wrath" color={FACTION_COLORS.wrath} /> was underpowered was confirmed through the balancing process. In v5.11, Wrath's VENGEANCE passive reflected 63.4% of incoming damage. The v5.12 rebalancer fine-tuned this to 62.0%, a slight reduction that accounts for the overall meta shift where Lust's lifesteal was dramatically nerfed (25.0% to 1.0%) and Envy's amplification was dramatically buffed (10.6% to 47.6%). Wrath now sits at 24.77% win rate, a <strong>-0.23% deviation</strong>.
             </p>
           </div>
         </Section>
@@ -723,7 +723,7 @@ export default function BalanceAnalysis() {
               <strong>3. Lust was the most overpowered faction pre-v5.12.</strong> The TEMPTATION passive at 25% lifesteal created a dominant sustain strategy that won 39.35% of games in the pre-v5.12 simulation. Reducing it to 1.0% — a 96% nerf — combined with base value reductions on 24 Lust cards, brought Lust to 26.01% win rate.
             </p>
             <p>
-              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.324 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy x1.029 to all enemies). The power budget must account for trigger frequency.
+              <strong>4. Conditional passives need higher payoffs.</strong> Pride's HUBRIS (triggers ~45% of rounds) has a x1.590 multiplier, while Sloth's ENDURANCE (triggers every round) provides shield + AOE damage (energy x1.029 to all enemies). The power budget must account for trigger frequency.
             </p>
             <p>
               <strong>5. 424 cards maintain balance.</strong> Expanding from 252 to 424 cards (including 28 skip-queue priority cards and 46 zero-cost cards) did not destabilize the balance, suggesting the system is robust to card pool expansion. The v5.11 zero-cost cards specifically address energy-lock perception issues without disrupting the power curve.
@@ -731,7 +731,7 @@ export default function BalanceAnalysis() {
 
             <h3 className="text-lg text-white/80 mb-4 mt-8" style={{ fontFamily: "var(--font-heading)" }}>Methods &amp; Techniques</h3>
             <p className="mb-4">
-              The following table summarizes the key methods, tools, and techniques used throughout the balancing process to achieve the final 1.41% maximum deviation.
+              The following table summarizes the key methods, tools, and techniques used throughout the balancing process to achieve the final 1.01% maximum deviation.
             </p>
             <div className="overflow-x-auto -mx-2 px-2">
               <table className="w-full text-sm border-collapse">
