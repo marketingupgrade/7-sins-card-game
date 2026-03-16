@@ -334,8 +334,11 @@ export interface LockedPlay {
   skipQueue?: boolean;
 }
 
-/** Selection timer duration in seconds */
-export const SELECTION_TIMER_SECONDS = 30;
+/** Selection timer duration in seconds (client-side visual countdown) */
+export const SELECTION_TIMER_SECONDS = 10;
+
+/** Server-side turn timer enforcement: auto-pass idle players after this many seconds */
+export const SERVER_TURN_TIMER_SECONDS = 12;
 
 // ─── Game State ──────────────────────────────────────────────
 export type GameStatus = "lobby" | "draft" | "active" | "finished";
@@ -394,6 +397,8 @@ export interface GameState {
   players: PlayerState[];
   activeEffects: ActiveEffect[];
   winnerId: string | null;
+  /** ISO timestamp deadline for selection phase — set when first player locks in (server-side timer enforcement) */
+  selectionDeadline: string | null;
 }
 
 // ─── Game Actions ────────────────────────────────────────────

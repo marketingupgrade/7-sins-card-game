@@ -41,6 +41,7 @@ import {
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
   CONSUME_ENERGY_REFUND,
+  SERVER_TURN_TIMER_SECONDS,
   getCompoundTickValue,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
@@ -286,7 +287,15 @@ export async function lockInCards(
     (lp: LockedPlay) => lp.playerId !== playerId
   );
   const allLocked = [...existingLocked, ...lockedPlays];
-  await sb.from("games").update({ locked_plays: allLocked }).eq("id", gameId);
+
+  // Server-side turn timer: set selection_deadline when the first player locks in
+  const gameUpdate: Record<string, any> = { locked_plays: allLocked };
+  if (!game.selection_deadline) {
+    // First lock-in this round — set the deadline
+    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1000).toISOString();
+    gameUpdate.selection_deadline = deadline;
+  }
+  await sb.from("games").update(gameUpdate).eq("id", gameId);
 
   await sb.from("game_log").insert({
     game_id: gameId,
@@ -343,7 +352,7 @@ export async function lockInCards(
       };
     });
 
-    await sb.from("games").update({ turn_phase: "resolution" }).eq("id", gameId);
+    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
     await resolveLockedPlays(gameId);
 
     const quip = selections.length === 0
@@ -576,6 +585,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
     players,
     activeEffects,
     winnerId: game.winner_id,
+    selectionDeadline: game.selection_deadline ?? null,
   };
 }
 
@@ -1204,6 +1214,7 @@ async function advanceRound(gameId: string): Promise<void> {
     await sb.from("games").update({
       turn_phase: "selection",
       locked_plays: [],
+      selection_deadline: null,
     }).eq("id", gameId);
     // Also clear locked_cards on all players
     for (const p of allPlayers) {
@@ -1345,3 +1356,111 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
   }
 }
 
+
+// ═══ SERVER-SIDE TURN TIMER ENFORCEMENT ══════════════════════════════
+/**
+ * Check if the selection deadline has passed for a game.
+ * If so, auto-pass all players who haven't locked in yet,
+ * then trigger resolution.
+ *
+ * Called by:
+ * 1. A tRPC endpoint (game.checkTimer) that clients poll every ~3s
+ * 2. Could also be called from lockInCards as an optimization
+ *
+ * Returns true if the deadline was enforced (auto-passes happened).
+ */
+export async function enforceSelectionDeadline(
+  gameId: string
+): Promise<{ enforced: boolean; resolvedPlays?: LockedPlay[]; resolutionPlayers?: PlayerState[] }> {
+  const sb = getServerSupabase();
+
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active" || game.turn_phase !== "selection") {
+    return { enforced: false };
+  }
+
+  // No deadline set yet (no one has locked in)
+  if (!game.selection_deadline) {
+    return { enforced: false };
+  }
+
+  const deadline = new Date(game.selection_deadline).getTime();
+  const now = Date.now();
+
+  if (now < deadline) {
+    return { enforced: false }; // Deadline hasn't passed yet
+  }
+
+  // Deadline has passed — auto-pass all players who haven't locked in
+  const { data: allPlayers } = await sb
+    .from("game_players")
+    .select("*, players(username)")
+    .eq("game_id", gameId)
+    .order("seat_index");
+
+  if (!allPlayers) return { enforced: false };
+
+  const alivePlayers = allPlayers.filter((p: any) => p.is_alive);
+  let autoPassCount = 0;
+
+  for (const p of alivePlayers) {
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    if (pLocked.length === 0) {
+      // This player hasn't locked in — auto-pass them
+      await sb.from("game_players").update({ locked_cards: [{ pass: true }] }).eq("id", p.id);
+      autoPassCount++;
+
+      // Log the auto-pass
+      await sb.from("game_log").insert({
+        game_id: gameId,
+        player_id: p.id,
+        action_type: "auto_pass",
+        action_data: { reason: "selection_deadline_expired" },
+        round_number: game.current_round,
+      });
+    }
+  }
+
+  if (autoPassCount === 0) {
+    // Everyone already locked in — shouldn't happen but handle gracefully
+    return { enforced: false };
+  }
+
+  // Now all players are locked in — trigger resolution
+  // Re-read the game's locked_plays (unchanged, only the auto-passed players had no plays)
+  const existingLocked: LockedPlay[] = Array.isArray(game.locked_plays) ? game.locked_plays : [];
+
+  // Snapshot for animation
+  const resolutionPlayers: PlayerState[] = allPlayers.map((gp: any) => {
+    const playerLocked = existingLocked.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
+    return {
+      id: gp.player_id,
+      gamePlayerId: gp.id,
+      username: gp.players?.username || "Unknown",
+      seatIndex: gp.seat_index,
+      chosenSin: gp.chosen_sin,
+      currentHp: gp.current_hp,
+      maxHp: gp.max_hp,
+      isAlive: gp.is_alive,
+      hand: gp.hand || [],
+      deckSize: (gp.deck || []).length,
+      discardSize: (gp.discard_pile || []).length,
+      currentEnergy: gp.current_energy ?? 0,
+      maxEnergy: gp.max_energy ?? 0,
+      bonusEnergy: gp.bonus_energy ?? 0,
+      lockedCards: playerLocked,
+      hasLockedIn: true,
+      consumedThisRound: gp.consumed_this_round ?? false,
+    };
+  });
+
+  // Transition to resolution
+  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+  await resolveLockedPlays(gameId);
+
+  return {
+    enforced: true,
+    resolvedPlays: existingLocked,
+    resolutionPlayers,
+  };
+}

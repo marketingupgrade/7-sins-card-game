@@ -5478,6 +5478,7 @@ var ENVY_JEALOUSY_PCT = 0.476;
 var LUST_TEMPTATION_PCT = 0.01;
 var GLUTTONY_DEVOURER_ENERGY = 1.698;
 var STARTING_ENERGY = 2;
+var SERVER_TURN_TIMER_SECONDS = 12;
 var MAX_ROUNDS = 20;
 var STARTING_HP = 333;
 var HAND_SIZE = 5;
@@ -5650,7 +5651,12 @@ async function lockInCards(gameId, playerId, selections) {
     (lp) => lp.playerId !== playerId
   );
   const allLocked = [...existingLocked, ...lockedPlays];
-  await sb.from("games").update({ locked_plays: allLocked }).eq("id", gameId);
+  const gameUpdate = { locked_plays: allLocked };
+  if (!game.selection_deadline) {
+    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1e3).toISOString();
+    gameUpdate.selection_deadline = deadline;
+  }
+  await sb.from("games").update(gameUpdate).eq("id", gameId);
   await sb.from("game_log").insert({
     game_id: gameId,
     player_id: player.id,
@@ -5691,7 +5697,7 @@ async function lockInCards(gameId, playerId, selections) {
         consumedThisRound: gp.consumed_this_round ?? false
       };
     });
-    await sb.from("games").update({ turn_phase: "resolution" }).eq("id", gameId);
+    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
     await resolveLockedPlays(gameId);
     const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
     return {
@@ -5848,7 +5854,8 @@ async function getGameState(gameId) {
     lockedPlays: allLockedPlays,
     players,
     activeEffects,
-    winnerId: game.winner_id
+    winnerId: game.winner_id,
+    selectionDeadline: game.selection_deadline ?? null
   };
 }
 async function getGameLog(gameId) {
@@ -6284,7 +6291,8 @@ async function advanceRound(gameId) {
   try {
     await sb.from("games").update({
       turn_phase: "selection",
-      locked_plays: []
+      locked_plays: [],
+      selection_deadline: null
     }).eq("id", gameId);
     for (const p of allPlayers) {
       await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
@@ -6373,6 +6381,72 @@ async function resolveActiveEffects(gameId, currentRound) {
       await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
     }
   }
+}
+async function enforceSelectionDeadline(gameId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active" || game.turn_phase !== "selection") {
+    return { enforced: false };
+  }
+  if (!game.selection_deadline) {
+    return { enforced: false };
+  }
+  const deadline = new Date(game.selection_deadline).getTime();
+  const now = Date.now();
+  if (now < deadline) {
+    return { enforced: false };
+  }
+  const { data: allPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+  if (!allPlayers) return { enforced: false };
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+  let autoPassCount = 0;
+  for (const p of alivePlayers) {
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    if (pLocked.length === 0) {
+      await sb.from("game_players").update({ locked_cards: [{ pass: true }] }).eq("id", p.id);
+      autoPassCount++;
+      await sb.from("game_log").insert({
+        game_id: gameId,
+        player_id: p.id,
+        action_type: "auto_pass",
+        action_data: { reason: "selection_deadline_expired" },
+        round_number: game.current_round
+      });
+    }
+  }
+  if (autoPassCount === 0) {
+    return { enforced: false };
+  }
+  const existingLocked = Array.isArray(game.locked_plays) ? game.locked_plays : [];
+  const resolutionPlayers = allPlayers.map((gp) => {
+    const playerLocked = existingLocked.filter((lp) => lp.playerId === gp.player_id);
+    return {
+      id: gp.player_id,
+      gamePlayerId: gp.id,
+      username: gp.players?.username || "Unknown",
+      seatIndex: gp.seat_index,
+      chosenSin: gp.chosen_sin,
+      currentHp: gp.current_hp,
+      maxHp: gp.max_hp,
+      isAlive: gp.is_alive,
+      hand: gp.hand || [],
+      deckSize: (gp.deck || []).length,
+      discardSize: (gp.discard_pile || []).length,
+      currentEnergy: gp.current_energy ?? 0,
+      maxEnergy: gp.max_energy ?? 0,
+      bonusEnergy: gp.bonus_energy ?? 0,
+      lockedCards: playerLocked,
+      hasLockedIn: true,
+      consumedThisRound: gp.consumed_this_round ?? false
+    };
+  });
+  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+  await resolveLockedPlays(gameId);
+  return {
+    enforced: true,
+    resolvedPlays: existingLocked,
+    resolutionPlayers
+  };
 }
 
 // server/profanityFilter.ts
@@ -6910,6 +6984,10 @@ var appRouter = router({
     /** Get game action log */
     getLog: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
       return getGameLog(input.gameId);
+    }),
+    /** Server-side turn timer check — enforces selection deadline */
+    checkTimer: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
+      return enforceSelectionDeadline(input.gameId);
     })
   })
 });

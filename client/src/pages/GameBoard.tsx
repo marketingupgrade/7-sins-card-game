@@ -34,7 +34,8 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO, CONSUME_ENERGY_REFUND } from "@shared/gameTypes";
+import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO, CONSUME_ENERGY_REFUND, SERVER_TURN_TIMER_SECONDS } from "@shared/gameTypes";
+import { trpc } from "@/lib/trpc";
 import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
@@ -166,14 +167,17 @@ export default function GameBoard() {
   const [hoverPreviewPos, setHoverPreviewPos] = useState({ x: 0, y: 0 });
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Turn timer: 10s countdown after first opponent locks in
-  const TURN_TIMER_SECONDS = 10;
+  // Turn timer: countdown based on server-side selectionDeadline
   const [turnTimerActive, setTurnTimerActive] = useState(false);
-  const [turnTimerSeconds, setTurnTimerSeconds] = useState(TURN_TIMER_SECONDS);
+  const [turnTimerSeconds, setTurnTimerSeconds] = useState(SERVER_TURN_TIMER_SECONDS);
   const turnTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoLockTriggeredRef = useRef(false);
   const handleLockInRef = useRef<() => void>(() => {});
   const handlePassLockInRef = useRef<() => void>(() => {});
+
+  // Server-side timer enforcement: poll server to auto-pass idle players
+  const checkTimerMutation = trpc.game.checkTimer.useMutation();
+  const serverTimerCheckRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Phase 2: Impact VFX state
   const [impactVfxTrigger, setImpactVfxTrigger] = useState(0);
@@ -368,7 +372,7 @@ export default function GameBoard() {
       setHasConsumedThisRound(false); // Reset consume allowance each round
       // Reset turn timer
       setTurnTimerActive(false);
-      setTurnTimerSeconds(TURN_TIMER_SECONDS);
+      setTurnTimerSeconds(SERVER_TURN_TIMER_SECONDS);
       autoLockTriggeredRef.current = false;
       if (turnTimerIntervalRef.current) {
         clearInterval(turnTimerIntervalRef.current);
@@ -377,17 +381,27 @@ export default function GameBoard() {
     }
   }, [turnPhase, gameState?.currentRound]);
 
-  // Turn timer: Start countdown when any opponent locks in and we haven't
+  // Turn timer: Start countdown from server deadline when any player locks in
   useEffect(() => {
     if (!gameState || !myPlayer || hasLockedIn || turnPhase !== "selection") return;
-    const opponents = gameState.players.filter(p => p.id !== playerId && p.isAlive);
-    const anyOpponentLocked = opponents.some(p => p.hasLockedIn);
-    if (anyOpponentLocked && !turnTimerActive) {
+    if (gameState.selectionDeadline && !turnTimerActive) {
+      // Calculate remaining seconds from server deadline
+      const deadline = new Date(gameState.selectionDeadline).getTime();
+      const remaining = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
       setTurnTimerActive(true);
-      setTurnTimerSeconds(TURN_TIMER_SECONDS);
+      setTurnTimerSeconds(remaining);
       soundEngine.play("card_play"); // Subtle alert sound
+    } else if (!gameState.selectionDeadline && !turnTimerActive) {
+      // Fallback: check if any opponent locked in (for backward compat)
+      const opponents = gameState.players.filter(p => p.id !== playerId && p.isAlive);
+      const anyOpponentLocked = opponents.some(p => p.hasLockedIn);
+      if (anyOpponentLocked) {
+        setTurnTimerActive(true);
+        setTurnTimerSeconds(SERVER_TURN_TIMER_SECONDS);
+        soundEngine.play("card_play");
+      }
     }
-  }, [gameState?.players, hasLockedIn, turnPhase, turnTimerActive, playerId, myPlayer]);
+  }, [gameState?.selectionDeadline, gameState?.players, hasLockedIn, turnPhase, turnTimerActive, playerId, myPlayer]);
 
   // Turn timer: Tick down every second (uses refs to avoid declaration-order issues)
   useEffect(() => {
@@ -399,7 +413,7 @@ export default function GameBoard() {
       return;
     }
     turnTimerIntervalRef.current = setInterval(() => {
-      setTurnTimerSeconds(prev => {
+      setTurnTimerSeconds((prev: number) => {
         if (prev <= 1) {
           // Timer expired — auto lock-in
           if (!autoLockTriggeredRef.current) {
@@ -420,6 +434,39 @@ export default function GameBoard() {
       }
     };
   }, [turnTimerActive, hasLockedIn]);
+
+  // Server-side timer enforcement: poll every 3s during selection to catch disconnected players
+  useEffect(() => {
+    if (!gameId || turnPhase !== "selection" || !gameState?.selectionDeadline) {
+      if (serverTimerCheckRef.current) {
+        clearInterval(serverTimerCheckRef.current);
+        serverTimerCheckRef.current = null;
+      }
+      return;
+    }
+    serverTimerCheckRef.current = setInterval(async () => {
+      try {
+        const result = await checkTimerMutation.mutateAsync({ gameId });
+        if (result.enforced) {
+          // Server auto-passed idle players and triggered resolution
+          if (result.resolvedPlays && result.resolutionPlayers) {
+            setCachedLockedPlays(result.resolvedPlays);
+            setCachedResolutionPlayers(result.resolutionPlayers);
+            setIsShowingResolution(true);
+          }
+          refetch();
+        }
+      } catch {
+        // Silently ignore — game may have moved past selection
+      }
+    }, 3000);
+    return () => {
+      if (serverTimerCheckRef.current) {
+        clearInterval(serverTimerCheckRef.current);
+        serverTimerCheckRef.current = null;
+      }
+    };
+  }, [gameId, turnPhase, gameState?.selectionDeadline]);
 
   const myCards = useMemo(
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
@@ -1465,7 +1512,7 @@ export default function GameBoard() {
                           : "oklch(0.70 0.15 85)",
                       }}
                       initial={{ width: "100%" }}
-                      animate={{ width: `${(turnTimerSeconds / TURN_TIMER_SECONDS) * 100}%` }}
+                      animate={{ width: `${(turnTimerSeconds / SERVER_TURN_TIMER_SECONDS) * 100}%` }}
                       transition={{ duration: 1, ease: "linear" }}
                     />
                   </div>

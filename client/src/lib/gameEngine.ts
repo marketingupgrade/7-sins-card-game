@@ -42,6 +42,7 @@ import {
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
   CONSUME_ENERGY_REFUND,
+  SERVER_TURN_TIMER_SECONDS,
   getCompoundTickValue,
 } from "../../../shared/gameTypes";
 
@@ -318,7 +319,14 @@ export async function lockInCards(
     (lp: LockedPlay) => lp.playerId !== playerId
   );
   const allLocked = [...existingLocked, ...lockedPlays];
-  await sb.from("games").update({ locked_plays: allLocked }).eq("id", gameId);
+
+  // Server-side turn timer: set selection_deadline when the first player locks in
+  const gameUpdate: Record<string, any> = { locked_plays: allLocked };
+  if (!game.selection_deadline) {
+    const deadline = new Date(Date.now() + SERVER_TURN_TIMER_SECONDS * 1000).toISOString();
+    gameUpdate.selection_deadline = deadline;
+  }
+  await sb.from("games").update(gameUpdate).eq("id", gameId);
 
   // Log the lock-in
   await sb.from("game_log").insert({
@@ -373,8 +381,8 @@ export async function lockInCards(
       consumedThisRound: gp.consumed_this_round ?? false,
     }));
 
-    // Transition to resolution phase
-    await sb.from("games").update({ turn_phase: "resolution" }).eq("id", gameId);
+    // Transition to resolution phase (clear deadline)
+    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
     // Resolve all locked plays
     await resolveLockedPlays(gameId);
   }
@@ -635,6 +643,7 @@ export async function getGameState(gameId: string): Promise<GameState> {
     players,
     activeEffects,
     winnerId: game.winner_id,
+    selectionDeadline: game.selection_deadline ?? null,
   };
 }
 
@@ -1290,6 +1299,7 @@ async function advanceRound(gameId: string): Promise<void> {
     await sb.from("games").update({
       turn_phase: "selection",
       locked_plays: [],
+      selection_deadline: null,
     }).eq("id", gameId);
     // Also clear locked_cards on all players
     for (const p of allPlayers) {

@@ -26,6 +26,7 @@ import {
   playCard,
   consumeCard,
   startGame,
+  enforceSelectionDeadline,
 } from "./gameEngine";
 import {
   getDiscussionComments,
@@ -693,6 +694,13 @@ export const appRouter = router({
       .input(z.object({ gameId: z.string().uuid() }))
       .query(async ({ input }) => {
         return getGameLog(input.gameId);
+      }),
+
+    /** Server-side turn timer check — enforces selection deadline */
+    checkTimer: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        return enforceSelectionDeadline(input.gameId);
       }),
   }),
 });

@@ -1981,3 +1981,15 @@
 - [x] Fix the root cause: replaced unreliable setTimeout(4000) with awaited Promise delay in both client (clientEngine.ts) and server (gameEngine.ts) engines
 - [x] Add self-healing watchdog in useGameState hook: detects stuck round_end/resolution for >15s and forces transition to selection phase
 - [x] All 492 tests passing, zero TypeScript errors
+
+### Server-Side Turn Timer Enforcement
+- [x] Leverage existing `selection_deadline` column on Supabase `games` table
+- [x] Set deadline when first player locks in (both client and server engines)
+- [x] Clear deadline on resolution and new round transitions
+- [x] Create `enforceSelectionDeadline()` server function to auto-pass idle players after deadline
+- [x] Add `game.checkTimer` tRPC endpoint for client polling (every 3s)
+- [x] Update GameBoard to use server deadline for timer countdown
+- [x] Add `selectionDeadline` field to `GameState` type
+- [x] Write 27 unit tests for timer logic
+- [x] All 519 tests passing, zero TypeScript errors
+- [x] Push to GitHub
