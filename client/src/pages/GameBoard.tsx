@@ -455,6 +455,13 @@ export default function GameBoard() {
             setCachedResolutionPlayers(result.resolutionPlayers);
             setIsShowingResolution(true);
           }
+          // Show timeout narrator quip for each auto-passed player
+          if (result.autoPassedPlayerNames && result.autoPassedPlayerNames.length > 0) {
+            for (const name of result.autoPassedPlayerNames) {
+              addRandomLine("timeout", { player: name });
+              addToActionFeed(`${name} was auto-passed (timed out)`);
+            }
+          }
           refetch();
         }
       } catch {

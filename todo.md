@@ -2007,3 +2007,11 @@
 - [x] Write 7 new unit tests for configurable timer (34 total in turnTimer.test.ts)
 - [x] All 526 tests passing, zero TypeScript errors
 - [x] Push to GitHub
+
+### Timeout Narrator Quips
+- [x] Add 12 timeout narrator quips to NARRATOR_LINES in shared/cardData.ts
+- [x] Return autoPassedPlayerNames from server enforceSelectionDeadline function
+- [x] Wire timeout quips into GameBoard server timer polling (addRandomLine + addToActionFeed)
+- [x] Update patch notes with v5.13.0 "The Hourglass Update" (server timer, configurable timer, timeout quips, round 13 fix)
+- [x] All 526 tests passing, zero TypeScript errors
+- [x] Push to GitHub

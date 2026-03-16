@@ -6416,6 +6416,10 @@ async function enforceSelectionDeadline(gameId) {
       });
     }
   }
+  const autoPassedPlayerNames = alivePlayers.filter((p) => {
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    return pLocked.length === 0;
+  }).map((p) => p.players?.username || "Unknown");
   if (autoPassCount === 0) {
     return { enforced: false };
   }
@@ -6447,7 +6451,8 @@ async function enforceSelectionDeadline(gameId) {
   return {
     enforced: true,
     resolvedPlays: existingLocked,
-    resolutionPlayers
+    resolutionPlayers,
+    autoPassedPlayerNames
   };
 }
 

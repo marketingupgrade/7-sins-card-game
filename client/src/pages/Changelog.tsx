@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.13.0",
+    date: "March 2026",
+    title: "The Hourglass Update",
+    summary: "Server-side turn timer enforcement prevents games from stalling when players disconnect. Configurable lobby timers let the host choose competitive (10s), standard (15s), or casual (30s) pacing. Timed-out players now trigger sassy narrator quips.",
+    major: false,
+    changes: [
+      { category: "feature", text: "Server-side turn timer enforcement: when a player locks in, a selection deadline is written to the database. If the deadline passes with idle players, the server auto-passes them and triggers resolution. No more stuck games from disconnected players." },
+      { category: "feature", text: "Configurable turn timer per lobby: the host can now choose between 10s (Competitive), 15s (Standard), or 30s (Casual) turn timers in the lobby settings before starting the game." },
+      { category: "feature", text: "Timer selector UI: animated StonePanel with three options in the lobby. Non-host players see the current timer setting in real-time." },
+      { category: "feature", text: "Timeout narrator quips: 12 new sassy narrator lines trigger when a player is auto-passed for running out of time. Each quip includes the timed-out player's name." },
+      { category: "feature", text: "Action feed entries for timeouts: auto-passed players now appear in the game's action feed with a clear 'timed out' label." },
+      { category: "feature", text: "Client-side timer syncs with server deadline: the countdown timer in the GameBoard now derives its value from the server-side selection_deadline timestamp, preventing drift between players." },
+      { category: "fix", text: "Round 13 freeze bug: replaced unreliable setTimeout(4000) with awaited Promise delay in both client and server engines. Added self-healing watchdog that detects stuck states and forces transitions." },
+      { category: "fix", text: "GameBoard progress bar now adapts to the lobby's configured timer duration instead of using a hardcoded constant." },
+    ],
+  },
+  {
     version: "5.12.0",
     date: "March 2026",
     title: "The Crucible Reforged",

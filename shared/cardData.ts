@@ -2807,4 +2807,18 @@ export const NARRATOR_LINES = {
     "Passive ability: {passive}. {player} gets a little extra something.",
     "{passive} kicks in for {player}. Sin has its perks.",
   ],
+  timeout: [
+    "Too slow, {player}. The arena waits for no sinner.",
+    "{player} fell asleep at the wheel. How very Sloth of them.",
+    "Time's up, {player}. Indecision is just cowardice with extra steps.",
+    "{player} couldn't be bothered. The void passes for them.",
+    "And {player} does... absolutely nothing. Riveting.",
+    "The clock ran out on {player}. Even sin requires punctuality.",
+    "{player} went AFK. Their sins will be judged in absentia.",
+    "Tick tock, {player}. Your silence speaks volumes.",
+    "{player} stared into the abyss, and the abyss got bored first.",
+    "No cards from {player}. The arena moves on without mercy.",
+    "{player} froze like a deer in hellfire. Auto-pass it is.",
+    "The ritual does not pause for the hesitant, {player}.",
+  ],
 };

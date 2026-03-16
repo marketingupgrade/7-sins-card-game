@@ -1373,7 +1373,7 @@ async function resolveActiveEffects(gameId: string, currentRound: number): Promi
  */
 export async function enforceSelectionDeadline(
   gameId: string
-): Promise<{ enforced: boolean; resolvedPlays?: LockedPlay[]; resolutionPlayers?: PlayerState[] }> {
+): Promise<{ enforced: boolean; resolvedPlays?: LockedPlay[]; resolutionPlayers?: PlayerState[]; autoPassedPlayerNames?: string[] }> {
   const sb = getServerSupabase();
 
   const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
@@ -1423,8 +1423,16 @@ export async function enforceSelectionDeadline(
     }
   }
 
+  // Collect names of auto-passed players for narrator quips
+  const autoPassedPlayerNames: string[] = alivePlayers
+    .filter((p: any) => {
+      const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+      return pLocked.length === 0;
+    })
+    .map((p: any) => p.players?.username || "Unknown");
+
   if (autoPassCount === 0) {
-    // Everyone already locked in — shouldn't happen but handle gracefully
+    // Everyone already locked in
     return { enforced: false };
   }
 
@@ -1464,5 +1472,6 @@ export async function enforceSelectionDeadline(
     enforced: true,
     resolvedPlays: existingLocked,
     resolutionPlayers,
+    autoPassedPlayerNames,
   };
 }
