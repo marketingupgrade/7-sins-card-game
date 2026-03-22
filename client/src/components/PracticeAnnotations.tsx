@@ -6,15 +6,20 @@
  * who has watched humanity sin for millennia and finds your fumbling
  * both predictable and mildly entertaining.
  *
+ * CRITICAL: The outer container uses pointer-events-none so it never
+ * blocks touch/click interactions on the game board beneath it.
+ * Only the inner card uses pointer-events-auto for the dismiss button.
+ *
  * Reads practice state from localStorage to determine if active.
  * Automatically dismisses after round 4 or when manually closed.
  */
 
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, Swords, Sparkles, Target, Heart, Skull, Eye } from "lucide-react";
+import { X, Zap, Swords, Sparkles, Target, Heart, Skull, Eye, EyeOff } from "lucide-react";
 import type { SinType, PlayerState } from "@shared/gameTypes";
 import { PASSIVE_INFO } from "@shared/gameTypes";
+import { isCoachingDisabled, setCoachingDisabled } from "./GameCoach";
 
 interface PracticeAnnotationsProps {
   gameId: string;
@@ -51,6 +56,7 @@ export default function PracticeAnnotations({
 }: PracticeAnnotationsProps) {
   const [dismissed, setDismissed] = useState(false);
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [coachingOff, setCoachingOff] = useState(isCoachingDisabled);
 
   const isPractice = useMemo(() => {
     return localStorage.getItem("7sins_practice_game") === gameId;
@@ -74,7 +80,7 @@ export default function PracticeAnnotations({
   const sinColor = SIN_COLORS[mySin] || "#ef4444";
 
   const annotation = useMemo((): Annotation | null => {
-    if (dismissed || !isPractice || !myPlayer) return null;
+    if (dismissed || !isPractice || !myPlayer || coachingOff) return null;
 
     // Round 1 annotations
     if (currentRound === 1) {
@@ -102,7 +108,7 @@ export default function PracticeAnnotations({
         return {
           id: "r1_waiting",
           narratorFlavor: "The die is cast. Now we wait.",
-          message: "Your sins are locked in. The bot is choosing their own path to damnation. Effects resolve simultaneously \u2014 no take-backs.",
+          message: "Your sins are locked in. The bot is choosing their own path to damnation. Effects resolve simultaneously — no take-backs.",
           icon: Target,
           position: "center",
           color: sinColor,
@@ -126,7 +132,7 @@ export default function PracticeAnnotations({
         return {
           id: "r2_compound",
           narratorFlavor: "Your sins from last round are still echoing. That's the beauty of compound interest.",
-          message: "Round 2. Your previous cards are compounding \u2014 dealing increasing damage each tick. Stack more effects now. Mix offense and defense. The cathedral rewards those who diversify their sins.",
+          message: "Round 2. Your previous cards are compounding — dealing increasing damage each tick. Stack more effects now. Mix offense and defense. The cathedral rewards those who diversify their sins.",
           icon: Sparkles,
           position: "bottom",
           color: sinColor,
@@ -141,7 +147,7 @@ export default function PracticeAnnotations({
         return {
           id: "r3_passive",
           narratorFlavor: `Your ${passiveInfo.name} works in the shadows. As all good sins should.`,
-          message: `${passiveInfo.description.split('.')[0]}. This passive fires automatically \u2014 no action required. Build your strategy around it. After this round, the narrator falls silent.`,
+          message: `${passiveInfo.description.split('.')[0]}. This passive fires automatically — no action required. Build your strategy around it. After this round, the narrator falls silent.`,
           icon: Heart,
           position: "bottom",
           color: sinColor,
@@ -164,13 +170,19 @@ export default function PracticeAnnotations({
     }
 
     return null;
-  }, [dismissed, isPractice, myPlayer, currentRound, isMyTurn, selectedCardsCount, hasLockedIn, turnPhase, mySin, sinColor]);
+  }, [dismissed, isPractice, myPlayer, currentRound, isMyTurn, selectedCardsCount, hasLockedIn, turnPhase, mySin, sinColor, coachingOff]);
 
   const handleDismiss = (id: string) => {
     setDismissedIds((prev) => new Set(prev).add(id));
   };
 
-  if (!annotation || dismissedIds.has(annotation.id)) return null;
+  const handleToggleOff = () => {
+    setCoachingDisabled(true);
+    setCoachingOff(true);
+    setDismissed(true);
+  };
+
+  if (!annotation || dismissedIds.has(annotation.id) || coachingOff) return null;
 
   const Icon = annotation.icon;
 
@@ -188,10 +200,10 @@ export default function PracticeAnnotations({
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, scale: 0.9 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
-        className={`fixed z-[60] ${positionClasses[annotation.position]} max-w-sm w-[90vw] pointer-events-auto`}
+        className={`fixed ${positionClasses[annotation.position]} max-w-sm w-[90vw] pointer-events-none z-[100]`}
       >
         <div
-          className="rounded-xl border backdrop-blur-md px-4 py-3 shadow-xl"
+          className="rounded-xl border backdrop-blur-md px-4 py-3 shadow-xl pointer-events-auto"
           style={{
             background: `linear-gradient(135deg, ${annotation.color}15, rgba(5, 3, 10, 0.92))`,
             borderColor: `${annotation.color}30`,
@@ -233,13 +245,22 @@ export default function PracticeAnnotations({
               </p>
             </div>
 
-            {/* Dismiss */}
-            <button
-              onClick={() => handleDismiss(annotation.id)}
-              className="shrink-0 p-1 rounded-lg hover:bg-white/10 transition-colors"
-            >
-              <X className="w-3.5 h-3.5 text-white/30" />
-            </button>
+            {/* Dismiss buttons */}
+            <div className="flex flex-col items-center gap-1 shrink-0">
+              <button
+                onClick={handleToggleOff}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                title="Turn off all coaching tips"
+              >
+                <EyeOff className="w-3 h-3 text-white/20" />
+              </button>
+              <button
+                onClick={() => handleDismiss(annotation.id)}
+                className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+              >
+                <X className="w-3.5 h-3.5 text-white/30" />
+              </button>
+            </div>
           </div>
         </div>
       </motion.div>

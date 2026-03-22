@@ -7,13 +7,20 @@
  *
  * Each tip triggers based on game state conditions and shows only once.
  * Stored in localStorage per-tip so each only shows once ever.
+ *
+ * CRITICAL: The outer container uses pointer-events-none so it never
+ * blocks touch/click interactions on the game board beneath it.
+ * Only the inner card uses pointer-events-auto for the dismiss button.
+ *
+ * Users can permanently toggle off coaching via the dismiss-all button.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Zap, Shield, Target, Clock, Flame, ArrowRight, Skull, Eye } from "lucide-react";
+import { X, Zap, Shield, Target, Clock, Flame, ArrowRight, Skull, Eye, EyeOff } from "lucide-react";
 
 const STORAGE_PREFIX = "7sins_coach_";
+const COACHING_DISABLED_KEY = "7sins_coaching_disabled";
 
 interface CoachTip {
   id: string;
@@ -32,7 +39,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.75 0.15 85)",
     title: "The First Temptation",
     narratorFlavor: "Every sinner starts somewhere.",
-    body: "Select a card from your hand, then click an opponent to target them. Or press Pass \u2014 even the patient can win.",
+    body: "Select a card from your hand, then click an opponent to target them. Or press Pass — even the patient can win.",
     autoDismissMs: 12000,
   },
   {
@@ -41,7 +48,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.25 25)",
     title: "Choose Your Victim",
     narratorFlavor: "The weak make easy prey. The strong make worthy enemies.",
-    body: "Click an opponent's portrait to direct your sin at them. Choose wisely \u2014 or don't. The cathedral judges either way.",
+    body: "Click an opponent's portrait to direct your sin at them. Choose wisely — or don't. The cathedral judges either way.",
     autoDismissMs: 8000,
   },
   {
@@ -59,7 +66,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.25 350)",
     title: "The Reaper Draws Near",
     narratorFlavor: "Even the damned must defend themselves.",
-    body: "Your HP is dangerously low. Heal or shield \u2014 a dead sinner plays no cards.",
+    body: "Your HP is dangerously low. Heal or shield — a dead sinner plays no cards.",
     autoDismissMs: 8000,
   },
   {
@@ -68,7 +75,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.15 280)",
     title: "Your Sins Accumulate",
     narratorFlavor: "The compound interest on evil is remarkably consistent.",
-    body: "Your previously played cards are compounding \u2014 dealing increasing damage each round automatically. Early investments pay the richest dividends.",
+    body: "Your previously played cards are compounding — dealing increasing damage each round automatically. Early investments pay the richest dividends.",
     autoDismissMs: 8000,
   },
   {
@@ -86,7 +93,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.25 25)",
     title: "The Cathedral Trembles",
     narratorFlavor: "All afflictions doubled. The endgame has teeth.",
-    body: "At round 16, every active affliction doubles in power. Play aggressively or fortify \u2014 half-measures die here.",
+    body: "At round 16, every active affliction doubles in power. Play aggressively or fortify — half-measures die here.",
     autoDismissMs: 10000,
   },
   {
@@ -95,7 +102,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.2 55)",
     title: "Judgment Approaches",
     narratorFlavor: "The Final Reckoning spares no one.",
-    body: "If round 20 arrives, ALL remaining cards in every hand are played at once. Hoard your best sins \u2014 or use them before the cathedral decides for you.",
+    body: "If round 20 arrives, ALL remaining cards in every hand are played at once. Hoard your best sins — or use them before the cathedral decides for you.",
     autoDismissMs: 10000,
   },
 ];
@@ -120,6 +127,20 @@ function isFirstGame(): boolean {
   } catch {
     return false;
   }
+}
+
+export function isCoachingDisabled(): boolean {
+  try {
+    return localStorage.getItem(COACHING_DISABLED_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+export function setCoachingDisabled(disabled: boolean): void {
+  try {
+    localStorage.setItem(COACHING_DISABLED_KEY, disabled ? "true" : "false");
+  } catch {}
 }
 
 export function markGamePlayed(): void {
@@ -153,13 +174,14 @@ export default function GameCoach({
 }: GameCoachProps) {
   const [activeTip, setActiveTip] = useState<CoachTip | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const [coachingOff, setCoachingOff] = useState(isCoachingDisabled);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shownThisSessionRef = useRef<Set<string>>(new Set());
 
   const firstGame = isFirstGame();
 
   const showTip = useCallback((tipId: string) => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (isTipSeen(tipId)) return;
     if (shownThisSessionRef.current.has(tipId)) return;
 
@@ -178,7 +200,7 @@ export default function GameCoach({
         setTimeout(() => setActiveTip(null), 300);
       }, tip.autoDismissMs);
     }
-  }, [firstGame]);
+  }, [firstGame, coachingOff]);
 
   const dismissTip = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
@@ -186,62 +208,68 @@ export default function GameCoach({
     setTimeout(() => setActiveTip(null), 300);
   }, []);
 
+  const toggleCoachingOff = useCallback(() => {
+    setCoachingDisabled(true);
+    setCoachingOff(true);
+    dismissTip();
+  }, [dismissTip]);
+
   // Trigger tips based on game state
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (round === 1 && isSelectionPhase && !hasSelectedCard) {
       showTip("first_turn");
     }
-  }, [round, isSelectionPhase, hasSelectedCard, firstGame, showTip]);
+  }, [round, isSelectionPhase, hasSelectedCard, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (hasSelectedCard && isSelectionPhase) {
       showTip("select_target");
     }
-  }, [hasSelectedCard, isSelectionPhase, firstGame, showTip]);
+  }, [hasSelectedCard, isSelectionPhase, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (energy <= 1 && isSelectionPhase && round > 1) {
       showTip("low_energy");
     }
-  }, [energy, isSelectionPhase, round, firstGame, showTip]);
+  }, [energy, isSelectionPhase, round, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (playerHp < maxHp * 0.3 && playerHp > 0) {
       showTip("low_hp");
     }
-  }, [playerHp, maxHp, firstGame, showTip]);
+  }, [playerHp, maxHp, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (hasActiveCompounds && round > 2) {
       showTip("compound_ticking");
     }
-  }, [hasActiveCompounds, round, firstGame, showTip]);
+  }, [hasActiveCompounds, round, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (cardJustPlayed) {
       showTip("card_played");
     }
-  }, [cardJustPlayed, firstGame, showTip]);
+  }, [cardJustPlayed, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (afflictionsDoubled) {
       showTip("affliction_doubled");
     }
-  }, [afflictionsDoubled, firstGame, showTip]);
+  }, [afflictionsDoubled, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
-    if (!firstGame) return;
+    if (!firstGame || coachingOff) return;
     if (round >= 18) {
       showTip("reckoning_soon");
     }
-  }, [round, firstGame, showTip]);
+  }, [round, firstGame, coachingOff, showTip]);
 
   useEffect(() => {
     return () => {
@@ -249,7 +277,7 @@ export default function GameCoach({
     };
   }, []);
 
-  if (!activeTip) return null;
+  if (!activeTip || coachingOff) return null;
 
   return (
     <AnimatePresence>
@@ -259,10 +287,10 @@ export default function GameCoach({
           animate={{ opacity: 1, y: 0, x: "-50%" }}
           exit={{ opacity: 0, y: 20, x: "-50%" }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed bottom-24 sm:bottom-28 left-1/2 z-[9990] w-[calc(100%-2rem)] max-w-sm pointer-events-auto"
+          className="fixed bottom-24 sm:bottom-28 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm pointer-events-none"
         >
           <div
-            className="rounded-xl p-3.5 sm:p-4 backdrop-blur-xl border shadow-lg"
+            className="rounded-xl p-3.5 sm:p-4 backdrop-blur-xl border shadow-lg pointer-events-auto"
             style={{
               background: "oklch(0.12 0.02 280 / 0.92)",
               borderColor: `${activeTip.color}30`,
@@ -287,12 +315,23 @@ export default function GameCoach({
                   >
                     {activeTip.title}
                   </h4>
-                  <button
-                    onClick={dismissTip}
-                    className="text-white/20 hover:text-white/50 transition-colors p-0.5 shrink-0 ml-2"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0 ml-2">
+                    {/* Toggle off all coaching */}
+                    <button
+                      onClick={toggleCoachingOff}
+                      className="text-white/15 hover:text-white/40 transition-colors p-0.5"
+                      title="Turn off coaching tips"
+                    >
+                      <EyeOff className="w-3 h-3" />
+                    </button>
+                    {/* Dismiss this tip */}
+                    <button
+                      onClick={dismissTip}
+                      className="text-white/20 hover:text-white/50 transition-colors p-0.5"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
                 {/* Narrator flavor */}
                 <p

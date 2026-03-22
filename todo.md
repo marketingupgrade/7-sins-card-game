@@ -2167,3 +2167,13 @@
 - [x] Narrator quotes between every section
 - [x] "DESCEND INTO THE CATHEDRAL" CTA at bottom
 - [x] Uses exact brand terminology: corruption, sins, malice, sinner, the Reckoning, dark liturgy
+
+### v6.6.1 — Critical Mobile Bug Fix
+- [x] FIX: GameCoach overlay blocks touch targeting on mobile — game unplayable
+- [x] FIX: Onboarding/coaching overlays use pointer-events-none on outer container
+- [x] Add dismiss/toggle button for GameCoach tips (EyeOff icon to disable all coaching)
+- [x] Add dismiss/toggle button for PracticeAnnotations (shared toggle via localStorage)
+- [x] All coaching overlays are non-blocking on mobile (pointer-events-auto only on inner card)
+- [x] Reduced z-index from z-[9990] to z-[100] to avoid blocking other UI
+- [x] Write tests for the fix (19 new tests, 820 total passing)
+- [ ] Push to GitHub
