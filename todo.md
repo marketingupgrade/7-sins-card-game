@@ -2136,3 +2136,34 @@
 - [x] Write tests for brand voice compliance (34 new tests, 774 total passing)
 - [x] Update patch notes (v6.5.0 "The Cathedral Speaks")
 - [x] Push to GitHub
+
+### v6.6.0 - GameBoard Brand Voice, Transitions & Sound Design
+- [x] Rebrand GameBoard top bar: round counter, phase labels, timer with cathedral terminology
+- [x] Rebrand lock-in button with branded CTA language ("Seal Your Fate")
+- [x] Rebrand player panel labels and status text
+- [x] Rebrand card selection/targeting UI text
+- [x] Build branded game loading screen with narrator quotes (10 rotating quotes)
+- [x] Build between-round transition screen with narrator commentary (22 quotes across 4 phases)
+- [x] Build round-start announcement with dramatic reveal
+- [x] Integrate cathedral bell toll sound for round start (3 intensity levels)
+- [x] Integrate whisper sound effect for narrator quotes
+- [x] Integrate deep resonance for Reckoning and elimination toll
+- [x] Integrate choir pad for game start loading screen
+- [x] Sound system uses Web Audio API synthesis (no external files)
+- [x] Sound respects existing SFX volume/mute settings
+- [x] Write tests for branded UI text and sound system (27 new tests, 801 total passing)
+- [x] Update patch notes (v6.6.0 "The Cathedral Resounds")
+- [ ] Push to GitHub
+
+### v6.6.0 Addendum: How to Play Brand Book Compliance
+- [x] How to Play page already matches brand book structure from 7sinscardgame.com/how-to-play
+- [x] Section 1: "The Only Commandment" with stats (4 Sinners, 20 Rounds) and Final Reckoning explanation
+- [x] Section 2: "The Ritual" with 30s timer, three-step selection flow
+- [x] Section 3: "Corruption" with energy progression visual and carry-over explanation
+- [x] Section 4: "The Art of Compounding Sin" with Fibonacci growth visualization and math
+- [x] Section 5: "Choosing Your Victims" with target mode explanations
+- [x] Section 6: "The Seven Deadly Paths" with faction passives
+- [x] Section 7: "Whispers from the Damned" with 6 branded strategy tips
+- [x] Narrator quotes between every section
+- [x] "DESCEND INTO THE CATHEDRAL" CTA at bottom
+- [x] Uses exact brand terminology: corruption, sins, malice, sinner, the Reckoning, dark liturgy

@@ -84,6 +84,27 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.6.0",
+    date: "March 2026",
+    title: "The Cathedral Resounds",
+    summary: "The cathedral now speaks through every moment of gameplay. Branded loading screens with rotating narrator quotes replace generic spinners. Between-round transitions feature dramatic cathedral reveals with phase-appropriate commentary — early rounds whisper patience, late rounds warn of the Reckoning. A full procedural sound design system synthesizes cathedral bell tolls, ethereal whispers, deep resonance, and choir pads using Web Audio API — no external files, all atmosphere.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Cathedral Loading Screen: branded game loading with 10 rotating narrator quotes and gothic cross animation replaces generic spinner" },
+      { category: "feature", text: "Between-Round Transitions: dramatic cathedral overlay with 22 narrator quotes across 4 phases (early, mid, late, reckoning) — commentary intensifies as the game progresses" },
+      { category: "feature", text: "Elimination Announcements: when a sinner falls, a dedicated transition with mournful narrator quotes marks their departure" },
+      { category: "feature", text: "Cathedral Bell Tolls: procedurally synthesized bell sounds with 3 intensity levels (soft for early rounds, normal for mid, deep for late) using harmonic overtones" },
+      { category: "feature", text: "Ethereal Whispers: breathy filtered noise bursts accompany narrator quote appearances during transitions" },
+      { category: "feature", text: "Deep Resonance: sub-bass drone with descending pitch marks the Final Reckoning — you'll feel it before you see it" },
+      { category: "feature", text: "Choir Pad: ethereal minor chord with detuned voices plays during game loading, setting the cathedral atmosphere from the first moment" },
+      { category: "feature", text: "Elimination Toll: two slow, mournful bell strikes mark each sinner's fall" },
+      { category: "feature", text: "All cathedral sounds are procedurally generated via Web Audio API — zero external audio files, instant playback, no loading" },
+      { category: "feature", text: "Sound system respects existing SFX volume and mute settings — toggle once, controls everything" },
+      { category: "feature", text: "GameBoard UI rebranded: 'Rite' replaces 'Round' in action feed, branded timer warnings, cathedral terminology throughout" },
+      { category: "fix", text: "How to Play page confirmed fully compliant with brand book structure from 7sinscardgame.com/how-to-play" },
+    ],
+  },
+  {
     version: "6.5.0",
     date: "March 2026",
     title: "The Cathedral Speaks",

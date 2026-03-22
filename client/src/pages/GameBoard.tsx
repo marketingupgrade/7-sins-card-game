@@ -57,6 +57,8 @@ import SinDrone from "@/components/SinDrone";
 import SinReactiveBackground from "@/components/SinReactiveBackground";
 const DeathSequence = lazy(() => import("@/components/DeathSequence"));
 import SinCursor from "@/components/SinCursor";
+import GameLoadingScreen from "@/components/GameLoadingScreen";
+import CathedralTransition from "@/components/CathedralTransition";
 const CardPlayArc = lazy(() => import("@/components/CardPlayArc"));
 const SinShaderOverlay = lazy(() => import("@/components/WebGLSinShaders"));
 import WebSpeechNarrator from "@/components/WebSpeechNarrator";
@@ -312,9 +314,9 @@ export default function GameBoard() {
     gameState,
     onBotAction: (result) => {
       if (result.action === "play" && result.botName) {
-        addToActionFeed(`${result.botName} locked in ${result.cardsPlayed || 0} card${(result.cardsPlayed || 0) !== 1 ? "s" : ""}`);
+        addToActionFeed(`${result.botName} sealed ${result.cardsPlayed || 0} sin${(result.cardsPlayed || 0) !== 1 ? "s" : ""}`);
       } else if (result.action === "pass" && result.botName) {
-        addToActionFeed(`${result.botName} is thinking...`);
+        addToActionFeed(`${result.botName} contemplates their damnation.`);
       }
     },
     onAllBotsLocked: (summary) => {
@@ -580,7 +582,7 @@ export default function GameBoard() {
         // Trigger round wipe
         setWipeRound(gameState.currentRound);
         setShowRoundWipe(true);
-        const message = `Round ${gameState.currentRound} begins`;
+        const message = `Rite ${gameState.currentRound} commences`;
         addRandomLine("roundStart", { round: String(gameState.currentRound) });
         addToActionFeed(message);
       }
@@ -706,7 +708,7 @@ export default function GameBoard() {
       const result = await lockInCards(gameId, playerId, selectedCards);
       setHasLockedIn(true);
       addMessage(result.narratorQuip, "action");
-      addToActionFeed(`${myPlayer?.username} locked in ${selectedCards.length} card${selectedCards.length !== 1 ? "s" : ""}`);
+      addToActionFeed(`${myPlayer?.username} sealed ${selectedCards.length} sin${selectedCards.length !== 1 ? "s" : ""}`);
       setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
@@ -735,7 +737,7 @@ export default function GameBoard() {
       refetch();
     } catch (err: any) {
       console.error("[LockIn]", err);
-      addMessage("Lock-in failed. Try again.", "info");
+      addMessage("Even sin has rules, mortal. Try again.", "info");
     } finally {
       setIsLockingIn(false);
     }
@@ -749,7 +751,7 @@ export default function GameBoard() {
       const result = await lockInCards(gameId, playerId, []);
       setHasLockedIn(true);
       addMessage("Choosing to do nothing? Bold strategy.", "action");
-      addToActionFeed(`${myPlayer?.username} passed (locked in 0 cards)`);
+      addToActionFeed(`${myPlayer?.username} abstains this rite.`);
       setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
@@ -924,7 +926,7 @@ export default function GameBoard() {
       refetch();
     } catch (err: any) {
       console.error("[PlayCard]", err);
-      addMessage("Could not play that card. Try again.", "info");
+      addMessage("Even hell has its bureaucracy. Try again.", "info");
     } finally {
       setIsPlayingCard(false);
     }
@@ -1014,16 +1016,7 @@ export default function GameBoard() {
   }
 
   if (isLoading || !gameState) {
-    return (
-      <div className="min-h-screen bg-arena flex items-center justify-center noise-overlay">
-        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
-          <div className="w-12 h-12 rounded-full border-2 border-wrath/50 border-t-wrath" />
-        </motion.div>
-        <p className="ml-4 text-sm text-muted-foreground" style={{ fontFamily: "var(--font-body)" }}>
-          Loading the arena of regret...
-        </p>
-      </div>
-    );
+    return <GameLoadingScreen />;
   }
 
   const mySin = (myPlayer?.chosenSin || 'wrath') as SinType;
@@ -1131,6 +1124,14 @@ export default function GameBoard() {
         onComplete={() => setShowRoundWipe(false)}
       />
 
+      {/* Tier 1: Cathedral Transition — branded narrator quote between rounds */}
+      <CathedralTransition
+        round={gameState.currentRound}
+        maxRounds={MAX_ROUNDS}
+        show={showRoundWipe}
+        type="round"
+      />
+
       {/* Tier 1: HP Critical Heartbeat */}
       <HpCriticalOverlay
         hpPercent={(myPlayer?.currentHp ?? 25) / (myPlayer?.maxHp ?? 25)}
@@ -1171,7 +1172,7 @@ export default function GameBoard() {
           <div className="flex items-center gap-1.5 md:gap-2">
             <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
             <span className="text-sm md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              <span className="hidden md:inline">Round </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
+              <span className="hidden md:inline">Rite </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>
           </div>
         </div>
@@ -1190,11 +1191,11 @@ export default function GameBoard() {
           <button
             onClick={() => setShowLog(!showLog)}
             className="relative p-1 md:p-2 rounded-lg transition-all hover:bg-candle/10 group"
-            title="Battle Log"
+            title="Scroll of Sins"
           >
             <img
               src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg"
-              alt="Battle Log"
+              alt="Scroll of Sins"
               className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60 group-hover:opacity-90 transition-opacity"
             />
             {logEntries.filter(e => e.action_type === 'play_card').length > 0 && (
@@ -1548,7 +1549,7 @@ export default function GameBoard() {
                     fontFamily: "var(--font-body)",
                     color: turnTimerSeconds <= 3 ? "oklch(0.70 0.20 30)" : "oklch(0.65 0.08 85)",
                   }}>
-                    {turnTimerSeconds <= 3 ? "Hurry! Auto-lock imminent" : "Opponent locked in — your turn!"}
+                    {turnTimerSeconds <= 3 ? "The cathedral grows impatient." : "A sinner has sealed their fate. Your move."}
                   </span>
                   {/* Progress bar */}
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-lg overflow-hidden">
@@ -1575,13 +1576,13 @@ export default function GameBoard() {
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/20 text-candle text-xs font-black">1</span>
-                  <span>Select cards from your hand</span>
+                  <span>Choose your sins</span>
                   <span className="text-candle/20 mx-1">→</span>
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/10 text-candle/30 text-xs font-black">2</span>
-                  <span className="text-candle/30">Choose targets</span>
+                  <span className="text-candle/30">Mark the damned</span>
                   <span className="text-candle/20 mx-1">→</span>
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/10 text-candle/30 text-xs font-black">3</span>
-                  <span className="text-candle/30">Lock in</span>
+                  <span className="text-candle/30">Seal fate</span>
                 </motion.div>
               )}
               {selectedCards.length > 0 && (() => {
@@ -1595,18 +1596,18 @@ export default function GameBoard() {
                 return (
                   <div className="flex flex-col items-center gap-1">
                     <div className="text-sm md:text-base text-candle/80 font-bold" style={{ fontFamily: "var(--font-heading)" }}>
-                      {selectedCards.length} card{selectedCards.length !== 1 ? "s" : ""} {"\u00B7"} {energyRemaining} energy left
+                      {selectedCards.length} sin{selectedCards.length !== 1 ? "s" : ""} {"\u00B7"} {energyRemaining} corruption remaining
                     </div>
                     {/* Step indicator — highlight current step */}
                     <div className="flex items-center gap-2 text-xs" style={{ fontFamily: "var(--font-body)" }}>
                       <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-candle/20 text-candle text-[10px] font-black">✓</span>
-                      <span className="text-candle/40">Cards</span>
+                      <span className="text-candle/40">Sins</span>
                       <span className="text-candle/20">→</span>
                       <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-black ${anyNeedsTarget ? 'bg-amber-500/30 text-amber-400 animate-pulse' : 'bg-candle/20 text-candle'}`}>{allHaveTargets ? '✓' : '2'}</span>
-                      <span className={anyNeedsTarget ? 'text-amber-400 font-bold' : 'text-candle/40'}>Targets</span>
+                      <span className={anyNeedsTarget ? 'text-amber-400 font-bold' : 'text-candle/40'}>Damned</span>
                       <span className="text-candle/20">→</span>
                       <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-black ${allHaveTargets ? 'bg-candle/20 text-candle' : 'bg-candle/10 text-candle/30'}`}>3</span>
-                      <span className={allHaveTargets ? 'text-candle/60' : 'text-candle/30'}>Lock in</span>
+                      <span className={allHaveTargets ? 'text-candle/60' : 'text-candle/30'}>Seal fate</span>
                     </div>
                     {/* Warning: cards without targets will be skipped */}
                     {anyNeedsTarget && (
@@ -1622,7 +1623,7 @@ export default function GameBoard() {
                         }}
                       >
                         <span>⚠</span>
-                        <span>Click an opponent to assign targets — untargeted cards won't play!</span>
+                        <span>Mark the damned. Sins without targets are wasted prayers.</span>
                       </motion.div>
                     )}
                   </div>
@@ -1654,7 +1655,7 @@ export default function GameBoard() {
                   onClick={handleLockIn}
                   disabled={isLockingIn || selectedCards.length === 0}
                 >
-                  {isLockingIn ? "LOCKING IN..." : `LOCK IN${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
+                  {isLockingIn ? "SEALING..." : `SEAL FATE${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
                 </motion.button>
                 <motion.button
                   data-tutorial="pass-btn"
@@ -1682,7 +1683,7 @@ export default function GameBoard() {
                   onClick={handlePassLockIn}
                   disabled={isLockingIn}
                 >
-                  {isLockingIn ? "..." : !canAffordAnyCard && selectedCards.length === 0 ? "PASS TURN" : "PASS"}
+                  {isLockingIn ? "..." : !canAffordAnyCard && selectedCards.length === 0 ? "ABSTAIN" : "ABSTAIN"}
                 </motion.button>
                 {/* Brandbook narrator hint when corruption runs dry */}
                 {!canAffordAnyCard && selectedCards.length === 0 && (
@@ -1709,9 +1710,9 @@ export default function GameBoard() {
               style={{ fontFamily: "var(--font-body)" }}
             >
               {(turnPhase === "resolution" || turnPhase === "round_end" || isShowingResolution)
-                ? "The sins are clashing..."
+                ? "The cathedral tallies the cost."
                 : hasLockedIn
-                  ? "Locked in. Waiting on the others..."
+                  ? "Your fate is sealed. The others still deliberate."
                   : "Pick your cards, sinner."}
             </motion.p>
           )}
