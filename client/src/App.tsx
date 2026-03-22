@@ -51,6 +51,7 @@ const CommunityDecks = lazy(() => import("./pages/CommunityDecks"));
 const Chronicles = lazy(() => import("./pages/Chronicles"));
 const ChronicleView = lazy(() => import("./pages/ChronicleView"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
+const HowToPlay = lazy(() => import("./pages/HowToPlay"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -103,6 +104,7 @@ function Router() {
         <Route path="/balance" component={BalanceAnalysis} />
         <Route path="/matchups" component={MatchupMatrix} />
         <Route path="/rules" component={GameRules} />
+        <Route path="/how-to-play" component={HowToPlay} />
         <Route path="/deck-builder" component={DeckBuilder} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />

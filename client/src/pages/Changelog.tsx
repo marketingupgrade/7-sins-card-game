@@ -84,6 +84,26 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.2.0",
+    date: "March 2026",
+    title: "The Initiation Rites",
+    summary: "A complete overhaul of the onboarding and tutorial system based on playtester feedback. New players now experience a three-stage progressive onboarding: a 4-slide Quick Start modal before their first game, contextual coaching tips during gameplay, and a comprehensive interactive How to Play guide. No more walls of text — every mechanic is taught visually, in context, exactly when you need it.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Interactive How to Play guide (/how-to-play) with 8 animated sections: Goal, Energy, Cards, Compound Effects, Factions, Targeting, Milestones, and Pro Tips" },
+      { category: "feature", text: "Animated compound pattern visualizations: Standard (balanced), Aggressive (early burst), and Slowburn (late power) strategies shown with live-animated timeline bars" },
+      { category: "feature", text: "Faction quick-reference cards with passive ability descriptions, SWOT analysis, and portrait art for all 7 sins" },
+      { category: "feature", text: "Quick Start modal: 4-slide visual intro that appears in the Lobby before a new player's first game — covers survival goal, energy, compound mechanics, and faction selection" },
+      { category: "feature", text: "GameCoach system: 8 contextual floating tips during first game — first turn guidance, target selection, low energy advice, low HP warning, compound explanation, card played confirmation, affliction doubling alert, and Final Reckoning warning" },
+      { category: "feature", text: "InGameTooltips component: hover tooltips for energy, HP, shield, and round counter that explain mechanics in context" },
+      { category: "feature", text: "Progressive disclosure onboarding flow: Quick Start (30 sec) → GameCoach (first game) → How to Play (deep reference) — each layer adds depth without overwhelming" },
+      { category: "feature", text: "All coaching tips auto-dismiss with animated progress bars and are stored in localStorage so they only show once per player" },
+      { category: "feature", text: "How to Play page linked from Home page button, SigilMenu navigation, and footer links" },
+      { category: "fix", text: "Removed auto-triggering tooltip tutorial on Home page that confused new players — replaced with dedicated How to Play page" },
+      { category: "feature", text: "30 new vitest tests for onboarding system — all 648 tests passing" },
+    ],
+  },
+  {
     version: "6.1.0",
     date: "March 2026",
     title: "The Illuminated Manuscripts",

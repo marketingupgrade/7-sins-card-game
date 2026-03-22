@@ -195,14 +195,9 @@ export default function Home() {
     };
   }, []);
 
-  const autoTriggeredRef = useState(() => ({ current: false }))[0];
-  useEffect(() => {
-    if (!tutorialCompleted && !tutorialActive && !autoTriggeredRef.current) {
-      autoTriggeredRef.current = true;
-      const timer = setTimeout(() => startTutorial("home"), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // First-time visitors: no longer auto-trigger the tooltip tutorial.
+  // Instead, the QuickStart modal in the Lobby and the How to Play page handle onboarding.
+  // The old tooltip tutorial is still accessible from the SigilMenu → Game Rules.
 
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState(() => localStorage.getItem("7sins_username") || "");
@@ -534,17 +529,18 @@ export default function Home() {
                   </div>
 
                   {/* ─── Tertiary: How to Play ─── */}
-                  <motion.button
-                    data-tutorial="how-to-play"
-                    whileHover={{ scale: 1.02, y: -1 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => startTutorial("home")}
-                    className="w-full rounded-xl py-2 px-6 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
-                    <GraduationCap className="w-3.5 h-3.5" />
-                    HOW TO PLAY
-                  </motion.button>
+                  <Link href="/how-to-play">
+                    <motion.div
+                      data-tutorial="how-to-play"
+                      whileHover={{ scale: 1.02, y: -1 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full rounded-xl py-2 px-6 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    >
+                      <GraduationCap className="w-3.5 h-3.5" />
+                      HOW TO PLAY
+                    </motion.div>
+                  </Link>
 
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />
@@ -660,6 +656,7 @@ export default function Home() {
                 { label: "Community Decks", href: "/community" },
                 { label: "Deck Builder", href: "/deck-builder" },
                 { label: "Game Rules", href: "/rules" },
+                { label: "How to Play", href: "/how-to-play" },
                 { label: "Lore", href: "/blog" },
                 { label: "Matchup Matrix", href: "/matchups" },
                 { label: "Chronicles", href: "/chronicles" },

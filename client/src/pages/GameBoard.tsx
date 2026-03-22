@@ -49,6 +49,7 @@ import YourTurnBanner from "@/components/YourTurnBanner";
 import ScreenShake from "@/components/ScreenShake";
 import EnergyOrbs from "@/components/EnergyOrbs";
 import HpCriticalOverlay from "@/components/HpCriticalOverlay";
+import GameCoach, { markGamePlayed } from "@/components/GameCoach";
 import RoundTransitionWipe from "@/components/RoundTransitionWipe";
 import SinDrone from "@/components/SinDrone";
 import SinReactiveBackground from "@/components/SinReactiveBackground";
@@ -1113,6 +1114,21 @@ export default function GameBoard() {
         hpPercent={(myPlayer?.currentHp ?? 25) / (myPlayer?.maxHp ?? 25)}
         isActive={myPlayer?.isAlive ?? true}
       />
+
+      {/* First-Game Coaching Tips */}
+      {myPlayer && gameState && (
+        <GameCoach
+          round={gameState.currentRound}
+          playerHp={myPlayer.currentHp}
+          maxHp={myPlayer.maxHp}
+          energy={myPlayer.currentEnergy}
+          isSelectionPhase={turnPhase === "selection"}
+          hasSelectedCard={selectedCards.length > 0}
+          hasActiveCompounds={(gameState.activeEffects?.filter(e => e.sourcePlayerId === myPlayer.gamePlayerId)?.length ?? 0) > 0}
+          cardJustPlayed={false}
+          afflictionsDoubled={gameState.currentRound >= 16}
+        />
+      )}
 
       {/* Top Bar — Gothic Stone Header (compact on mobile) */}
       <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>

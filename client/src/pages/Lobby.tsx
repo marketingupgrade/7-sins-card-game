@@ -26,6 +26,7 @@ import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
+import QuickStartModal, { useQuickStartNeeded } from "@/components/QuickStartModal";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
 import { PASSIVE_INFO, FACTION_SWOT, TIMER_OPTIONS, DEFAULT_TURN_TIMER } from "@shared/gameTypes";
 
@@ -356,6 +357,9 @@ export default function Lobby() {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ background: "linear-gradient(180deg, #0a0810 0%, #12101a 50%, #0a0810 100%)" }}>
+      {/* Quick Start modal for first-time players */}
+      <QuickStartModal />
+
       {/* Babylon.js 3D Cathedral Background */}
       <Suspense fallback={null}>
         <LobbyBabylonScene className="opacity-60" />

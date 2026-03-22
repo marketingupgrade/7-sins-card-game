@@ -2077,3 +2077,22 @@
 - [x] Update patch notes (v6.1.0 "The Illuminated Manuscripts")
 - [x] Add generateCoverArt tRPC endpoint for existing chronicles
 - [x] Push to GitHub
+
+### Onboarding & Tutorial Overhaul (Playtester Feedback)
+- [x] Build dedicated interactive "How to Play" guide page (/how-to-play) with 8 animated sections
+- [x] Add animated visual examples for compound patterns (Standard/Aggressive/Slowburn)
+- [x] Create faction quick-reference cards with passive ability explanations
+- [x] Add GameCoach contextual coaching during first game (8 tip types)
+- [x] Implement smart first-turn hints (first_turn, select_target, low_energy tips)
+- [x] Add InGameTooltips component (energy, HP, round, shield tooltips)
+- [x] Create QuickStart modal (4-slide visual intro in Lobby, shows once)
+- [x] QuickStart modal covers sin selection and energy basics before first game
+- [x] GameCoach provides contextual floating tips during gameplay
+- [ ] Add "Why did I lose?" post-game analysis tips for new players (future)
+- [ ] Create beginner-friendly card sorting/filtering in hand (future)
+- [x] Add energy management tips (low_energy GameCoach tip)
+- [x] Implement progressive disclosure (QuickStart → GameCoach → How to Play page)
+- [x] Add first-turn coaching via GameCoach (first_turn + select_target tips)
+- [x] Write tests for onboarding system (30 tests passing, 648 total)
+- [x] Update patch notes (v6.2.0 "The Initiation Rites")
+- [ ] Push to GitHub
