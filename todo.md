@@ -2119,4 +2119,4 @@
 - [x] Turn Phase Timeline: visual phase progression bar
 - [x] Write tests for new UI components (50 new tests, 740 total passing)
 - [x] Update patch notes (v6.4.0 "The Seer's Lens")
-- [ ] Push to GitHub
+- [x] Push to GitHub
