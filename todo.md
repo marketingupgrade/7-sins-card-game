@@ -2153,7 +2153,7 @@
 - [x] Sound respects existing SFX volume/mute settings
 - [x] Write tests for branded UI text and sound system (27 new tests, 801 total passing)
 - [x] Update patch notes (v6.6.0 "The Cathedral Resounds")
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ### v6.6.0 Addendum: How to Play Brand Book Compliance
 - [x] How to Play page already matches brand book structure from 7sinscardgame.com/how-to-play
