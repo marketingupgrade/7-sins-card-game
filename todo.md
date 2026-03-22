@@ -2120,3 +2120,19 @@
 - [x] Write tests for new UI components (50 new tests, 740 total passing)
 - [x] Update patch notes (v6.4.0 "The Seer's Lens")
 - [x] Push to GitHub
+
+### v6.5.0 - Brand Book Onboarding Overhaul
+- [x] Rewrite How to Play page: narrator voice, gothic cathedral aesthetic, Cinzel/Cormorant fonts
+- [x] Rewrite How to Play page: proper information hierarchy (Layer 1/2/3 per Miller's Law)
+- [x] Rewrite How to Play page: faction identity profiles with branded descriptions
+- [x] Rewrite QuickStart Modal: sardonic narrator voice, cathedral metaphors, branded copy
+- [x] Rewrite GameCoach tips: replace generic tips with branded narrator voice
+- [x] Rewrite PracticeAnnotations: branded voice for round-by-round teaching
+- [x] Rewrite PracticeMode briefing steps with branded narrator quotes
+- [x] Rewrite PostGameAnalysis with cathedral terminology and branded tips
+- [x] Apply 60-30-10 color rule across all onboarding components
+- [x] Use proper branded copy patterns (e.g., "Every sinner starts somewhere" not "Let's learn the basics")
+- [x] Ensure Fibonacci spacing system in onboarding layouts
+- [x] Write tests for brand voice compliance (34 new tests, 774 total passing)
+- [x] Update patch notes (v6.5.0 "The Cathedral Speaks")
+- [ ] Push to GitHub

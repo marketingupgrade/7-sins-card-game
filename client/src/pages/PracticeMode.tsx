@@ -29,13 +29,13 @@ const lazyGameEngine = () => import("@/lib/gameEngine");
 const lazyBotEngine = () => import("@/lib/botEngine");
 
 const PRACTICE_SINS: { sin: SinType; label: string; desc: string; difficulty: string }[] = [
-  { sin: "wrath", label: "Wrath", desc: "Pure aggression. Deal damage, reflect damage.", difficulty: "Easy" },
-  { sin: "sloth", label: "Sloth", desc: "Defensive tank. Shields and endurance.", difficulty: "Easy" },
-  { sin: "greed", label: "Greed", desc: "Economy engine. Tax damage into shields.", difficulty: "Medium" },
-  { sin: "envy", label: "Envy", desc: "Steal effects. Copy what others build.", difficulty: "Medium" },
-  { sin: "lust", label: "Lust", desc: "Lifesteal. Deal damage, heal yourself.", difficulty: "Easy" },
-  { sin: "pride", label: "Pride", desc: "High risk. Multiply your strongest card.", difficulty: "Hard" },
-  { sin: "gluttony", label: "Gluttony", desc: "Burn cards for energy. Overwhelm with volume.", difficulty: "Hard" },
+  { sin: "wrath", label: "Wrath", desc: "The blunt instrument. Deal damage, reflect it back.", difficulty: "Easy" },
+  { sin: "sloth", label: "Sloth", desc: "The immovable object. Shields and stubborn endurance.", difficulty: "Easy" },
+  { sin: "greed", label: "Greed", desc: "The tax collector. Convert damage into personal wealth.", difficulty: "Medium" },
+  { sin: "envy", label: "Envy", desc: "The mimic. Steal what others build.", difficulty: "Medium" },
+  { sin: "lust", label: "Lust", desc: "The parasite. Deal damage, drink the health.", difficulty: "Easy" },
+  { sin: "pride", label: "Pride", desc: "The gambler. Multiply your strongest — or lose everything.", difficulty: "Hard" },
+  { sin: "gluttony", label: "Gluttony", desc: "The devourer. Burn cards for power. Overwhelm with volume.", difficulty: "Hard" },
 ];
 
 const SIN_COLORS: Record<string, string> = {
@@ -46,6 +46,7 @@ const SIN_COLORS: Record<string, string> = {
 interface PracticeStep {
   id: string;
   title: string;
+  narratorQuote: string;
   content: string;
   icon: typeof Swords;
   highlight?: string;
@@ -54,50 +55,58 @@ interface PracticeStep {
 const PRACTICE_STEPS: PracticeStep[] = [
   {
     id: "welcome",
-    title: "Welcome to Practice Mode",
-    content: "This is a guided 1v1 match against a bot. I'll walk you through the basics. You can take your time — there's no turn timer in practice.",
+    title: "The Training Grounds",
+    narratorQuote: "Every sinner starts somewhere. Usually at the bottom.",
+    content: "This is a guided 1v1 match against a bot. The narrator will walk you through the fundamentals. Take your time — there's no turn timer in the training grounds.",
     icon: GraduationCap,
   },
   {
     id: "energy",
-    title: "Energy is Your Currency",
-    content: "You start with 2 energy and gain +1 each round (max 7). Every card costs energy to play. Unspent energy carries over to the next round, so don't waste it!",
+    title: "The Price of Power",
+    narratorQuote: "Corruption is currency. Spend it wisely, or don't — the cathedral profits either way.",
+    content: "You start with 2 corruption and gain +1 each round (max 7). Every card costs corruption to play. Unspent corruption carries over — restraint today enables devastation tomorrow.",
     icon: Zap,
   },
   {
     id: "cards",
-    title: "Playing Cards",
-    content: "Click a card in your hand to select it, then click an opponent to target them. You can select multiple cards per turn. When you're done, hit LOCK IN to confirm your plays.",
+    title: "Committing Your Sins",
+    narratorQuote: "Select your weapon. Point it at someone who deserves it. Or doesn't.",
+    content: "Select a card from your hand, then click an opponent to direct your sin at them. You can commit multiple sins per turn if you have the corruption. When you're done, LOCK IN to seal your fate.",
     icon: Swords,
   },
   {
     id: "compound",
-    title: "Compound Effects",
-    content: "ALL cards in this game have compound effects — they tick every round after being played. A damage card played on round 1 will keep dealing damage on rounds 2, 3, 4... The earlier you play, the more total value you get!",
+    title: "The Compound Interest on Evil",
+    narratorQuote: "A sin planted early grows roots. A sin planted late merely scratches the surface.",
+    content: "ALL cards create compound effects that tick every round after being played. A damage card played on round 1 keeps dealing damage on rounds 2, 3, 4… with increasing multipliers. The earlier you invest your sins, the greater the returns.",
     icon: Sparkles,
   },
   {
     id: "defense",
-    title: "Don't Forget Defense",
-    content: "Healing and shield cards are just as important as damage. If you die, you lose — even if you dealt the most damage. Mix offense and defense based on your HP.",
+    title: "Even the Damned Must Defend",
+    narratorQuote: "A dead sinner plays no cards. Remember that.",
+    content: "Healing and shield cards are just as important as damage. If your HP hits zero, your story ends — even if you dealt the most damage. Mix offense and defense based on your survival needs.",
     icon: Shield,
   },
   {
     id: "passive",
-    title: "Your Faction Passive",
-    content: "Each sin has a unique passive ability that triggers automatically. Check the info panel to see what yours does. Build your strategy around it!",
+    title: "Your Sin Works in the Shadows",
+    narratorQuote: "The best sins are the ones that work while you sleep.",
+    content: "Each faction has a unique passive ability that triggers automatically. It fires without your input — build your strategy around it. Your sin defines your path to victory.",
     icon: Heart,
   },
   {
     id: "targeting",
-    title: "Smart Targeting",
-    content: "Don't spread damage across all opponents. Focus fire on one target to eliminate them. In a 1v1 practice, you only have one target — but in real games, choosing who to attack is crucial.",
+    title: "Choose Your Victim Wisely",
+    narratorQuote: "Scatter your sins and you scatter your power. Focus, and worlds crumble.",
+    content: "Don't spread damage across all opponents. Focus fire on one target to eliminate them. In this practice, you only have one victim — but in real games, choosing who to destroy is half the strategy.",
     icon: Target,
   },
   {
     id: "go",
-    title: "You're Ready!",
-    content: "The annotations will fade after round 3. From then on, you're on your own. Good luck, sinner. Remember: play cards early, spend all your energy, and don't die.",
+    title: "The Cathedral Awaits",
+    narratorQuote: "The training wheels come off. Try not to crash into anything holy.",
+    content: "The narrator will guide you for the first 3 rounds, then fall silent. From there, it's between you and whatever passes for your conscience. Spend corruption. Play early. Don't die.",
     icon: ArrowRight,
   },
 ];
@@ -226,8 +235,14 @@ export default function PracticeMode() {
                 >
                   Choose Your Sin
                 </h1>
+                <p
+                  className="text-sm italic text-amber-200/25 mb-2"
+                  style={{ fontFamily: "var(--font-narrator)" }}
+                >
+                  "Seven deadly sins. Seven ways to lose everything. But first, you must learn."
+                </p>
                 <p className="text-sm text-white/40" style={{ fontFamily: "var(--font-body)" }}>
-                  Pick a faction to learn. You'll face a single bot opponent in a guided match.
+                  Pick a faction. You'll face a single bot in the training grounds.
                 </p>
               </div>
 
@@ -348,7 +363,7 @@ export default function PracticeMode() {
                   boxShadow: selectedSin ? `0 0 20px ${SIN_COLORS[selectedSin]}30` : "none",
                 }}
               >
-                {selectedSin ? "BEGIN TRAINING" : "SELECT A SIN FIRST"}
+                {selectedSin ? "ENTER THE TRAINING GROUNDS" : "SELECT A SIN FIRST"}
               </motion.button>
 
               {error && (
@@ -406,11 +421,19 @@ export default function PracticeMode() {
 
                   {/* Title */}
                   <h2
-                    className="text-xl font-black mb-3"
+                    className="text-xl font-black mb-1.5"
                     style={{ fontFamily: "var(--font-heading)", color: SIN_COLORS[selectedSin!] }}
                   >
                     {currentStep.title}
                   </h2>
+
+                  {/* Narrator quote */}
+                  <p
+                    className="text-sm italic text-amber-200/25 mb-3 leading-relaxed"
+                    style={{ fontFamily: "var(--font-narrator)" }}
+                  >
+                    "{currentStep.narratorQuote}"
+                  </p>
 
                   {/* Content */}
                   <p className="text-sm text-white/55 leading-relaxed mb-8" style={{ fontFamily: "var(--font-body)" }}>
@@ -508,7 +531,7 @@ export default function PracticeMode() {
                 className="text-sm text-white/50"
                 style={{ fontFamily: "var(--font-body)" }}
               >
-                Preparing the training arena...
+                The cathedral prepares your trial...
               </p>
             </motion.div>
           )}

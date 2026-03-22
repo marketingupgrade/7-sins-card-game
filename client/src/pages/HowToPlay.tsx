@@ -1,18 +1,18 @@
 /**
- * How to Play — Interactive Visual Guide
+ * The Sinner's Primer — Interactive Visual Guide
  *
  * A step-by-step animated guide that teaches new players the core mechanics
- * of the 7 Deadly Sins card game. Each section uses visual diagrams,
- * animated examples, and concise text — not walls of rules.
+ * of the 7 Deadly Sins card game. Written in the brand's sardonic narrator
+ * voice with cathedral aesthetic and Uncial Antiqua flavor text.
  *
  * Sections:
- * 1. The Goal — survive or dominate
- * 2. Your Turn — the 3-phase loop
- * 3. Energy (Corruption) — spend to play
- * 4. Cards & Compound Patterns — the escalation system
- * 5. Targeting — who gets hit
- * 6. Factions — pick your sin
- * 7. Pro Tips — quick strategy advice
+ * I.   The Only Commandment — survive or dominate
+ * II.  The Ritual — the 3-phase loop
+ * III. Corruption — spend to play
+ * IV.  The Art of Compounding Sin — the escalation system
+ * V.   Choosing Your Victims — who gets hit
+ * VI.  The Seven Deadly Paths — pick your sin
+ * VII. Whispers from the Damned — quick strategy advice
  */
 
 import { useState, useRef, useEffect } from "react";
@@ -24,6 +24,18 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { PASSIVE_INFO } from "@shared/gameTypes";
 import type { SinType } from "@shared/gameTypes";
+
+/* ─── Narrator Flavor Text ─── */
+function NarratorQuote({ children }: { children: React.ReactNode }) {
+  return (
+    <p
+      className="text-center text-sm sm:text-base italic text-amber-200/30 leading-relaxed my-8 sm:my-12 max-w-lg mx-auto px-4"
+      style={{ fontFamily: "var(--font-narrator)" }}
+    >
+      "{children}"
+    </p>
+  );
+}
 
 /* ─── Animated Section Wrapper ─── */
 function Section({ id, children, className = "" }: { id: string; children: React.ReactNode; className?: string }) {
@@ -105,7 +117,7 @@ function EnergyDemo() {
             Round {round}
           </p>
           <p className="text-sm text-white/60" style={{ fontFamily: "var(--font-body)" }}>
-            {round === 1 ? "You start with 2 energy" : `+1 energy gained (${energy}/7)`}
+            {round === 1 ? "Your corruption begins at 2" : `The darkness grows (+1 to ${energy}/7)`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -154,9 +166,9 @@ function EnergyDemo() {
       {/* Cost examples */}
       <div className="flex gap-2 flex-wrap">
         {[
-          { cost: 1, name: "Cheap card", playable: energy >= 1 },
-          { cost: 3, name: "Mid card", playable: energy >= 3 },
-          { cost: 5, name: "Expensive card", playable: energy >= 5 },
+          { cost: 1, name: "Minor vice", playable: energy >= 1 },
+          { cost: 3, name: "Mortal sin", playable: energy >= 3 },
+          { cost: 5, name: "Cardinal sin", playable: energy >= 5 },
         ].map((card) => (
           <div
             key={card.cost}
@@ -167,7 +179,7 @@ function EnergyDemo() {
             }`}
             style={{ fontFamily: "var(--font-body)" }}
           >
-            <span className="font-bold">{card.cost}</span> cost — {card.playable ? "Playable" : "Too expensive"}
+            <span className="font-bold">{card.cost}</span> corruption — {card.playable ? "Affordable" : "Beyond your reach"}
           </div>
         ))}
       </div>
@@ -182,9 +194,9 @@ function CompoundDemo() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const patterns = {
-    standard: { label: "Standard", color: "#60a5fa", multipliers: [1, 1, 2, 3, 5], desc: "Fibonacci — balanced growth" },
-    aggressive: { label: "Aggressive", color: "#ef4444", multipliers: [1, 2, 4, 8, 16], desc: "Doubles each tick — explosive" },
-    slowburn: { label: "Slowburn", color: "#a855f7", multipliers: [1, 1, 1, 1, 2], desc: "Flat then ramps — patient" },
+    standard: { label: "Standard", color: "#60a5fa", multipliers: [1, 1, 2, 3, 5], desc: "Fibonacci growth — the mathematics of temptation" },
+    aggressive: { label: "Aggressive", color: "#ef4444", multipliers: [1, 2, 4, 8, 16], desc: "Doubles each tick — wrath incarnate" },
+    slowburn: { label: "Slowburn", color: "#a855f7", multipliers: [1, 1, 1, 1, 2], desc: "Patient, then devastating — the way of Sloth" },
   };
 
   const pat = patterns[activePattern];
@@ -274,7 +286,7 @@ function CompoundDemo() {
           Total over {pat.multipliers.length} ticks: {baseValue * pat.multipliers.reduce((a, b) => a + b, 0)} damage
         </span>
         <p className="text-xs text-white/30 mt-1" style={{ fontFamily: "var(--font-body)" }}>
-          from a single card with base value {baseValue}
+          from a single card with base value {baseValue} — sin compounds
         </p>
       </div>
     </div>
@@ -291,24 +303,24 @@ function TurnPhaseDiagram() {
       time: "30s",
       color: "oklch(0.75 0.15 85)",
       icon: <Swords className="w-5 h-5" />,
-      desc: "Pick your cards and targets. Everyone chooses simultaneously — your picks are hidden until resolution.",
-      tips: ["Select 0 or more cards from your hand", "Click opponents to assign targets", "Cards you can't afford are dimmed"],
+      desc: "Choose your cards and your victims. Every sinner decides simultaneously — your choices are hidden until the veil lifts.",
+      tips: ["Select cards from your hand — each costs corruption to play", "Click opponents to assign your malice", "Cards beyond your means are dimmed, a reminder of your limits"],
     },
     {
       name: "Resolution",
       time: "Auto",
       color: "oklch(0.65 0.25 25)",
       icon: <Flame className="w-5 h-5" />,
-      desc: "Cards resolve one by one. Priority cards go first, then lowest HP plays first. Watch the carnage unfold.",
-      tips: ["Priority cards skip the queue", "Lowest HP resolves first (tiebreak: seat order)", "Lowest cost cards within a player resolve first"],
+      desc: "The cathedral reveals all. Cards resolve one by one — priority cards cut the queue, then the weakest strike first. Watch the carnage unfold.",
+      tips: ["Priority cards skip the queue — ruthless efficiency", "Lowest HP resolves first (the desperate strike hardest)", "Within a player, cheapest cards resolve first"],
     },
     {
       name: "Round End",
       time: "Auto",
       color: "oklch(0.65 0.15 280)",
       icon: <Clock className="w-5 h-5" />,
-      desc: "Compound effects tick (dealing their next multiplier). Energy refreshes. New cards are drawn. Next round begins.",
-      tips: ["All active compound effects tick forward", "+1 energy gained (carries over)", "Draw cards to refill your hand"],
+      desc: "Compound effects tick forward, dealing their next multiplier of suffering. Corruption refreshes. New cards are drawn from the abyss. The cycle repeats.",
+      tips: ["All active compound effects advance one tick", "+1 corruption gained (unspent carries over)", "Draw cards to refill your hand of sins"],
     },
   ];
 
@@ -384,7 +396,7 @@ function TurnPhaseDiagram() {
           </div>
         ))}
         <ArrowRight className="w-3 h-3 text-white/20" />
-        <span className="text-xs text-white/20" style={{ fontFamily: "var(--font-heading)" }}>Repeat</span>
+        <span className="text-xs text-white/20" style={{ fontFamily: "var(--font-heading)" }}>Eternal</span>
       </div>
     </div>
   );
@@ -395,10 +407,10 @@ function TargetingVisual() {
   const [mode, setMode] = useState<"single" | "duo" | "aoe" | "self">("single");
 
   const modes = {
-    single: { label: "Single", color: "#ef4444", targets: [true, false, false], desc: "Hits the lowest-HP enemy" },
-    duo: { label: "Duo", color: "#f59e0b", targets: [true, true, false], desc: "Hits the 2 lowest-HP enemies" },
-    aoe: { label: "AoE", color: "#a855f7", targets: [true, true, true], desc: "Hits ALL enemies" },
-    self: { label: "Self", color: "#22c55e", targets: [false, false, false], desc: "Targets yourself (heals, shields)" },
+    single: { label: "Single", color: "#ef4444", targets: [true, false, false], desc: "Strikes the weakest — the cathedral rewards cruelty" },
+    duo: { label: "Duo", color: "#f59e0b", targets: [true, true, false], desc: "Two victims for the price of one sin" },
+    aoe: { label: "AoE", color: "#a855f7", targets: [true, true, true], desc: "All shall suffer equally — no one escapes" },
+    self: { label: "Self", color: "#22c55e", targets: [false, false, false], desc: "Turn inward — heal your wounds, build your fortress" },
   };
 
   const m = modes[mode];
@@ -460,7 +472,7 @@ function TargetingVisual() {
 
         {/* Opponents */}
         <div className="flex gap-3">
-          {["Opp 1", "Opp 2", "Opp 3"].map((name, i) => (
+          {["Sinner 1", "Sinner 2", "Sinner 3"].map((name, i) => (
             <motion.div
               key={i}
               animate={
@@ -500,14 +512,14 @@ function TargetingVisual() {
 function FactionQuickGuide() {
   const [activeSin, setActiveSin] = useState<SinType>("wrath");
 
-  const factions: { sin: SinType; name: string; color: string; playstyle: string; difficulty: string }[] = [
-    { sin: "wrath", name: "Wrath", color: "var(--color-wrath)", playstyle: "Glass cannon — high risk, high damage. Reflects damage back at attackers.", difficulty: "Medium" },
-    { sin: "sloth", name: "Sloth", color: "var(--color-sloth)", playstyle: "Tank — builds shields from patience. Outlasts everyone with slowburn cards.", difficulty: "Easy" },
-    { sin: "greed", name: "Greed", color: "var(--color-greed)", playstyle: "Thief — steals energy, HP, and shields. Converts damage dealt into defense.", difficulty: "Medium" },
-    { sin: "envy", name: "Envy", color: "var(--color-envy)", playstyle: "Debuffer — amplifies afflictions on targets. Exponential scaling over time.", difficulty: "Hard" },
-    { sin: "pride", name: "Pride", color: "var(--color-pride)", playstyle: "High roller — gets a damage multiplier when playing the most expensive card.", difficulty: "Hard" },
-    { sin: "lust", name: "Lust", color: "var(--color-lust)", playstyle: "Sustain — heals from every point of damage dealt. War of attrition specialist.", difficulty: "Easy" },
-    { sin: "gluttony", name: "Gluttony", color: "var(--color-gluttony)", playstyle: "Destroyer — burns opponent cards permanently. Gains energy from destruction.", difficulty: "Medium" },
+  const factions: { sin: SinType; name: string; title: string; color: string; playstyle: string; difficulty: string }[] = [
+    { sin: "wrath", name: "Wrath", title: "The Berserker's Flame", color: "var(--color-wrath)", playstyle: "Glass cannon — high risk, devastating damage. Your rage reflects back at those foolish enough to strike you.", difficulty: "Medium" },
+    { sin: "sloth", name: "Sloth", title: "The Patient Fortress", color: "var(--color-sloth)", playstyle: "Immovable object — builds shields from inaction. Outlasts everyone through sheer, magnificent laziness.", difficulty: "Easy" },
+    { sin: "greed", name: "Greed", title: "The Tax Collector", color: "var(--color-greed)", playstyle: "Thief — steals corruption, vitality, and defenses. Converts the suffering of others into personal wealth.", difficulty: "Medium" },
+    { sin: "envy", name: "Envy", title: "The Poisoner", color: "var(--color-envy)", playstyle: "Debuffer — amplifies afflictions on the envied. What they have, you corrupt. Exponential scaling over time.", difficulty: "Hard" },
+    { sin: "pride", name: "Pride", title: "The Sovereign", color: "var(--color-pride)", playstyle: "High roller — rewarded for playing the most expensive card. The arrogance of power, weaponized.", difficulty: "Hard" },
+    { sin: "lust", name: "Lust", title: "The Seducer", color: "var(--color-lust)", playstyle: "Sustain — heals from every point of damage dealt. A war of attrition where desire becomes durability.", difficulty: "Easy" },
+    { sin: "gluttony", name: "Gluttony", title: "The Devourer", color: "var(--color-gluttony)", playstyle: "Destroyer — burns opponent cards permanently. Consumes everything, gains corruption from the destruction.", difficulty: "Medium" },
   ];
 
   const active = factions.find((f) => f.sin === activeSin)!;
@@ -561,11 +573,17 @@ function FactionQuickGuide() {
             {/* Info */}
             <div className="flex-1 min-w-0">
               <h3
-                className="text-lg font-bold tracking-wider mb-1"
+                className="text-lg font-bold tracking-wider mb-0.5"
                 style={{ fontFamily: "var(--font-heading)", color: active.color }}
               >
                 {active.name}
               </h3>
+              <p
+                className="text-[10px] italic text-white/30 mb-2"
+                style={{ fontFamily: "var(--font-narrator)" }}
+              >
+                {active.title}
+              </p>
               <div className="flex items-center gap-2 mb-3">
                 <span
                   className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider ${
@@ -601,15 +619,15 @@ function FactionQuickGuide() {
   );
 }
 
-/* ─── Pro Tips ─── */
+/* ─── Whispers from the Damned ─── */
 function ProTips() {
   const tips = [
-    { icon: <Zap className="w-4 h-4" />, color: "oklch(0.75 0.15 85)", title: "Save energy for combos", body: "Don't spend everything every round. Saving 1-2 energy lets you play expensive cards next turn for devastating combos." },
-    { icon: <Shield className="w-4 h-4" />, color: "oklch(0.65 0.15 195)", title: "Shields persist", body: "Shield doesn't decay between rounds. Building shield early creates a buffer that absorbs multiple attacks." },
-    { icon: <Target className="w-4 h-4" />, color: "oklch(0.65 0.25 25)", title: "Focus fire", body: "Eliminating one player early is usually better than spreading damage. A 3v1 endgame is much easier than a 2v2." },
-    { icon: <Clock className="w-4 h-4" />, color: "oklch(0.65 0.15 280)", title: "Compound cards are investments", body: "A 3-tick card played in round 2 deals damage in rounds 2, 3, AND 4. Early compound cards have the highest total value." },
-    { icon: <Flame className="w-4 h-4" />, color: "oklch(0.65 0.2 55)", title: "Watch the Reckoning", body: "If the game reaches round 20, ALL remaining cards in hand are played at once. Save powerful cards for a potential Reckoning." },
-    { icon: <Heart className="w-4 h-4" />, color: "oklch(0.65 0.25 350)", title: "Passing is a strategy", body: "If you can't afford any good cards, pass. Your compound effects still tick, and you'll have more energy next round." },
+    { icon: <Zap className="w-4 h-4" />, color: "oklch(0.75 0.15 85)", title: "Hoard your corruption", body: "Patience is a weapon. Saving 1-2 corruption lets you unleash devastating cards next round. The compound interest on restraint is remarkable." },
+    { icon: <Shield className="w-4 h-4" />, color: "oklch(0.65 0.15 195)", title: "Shields persist", body: "Unlike health, shields don't decay between rounds. Building early creates a fortress that absorbs multiple assaults. Even the damned need walls." },
+    { icon: <Target className="w-4 h-4" />, color: "oklch(0.65 0.25 25)", title: "Focus your malice", body: "Eliminating one sinner early is almost always superior to spreading damage. A 3v1 endgame is far more survivable than a 2v2." },
+    { icon: <Clock className="w-4 h-4" />, color: "oklch(0.65 0.15 280)", title: "Invest in early sin", body: "A compound card played in round 2 deals damage in rounds 2, 3, AND 4. The earlier you plant your sins, the greater the harvest." },
+    { icon: <Flame className="w-4 h-4" />, color: "oklch(0.65 0.2 55)", title: "Fear the Reckoning", body: "If the game reaches round 20, ALL remaining cards are played at once. Save powerful cards for a potential apocalypse — or use them to prevent one." },
+    { icon: <Heart className="w-4 h-4" />, color: "oklch(0.65 0.25 350)", title: "Passing is a strategy", body: "If you can't afford worthy cards, pass. Your compound effects still tick, and you'll have more corruption next round. Sometimes doing nothing is doing everything." },
   ];
 
   return (
@@ -646,13 +664,13 @@ function ProTips() {
 /* ─── Table of Contents ─── */
 function TableOfContents() {
   const sections = [
-    { id: "goal", label: "The Goal", number: "I" },
-    { id: "turns", label: "Your Turn", number: "II" },
-    { id: "energy", label: "Energy", number: "III" },
-    { id: "cards", label: "Cards & Compounds", number: "IV" },
-    { id: "targeting", label: "Targeting", number: "V" },
-    { id: "factions", label: "Factions", number: "VI" },
-    { id: "tips", label: "Pro Tips", number: "VII" },
+    { id: "goal", label: "The Only Commandment", number: "I" },
+    { id: "turns", label: "The Ritual", number: "II" },
+    { id: "energy", label: "Corruption", number: "III" },
+    { id: "cards", label: "Compounding Sin", number: "IV" },
+    { id: "targeting", label: "Choosing Victims", number: "V" },
+    { id: "factions", label: "The Seven Paths", number: "VI" },
+    { id: "tips", label: "Whispers", number: "VII" },
   ];
 
   return (
@@ -704,13 +722,19 @@ export default function HowToPlay() {
               className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-wide mb-3"
               style={{ fontFamily: "var(--font-heading)", color: "rgba(255, 255, 255, 0.9)" }}
             >
-              How to Play
+              The Sinner's Primer
             </h1>
             <p
-              className="text-sm sm:text-base text-white/40 max-w-xl mx-auto leading-relaxed mb-8"
+              className="text-base sm:text-lg italic text-amber-200/35 max-w-xl mx-auto leading-relaxed mb-2"
+              style={{ fontFamily: "var(--font-narrator)" }}
+            >
+              "Every sinner starts somewhere. Most start here."
+            </p>
+            <p
+              className="text-sm text-white/35 max-w-md mx-auto leading-relaxed mb-8"
               style={{ fontFamily: "var(--font-body)" }}
             >
-              Learn the core mechanics in 5 minutes. Interactive examples, animated diagrams, zero walls of text.
+              Interactive examples, animated diagrams, zero walls of text. The cathedral teaches through experience, not sermons.
             </p>
 
             <TableOfContents />
@@ -730,12 +754,12 @@ export default function HowToPlay() {
       <main className="relative z-10 px-4 pb-16">
         <div className="max-w-3xl mx-auto space-y-20">
 
-          {/* ── I. The Goal ── */}
+          {/* ── I. The Only Commandment ── */}
           <Section id="goal">
             <SectionHeader
               number="I"
-              title="The Goal"
-              subtitle="Survive. Eliminate. Dominate."
+              title="The Only Commandment"
+              subtitle="Survive. Eliminate. Dominate. There is no second place in the cathedral."
             />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
               <div className="rounded-xl p-4 border border-white/8 bg-black/40 text-center">
@@ -743,113 +767,128 @@ export default function HowToPlay() {
                   <Heart className="w-6 h-6 text-green-400" />
                 </div>
                 <p className="text-2xl font-bold text-white/80 mb-1" style={{ fontFamily: "var(--font-heading)" }}>333 HP</p>
-                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Starting health</p>
+                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Your mortal coil</p>
               </div>
               <div className="rounded-xl p-4 border border-white/8 bg-black/40 text-center">
                 <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto mb-3">
                   <Swords className="w-6 h-6 text-amber-400" />
                 </div>
-                <p className="text-2xl font-bold text-white/80 mb-1" style={{ fontFamily: "var(--font-heading)" }}>4 Players</p>
-                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Free-for-all</p>
+                <p className="text-2xl font-bold text-white/80 mb-1" style={{ fontFamily: "var(--font-heading)" }}>4 Sinners</p>
+                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Free-for-all damnation</p>
               </div>
               <div className="rounded-xl p-4 border border-white/8 bg-black/40 text-center">
                 <div className="w-12 h-12 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-3">
                   <Clock className="w-6 h-6 text-purple-400" />
                 </div>
                 <p className="text-2xl font-bold text-white/80 mb-1" style={{ fontFamily: "var(--font-heading)" }}>20 Rounds</p>
-                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Max game length</p>
+                <p className="text-xs text-white/40" style={{ fontFamily: "var(--font-body)" }}>Until the Reckoning</p>
               </div>
             </div>
             <div className="rounded-xl p-5 border border-white/8 bg-black/40">
               <p className="text-sm text-white/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                <strong className="text-white/80">Be the last sinner standing.</strong> Four players pick sin factions, draw cards, and battle over 20 rounds.
-                Reduce opponents to 0 HP to eliminate them. If the game reaches round 20, the <strong className="text-orange-300/70">Final Reckoning</strong> triggers:
-                every player plays ALL remaining cards at once, and the highest HP wins. No draws, no mercy.
+                <strong className="text-white/80">Be the last sinner standing.</strong> Four players choose their sin, draw cards, and wage war across 20 rounds.
+                Reduce your rivals to 0 HP to send them to oblivion. If the game reaches round 20, the <strong className="text-orange-300/70">Final Reckoning</strong> triggers:
+                every sinner plays ALL remaining cards at once, and the one with the most HP claims the cathedral. No draws. No mercy. No second chances.
               </p>
             </div>
           </Section>
 
-          {/* ── II. Your Turn ── */}
+          <NarratorQuote>They say patience is a virtue. In this cathedral, patience is a weapon.</NarratorQuote>
+
+          {/* ── II. The Ritual ── */}
           <Section id="turns">
             <SectionHeader
               number="II"
-              title="Your Turn"
-              subtitle="Every round has three phases. Here's the loop."
+              title="The Ritual"
+              subtitle="Every round follows the same dark liturgy. Three phases, repeated until only one remains."
             />
             <TurnPhaseDiagram />
           </Section>
 
-          {/* ── III. Energy ── */}
+          <NarratorQuote>The compound interest on sin is remarkably similar to the compound interest on a good investment.</NarratorQuote>
+
+          {/* ── III. Corruption ── */}
           <Section id="energy">
             <SectionHeader
               number="III"
-              title="Corruption (Energy)"
-              subtitle="The fuel of sin. Spend it to play cards."
+              title="Corruption"
+              subtitle="The fuel of sin. Every card demands its price in corruption. Spend wisely — or recklessly."
             />
             <EnergyDemo />
             <div className="mt-4 rounded-xl p-4 border border-amber-500/10 bg-amber-500/5">
               <p className="text-xs text-amber-200/60 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                <strong className="text-amber-200/80">Key insight:</strong> Unspent energy carries over. If you have 3 energy and spend 1,
-                you'll have 3 energy next round (2 carried + 1 gained). Saving energy lets you play expensive cards later.
+                <strong className="text-amber-200/80">The patient sinner's advantage:</strong> Unspent corruption carries over. If you have 3 corruption and spend 1,
+                you'll have 3 next round (2 carried + 1 gained). Restraint today enables devastation tomorrow.
               </p>
             </div>
           </Section>
 
-          {/* ── IV. Cards & Compounds ── */}
+          {/* ── IV. The Art of Compounding Sin ── */}
           <Section id="cards">
             <SectionHeader
               number="IV"
-              title="Cards & Compound Patterns"
-              subtitle="Every card escalates over time. Play once, deal damage for multiple rounds."
+              title="The Art of Compounding Sin"
+              subtitle="Every card is an investment in suffering. Play once, deal damage for multiple rounds. Sin compounds."
             />
             <CompoundDemo />
             <div className="mt-4 rounded-xl p-4 border border-white/5 bg-black/30">
               <p className="text-xs text-white/50 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                <strong className="text-white/70">How it works:</strong> When you play a card, it creates a compound effect that ticks each round.
-                The base value is multiplied by the pattern's multiplier for that tick. A Standard card with base 5 deals: 5, 5, 10, 15 over 4 rounds = 35 total damage from one card play.
+                <strong className="text-white/70">The mathematics of evil:</strong> When you play a card, it creates a compound effect that ticks each round.
+                The base value is multiplied by the pattern's multiplier for that tick. A Standard card with base 5 deals: 5, 5, 10, 15 over 4 rounds = 35 total damage from one act of sin.
+                The earlier you invest, the greater the returns.
               </p>
             </div>
           </Section>
 
-          {/* ── V. Targeting ── */}
+          <NarratorQuote>You chose your sin. Or did it choose you? The answer matters less than you think.</NarratorQuote>
+
+          {/* ── V. Choosing Your Victims ── */}
           <Section id="targeting">
             <SectionHeader
               number="V"
-              title="Targeting"
-              subtitle="Who gets hit depends on the card's target mode."
+              title="Choosing Your Victims"
+              subtitle="Every sin needs a target. Who suffers depends on the card's nature."
             />
             <TargetingVisual />
           </Section>
 
-          {/* ── VI. Factions ── */}
+          {/* ── VI. The Seven Deadly Paths ── */}
           <Section id="factions">
             <SectionHeader
               number="VI"
-              title="The Seven Factions"
-              subtitle="Each sin has a unique passive ability and playstyle. Pick the one that fits you."
+              title="The Seven Deadly Paths"
+              subtitle="Each sin grants a unique passive ability and playstyle. What kind of sinner are you?"
             />
             <FactionQuickGuide />
           </Section>
 
-          {/* ── VII. Pro Tips ── */}
+          <NarratorQuote>Seven sins. Seven factions. Seven ways to lose everything. Choose wisely.</NarratorQuote>
+
+          {/* ── VII. Whispers from the Damned ── */}
           <Section id="tips">
             <SectionHeader
               number="VII"
-              title="Pro Tips"
-              subtitle="Advice from the cathedral's most seasoned sinners."
+              title="Whispers from the Damned"
+              subtitle="Hard-won wisdom from the cathedral's most seasoned sinners."
             />
             <ProTips />
           </Section>
 
           {/* ── CTA ── */}
           <div className="text-center pt-8">
-            <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="flex items-center justify-center gap-2 mb-4">
               <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-500/20" />
               <span className="text-xs tracking-[0.3em] text-amber-200/40 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
-                Ready?
+                The Cathedral Awaits
               </span>
               <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-500/20" />
             </div>
+            <p
+              className="text-sm italic text-amber-200/25 mb-6 max-w-md mx-auto"
+              style={{ fontFamily: "var(--font-narrator)" }}
+            >
+              "Every card game promises you power. We promise you honesty. The power is just a side effect."
+            </p>
             <Link href="/">
               <motion.div
                 whileHover={{ scale: 1.03, y: -2 }}
@@ -863,16 +902,24 @@ export default function HowToPlay() {
                 }}
               >
                 <Swords className="w-5 h-5" />
-                START PLAYING
+                DESCEND INTO THE CATHEDRAL
               </motion.div>
             </Link>
-            <div className="mt-4">
+            <div className="mt-4 flex items-center justify-center gap-4">
+              <Link
+                href="/practice"
+                className="text-xs text-amber-200/30 hover:text-amber-200/50 transition-colors underline underline-offset-4"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                Try Practice Mode first
+              </Link>
+              <span className="text-white/10">|</span>
               <Link
                 href="/rules"
                 className="text-xs text-white/30 hover:text-white/50 transition-colors underline underline-offset-4"
                 style={{ fontFamily: "var(--font-heading)" }}
               >
-                Want the full rulebook? View Game Rules
+                Full Rulebook
               </Link>
             </div>
           </div>

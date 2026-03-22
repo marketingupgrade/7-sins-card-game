@@ -84,6 +84,24 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.5.0",
+    date: "March 2026",
+    title: "The Cathedral Speaks",
+    summary: "Complete brand voice overhaul of all onboarding and tutorial content. Every teaching surface now speaks in the brand book's sardonic narrator voice — an omniscient entity who has watched humanity sin for millennia and finds your fumbling both predictable and mildly entertaining. Cathedral terminology, gothic aesthetic, and proper information hierarchy throughout.",
+    major: true,
+    changes: [
+      { category: "feature", text: "How to Play page rewritten with narrator voice: sardonic quotes, cathedral metaphors, and branded faction descriptions replace generic tutorial language" },
+      { category: "feature", text: "QuickStart Modal redesigned as 'The Cathedral Speaks' — 4-slide branded intro with narrator quotes, cathedral aesthetic, and 'Embrace Your Sin' CTA" },
+      { category: "feature", text: "GameCoach tips rewritten: 8 contextual coaching messages now use narrator voice with branded terminology (corruption instead of energy, sins instead of cards)" },
+      { category: "feature", text: "PracticeMode briefing steps rewritten: 8 branded steps with narrator quotes ('Every sinner starts somewhere'), cathedral metaphors, and evocative faction descriptions" },
+      { category: "feature", text: "PracticeAnnotations rewritten: round-by-round teaching uses narrator flavor text ('Your sins from last round are still echoing. That's the beauty of compound interest.')" },
+      { category: "feature", text: "PostGameAnalysis rebranded as 'The Cathedral's Judgment': branded tip titles ('Corruption squandered', 'A short and unremarkable damnation'), faction-specific strategy tips with character" },
+      { category: "feature", text: "Brand font hierarchy enforced: Cinzel for headings, Cormorant Garamond for body, Uncial Antiqua for narrator flavor text across all onboarding surfaces" },
+      { category: "feature", text: "34 new brand voice compliance tests verify narrator markers, font usage, branded terminology, and absence of generic tutorial language" },
+      { category: "fix", text: "Consistent 60-30-10 color rule and Fibonacci spacing across all onboarding components" },
+    ],
+  },
+  {
     version: "6.4.0",
     date: "March 2026",
     title: "The Seer's Lens",

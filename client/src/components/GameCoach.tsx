@@ -1,25 +1,17 @@
 /**
- * GameCoach — Contextual First-Game Coaching System
+ * GameCoach — The Narrator Whispers
  *
  * Non-blocking floating tips that appear during a player's first game.
+ * Written in the brand's sardonic narrator voice — an omniscient entity
+ * who has watched humanity sin for millennia and is tired of it.
+ *
  * Each tip triggers based on game state conditions and shows only once.
- *
- * Tips:
- * - First turn: "Select a card from your hand to play it"
- * - First targeting: "Click an opponent to target them"
- * - Low energy: "You can pass to save energy for next round"
- * - Low HP: "Consider playing defensive cards or shields"
- * - Compound ticking: "Your compound effects are dealing damage each round"
- * - Round 16+: "Afflictions just doubled! The endgame is here"
- * - Final Reckoning approaching: "Round 20 triggers the Final Reckoning"
- * - First card played: "Nice! That card will compound over multiple rounds"
- *
  * Stored in localStorage per-tip so each only shows once ever.
  */
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Lightbulb, Zap, Shield, Target, Clock, Flame, ArrowRight } from "lucide-react";
+import { X, Zap, Shield, Target, Clock, Flame, ArrowRight, Skull, Eye } from "lucide-react";
 
 const STORAGE_PREFIX = "7sins_coach_";
 
@@ -28,74 +20,82 @@ interface CoachTip {
   icon: React.ReactNode;
   color: string;
   title: string;
+  narratorFlavor: string;
   body: string;
-  /** Duration in ms before auto-dismiss (0 = manual only) */
   autoDismissMs: number;
 }
 
 const ALL_TIPS: CoachTip[] = [
   {
     id: "first_turn",
-    icon: <Lightbulb className="w-4 h-4" />,
+    icon: <Eye className="w-4 h-4" />,
     color: "oklch(0.75 0.15 85)",
-    title: "Your First Turn",
-    body: "Tap a card from your hand to select it, then click an opponent to target them. Or press Pass to skip.",
+    title: "The First Temptation",
+    narratorFlavor: "Every sinner starts somewhere.",
+    body: "Select a card from your hand, then click an opponent to target them. Or press Pass \u2014 even the patient can win.",
     autoDismissMs: 12000,
   },
   {
     id: "select_target",
     icon: <Target className="w-4 h-4" />,
     color: "oklch(0.65 0.25 25)",
-    title: "Choose a Target",
-    body: "Click on an opponent's portrait to target them with your selected card.",
+    title: "Choose Your Victim",
+    narratorFlavor: "The weak make easy prey. The strong make worthy enemies.",
+    body: "Click an opponent's portrait to direct your sin at them. Choose wisely \u2014 or don't. The cathedral judges either way.",
     autoDismissMs: 8000,
   },
   {
     id: "low_energy",
     icon: <Zap className="w-4 h-4" />,
     color: "oklch(0.75 0.15 85)",
-    title: "Low on Energy",
-    body: "You can pass this turn to save energy. Unspent energy carries over to next round — save up for a big play!",
+    title: "Your Corruption Runs Dry",
+    narratorFlavor: "Patience. Even sin has a budget.",
+    body: "Pass this turn to carry your corruption forward. Restraint today enables devastation tomorrow.",
     autoDismissMs: 8000,
   },
   {
     id: "low_hp",
     icon: <Shield className="w-4 h-4" />,
     color: "oklch(0.65 0.25 350)",
-    title: "Health Getting Low",
-    body: "Consider playing heal or shield cards to survive. Check your hand for defensive options.",
+    title: "The Reaper Draws Near",
+    narratorFlavor: "Even the damned must defend themselves.",
+    body: "Your HP is dangerously low. Heal or shield \u2014 a dead sinner plays no cards.",
     autoDismissMs: 8000,
   },
   {
     id: "compound_ticking",
     icon: <Clock className="w-4 h-4" />,
     color: "oklch(0.65 0.15 280)",
-    title: "Compound Effects Active",
-    body: "Your previously played cards are dealing damage each round automatically. The multiplier increases each tick!",
+    title: "Your Sins Accumulate",
+    narratorFlavor: "The compound interest on evil is remarkably consistent.",
+    body: "Your previously played cards are compounding \u2014 dealing increasing damage each round automatically. Early investments pay the richest dividends.",
     autoDismissMs: 8000,
   },
   {
     id: "card_played",
     icon: <ArrowRight className="w-4 h-4" />,
     color: "oklch(0.65 0.2 140)",
-    title: "Card Played!",
-    body: "That card will compound over multiple rounds, dealing increasing damage each tick. Early cards have the highest total value.",
+    title: "Your Corruption Spreads",
+    narratorFlavor: "One act of sin, echoing through eternity.",
+    body: "That card will compound over multiple rounds, growing stronger each tick. The earlier you plant your sins, the greater the harvest.",
     autoDismissMs: 6000,
   },
   {
     id: "affliction_doubled",
     icon: <Flame className="w-4 h-4" />,
     color: "oklch(0.65 0.25 25)",
-    title: "Afflictions Doubled!",
-    body: "At round 16, all active afflictions are doubled. The endgame is here — play aggressively or defend hard.",
+    title: "The Cathedral Trembles",
+    narratorFlavor: "All afflictions doubled. The endgame has teeth.",
+    body: "At round 16, every active affliction doubles in power. Play aggressively or fortify \u2014 half-measures die here.",
     autoDismissMs: 10000,
   },
   {
     id: "reckoning_soon",
-    icon: <Flame className="w-4 h-4" />,
+    icon: <Skull className="w-4 h-4" />,
     color: "oklch(0.65 0.2 55)",
-    title: "Final Reckoning Approaching",
-    body: "If the game reaches round 20, ALL remaining cards in your hand are played at once. Save your best cards!",
+    title: "Judgment Approaches",
+    narratorFlavor: "The Final Reckoning spares no one.",
+    body: "If round 20 arrives, ALL remaining cards in every hand are played at once. Hoard your best sins \u2014 or use them before the cathedral decides for you.",
     autoDismissMs: 10000,
   },
 ];
@@ -114,7 +114,6 @@ function markTipSeen(tipId: string): void {
   } catch {}
 }
 
-/** Check if this is the player's first game (no tips have been seen yet) */
 function isFirstGame(): boolean {
   try {
     return localStorage.getItem(STORAGE_PREFIX + "any_game_played") !== "true";
@@ -130,23 +129,14 @@ export function markGamePlayed(): void {
 }
 
 interface GameCoachProps {
-  /** Current round number */
   round: number;
-  /** Player's current HP */
   playerHp: number;
-  /** Player's max HP */
   maxHp: number;
-  /** Player's current energy */
   energy: number;
-  /** Whether it's the player's turn to select */
   isSelectionPhase: boolean;
-  /** Whether the player has selected a card */
   hasSelectedCard: boolean;
-  /** Whether the player has active compound effects */
   hasActiveCompounds: boolean;
-  /** Whether a card was just played this round */
   cardJustPlayed: boolean;
-  /** Whether afflictions were just doubled */
   afflictionsDoubled: boolean;
 }
 
@@ -163,11 +153,9 @@ export default function GameCoach({
 }: GameCoachProps) {
   const [activeTip, setActiveTip] = useState<CoachTip | null>(null);
   const [dismissed, setDismissed] = useState(false);
-  const tipQueueRef = useRef<string[]>([]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const shownThisSessionRef = useRef<Set<string>>(new Set());
 
-  // Only show tips during first game
   const firstGame = isFirstGame();
 
   const showTip = useCallback((tipId: string) => {
@@ -183,7 +171,6 @@ export default function GameCoach({
     setActiveTip(tip);
     setDismissed(false);
 
-    // Auto-dismiss
     if (timerRef.current) clearTimeout(timerRef.current);
     if (tip.autoDismissMs > 0) {
       timerRef.current = setTimeout(() => {
@@ -202,8 +189,6 @@ export default function GameCoach({
   // Trigger tips based on game state
   useEffect(() => {
     if (!firstGame) return;
-
-    // First turn
     if (round === 1 && isSelectionPhase && !hasSelectedCard) {
       showTip("first_turn");
     }
@@ -211,8 +196,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Card selected, need target
     if (hasSelectedCard && isSelectionPhase) {
       showTip("select_target");
     }
@@ -220,8 +203,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Low energy (can't play most cards)
     if (energy <= 1 && isSelectionPhase && round > 1) {
       showTip("low_energy");
     }
@@ -229,8 +210,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Low HP
     if (playerHp < maxHp * 0.3 && playerHp > 0) {
       showTip("low_hp");
     }
@@ -238,8 +217,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Compound effects ticking
     if (hasActiveCompounds && round > 2) {
       showTip("compound_ticking");
     }
@@ -247,8 +224,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Card just played
     if (cardJustPlayed) {
       showTip("card_played");
     }
@@ -256,8 +231,6 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Affliction doubling
     if (afflictionsDoubled) {
       showTip("affliction_doubled");
     }
@@ -265,14 +238,11 @@ export default function GameCoach({
 
   useEffect(() => {
     if (!firstGame) return;
-
-    // Final Reckoning approaching
     if (round >= 18) {
       showTip("reckoning_soon");
     }
   }, [round, firstGame, showTip]);
 
-  // Cleanup timer on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -310,7 +280,7 @@ export default function GameCoach({
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-0.5">
                   <h4
                     className="text-xs font-bold tracking-wider"
                     style={{ fontFamily: "var(--font-heading)", color: activeTip.color }}
@@ -324,6 +294,13 @@ export default function GameCoach({
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
+                {/* Narrator flavor */}
+                <p
+                  className="text-[10px] italic text-amber-200/25 mb-1 leading-relaxed"
+                  style={{ fontFamily: "var(--font-narrator)" }}
+                >
+                  "{activeTip.narratorFlavor}"
+                </p>
                 <p
                   className="text-xs text-white/50 leading-relaxed"
                   style={{ fontFamily: "var(--font-body)" }}

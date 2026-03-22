@@ -95,8 +95,8 @@ function analyzeGame(
     if (unplayedCards.length >= 3) {
       tips.push({
         icon: AlertTriangle,
-        title: `${unplayedCards.length} cards left unplayed`,
-        detail: `You had ${unplayedCards.length} cards still in hand worth ${totalUnplayedCost} total energy. ${
+        title: `${unplayedCards.length} sins left uncommitted`,
+        detail: `You clutched ${unplayedCards.length} cards worth ${totalUnplayedCost} corruption and played none of them. ${
           totalUnplayedDamage > 0
             ? `That's ~${totalUnplayedDamage} base damage you never dealt.`
             : totalUnplayedHealing > 0
@@ -113,8 +113,8 @@ function analyzeGame(
     if (affordableUnplayed.length > 0 && me.currentEnergy > 0) {
       tips.push({
         icon: Zap,
-        title: "Energy left on the table",
-        detail: `You ended with ${me.currentEnergy} energy and ${affordableUnplayed.length} playable card${affordableUnplayed.length > 1 ? "s" : ""} in hand. Always spend your energy — unspent corruption is wasted potential. Even a 1-cost card compounds into 7x its value over 4 rounds.`,
+        title: "Corruption squandered",
+        detail: `You ended with ${me.currentEnergy} corruption and ${affordableUnplayed.length} playable card${affordableUnplayed.length > 1 ? "s" : ""} still in hand. The cathedral does not reward restraint — unspent corruption is wasted damnation. Even a 1-cost sin compounds into 7x its base value over 4 rounds.`,
         severity: "critical",
         category: "energy",
       });
@@ -125,8 +125,8 @@ function analyzeGame(
   if (me.currentEnergy >= 3 && currentRound < MAX_ROUNDS) {
     tips.push({
       icon: Zap,
-      title: "High unspent energy at game end",
-      detail: `You had ${me.currentEnergy}/${me.maxEnergy} energy when the game ended. Each unspent energy point is a card you could have played. In the mid-to-late game, try to play multiple low-cost cards per turn rather than saving for one big card.`,
+        title: "Hoarded corruption at the end",
+        detail: `You had ${me.currentEnergy}/${me.maxEnergy} corruption when the cathedral doors closed. Each unspent point is a sin you could have committed. In the mid-to-late game, play multiple low-cost sins per turn rather than saving for one grand gesture.`,
       severity: "important",
       category: "energy",
     });
@@ -139,8 +139,8 @@ function analyzeGame(
   if (!me.isAlive && currentRound <= 12) {
     tips.push({
       icon: Shield,
-      title: "Eliminated early",
-      detail: `You were eliminated by round ${currentRound} out of ${MAX_ROUNDS}. Early elimination usually means you were focused by multiple opponents or didn't invest enough in defensive cards (healing, shields). Try mixing in 2-3 defensive cards per round to survive longer.`,
+        title: "A short and unremarkable damnation",
+        detail: `Eliminated by round ${currentRound} of ${MAX_ROUNDS}. The cathedral barely noticed your passing. Early death usually means you neglected defense or attracted too much attention. Mix in 2-3 defensive sins per round — even the damned must survive to sin again.`,
       severity: "critical",
       category: "defense",
     });
@@ -209,8 +209,8 @@ function analyzeGame(
   if (cardsPlayed < currentRound && currentRound > 3) {
     tips.push({
       icon: TrendingUp,
-      title: "Low card output",
-      detail: `You played ~${cardsPlayed} cards over ${currentRound} rounds (${(cardsPlayed / currentRound).toFixed(1)} per round). Try to play at least 1 card per round — compound effects need time to stack. Playing a 1-cost card on round 1 deals 7x its base value by round 4.`,
+        title: "Sins left unspoken",
+        detail: `You committed ~${cardsPlayed} sins over ${currentRound} rounds (${(cardsPlayed / currentRound).toFixed(1)} per round). The cathedral rewards prolific sinners. Play at least 1 card per round — compound effects need time to fester. A 1-cost sin on round 1 deals 7x its base value by round 4.`,
       severity: cardsPlayed < currentRound * 0.5 ? "critical" : "important",
       category: "cards",
     });
@@ -220,8 +220,8 @@ function analyzeGame(
   if (currentRound >= 16 && !me.isAlive) {
     tips.push({
       icon: Swords,
-      title: "Fell after affliction doubling",
-      detail: `You survived to round ${currentRound} but fell after afflictions doubled at round 16. In the late game, prioritize healing and shields over damage. Consider saving a heal_steal or shield_gain card for rounds 16+.`,
+        title: "The Reckoning claimed you",
+        detail: `You survived to round ${currentRound} but fell when afflictions doubled at round 16 — the cathedral's final judgment. In the late game, prioritize healing and shields over damage. Save a heal_steal or shield_gain for the Reckoning rounds.`,
       severity: "important",
       category: "timing",
     });
@@ -231,13 +231,13 @@ function analyzeGame(
   if (mySin) {
     const passiveInfo = PASSIVE_INFO[mySin];
     const passiveTips: Record<string, string> = {
-      wrath: "Your Vengeance passive reflects damage back. Playing aggressively and taking hits is actually your strategy — but you need enough HP to survive. Mix damage with healing.",
-      sloth: "Your Endurance passive generates shields based on energy × hand size. Keep your hand full and energy high for maximum shield generation each turn.",
-      greed: "Your Tax passive generates shields from compound damage ticks. Play lots of compound damage cards early so they tick multiple times, generating shields over time.",
-      envy: "Your Jealousy passive steals a percentage of healing. Target players who heal a lot (like Lust) to maximize your passive value.",
-      pride: "Your Hubris passive multiplies effects of your highest-cost card each round. Always play at least one expensive card per round to trigger the multiplier.",
-      lust: "Your Temptation passive heals you when you deal damage. Focus on consistent damage output rather than burst — more hits means more healing.",
-      gluttony: "Your Devourer passive converts burned cards into energy. Use discard_burn cards early and often to fuel expensive plays later.",
+      wrath: "Vengeance reflects damage back to attackers. Your strategy is counterintuitive — take hits to deal them. But a dead berserker reflects nothing. Mix damage with enough healing to stay standing.",
+      sloth: "Endurance generates shields from your energy × hand size. The lazier you are (hoarding cards, saving corruption), the stronger your walls. Ironic, isn't it?",
+      greed: "Tax converts compound damage ticks into personal shields. Play damage cards early so they tick repeatedly, each tick generating wealth. The cathedral's most reliable accountant.",
+      envy: "Jealousy steals a percentage of all healing. Target the self-healers — Lust players are your favorite prey. Their recovery becomes your recovery.",
+      pride: "Hubris multiplies your highest-cost card's effects each round. Always play at least one expensive sin — the multiplier rewards ambition and punishes frugality.",
+      lust: "Temptation heals you when you deal damage. Consistent damage output matters more than burst — more hits, more stolen vitality. The parasite's creed.",
+      gluttony: "Devourer converts burned cards into corruption. Use discard effects early and often to fuel increasingly expensive sins. Consume everything. Leave nothing.",
     };
 
     if (passiveTips[mySin]) {
@@ -305,10 +305,10 @@ export default function PostGameAnalysis({
                 className="text-sm font-bold tracking-wider"
                 style={{ fontFamily: "var(--font-heading)", color: sinColor }}
               >
-                WHY DID I LOSE?
+                THE CATHEDRAL'S JUDGMENT
               </p>
               <p className="text-[10px] text-white/30" style={{ fontFamily: "var(--font-body)" }}>
-                {tips.length} improvement tip{tips.length !== 1 ? "s" : ""} based on your game
+                {tips.length} lesson{tips.length !== 1 ? "s" : ""} from your downfall
               </p>
             </div>
           </div>
@@ -383,7 +383,7 @@ export default function PostGameAnalysis({
                   className="text-[10px] uppercase tracking-widest hover:underline transition-colors"
                   style={{ color: `${sinColor}80`, fontFamily: "var(--font-heading)" }}
                 >
-                  Read the full strategy guide →
+                  Consult the Scriptures →
                 </a>
               </motion.div>
             </div>
