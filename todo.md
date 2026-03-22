@@ -2109,4 +2109,4 @@
 - [x] Beginner card sorting: "Smart" sort prioritizes affordable + situationally best cards
 - [x] Write tests for all three features (42 new tests, 690 total passing)
 - [x] Update patch notes (v6.3.0 "The Training Grounds")
-- [ ] Push to GitHub
+- [x] Push to GitHub
