@@ -78,6 +78,9 @@ import CardHoverPreview from "@/components/CardHoverPreview";
 import TargetAvatarBadge from "@/components/TargetAvatarBadge";
 import MobileBattleOverview from "@/components/MobileBattleOverview";
 const BattleLog = lazy(() => import("@/components/BattleLog"));
+import ActiveEffectsDashboard from "@/components/ActiveEffectsDashboard";
+import PassiveReminder from "@/components/PassiveReminder";
+import TurnPhaseTimeline from "@/components/TurnPhaseTimeline";
 const RoundEndPrompt = lazy(() => import("@/components/RoundEndPrompt"));
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAINarrator } from "@/hooks/useAINarrator";
@@ -1174,47 +1177,13 @@ export default function GameBoard() {
         </div>
 
         <div className="flex items-center justify-center flex-1">
-          {(turnPhase === "resolution" || turnPhase === "round_end" || isShowingResolution) ? (
-            <motion.div
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 0.8, repeat: Infinity }}
-              className="flex items-center gap-2"
-            >
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-red-500" />
-              <span className="text-sm md:text-base font-bold text-red-400" style={{ fontFamily: "var(--font-heading)" }}>
-                RESOLVING...
-              </span>
-            </motion.div>
-          ) : isMyTurn ? (
-            <motion.div
-              animate={{ opacity: [0.6, 1, 0.6] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              className="flex items-center gap-2"
-            >
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-greed-glow" />
-              <span className="text-sm md:text-base font-bold text-greed-glow" style={{ fontFamily: "var(--font-heading)" }}>
-                SELECT YOUR CARDS
-              </span>
-            </motion.div>
-          ) : hasLockedIn ? (
-            <motion.div
-              animate={{ opacity: [0.4, 0.8, 0.4] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="flex items-center gap-2"
-            >
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-candle/60" />
-              <span className="text-sm md:text-base font-bold text-candle/80" style={{ fontFamily: "var(--font-heading)" }}>
-                LOCKED IN — WAITING...
-              </span>
-            </motion.div>
-          ) : (
-            <div className="flex items-center gap-2">
-              <div className="w-2 md:w-3 h-2 md:h-3 rounded-full bg-muted-foreground/40" />
-              <span className="text-sm md:text-base text-muted-foreground" style={{ fontFamily: "var(--font-heading)" }}>
-                Waiting for players...
-              </span>
-            </div>
-          )}
+          <TurnPhaseTimeline
+            currentPhase={turnPhase}
+            currentRound={gameState.currentRound}
+            hasLockedIn={hasLockedIn}
+            playersLockedIn={gameState.players.filter(p => p.hasLockedIn || p.lockedCards.length > 0).length}
+            totalPlayers={gameState.players.filter(p => p.isAlive).length}
+          />
         </div>
 
         <div className="flex items-center gap-1 md:gap-3">
@@ -2321,6 +2290,29 @@ const PlayerPanel = memo(function PlayerPanel({
             sinColor={sinColor}
             bonusEnergy={player.bonusEnergy}
           />
+        )}
+
+        {/* Passive Ability Reminder — always visible */}
+        {player.chosenSin && player.isAlive && (
+          <div className="mt-1">
+            <PassiveReminder
+              sin={player.chosenSin as SinType}
+              mode={isTargetable ? "targeting" : "badge"}
+              isSelf={isMe}
+            />
+          </div>
+        )}
+
+        {/* Active Effects Dashboard — net HP change per round */}
+        {player.isAlive && (
+          <div className="mt-1">
+            <ActiveEffectsDashboard
+              player={player}
+              activeEffects={activeEffects}
+              currentRound={currentRound}
+              isCompact={compact}
+            />
+          </div>
         )}
 
         {/* Effect Badges — show more on hover */}

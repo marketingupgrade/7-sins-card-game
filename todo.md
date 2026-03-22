@@ -2110,3 +2110,13 @@
 - [x] Write tests for all three features (42 new tests, 690 total passing)
 - [x] Update patch notes (v6.3.0 "The Training Grounds")
 - [x] Push to GitHub
+
+### v6.4.0 — UX & Game Design Audit Fixes
+- [x] Card Value Calculator: show total damage, duration, % HP impact on cards
+- [x] Compound Pattern Sparklines: inline mini-graphs showing growth curves
+- [x] Active Effects Dashboard: always-visible effect summaries on player panels
+- [x] Passive Ability Reminders: persistent indicators + targeting context
+- [x] Turn Phase Timeline: visual phase progression bar
+- [x] Write tests for new UI components (50 new tests, 740 total passing)
+- [x] Update patch notes (v6.4.0 "The Seer's Lens")
+- [ ] Push to GitHub

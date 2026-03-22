@@ -19,6 +19,7 @@ import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { soundEngine } from "@/lib/soundEngine";
 import { getEffectIconUrl, SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import CardValueCalc from "./CardValueCalc";
 const HolographicCardShader = lazy(() => import("./HolographicCardShader"));
 const AnimatedCardArt = lazy(() => import("./AnimatedCardArt"));
 
@@ -428,10 +429,13 @@ const GameCard = memo(function GameCard({ card, currentRound, isPlayable, isSele
         })}
       </div>
 
-      {/* Description — flavor text */}
+      {/* Strategic Value Calculator — shows total value, sparkline, % HP */}
+      <CardValueCalc card={card} currentRound={currentRound} />
+
+      {/* Description — flavor text (hidden during gameplay to save space) */}
       <div className="absolute bottom-2 left-3 right-3">
         <p
-          className="text-xs sm:text-sm text-foreground/60 italic leading-tight line-clamp-2"
+          className="text-[9px] sm:text-[10px] text-foreground/40 italic leading-tight line-clamp-1"
           style={{
             fontFamily: "var(--font-body)",
             textShadow: "0 1px 4px rgba(0,0,0,0.8)",

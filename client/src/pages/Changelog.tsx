@@ -84,6 +84,23 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.4.0",
+    date: "March 2026",
+    title: "The Seer's Lens",
+    summary: "A comprehensive UX and game design audit overhaul. Cards now show their total strategic value — total damage over full duration, % of target HP, and compound growth sparklines. Player panels display net HP change per round from active effects. Faction passives are always visible with targeting warnings. And a new turn phase timeline replaces the old status text with a clear visual progression bar.",
+    major: true,
+    changes: [
+      { category: "feature", text: "Card Value Calculator: every card now shows total damage/heal over its full duration, percentage of target HP, and a timing indicator (early/ok/late) based on remaining rounds" },
+      { category: "feature", text: "Compound Pattern Sparklines: inline SVG mini-graphs on cards visualize the growth curve (Fibonacci for Standard, exponential for Aggressive, flat-then-ramp for Slowburn)" },
+      { category: "feature", text: "Active Effects Dashboard on every player panel: shows net HP change per round with color-coded breakdown (red for damage, green for heal, cyan for shield, yellow for control)" },
+      { category: "feature", text: "Passive Ability Reminders: persistent badges on player panels showing each faction's passive ability — no more forgetting what Wrath or Sloth does" },
+      { category: "feature", text: "Targeting Warnings: when selecting a target, see faction-specific cautions (e.g., 'Attacking Wrath reflects damage back to YOU', 'Lust heals from damage ticks')" },
+      { category: "feature", text: "Turn Phase Timeline: visual 3-step progression bar (Select → Resolve → Tick) replaces the old text status, showing exactly where you are in each round" },
+      { category: "feature", text: "Phase timeline shows lock-in counter (e.g., '2/4 locked in') during selection phase for better multiplayer awareness" },
+      { category: "fix", text: "Improved information hierarchy on player panels: passive → effects dashboard → effect badges, ordered by strategic importance" },
+    ],
+  },
+  {
     version: "6.3.0",
     date: "March 2026",
     title: "The Training Grounds",
