@@ -84,6 +84,39 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "5.14.0",
+    date: "March 2026",
+    title: "The Living Cathedral",
+    summary: "AI breathes life into the arena. A Living Narrator generates unique, context-aware commentary for every game moment. The Sin Whisperer tempts you with faction-specific private whispers during card selection. Both features are toggleable in the lobby.",
+    major: true,
+    changes: [
+      {
+        category: "feature",
+        text: "Living Narrator: LLM-powered narrator generates unique commentary at round start, card reveal, player elimination, and game over — no two games narrated the same way",
+      },
+      {
+        category: "feature",
+        text: "Sin Whisperer: Your chosen sin whispers private temptations during card selection, with faction-specific personality (Wrath demands vengeance, Sloth counsels patience, Greed calculates profit...)",
+      },
+      {
+        category: "feature",
+        text: "Adaptive Nemesis System: AI tracks player behavioral patterns, rivalries, and aggression scores to generate contextually relevant commentary",
+      },
+      {
+        category: "feature",
+        text: "Lobby AI toggles: Host can independently enable/disable Living Narrator and Sin Whisperer with animated StonePanel controls",
+      },
+      {
+        category: "feature",
+        text: "SinWhisper UI component: Floating, faction-colored temptation display with pulse animation and typewriter loading state",
+      },
+      {
+        category: "fix",
+        text: "Graceful fallback: If AI generation fails, the game seamlessly falls back to curated static narrator lines",
+      },
+    ],
+  },
+  {
     version: "5.13.0",
     date: "March 2026",
     title: "The Hourglass Update",

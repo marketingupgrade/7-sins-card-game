@@ -417,6 +417,10 @@ export interface GameState {
   selectionDeadline: string | null;
   /** Configured turn timer duration in seconds (set by host in lobby) */
   turnTimerSeconds: number;
+  /** Whether the AI narrator is enabled for this game */
+  aiNarrator: boolean;
+  /** Whether the AI Sin Whisperer is enabled for this game */
+  aiWhisperer: boolean;
 }
 
 // ─── Game Actions ────────────────────────────────────────────

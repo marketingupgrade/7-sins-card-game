@@ -68,6 +68,13 @@ import {
   getPlayerByGamertag,
 } from "./db-supabase";
 import { validateGamertag } from "./profanityFilter";
+import {
+  generateNarratorLine,
+  generateWhisper,
+  analyzePlayerBehaviors,
+  buildMatchContext,
+  detectRivalries,
+} from "./aiNarrator";
 
 export const appRouter = router({
   system: systemRouter,
@@ -701,6 +708,88 @@ export const appRouter = router({
       .input(z.object({ gameId: z.string().uuid() }))
       .mutation(async ({ input }) => {
         return enforceSelectionDeadline(input.gameId);
+      }),
+
+    /** AI Narrator — generate a contextual narrator line for a game moment */
+    aiNarrate: publicProcedure
+      .input(
+        z.object({
+          gameId: z.string().uuid(),
+          trigger: z.enum([
+            "round_start",
+            "card_reveal",
+            "big_damage",
+            "player_eliminated",
+            "game_over",
+            "comeback",
+            "rivalry_escalation",
+          ]),
+          triggerData: z.record(z.string(), z.any()).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const gameState = await getGameState(input.gameId);
+        if (!gameState || !gameState.aiNarrator) {
+          return { line: null };
+        }
+        const gameLog = await getGameLog(input.gameId);
+        const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+        const context = buildMatchContext(gameState, behaviors);
+        const line = await generateNarratorLine(
+          input.trigger,
+          context,
+          input.triggerData
+        );
+        return { line };
+      }),
+
+    /** Sin Whisperer — generate a private temptation for a specific player */
+    aiWhisper: publicProcedure
+      .input(
+        z.object({
+          gameId: z.string().uuid(),
+          playerId: z.string().min(1).max(64),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const gameState = await getGameState(input.gameId);
+        if (!gameState || !gameState.aiWhisperer) {
+          return { whisper: null };
+        }
+        const player = gameState.players.find(
+          (p) => p.id === input.playerId
+        );
+        if (!player || !player.isAlive) {
+          return { whisper: null };
+        }
+        const gameLog = await getGameLog(input.gameId);
+        const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+        const context = buildMatchContext(gameState, behaviors);
+        // Build hand info for whisper context
+        const { getCardById: getCard } = await import("../shared/cardData");
+        const hand = player.hand.map((cardId) => {
+          const card = getCard(cardId);
+          return {
+            id: cardId,
+            name: card?.name || "Unknown",
+            energyCost: card?.cost || 0,
+            effects: card?.effects || [],
+          };
+        });
+        const whisper = await generateWhisper(player, context, hand);
+        return { whisper };
+      }),
+
+    /** Get behavioral analysis for a game (rivalries, player tags, etc.) */
+    aiAnalysis: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .query(async ({ input }) => {
+        const gameState = await getGameState(input.gameId);
+        if (!gameState) return { behaviors: [], rivalries: [] };
+        const gameLog = await getGameLog(input.gameId);
+        const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+        const rivalries = detectRivalries(behaviors);
+        return { behaviors, rivalries };
       }),
   }),
 });

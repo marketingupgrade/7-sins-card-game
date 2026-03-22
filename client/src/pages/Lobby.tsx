@@ -11,7 +11,7 @@ import { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
-import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock, Timer } from "lucide-react";
+import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock, Timer, Sparkles, MessageSquare } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
@@ -21,7 +21,7 @@ import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { chooseSin, startGame, getGameState, setCustomDeck, setTurnTimer } from "@/lib/gameEngine";
+import { chooseSin, startGame, getGameState, setCustomDeck, setTurnTimer, setAISettings } from "@/lib/gameEngine";
 import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
@@ -192,6 +192,8 @@ export default function Lobby() {
   const [showDeckPicker, setShowDeckPicker] = useState(false);
   const [selectedDeckName, setSelectedDeckName] = useState<string | null>(null);
   const [selectedTimer, setSelectedTimer] = useState<number>(DEFAULT_TURN_TIMER);
+  const [aiNarratorEnabled, setAiNarratorEnabled] = useState(true);
+  const [aiWhispererEnabled, setAiWhispererEnabled] = useState(true);
 
   useEffect(() => { setCurrentPage("lobby"); }, [setCurrentPage]);
   useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
@@ -207,6 +209,8 @@ export default function Lobby() {
       setState(gs);
       // Sync timer from game state
       if (gs.turnTimerSeconds) setSelectedTimer(gs.turnTimerSeconds);
+      if (gs.aiNarrator !== undefined) setAiNarratorEnabled(gs.aiNarrator);
+      if (gs.aiWhisperer !== undefined) setAiWhispererEnabled(gs.aiWhisperer);
       if (gs.status === "active") setLocation(`/game/${gameId}`);
     } catch (err: any) { console.error("[LoadState]", err); setError("Failed to load the lobby. Please refresh the page."); }
   }, [gameId, setLocation]);
@@ -293,6 +297,28 @@ export default function Lobby() {
     } catch (err: any) {
       console.error("[SetTimer]", err);
       setError("Failed to set the timer. Try again.");
+    }
+  };
+
+  const handleAIToggle = async (setting: 'narrator' | 'whisperer') => {
+    if (!gameId) return;
+    soundEngine.play("ui_click");
+    const newValue = setting === 'narrator' ? !aiNarratorEnabled : !aiWhispererEnabled;
+    if (setting === 'narrator') setAiNarratorEnabled(newValue);
+    else setAiWhispererEnabled(newValue);
+    try {
+      await setAISettings(gameId, setting === 'narrator' ? { aiNarrator: newValue } : { aiWhisperer: newValue });
+      addMessage(
+        setting === 'narrator'
+          ? (newValue ? "The Living Narrator awakens. Every round will be unique." : "The Narrator falls silent. Static lines will be used.")
+          : (newValue ? "The Sin Whisperer stirs. Your sin will tempt you each round." : "The Whisperer is silenced. Choose your cards in peace."),
+        "info"
+      );
+    } catch (err: any) {
+      console.error("[AIToggle]", err);
+      // Revert on failure
+      if (setting === 'narrator') setAiNarratorEnabled(!newValue);
+      else setAiWhispererEnabled(!newValue);
     }
   };
 
@@ -976,6 +1002,134 @@ export default function Lobby() {
                 >
                   Turn Timer: <span className="text-candle/80 font-bold">{selectedTimer}s</span>
                 </span>
+              </div>
+            </StonePanel>
+          </motion.div>
+        )}
+
+        {/* AI Features Toggle — Host Only */}
+        {isHost && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-full max-w-lg mb-6"
+          >
+            <StonePanel className="p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="w-3.5 h-3.5 text-candle/60" />
+                <h3
+                  className="text-xs tracking-[0.25em] text-candle/60 uppercase"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  AI Features
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Living Narrator Toggle */}
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleAIToggle('narrator')}
+                  className={`relative py-3 px-3 rounded-lg border text-left transition-all duration-200 ${
+                    aiNarratorEnabled
+                      ? "bg-candle/15 border-candle/40 shadow-[0_0_15px_oklch(0.55_0.12_60/0.15)]"
+                      : "bg-candle/5 border-candle/15 hover:bg-candle/10 hover:border-candle/25"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles className={`w-3.5 h-3.5 ${aiNarratorEnabled ? 'text-candle' : 'text-candle/30'}`} />
+                    <span
+                      className={`text-xs font-bold tracking-wider uppercase ${aiNarratorEnabled ? 'text-candle' : 'text-candle/40'}`}
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    >
+                      Living Narrator
+                    </span>
+                  </div>
+                  <span
+                    className={`text-[10px] ${aiNarratorEnabled ? 'text-candle/60' : 'text-candle/25'}`}
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    AI generates unique commentary each round
+                  </span>
+                  {aiNarratorEnabled && (
+                    <motion.div
+                      layoutId="narrator-indicator"
+                      className="absolute top-2 right-2 w-2 h-2 rounded-full bg-candle/80"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </motion.button>
+
+                {/* Sin Whisperer Toggle */}
+                <motion.button
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleAIToggle('whisperer')}
+                  className={`relative py-3 px-3 rounded-lg border text-left transition-all duration-200 ${
+                    aiWhispererEnabled
+                      ? "bg-candle/15 border-candle/40 shadow-[0_0_15px_oklch(0.55_0.12_60/0.15)]"
+                      : "bg-candle/5 border-candle/15 hover:bg-candle/10 hover:border-candle/25"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <MessageSquare className={`w-3.5 h-3.5 ${aiWhispererEnabled ? 'text-candle' : 'text-candle/30'}`} />
+                    <span
+                      className={`text-xs font-bold tracking-wider uppercase ${aiWhispererEnabled ? 'text-candle' : 'text-candle/40'}`}
+                      style={{ fontFamily: "var(--font-heading)" }}
+                    >
+                      Sin Whisperer
+                    </span>
+                  </div>
+                  <span
+                    className={`text-[10px] ${aiWhispererEnabled ? 'text-candle/60' : 'text-candle/25'}`}
+                    style={{ fontFamily: "var(--font-body)" }}
+                  >
+                    Your sin tempts you with private whispers
+                  </span>
+                  {aiWhispererEnabled && (
+                    <motion.div
+                      layoutId="whisperer-indicator"
+                      className="absolute top-2 right-2 w-2 h-2 rounded-full bg-candle/80"
+                      animate={{ scale: [1, 1.3, 1], opacity: [0.6, 1, 0.6] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    />
+                  )}
+                </motion.button>
+              </div>
+            </StonePanel>
+          </motion.div>
+        )}
+
+        {/* AI Features display for non-host */}
+        {!isHost && state && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="w-full max-w-lg mb-6"
+          >
+            <StonePanel className="p-3">
+              <div className="flex items-center justify-center gap-4">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className={`w-3 h-3 ${aiNarratorEnabled ? 'text-candle/70' : 'text-candle/25'}`} />
+                  <span
+                    className={`text-xs tracking-[0.15em] uppercase ${aiNarratorEnabled ? 'text-candle/60' : 'text-candle/30 line-through'}`}
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    AI Narrator {aiNarratorEnabled ? 'ON' : 'OFF'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <MessageSquare className={`w-3 h-3 ${aiWhispererEnabled ? 'text-candle/70' : 'text-candle/25'}`} />
+                  <span
+                    className={`text-xs tracking-[0.15em] uppercase ${aiWhispererEnabled ? 'text-candle/60' : 'text-candle/30 line-through'}`}
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    Sin Whisperer {aiWhispererEnabled ? 'ON' : 'OFF'}
+                  </span>
+                </div>
               </div>
             </StonePanel>
           </motion.div>

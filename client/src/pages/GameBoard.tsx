@@ -77,6 +77,8 @@ import MobileBattleOverview from "@/components/MobileBattleOverview";
 const BattleLog = lazy(() => import("@/components/BattleLog"));
 const RoundEndPrompt = lazy(() => import("@/components/RoundEndPrompt"));
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useAINarrator } from "@/hooks/useAINarrator";
+import SinWhisper from "@/components/SinWhisper";
 import { getSinHexColor, getSinCssVar } from "@/lib/sinColors";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
 const BloomOverlay = lazy(() => import("@/components/BloomOverlay"));
@@ -279,6 +281,16 @@ export default function GameBoard() {
     }
     prevGameStatus.current = gameState.status;
   }, [gameState?.status]);
+
+  // ─── AI Narrator & Sin Whisperer ─────────────────────────────
+  const addToActionFeedRef = useRef<(text: string) => void>(() => {});
+  const { whisper: aiWhisper, isWhisperLoading } = useAINarrator({
+    gameId: gameId || null,
+    playerId,
+    gameState,
+    addMessage,
+    addToActionFeed: (text: string) => addToActionFeedRef.current(text),
+  });
 
   const addToActionFeed = useCallback((text: string) => {
     const entry: ActionFeedEntry = {
@@ -1459,6 +1471,17 @@ export default function GameBoard() {
         </div>
 
         {/* Action Feed moved to center area on desktop; mobile has inline feed */}
+
+        {/* Sin Whisperer — AI temptation during selection phase */}
+        {gameState?.aiWhisperer && isMyTurn && !hasLockedIn && (
+          <div className="shrink-0 px-4 py-1">
+            <SinWhisper
+              whisper={aiWhisper}
+              isLoading={isWhisperLoading}
+              faction={mySin}
+            />
+          </div>
+        )}
 
         {/* Action Buttons — above cards so they're never hidden */}
         <div className="shrink-0 relative z-20">

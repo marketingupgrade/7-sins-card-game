@@ -2015,3 +2015,20 @@
 - [x] Update patch notes with v5.13.0 "The Hourglass Update" (server timer, configurable timer, timeout quips, round 13 fix)
 - [x] All 526 tests passing, zero TypeScript errors
 - [x] Push to GitHub
+
+### AI Integration: The Living Cathedral (v5.14.0)
+- [x] Create server/aiNarrator.ts with LLM-powered narrator system (Gemini 2.5 Flash via Forge API)
+- [x] Build game state analysis engine (rivalry detection, behavioral tagging, comeback tracking)
+- [x] Create narrator prompt templates for 7 trigger types (round_start, card_reveal, big_damage, elimination, game_over, comeback, rivalry_escalation)
+- [x] Create Sin Whisperer system with 7 per-faction personality prompts (wrath, sloth, greed, envy, pride, lust, gluttony)
+- [x] Add AI narrator toggle to lobby settings (host can enable/disable)
+- [x] Add Sin Whisperer toggle to lobby settings
+- [x] Wire narrator outputs into GameBoard via useAINarrator hook
+- [x] Wire Sin Whisperer outputs into SinWhisper floating UI component during selection phase
+- [x] Add Supabase columns for AI settings (ai_narrator, ai_whisperer)
+- [x] Create tRPC endpoints: game.aiNarrate, game.aiWhisper
+- [x] Add fallback to static narrator quips when LLM fails
+- [x] Write 15 unit tests for AI narrator behavioral analysis, rivalry detection, and context building
+- [x] Update patch notes with v5.14.0 "The Living Cathedral" update
+- [x] All 541 tests passing, zero TypeScript errors
+- [x] Push to GitHub

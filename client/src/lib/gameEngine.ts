@@ -206,7 +206,23 @@ export async function setTurnTimer(
   if (error) throw new Error(`Failed to set turn timer: ${error.message}`);
 }
 
-// ─── Start Game ──────────────────────────────────────────────
+// ─── AI Settings ─────────────────────────────────────────────────────────
+export async function setAISettings(
+  gameId: string,
+  settings: { aiNarrator?: boolean; aiWhisperer?: boolean }
+): Promise<void> {
+  const sb = getClientSupabase();
+  const update: Record<string, boolean> = {};
+  if (settings.aiNarrator !== undefined) update.ai_narrator = settings.aiNarrator;
+  if (settings.aiWhisperer !== undefined) update.ai_whisperer = settings.aiWhisperer;
+  const { error } = await sb
+    .from("games")
+    .update(update)
+    .eq("id", gameId);
+  if (error) throw new Error(`Failed to set AI settings: ${error.message}`);
+}
+
+// ─── Start Game ──────────────────────────────────────────────────────────
 export async function startGame(gameId: string): Promise<void> {
   const sb = getClientSupabase();
 
@@ -664,6 +680,8 @@ export async function getGameState(gameId: string): Promise<GameState> {
     winnerId: game.winner_id,
     selectionDeadline: game.selection_deadline ?? null,
     turnTimerSeconds: game.turn_timer_seconds ?? 15,
+    aiNarrator: game.ai_narrator ?? true,
+    aiWhisperer: game.ai_whisperer ?? true,
   };
 }
 

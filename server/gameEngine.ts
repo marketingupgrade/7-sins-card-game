@@ -588,6 +588,8 @@ export async function getGameState(gameId: string): Promise<GameState> {
     winnerId: game.winner_id,
     selectionDeadline: game.selection_deadline ?? null,
     turnTimerSeconds: game.turn_timer_seconds ?? 15,
+    aiNarrator: game.ai_narrator ?? true,
+    aiWhisperer: game.ai_whisperer ?? true,
   };
 }
 
