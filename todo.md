@@ -2176,4 +2176,4 @@
 - [x] All coaching overlays are non-blocking on mobile (pointer-events-auto only on inner card)
 - [x] Reduced z-index from z-[9990] to z-[100] to avoid blocking other UI
 - [x] Write tests for the fix (19 new tests, 820 total passing)
-- [ ] Push to GitHub
+- [x] Push to GitHub
