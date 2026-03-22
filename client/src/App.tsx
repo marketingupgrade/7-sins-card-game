@@ -52,6 +52,7 @@ const Chronicles = lazy(() => import("./pages/Chronicles"));
 const ChronicleView = lazy(() => import("./pages/ChronicleView"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const HowToPlay = lazy(() => import("./pages/HowToPlay"));
+const PracticeMode = lazy(() => import("./pages/PracticeMode"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 /** Minimal loading spinner shown while page chunks load */
@@ -105,6 +106,7 @@ function Router() {
         <Route path="/matchups" component={MatchupMatrix} />
         <Route path="/rules" component={GameRules} />
         <Route path="/how-to-play" component={HowToPlay} />
+        <Route path="/practice" component={PracticeMode} />
         <Route path="/deck-builder" component={DeckBuilder} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />

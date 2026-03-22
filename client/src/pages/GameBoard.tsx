@@ -50,6 +50,8 @@ import ScreenShake from "@/components/ScreenShake";
 import EnergyOrbs from "@/components/EnergyOrbs";
 import HpCriticalOverlay from "@/components/HpCriticalOverlay";
 import GameCoach, { markGamePlayed } from "@/components/GameCoach";
+import PracticeAnnotations from "@/components/PracticeAnnotations";
+import HandSorter, { sortCards, type SortMode } from "@/components/HandSorter";
 import RoundTransitionWipe from "@/components/RoundTransitionWipe";
 import SinDrone from "@/components/SinDrone";
 import SinReactiveBackground from "@/components/SinReactiveBackground";
@@ -489,9 +491,26 @@ export default function GameBoard() {
     };
   }, [gameId, turnPhase, gameState?.selectionDeadline]);
 
-  const myCards = useMemo(
+  // Card sorting state
+  const [cardSortMode, setCardSortMode] = useState<SortMode>(() => {
+    return (localStorage.getItem("7sins_sort_mode") as SortMode) || "default";
+  });
+
+  const myCardsUnsorted = useMemo(
     () => (myPlayer?.hand || []).map((id) => CARD_MAP[id]).filter(Boolean),
     [myPlayer?.hand]
+  );
+
+  const myCards = useMemo(
+    () => sortCards(
+      myCardsUnsorted,
+      cardSortMode,
+      myPlayer?.currentEnergy ?? 0,
+      myPlayer?.currentHp ?? 0,
+      myPlayer?.maxHp ?? 333,
+      gameState?.currentRound ?? 1,
+    ),
+    [myCardsUnsorted, cardSortMode, myPlayer?.currentEnergy, myPlayer?.currentHp, myPlayer?.maxHp, gameState?.currentRound]
   );
 
   const opponents = useMemo(() => {
@@ -1115,6 +1134,19 @@ export default function GameBoard() {
         isActive={myPlayer?.isAlive ?? true}
       />
 
+      {/* Practice Mode Annotations */}
+      {gameId && myPlayer && gameState && (
+        <PracticeAnnotations
+          gameId={gameId}
+          currentRound={gameState.currentRound}
+          myPlayer={myPlayer}
+          isMyTurn={isMyTurn}
+          hasLockedIn={hasLockedIn}
+          selectedCardsCount={selectedCards.length}
+          turnPhase={turnPhase}
+        />
+      )}
+
       {/* First-Game Coaching Tips */}
       {myPlayer && gameState && (
         <GameCoach
@@ -1718,6 +1750,18 @@ export default function GameBoard() {
 
         {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
         <div data-tutorial="card-hand" className="px-2 md:px-4 pb-4 md:pb-6 shrink-0 overflow-visible">
+          {/* Sort controls */}
+          <div className="flex justify-center mb-1">
+            <HandSorter
+              energy={myPlayer?.currentEnergy ?? 0}
+              hp={myPlayer?.currentHp ?? 0}
+              maxHp={myPlayer?.maxHp ?? 333}
+              round={gameState?.currentRound ?? 1}
+              isMyTurn={isMyTurn}
+              onSortChange={setCardSortMode}
+              sortMode={cardSortMode}
+            />
+          </div>
           {/* Desktop hand — UX: tighter gap, hover-lift for Fitts's Law proximity */}
           <div className="hidden md:flex items-end justify-center gap-2 overflow-x-auto pb-4 pt-2 scrollbar-thin" style={{ minHeight: '200px' }}>
             {myPlayer && (

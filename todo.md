@@ -2088,11 +2088,25 @@
 - [x] Create QuickStart modal (4-slide visual intro in Lobby, shows once)
 - [x] QuickStart modal covers sin selection and energy basics before first game
 - [x] GameCoach provides contextual floating tips during gameplay
-- [ ] Add "Why did I lose?" post-game analysis tips for new players (future)
-- [ ] Create beginner-friendly card sorting/filtering in hand (future)
+- [x] Add "Why did I lose?" post-game analysis tips for new players
+- [x] Create beginner-friendly card sorting/filtering in hand
 - [x] Add energy management tips (low_energy GameCoach tip)
 - [x] Implement progressive disclosure (QuickStart → GameCoach → How to Play page)
 - [x] Add first-turn coaching via GameCoach (first_turn + select_target tips)
 - [x] Write tests for onboarding system (30 tests passing, 648 total)
 - [x] Update patch notes (v6.2.0 "The Initiation Rites")
 - [x] Push to GitHub
+
+### v6.3.0 — Post-Game Analysis, Practice Mode, Card Sorting
+- [x] "Why did I lose?" post-game analysis with contextual tips after a loss
+- [x] Analyze unplayed cards, energy waste, targeting mistakes, and HP timeline
+- [x] Show actionable improvement suggestions based on game data
+- [x] Practice mode: guided solo game against 1 bot with annotations
+- [x] Practice mode: briefing slides before game with 8 teaching steps
+- [x] Practice mode: accessible from Home page, SigilMenu, and How to Play page
+- [x] Practice mode: PracticeAnnotations with round-by-round contextual teaching
+- [x] Beginner card sorting: sort by Draw / Cost / Type / Smart toggle in hand
+- [x] Beginner card sorting: "Smart" sort prioritizes affordable + situationally best cards
+- [x] Write tests for all three features (42 new tests, 690 total passing)
+- [x] Update patch notes (v6.3.0 "The Training Grounds")
+- [ ] Push to GitHub

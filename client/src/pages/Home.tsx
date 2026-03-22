@@ -528,19 +528,32 @@ export default function Home() {
                     </Link>
                   </div>
 
-                  {/* ─── Tertiary: How to Play ─── */}
-                  <Link href="/how-to-play">
-                    <motion.div
-                      data-tutorial="how-to-play"
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full rounded-xl py-2 px-6 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                      style={{ fontFamily: "var(--font-heading)" }}
-                    >
-                      <GraduationCap className="w-3.5 h-3.5" />
-                      HOW TO PLAY
-                    </motion.div>
-                  </Link>
+                  {/* ─── Tertiary: How to Play + Practice ─── */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Link href="/how-to-play">
+                      <motion.div
+                        data-tutorial="how-to-play"
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full rounded-xl py-2 px-4 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        <GraduationCap className="w-3.5 h-3.5" />
+                        HOW TO PLAY
+                      </motion.div>
+                    </Link>
+                    <Link href="/practice">
+                      <motion.div
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full rounded-xl py-2 px-4 text-xs border border-amber-500/15 text-amber-300/50 hover:bg-amber-500/5 hover:border-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        <Bot className="w-3.5 h-3.5" />
+                        PRACTICE
+                      </motion.div>
+                    </Link>
+                  </div>
 
                   <div className="flex items-center gap-3 my-1">
                     <div className="flex-1 h-px bg-white/8" />

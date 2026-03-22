@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { RotateCcw, BookOpen, Loader2, Download } from "lucide-react";
+import PostGameAnalysis from "./PostGameAnalysis";
 import { trpc } from "@/lib/trpc";
 import { ICON_URLS } from "@/lib/assetUrls";
 import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
@@ -942,6 +943,17 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                 </button>
               </div>
             </motion.div>
+
+            {/* ── WHY DID I LOSE? ── */}
+            {!isPlayerWinner && showContent && (
+              <PostGameAnalysis
+                players={players}
+                currentPlayerId={currentPlayerId}
+                currentRound={currentRound}
+                sinColor={sinColor}
+                logEntries={logEntries}
+              />
+            )}
 
             {/* ── AI CHRONICLE CTA ── */}
             {gameId && (

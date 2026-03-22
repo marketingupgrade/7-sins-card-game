@@ -84,6 +84,24 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.3.0",
+    date: "March 2026",
+    title: "The Training Grounds",
+    summary: "Three major features for new and improving players. After a loss, you now get a personalized breakdown of what went wrong — wasted energy, unplayed cards, missing defense, and more. Practice Mode lets you train against a bot with guided annotations that teach you round by round. And a new card sorting system in your hand lets you sort by Cost, Type, or Smart (which recommends the best plays based on your current game state).",
+    major: true,
+    changes: [
+      { category: "feature", text: "'Why Did I Lose?' post-game analysis: after a loss, see a breakdown of energy waste, unplayed cards, missing defense, early elimination, and low damage output with actionable improvement tips" },
+      { category: "feature", text: "Post-game analysis tracks 6 metrics: cards played, total damage dealt, healing done, shields applied, unplayed cards remaining, and energy wasted" },
+      { category: "feature", text: "Practice Mode: guided 1v1 training match against a bot with an 8-step pre-game briefing covering energy, cards, compound effects, defense, passives, and targeting" },
+      { category: "feature", text: "Practice Mode annotations: round-by-round contextual teaching overlays — Round 1 teaches card selection and lock-in, Round 2 explains compound growth, Round 3 covers faction passives, Round 4 sends you off with encouragement" },
+      { category: "feature", text: "Practice Mode accessible from Home page, SigilMenu navigation, and How to Play page with difficulty ratings per faction" },
+      { category: "feature", text: "Hand card sorting: toggle between Draw (original order), Cost (cheapest first), Type (damage → steal → heal → shield), and Smart (AI-recommended plays)" },
+      { category: "feature", text: "Smart sort algorithm considers current energy, HP percentage, round number, compound pattern timing, card tier, and energy efficiency to recommend optimal plays" },
+      { category: "feature", text: "Sort preference persists in localStorage with a 'new' indicator dot for first-time users" },
+      { category: "feature", text: "42 new vitest tests for all three features — all 690 tests passing" },
+    ],
+  },
+  {
     version: "6.2.0",
     date: "March 2026",
     title: "The Initiation Rites",
