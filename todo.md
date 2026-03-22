@@ -1959,7 +1959,7 @@
 - [ ] Apply rebalanced values to game code
 - [ ] Generate comprehensive balancing analysis document
 - [ ] Audit and update all main pages on the site
-- [ ] Push to GitHub
+- [x] Push to GitHub
 
 ### v5.12 Final — Balancing Analysis + Full Site Update
 - [x] Generate comprehensive balancing analysis with charts and data visualizations
@@ -2076,4 +2076,4 @@
 - [x] Write tests for cover art prompt generation (47 tests passing)
 - [x] Update patch notes (v6.1.0 "The Illuminated Manuscripts")
 - [x] Add generateCoverArt tRPC endpoint for existing chronicles
-- [ ] Push to GitHub
+- [x] Push to GitHub
