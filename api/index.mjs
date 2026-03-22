@@ -6398,6 +6398,229 @@ function getDefaultWhisper(faction) {
 
 // server/chronicleEngine.ts
 import { createClient as createClient3 } from "@supabase/supabase-js";
+
+// server/chronicleCoverArt.ts
+import { GoogleGenAI } from "@google/genai";
+
+// server/storage.ts
+function getStorageConfig() {
+  const baseUrl = ENV.forgeApiUrl;
+  const apiKey = ENV.forgeApiKey;
+  if (!baseUrl || !apiKey) {
+    throw new Error(
+      "Storage proxy credentials missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
+    );
+  }
+  return { baseUrl: baseUrl.replace(/\/+$/, ""), apiKey };
+}
+function buildUploadUrl(baseUrl, relKey) {
+  const url = new URL("v1/storage/upload", ensureTrailingSlash(baseUrl));
+  url.searchParams.set("path", normalizeKey(relKey));
+  return url;
+}
+function ensureTrailingSlash(value) {
+  return value.endsWith("/") ? value : `${value}/`;
+}
+function normalizeKey(relKey) {
+  return relKey.replace(/^\/+/, "");
+}
+function toFormData(data, contentType, fileName) {
+  const blob = typeof data === "string" ? new Blob([data], { type: contentType }) : new Blob([data], { type: contentType });
+  const form = new FormData();
+  form.append("file", blob, fileName || "file");
+  return form;
+}
+function buildAuthHeaders(apiKey) {
+  return { Authorization: `Bearer ${apiKey}` };
+}
+async function storagePut(relKey, data, contentType = "application/octet-stream") {
+  const { baseUrl, apiKey } = getStorageConfig();
+  const key = normalizeKey(relKey);
+  const uploadUrl = buildUploadUrl(baseUrl, key);
+  const formData = toFormData(data, contentType, key.split("/").pop() ?? key);
+  const response = await fetch(uploadUrl, {
+    method: "POST",
+    headers: buildAuthHeaders(apiKey),
+    body: formData
+  });
+  if (!response.ok) {
+    const message = await response.text().catch(() => response.statusText);
+    throw new Error(
+      `Storage upload failed (${response.status} ${response.statusText}): ${message}`
+    );
+  }
+  const url = (await response.json()).url;
+  return { key, url };
+}
+
+// server/chronicleCoverArt.ts
+function getImagenClient() {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GOOGLE_GENERATIVE_AI_API_KEY not configured");
+  }
+  return new GoogleGenAI({ apiKey });
+}
+var CIVILIZATION_ART_STYLES = {
+  warrior_empire: {
+    palette: "deep crimson, burnt umber, iron grey, blood orange, charcoal black",
+    medium: "oil painting on weathered canvas, dramatic chiaroscuro lighting",
+    atmosphere: "smoke rising from distant battlefields, ominous storm clouds, shafts of red sunlight",
+    motifs: ["broken swords", "siege towers", "war banners", "fortress walls", "marching armies"]
+  },
+  enlightened_republic: {
+    palette: "celestial blue, ivory white, gold leaf, soft violet, pearl grey",
+    medium: "Renaissance fresco style, luminous and ethereal, sfumato technique",
+    atmosphere: "golden hour light streaming through marble columns, clear skies with cirrus clouds",
+    motifs: ["towering libraries", "astronomical instruments", "laurel wreaths", "open scrolls", "domed temples"]
+  },
+  merchant_federation: {
+    palette: "rich amber, deep emerald, burnished gold, mahogany brown, sapphire blue",
+    medium: "Dutch Golden Age painting style, rich textures, warm candlelight",
+    atmosphere: "bustling harbor at sunset, ships with billowing sails, lantern-lit counting houses",
+    motifs: ["overflowing treasure chests", "merchant ships", "scales and weights", "silk caravans", "market squares"]
+  },
+  balanced: {
+    palette: "muted earth tones, twilight purple, aged bronze, sage green, dusty rose",
+    medium: "mixed media illustration, combining woodcut and watercolor, layered textures",
+    atmosphere: "twilight at a crossroads, where four paths meet under an ancient tree",
+    motifs: ["intertwined roots", "balanced scales", "four-faced monuments", "winding rivers", "ancient maps"]
+  }
+};
+var RARITY_ART_MODIFIERS = {
+  common: {
+    intensity: "subdued, understated",
+    detail: "clean composition, moderate detail",
+    specialEffect: "none"
+  },
+  rare: {
+    intensity: "vivid, striking",
+    detail: "intricate details, rich textures",
+    specialEffect: "subtle golden light emanating from the horizon"
+  },
+  epic: {
+    intensity: "dramatic, awe-inspiring",
+    detail: "highly detailed, masterwork quality, every surface textured",
+    specialEffect: "ethereal purple aurora in the sky, mystical energy radiating from the center"
+  },
+  legendary: {
+    intensity: "transcendent, mythic, overwhelming",
+    detail: "museum-quality detail, photorealistic textures with painterly composition",
+    specialEffect: "divine golden light breaking through storm clouds, celestial phenomena, the sky itself seems alive"
+  }
+};
+var FACTION_VISUAL_ELEMENTS = {
+  wrath: "flames and destruction, shattered armor, a blood-red sun",
+  sloth: "overgrown ruins, creeping vines, a civilization frozen in amber",
+  greed: "mountains of gold coins, jeweled crowns, overflowing vaults",
+  envy: "shadowy figures watching from mirrors, green-tinted fog, stolen crowns",
+  pride: "impossibly tall towers reaching into clouds, golden thrones, radiant monuments",
+  lust: "intertwined roses and thorns, silk banners, moonlit gardens",
+  gluttony: "overflowing banquet tables, expanding borders on a map, consumed landscapes"
+};
+function buildCoverArtPrompt(params) {
+  const civStyle = CIVILIZATION_ART_STYLES[params.civilizationType];
+  const rarityMod = RARITY_ART_MODIFIERS[params.rarityTier];
+  const motifs = civStyle.motifs.sort(() => Math.random() - 0.5).slice(0, 3).join(", ");
+  const factionVisuals = params.dominantFactions.slice(0, 2).map((f) => FACTION_VISUAL_ELEMENTS[f]).join("; ");
+  const eraFeel = params.turningPointRound <= 7 ? "ancient and primordial, stone and bronze" : params.turningPointRound <= 14 ? "medieval to industrial, iron and steam" : "modern to futuristic, glass and light";
+  const prompt = [
+    // Core subject
+    `A dramatic book cover illustration for an alternate history chronicle titled "${params.title}".`,
+    // Art style
+    `Art style: ${civStyle.medium}. ${rarityMod.intensity}.`,
+    // Color palette
+    `Color palette: ${civStyle.palette}.`,
+    // Atmosphere
+    `Atmosphere: ${civStyle.atmosphere}.`,
+    // Key visual elements
+    `Key elements in the composition: ${motifs}.`,
+    // Faction influence
+    factionVisuals ? `Visual influences: ${factionVisuals}.` : "",
+    // Era feel
+    `The overall era feel is ${eraFeel}.`,
+    // Detail level
+    `Detail level: ${rarityMod.detail}.`,
+    // Special effects for higher rarities
+    rarityMod.specialEffect !== "none" ? `Special visual effect: ${rarityMod.specialEffect}.` : "",
+    // Composition rules
+    "Composition: wide cinematic aspect ratio, rule of thirds, strong focal point in the center.",
+    "No text, no letters, no words, no watermarks. Pure illustration.",
+    // Quality
+    "Professional quality, suitable for a published book cover."
+  ].filter(Boolean).join(" ");
+  return prompt;
+}
+async function generateCoverImage(prompt) {
+  try {
+    const ai = getImagenClient();
+    const response = await ai.models.generateImages({
+      model: "imagen-4.0-generate-001",
+      prompt,
+      config: {
+        numberOfImages: 1,
+        aspectRatio: "16:9"
+      }
+    });
+    const imageBytes = response.generatedImages?.[0]?.image?.imageBytes;
+    if (!imageBytes) {
+      console.warn("[CoverArt] No image bytes returned from Imagen API");
+      return null;
+    }
+    return Buffer.from(imageBytes, "base64");
+  } catch (error) {
+    console.error("[CoverArt] Image generation failed:", error?.message || error);
+    return null;
+  }
+}
+async function uploadCoverArt(imageBuffer, gameId) {
+  try {
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const fileKey = `chronicle-covers/${gameId}-${randomSuffix}.png`;
+    const { url } = await storagePut(fileKey, imageBuffer, "image/png");
+    return url;
+  } catch (error) {
+    console.error("[CoverArt] Upload failed:", error?.message || error);
+    return null;
+  }
+}
+async function saveCoverArtUrl(gameId, coverUrl) {
+  const { createClient: createClient4 } = await import("@supabase/supabase-js");
+  const supabase = createClient4(
+    process.env.VITE_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ""
+  );
+  const { error } = await supabase.from("chronicles").update({ cover_image_url: coverUrl }).eq("game_id", gameId);
+  if (error) {
+    console.error("[CoverArt] Failed to save URL to database:", error);
+  }
+}
+async function generateAndSaveCoverArt(params) {
+  const startTime = Date.now();
+  try {
+    const prompt = buildCoverArtPrompt(params);
+    console.log(`[CoverArt] Generating cover for game ${params.gameId} (${params.civilizationType}, ${params.rarityTier})`);
+    const imageBuffer = await generateCoverImage(prompt);
+    if (!imageBuffer) {
+      console.warn(`[CoverArt] No image generated for game ${params.gameId}`);
+      return null;
+    }
+    console.log(`[CoverArt] Image generated (${imageBuffer.length} bytes) in ${Date.now() - startTime}ms`);
+    const coverUrl = await uploadCoverArt(imageBuffer, params.gameId);
+    if (!coverUrl) {
+      console.warn(`[CoverArt] Upload failed for game ${params.gameId}`);
+      return null;
+    }
+    await saveCoverArtUrl(params.gameId, coverUrl);
+    console.log(`[CoverArt] Cover art saved for game ${params.gameId}: ${coverUrl}`);
+    return coverUrl;
+  } catch (error) {
+    console.error(`[CoverArt] Failed for game ${params.gameId}:`, error?.message || error);
+    return null;
+  }
+}
+
+// server/chronicleEngine.ts
 var model2 = google2("gemini-2.0-flash");
 var NARRATOR_VOICE_CHART = `You are THE CHRONICLER \u2014 an ancient, omniscient entity who has watched every civilization rise and fall.
 
@@ -6997,6 +7220,19 @@ async function assembleAndSaveChronicle(gameId) {
       stats: result.stats
     });
     console.log(`[Chronicle] Full chronicle assembled and saved for game ${gameId} (id: ${chronicleId})`);
+    const dominantFactions = playerFactions.map((pf) => pf.faction).filter(Boolean);
+    generateAndSaveCoverArt({
+      gameId,
+      title: result.title,
+      civilizationType: result.civilizationType,
+      rarityTier: result.rarityTier,
+      dominantFactions,
+      turningPointRound: result.turningPointRound,
+      totalEliminations: result.stats.totalEliminations,
+      excerpt: result.excerpt
+    }).catch((err) => {
+      console.error(`[Chronicle] Cover art generation failed for ${gameId}:`, err);
+    });
     return chronicleId;
   } catch (error) {
     console.error("[Chronicle] Failed to assemble chronicle:", error);
@@ -8642,7 +8878,8 @@ var appRouter = router({
           title: existing.title,
           excerpt: existing.excerpt,
           rarityTier: existing.rarity_tier,
-          civilizationType: existing.civilization_type
+          civilizationType: existing.civilization_type,
+          coverImageUrl: existing.cover_image_url || null
         };
       }
       const gameState = await getGameState(input.gameId);
@@ -8695,6 +8932,28 @@ var appRouter = router({
         rarityTier: input.rarityTier,
         civilizationType: input.civilizationType
       });
+    }),
+    /** Generate cover art for an existing chronicle that doesn't have one */
+    generateCoverArt: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
+      const chronicle = await loadChronicle(input.gameId);
+      if (!chronicle) {
+        return { success: false, error: "Chronicle not found" };
+      }
+      if (chronicle.cover_image_url) {
+        return { success: true, coverImageUrl: chronicle.cover_image_url };
+      }
+      const playerFactions = Array.isArray(chronicle.player_factions) ? chronicle.player_factions.map((pf) => pf.faction).filter(Boolean) : [];
+      const coverUrl = await generateAndSaveCoverArt({
+        gameId: input.gameId,
+        title: chronicle.title,
+        civilizationType: chronicle.civilization_type,
+        rarityTier: chronicle.rarity_tier,
+        dominantFactions: playerFactions,
+        turningPointRound: chronicle.turning_point_round || 10,
+        totalEliminations: chronicle.stats_json?.totalEliminations || 0,
+        excerpt: chronicle.excerpt
+      });
+      return { success: !!coverUrl, coverImageUrl: coverUrl };
     })
   })
 });

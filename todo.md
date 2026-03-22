@@ -2095,4 +2095,4 @@
 - [x] Add first-turn coaching via GameCoach (first_turn + select_target tips)
 - [x] Write tests for onboarding system (30 tests passing, 648 total)
 - [x] Update patch notes (v6.2.0 "The Initiation Rites")
-- [ ] Push to GitHub
+- [x] Push to GitHub
