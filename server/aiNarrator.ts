@@ -11,21 +11,15 @@
  * 3. Adaptive Nemesis - Behavioral analysis that feeds both systems
  */
 
-import { createOpenAI } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-import { createPatchedFetch } from "./_core/patchedFetch";
 import type { GameState, PlayerState, SinType, LockedPlay } from "../shared/gameTypes";
 import { getCardById } from "../shared/cardData";
 import { NARRATOR_LINES } from "../shared/cardData";
 
-// ---- LLM Setup ----
-const openai = createOpenAI({
-  apiKey: process.env.BUILT_IN_FORGE_API_KEY,
-  baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
-  fetch: createPatchedFetch(fetch),
-});
-
-const model = openai.chat("gemini-2.5-flash");
+// ---- LLM Setup (Google Gemini Flash) ----
+// Uses GOOGLE_GENERATIVE_AI_API_KEY env var automatically
+const model = google("gemini-2.0-flash");
 
 // ---- Behavioral Analysis Types ----
 export interface PlayerBehavior {

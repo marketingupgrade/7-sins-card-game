@@ -84,6 +84,25 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.0.0",
+    date: "March 2026",
+    title: "The Chronicle Engine",
+    summary: "Your battles now write history. Every match generates a unique alternate history of human civilization, shaped entirely by how the game unfolds. A 3-stage AI narrative pipeline translates card plays into historical events across 20 eras — from the Dawn of Consciousness to The Last Reckoning. Read, share, and download your chronicles.",
+    changes: [
+      { category: "feature", text: "Chronicle Engine: 20-round matches map to 20 eras of human civilization. Each sin faction represents a historical force (Wrath = military conquest, Greed = capitalism, Sloth = isolationism, etc.)" },
+      { category: "feature", text: "3-stage AI narrative pipeline: Event Translator → Continuity Checker → Prose Writer, powered by Google Gemini 2.5 Flash" },
+      { category: "feature", text: "Post-game chronicle assembly with Evaluator-Optimizer loop for quality and continuity" },
+      { category: "feature", text: "Chronicle rarity tiers: Common (60%), Rare (25%), Epic (10%), Legendary (5%) — variable ratio reinforcement for dopamine loops" },
+      { category: "feature", text: "Civilization personality metrics: Militarism / Culture / Commerce tracked across rounds, determines civilization type (Warrior Empire, Enlightened Republic, Merchant Federation)" },
+      { category: "feature", text: "Public Chronicles feed at /chronicles — browse, search, and read other players' alternate histories" },
+      { category: "feature", text: "Literary chronicle view with progressive disclosure, drop caps, and Cormorant Garamond typography" },
+      { category: "feature", text: "Game-over Zeigarnik tension: 'The Chronicler is writing...' loading state with animated quill dots before chronicle reveal" },
+      { category: "feature", text: "Download chronicles as text, share via link" },
+      { category: "feature", text: "Switched all AI from Forge API to direct Google Gemini 2.5 Flash for production deployment" },
+      { category: "fix", text: "28 new chronicle engine tests, 571 total tests passing" },
+    ],
+  },
+  {
     version: "5.14.0",
     date: "March 2026",
     title: "The Living Cathedral",

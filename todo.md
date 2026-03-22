@@ -2032,3 +2032,35 @@
 - [x] Update patch notes with v5.14.0 "The Living Cathedral" update
 - [x] All 541 tests passing, zero TypeScript errors
 - [x] Push to GitHub
+
+### Chronicle Engine v6.0.0
+- [x] Create Supabase tables: chronicle_segments, chronicles (with indexes)
+- [x] Build shared/chronicleTypes.ts with ERA_TIMELINE (20 eras), FACTION_FORCES (7 sins), TITLE_FORMULAS, RARITY_CONFIGS
+- [x] Build server/chronicleEngine.ts with 3-stage narrative pipeline (Event Translator → Continuity Checker → Prose Writer)
+- [x] Build chronicle assembly with Evaluator-Optimizer loop and civilization metrics
+- [x] Implement Narrator Voice Chart with civilization-type personas
+- [x] Track civilization metrics (Militarism, Culture, Commerce) via faction contributions
+- [x] Implement chronicle rarity tiers (Common 60%, Rare 25%, Epic 10%, Legendary 5%)
+- [x] Generate chronicle titles using 8 copywriting formula templates
+- [x] Generate open-loop excerpts for social sharing
+- [x] Add tRPC endpoints: game.getChronicle, game.getPublishedChronicles, game.assembleChronicle
+- [x] Wire chronicle generation into game resolution flow (fire-and-forget after each round + game over)
+- [x] Build Chronicles.tsx public feed with social proof design (rarity glow, view counts, civilization badges)
+- [x] Build ChronicleView.tsx with three-layer progressive disclosure and literary typography
+- [x] Implement Zeigarnik tension sequence ('The Chronicler is writing...' with animated quill dots)
+- [x] Add literary typography (Cinzel Decorative + Cormorant Garamond)
+- [x] Add chronicle download as text
+- [x] Add share functionality via link
+- [x] Add view counting for chronicles (auto-increment on view)
+- [x] Add routes to App.tsx (/chronicles, /chronicles/:id)
+- [x] Write 28 chronicle engine tests — all passing
+- [x] Update patch notes with v6.0.0 "The Chronicle Engine"
+- [x] All 571 tests passing, zero TypeScript errors
+- [x] Push to GitHub
+### Switch AI from Forge to Google Gemini Flash
+- [x] Set GOOGLE_GENERATIVE_AI_API_KEY env var
+- [x] Install @ai-sdk/google package
+- [x] Update server/aiNarrator.ts to use Google Gemini directly
+- [x] Update server/chronicleEngine.ts to use Google Gemini directly
+- [x] Remove Forge API dependency from AI code (no more patchedFetch)
+- [x] Validate API key with vitest test (440ms response time)

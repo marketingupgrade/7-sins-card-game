@@ -48,6 +48,8 @@ const Blog = lazy(() => import("./pages/Blog"));
 const BlogPost = lazy(() => import("./pages/BlogPost"));
 const Brandbook = lazy(() => import("./pages/Brandbook"));
 const CommunityDecks = lazy(() => import("./pages/CommunityDecks"));
+const Chronicles = lazy(() => import("./pages/Chronicles"));
+const ChronicleView = lazy(() => import("./pages/ChronicleView"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -113,6 +115,8 @@ function Router() {
         <Route path="/reset-password" component={ResetPassword} />
         <Route path="/brandbook" component={Brandbook} />
         <Route path="/community" component={CommunityDecks} />
+        <Route path="/chronicles" component={Chronicles} />
+        <Route path="/chronicle/:gameId" component={ChronicleView} />
         <Route path="/player/:gamertag" component={PlayerProfile} />
         <Route path="/404" component={NotFound} />
         <Route component={NotFound} />

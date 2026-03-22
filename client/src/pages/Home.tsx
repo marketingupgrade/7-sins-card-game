@@ -662,6 +662,7 @@ export default function Home() {
                 { label: "Game Rules", href: "/rules" },
                 { label: "Lore", href: "/blog" },
                 { label: "Matchup Matrix", href: "/matchups" },
+                { label: "Chronicles", href: "/chronicles" },
                 { label: "Patch Notes", href: "/changelog" },
               ].map((link) => (
                 <Link

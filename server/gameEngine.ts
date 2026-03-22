@@ -45,6 +45,7 @@ import {
   getCompoundTickValue,
 } from "../shared/gameTypes";
 import { getServerSupabase } from "./supabaseServer";
+import { generateAndSaveRoundNarrative, assembleAndSaveChronicle } from "./chronicleEngine";
 
 // ─── Room Code Generation ────────────────────────────────────
 function generateRoomCode(): string {
@@ -497,6 +498,18 @@ async function resolveLockedPlays(gameId: string): Promise<void> {
       },
       round_number: game.current_round,
     });
+  }
+
+  // ─── Chronicle: generate round narrative asynchronously ───
+  try {
+    const { data: currentGame } = await sb.from("games").select("ai_narrator").eq("id", gameId).single();
+    if (currentGame?.ai_narrator) {
+      generateAndSaveRoundNarrative(gameId, game.current_round).catch((err) =>
+        console.error("[Chronicle] Round narrative failed:", err)
+      );
+    }
+  } catch (e) {
+    console.error("[Chronicle] Failed to check AI narrator setting:", e);
   }
 
   await advanceRound(gameId);
@@ -1068,6 +1081,17 @@ async function advanceRound(gameId: string): Promise<void> {
       finished_at: new Date().toISOString(),
       turn_phase: "round_end",
     }).eq("id", gameId);
+
+    // ─── Chronicle: assemble full chronicle on elimination finish ───
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch((err) =>
+          console.error("[Chronicle] Assembly failed (elimination):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
     return;
   }
 
@@ -1129,6 +1153,17 @@ async function advanceRound(gameId: string): Promise<void> {
       current_round: MAX_ROUNDS,
       turn_phase: "round_end",
     }).eq("id", gameId);
+
+    // ─── Chronicle: assemble full chronicle on Final Reckoning finish ───
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch((err) =>
+          console.error("[Chronicle] Assembly failed (reckoning):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
     return;
   }
 
@@ -1153,6 +1188,17 @@ async function advanceRound(gameId: string): Promise<void> {
       finished_at: new Date().toISOString(),
       turn_phase: "round_end",
     }).eq("id", gameId);
+
+    // ─── Chronicle: assemble full chronicle on mid-round elimination ───
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch((err) =>
+          console.error("[Chronicle] Assembly failed (mid-round):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
     return;
   }
 

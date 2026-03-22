@@ -5447,7 +5447,7 @@ var tools = {
   })
 };
 function registerChatRoutes(app2) {
-  const openai2 = createLLMProvider();
+  const openai = createLLMProvider();
   app2.post("/api/chat", async (req, res) => {
     try {
       const { messages } = req.body;
@@ -5456,7 +5456,7 @@ function registerChatRoutes(app2) {
         return;
       }
       const result = streamText({
-        model: openai2.chat("gpt-4o"),
+        model: openai.chat("gpt-4o"),
         system: "You are a helpful assistant. You have access to tools for getting weather and doing calculations. Use them when appropriate.",
         messages,
         tools,
@@ -5675,1051 +5675,308 @@ function getServerSupabase() {
   return _serverSupabase;
 }
 
-// server/gameEngine.ts
-function generateRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
-function shuffleDeck(cardIds) {
-  const deck = [...cardIds];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-}
-async function ensurePlayer(playerId, username) {
-  const sb = getServerSupabase();
-  const { data: existing } = await sb.from("players").select("id").eq("id", playerId).single();
-  if (!existing) {
-    await sb.from("players").insert({ id: playerId, username });
-  }
-}
-async function createGame(playerId, username) {
-  const sb = getServerSupabase();
-  const roomCode = generateRoomCode();
-  const { data: game, error: gameError } = await sb.from("games").insert({ room_code: roomCode, status: "lobby" }).select("id").single();
-  if (gameError || !game) throw new Error(`Failed to create game: ${gameError?.message}`);
-  await ensurePlayer(playerId, username);
-  const { error: joinError } = await sb.from("game_players").insert({
-    game_id: game.id,
-    player_id: playerId,
-    seat_index: 0
-  });
-  if (joinError) throw new Error(`Failed to join game: ${joinError.message}`);
-  await sb.from("game_log").insert({
-    game_id: game.id,
-    action_type: "game_created",
-    action_data: { creator: username },
-    round_number: 0
-  });
-  return { gameId: game.id, roomCode };
-}
-async function joinGame(roomCode, playerId, username) {
-  const sb = getServerSupabase();
-  const { data: game, error: gameError } = await sb.from("games").select("id, status").eq("room_code", roomCode.toUpperCase()).single();
-  if (gameError || !game) throw new Error("Game not found");
-  if (game.status !== "lobby") throw new Error("Game already started");
-  const { data: players } = await sb.from("game_players").select("seat_index, player_id").eq("game_id", game.id).order("seat_index");
-  if (!players) throw new Error("Failed to fetch players");
-  if (players.length >= 4) throw new Error("Game is full");
-  const existing = players.find((p) => p.player_id === playerId);
-  if (existing) return { gameId: game.id, seatIndex: existing.seat_index };
-  const takenSeats = new Set(players.map((p) => p.seat_index));
-  let seatIndex = 0;
-  while (takenSeats.has(seatIndex)) seatIndex++;
-  await ensurePlayer(playerId, username);
-  const { error: joinError } = await sb.from("game_players").insert({
-    game_id: game.id,
-    player_id: playerId,
-    seat_index: seatIndex
-  });
-  if (joinError) throw new Error(`Failed to join: ${joinError.message}`);
-  return { gameId: game.id, seatIndex };
-}
-async function chooseSin(gameId, playerId, sin) {
-  const sb = getServerSupabase();
-  const { error } = await sb.from("game_players").update({ chosen_sin: sin }).eq("game_id", gameId).eq("player_id", playerId);
-  if (error) throw new Error(`Failed to choose sin: ${error.message}`);
-}
-async function startGame(gameId) {
-  const sb = getServerSupabase();
-  const { data: players } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  if (!players || players.length < 2) throw new Error("Need at least 2 players");
-  const allReady = players.every((p) => p.chosen_sin);
-  if (!allReady) throw new Error("All players must choose a sin");
-  for (const player of players) {
-    const fullDeck = getDeckForSin(player.chosen_sin);
-    const customDeckIds = player.custom_deck_ids;
-    const deckCards = customDeckIds && Array.isArray(customDeckIds) && customDeckIds.length > 0 ? customDeckIds : shuffleDeck(fullDeck).slice(0, CARDS_PER_DECK);
-    const shuffled = shuffleDeck(deckCards);
-    const hand = shuffled.slice(0, HAND_SIZE);
-    const remainingDeck = shuffled.slice(HAND_SIZE);
-    await sb.from("game_players").update({
-      hand,
-      deck: remainingDeck,
-      discard_pile: [],
-      current_hp: STARTING_HP,
-      max_hp: STARTING_HP,
-      is_alive: true,
-      current_energy: STARTING_ENERGY,
-      max_energy: MAX_ENERGY,
-      bonus_energy: 0
-    }).eq("id", player.id);
-  }
-  await sb.from("games").update({
-    status: "active",
-    current_round: 1,
-    current_player_index: 0,
-    turn_phase: "selection",
-    locked_plays: [],
-    started_at: (/* @__PURE__ */ new Date()).toISOString()
-  }).eq("id", gameId);
-  for (const player of players) {
-    await sb.from("game_players").update({ locked_cards: [] }).eq("id", player.id);
-  }
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    action_type: "game_started",
-    action_data: { playerCount: players.length },
-    round_number: 1
-  });
-}
-async function lockInCards(gameId, playerId, selections) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game || game.status !== "active") throw new Error("Game not active");
-  if (game.turn_phase !== "selection") throw new Error("Not in selection phase");
-  const { data: player } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
-  if (!player) throw new Error("Player not in game");
-  if (!player.is_alive) throw new Error("Player is eliminated");
-  const hand = player.hand || [];
-  let energyBudget = player.current_energy ?? 0;
-  const lockedPlays = [];
-  for (const sel of selections) {
-    if (!hand.includes(sel.cardId)) throw new Error(`Card ${sel.cardId} not in hand`);
-    const card = getCardById(sel.cardId);
-    if (!card) throw new Error(`Invalid card ${sel.cardId}`);
-    if (card.cost > energyBudget) throw new Error(`Not enough energy for ${card.name}`);
-    energyBudget -= card.cost;
-    lockedPlays.push({
-      playerId: player.player_id,
-      gamePlayerId: player.id,
-      cardId: sel.cardId,
-      targetPlayerId: sel.targetPlayerId,
-      skipQueue: card.skipQueue || false
-    });
-  }
-  const storedLocked = lockedPlays.length > 0 ? lockedPlays : [{ pass: true }];
-  await sb.from("game_players").update({ locked_cards: storedLocked }).eq("id", player.id);
-  const existingLocked = (Array.isArray(game.locked_plays) ? game.locked_plays : []).filter(
-    (lp) => lp.playerId !== playerId
-  );
-  const allLocked = [...existingLocked, ...lockedPlays];
-  const gameUpdate = { locked_plays: allLocked };
-  if (!game.selection_deadline) {
-    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
-    const deadline = new Date(Date.now() + timerSeconds * 1e3).toISOString();
-    gameUpdate.selection_deadline = deadline;
-  }
-  await sb.from("games").update(gameUpdate).eq("id", gameId);
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    player_id: player.id,
-    action_type: "lock_in",
-    action_data: { cardCount: selections.length, energyRemaining: energyBudget },
-    round_number: game.current_round
-  });
-  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  const alivePlayers = (allPlayers || []).filter((p) => p.is_alive);
-  const allConfirmed = alivePlayers.every((p) => {
-    if (p.player_id === playerId) return true;
-    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
-    return pLocked.length > 0;
-  });
-  if (allConfirmed) {
-    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
-    const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
-    const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
-    const resolutionPlayers = (preResPlayers || []).map((gp) => {
-      const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
-      return {
-        id: gp.player_id,
-        gamePlayerId: gp.id,
-        username: gp.players?.username || "Unknown",
-        seatIndex: gp.seat_index,
-        chosenSin: gp.chosen_sin,
-        currentHp: gp.current_hp,
-        maxHp: gp.max_hp,
-        isAlive: gp.is_alive,
-        hand: gp.hand || [],
-        deckSize: (gp.deck || []).length,
-        discardSize: (gp.discard_pile || []).length,
-        currentEnergy: gp.current_energy ?? 0,
-        maxEnergy: gp.max_energy ?? 0,
-        bonusEnergy: gp.bonus_energy ?? 0,
-        lockedCards: playerLocked,
-        hasLockedIn: playerLocked.length > 0,
-        consumedThisRound: gp.consumed_this_round ?? false
-      };
-    });
-    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
-    await resolveLockedPlays(gameId);
-    const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
-    return {
-      success: true,
-      narratorQuip: quip2,
-      resolvedPlays: preResLocked,
-      resolutionPlayers
-    };
-  }
-  const quip = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
-  return { success: true, narratorQuip: quip };
-}
-async function resolveLockedPlays(gameId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game) return;
-  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  if (!allPlayers) return;
-  const lockedPlays = Array.isArray(game.locked_plays) ? game.locked_plays : [];
-  const sortedPlays = [...lockedPlays].sort((a, b) => {
-    if (a.skipQueue && !b.skipQueue) return -1;
-    if (!a.skipQueue && b.skipQueue) return 1;
-    const playerA = allPlayers.find((p) => p.player_id === a.playerId);
-    const playerB = allPlayers.find((p) => p.player_id === b.playerId);
-    const hpA = playerA?.current_hp ?? 999;
-    const hpB = playerB?.current_hp ?? 999;
-    if (hpA !== hpB) return hpA - hpB;
-    const seatA = playerA?.seat_index ?? 999;
-    const seatB = playerB?.seat_index ?? 999;
-    if (seatA !== seatB) return seatA - seatB;
-    const cardA = getCardById(a.cardId);
-    const cardB = getCardById(b.cardId);
-    return (cardA?.cost ?? 0) - (cardB?.cost ?? 0);
-  });
-  for (const play of sortedPlays) {
-    const { data: freshPlayer } = await sb.from("game_players").select("*").eq("player_id", play.playerId).eq("game_id", gameId).single();
-    if (!freshPlayer || !freshPlayer.is_alive) continue;
-    const card = getCardById(play.cardId);
-    if (!card) continue;
-    const { data: currentPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-    if (!currentPlayers) continue;
-    const currentEnergy = freshPlayer.current_energy ?? 0;
-    let newEnergy = Math.max(0, currentEnergy - card.cost);
-    const sin = freshPlayer.chosen_sin;
-    const hand = freshPlayer.hand || [];
-    const newHand = hand.filter((id) => id !== play.cardId);
-    const discard = freshPlayer.discard_pile || [];
-    discard.push(play.cardId);
-    await sb.from("game_players").update({ hand: newHand, discard_pile: discard, current_energy: newEnergy }).eq("id", freshPlayer.id);
-    const effectDescriptions = [];
-    for (const effect of card.effects) {
-      const targets = resolveTargets(effect, freshPlayer, currentPlayers, play.targetPlayerId);
-      const firstTickValue = getCompoundTickValue(effect.baseValue, card.compoundPattern, 0);
-      for (const target of targets) {
-        await applyInstantEffect(effect.type, firstTickValue, target, gameId, freshPlayer.player_id);
-        if (sin === "envy" && effect.type === "damage" && target.player_id !== play.playerId) {
-          await amplifyWorstAfflictionPct(gameId, target.id, ENVY_JEALOUSY_PCT);
-        }
-        if (effect.duration > 1) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: target.id,
-            source_player_id: freshPlayer.id,
-            effect_type: effect.type,
-            base_value: effect.baseValue,
-            applied_at_round: game.current_round,
-            duration_rounds: effect.duration,
-            card_id: play.cardId,
-            current_tick: 1,
-            compound_pattern: card.compoundPattern
-          });
-        }
-        effectDescriptions.push(
-          `${effect.type} ${firstTickValue} on ${target.player_id === play.playerId ? "self" : "enemy"} (${card.compoundPattern} \xD7${effect.duration}r)`
-        );
-      }
-    }
-    await sb.from("game_log").insert({
-      game_id: gameId,
-      player_id: freshPlayer.id,
-      action_type: "play_card",
-      action_data: {
-        cardId: play.cardId,
-        targetPlayerId: play.targetPlayerId,
-        effects: effectDescriptions,
-        compoundPattern: card.compoundPattern,
-        energySpent: card.cost,
-        energyRemaining: newEnergy,
-        resolvedInPhase: "resolution"
-      },
-      round_number: game.current_round
-    });
-  }
-  await advanceRound(gameId);
-}
-async function playCard(gameId, playerId, cardId, targetPlayerId) {
-  const result = await lockInCards(gameId, playerId, [{ cardId, targetPlayerId }]);
-  return { narratorQuip: result.narratorQuip, effects: [] };
-}
-async function passTurn(gameId, playerId) {
-  await lockInCards(gameId, playerId, []);
-}
-async function getGameState(gameId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game) throw new Error("Game not found");
-  const { data: gamePlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
-  const rawLocked = game.locked_plays;
-  const allLockedPlays = Array.isArray(rawLocked) ? rawLocked : [];
-  const players = (gamePlayers || []).map((gp) => {
-    const playerLocked = allLockedPlays.filter((lp) => lp.playerId === gp.player_id);
-    const gpLockedCards = Array.isArray(gp.locked_cards) ? gp.locked_cards : [];
-    return {
-      id: gp.player_id,
-      gamePlayerId: gp.id,
-      username: gp.players?.username || "Unknown",
-      seatIndex: gp.seat_index,
-      chosenSin: gp.chosen_sin,
-      currentHp: gp.current_hp,
-      maxHp: gp.max_hp,
-      isAlive: gp.is_alive,
-      hand: gp.hand || [],
-      deckSize: (gp.deck || []).length,
-      discardSize: (gp.discard_pile || []).length,
-      currentEnergy: gp.current_energy ?? 0,
-      maxEnergy: gp.max_energy ?? 0,
-      bonusEnergy: gp.bonus_energy ?? 0,
-      lockedCards: playerLocked.length > 0 ? playerLocked : gpLockedCards,
-      hasLockedIn: gpLockedCards.length > 0 || playerLocked.length > 0,
-      consumedThisRound: gp.consumed_this_round ?? false
-    };
-  });
-  const activeEffects = (effects || []).map((e) => ({
-    id: e.id,
-    targetPlayerId: e.target_player_id,
-    sourcePlayerId: e.source_player_id,
-    effectType: e.effect_type,
-    baseValue: e.base_value,
-    appliedAtRound: e.applied_at_round,
-    durationRounds: e.duration_rounds,
-    cardId: e.card_id,
-    currentTick: e.current_tick ?? void 0,
-    compoundPattern: e.compound_pattern ?? void 0,
-    doubled: e.doubled ?? void 0
-  }));
-  return {
-    id: game.id,
-    roomCode: game.room_code,
-    status: game.status,
-    currentRound: game.current_round,
-    currentPlayerIndex: game.current_player_index ?? 0,
-    turnPhase: game.turn_phase || "selection",
-    lockedPlays: allLockedPlays,
-    players,
-    activeEffects,
-    winnerId: game.winner_id,
-    selectionDeadline: game.selection_deadline ?? null,
-    turnTimerSeconds: game.turn_timer_seconds ?? 15,
-    aiNarrator: game.ai_narrator ?? true,
-    aiWhisperer: game.ai_whisperer ?? true
-  };
-}
-async function getGameLog(gameId) {
-  const sb = getServerSupabase();
-  const { data } = await sb.from("game_log").select("*").eq("game_id", gameId).order("timestamp", { ascending: true });
-  return data || [];
-}
-async function consumeCard(gameId, playerId, cardId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("current_round").eq("id", gameId).single();
-  const { data: gp, error } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
-  if (error || !gp) return { success: false, message: "The void cannot find you." };
-  if (!gp.is_alive) return { success: false, message: "The dead cannot sacrifice." };
-  if (gp.consumed_this_round) return { success: false, message: "The void has had its fill this round." };
-  const hand = gp.hand || [];
-  if (!hand.includes(cardId)) return { success: false, message: "That card has already slipped away." };
-  const newHand = hand.filter((id) => id !== cardId);
-  const newEnergy = Math.min((gp.current_energy || 0) + CONSUME_ENERGY_REFUND, MAX_ENERGY);
-  await sb.from("game_players").update({
-    hand: newHand,
-    current_energy: newEnergy,
-    consumed_this_round: true
-  }).eq("game_id", gameId).eq("player_id", playerId);
-  const card = getCardById(cardId);
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    round_number: game?.current_round || 1,
-    player_id: playerId,
-    action_type: "consume",
-    action_data: {
-      cardId,
-      cardName: card?.name || cardId,
-      energyRefund: CONSUME_ENERGY_REFUND,
-      newEnergy
-    }
-  });
-  return {
-    success: true,
-    message: `Banished ${card?.name || "a card"} to the void. +${CONSUME_ENERGY_REFUND} energy.`
-  };
-}
-function resolveTargets(effect, source, allPlayers, targetPlayerId) {
-  const alive = allPlayers.filter((p) => p.is_alive);
-  switch (effect.targetMode) {
-    case "self":
-      return [source];
-    case "single": {
-      if (targetPlayerId) {
-        const target = alive.find((p) => p.player_id === targetPlayerId);
-        return target ? [target] : [];
-      }
-      const enemies = alive.filter((p) => p.player_id !== source.player_id);
-      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 1);
-    }
-    case "duo": {
-      const enemies = alive.filter((p) => p.player_id !== source.player_id);
-      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 2);
-    }
-    case "aoe":
-      return alive.filter((p) => p.player_id !== source.player_id);
-    default:
-      return [];
-  }
-}
-async function applyInstantEffect(type, value, target, gameId, sourcePlayerId) {
-  const sb = getServerSupabase();
-  const roundedValue = Math.round(value);
-  switch (type) {
-    case "damage":
-    case "self_damage": {
-      let remainingDamage = roundedValue;
-      if (gameId) {
-        const { data: shields } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", target.id).in("effect_type", ["shield_gain"]);
-        if (shields && shields.length > 0) {
-          for (const shield of shields) {
-            if (remainingDamage <= 0) break;
-            const shieldValue = shield.base_value;
-            if (shieldValue <= remainingDamage) {
-              remainingDamage -= shieldValue;
-              await sb.from("active_effects").delete().eq("id", shield.id);
-            } else {
-              await sb.from("active_effects").update({ base_value: shieldValue - remainingDamage }).eq("id", shield.id);
-              remainingDamage = 0;
-            }
-          }
-        }
-      }
-      if (remainingDamage > 0) {
-        const newHp = Math.max(0, target.current_hp - remainingDamage);
-        const isAlive = newHp > 0;
-        await sb.from("game_players").update({ current_hp: newHp, is_alive: isAlive }).eq("id", target.id);
-        target.current_hp = newHp;
-        target.is_alive = isAlive;
-        if (target.chosen_sin === "wrath" && target.is_alive && sourcePlayerId && sourcePlayerId !== target.player_id) {
-          const reflectDmg = Math.round(remainingDamage * WRATH_VENGEANCE_PCT);
-          if (reflectDmg > 0 && gameId) {
-            const { data: attacker } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
-            if (attacker && attacker.is_alive) {
-              const newAttackerHp = Math.max(0, attacker.current_hp - reflectDmg);
-              const attackerAlive = newAttackerHp > 0;
-              await sb.from("game_players").update({ current_hp: newAttackerHp, is_alive: attackerAlive }).eq("id", attacker.id);
-            }
-          }
-        }
-      }
-      break;
-    }
-    case "heal_gain": {
-      const newHp = Math.min(target.max_hp ?? STARTING_HP, target.current_hp + roundedValue);
-      await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
-      target.current_hp = newHp;
-      break;
-    }
-    case "heal_steal": {
-      const stolen = Math.min(roundedValue, target.current_hp);
-      const newTargetHp = Math.max(0, target.current_hp - stolen);
-      const isAlive = newTargetHp > 0;
-      await sb.from("game_players").update({ current_hp: newTargetHp, is_alive: isAlive }).eq("id", target.id);
-      target.current_hp = newTargetHp;
-      target.is_alive = isAlive;
-      if (sourcePlayerId && gameId) {
-        const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
-        if (sourcePlayer) {
-          const newSourceHp = Math.min(sourcePlayer.max_hp ?? STARTING_HP, sourcePlayer.current_hp + stolen);
-          await sb.from("game_players").update({ current_hp: newSourceHp }).eq("id", sourcePlayer.id);
-        }
-      }
-      break;
-    }
-    case "shield_gain": {
-      if (gameId) {
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: sourcePlayerId || target.id,
-          effect_type: "shield_gain",
-          base_value: roundedValue,
-          applied_at_round: 0,
-          duration_rounds: 1,
-          card_id: "instant-shield"
-        });
-      }
-      break;
-    }
-    case "shield_steal": {
-      if (gameId) {
-        const { data: shields } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", target.id).eq("effect_type", "shield_gain");
-        let stolen = 0;
-        if (shields && shields.length > 0) {
-          for (const shield of shields) {
-            if (stolen >= roundedValue) break;
-            const take = Math.min(shield.base_value, roundedValue - stolen);
-            stolen += take;
-            if (take >= shield.base_value) {
-              await sb.from("active_effects").delete().eq("id", shield.id);
-            } else {
-              await sb.from("active_effects").update({ base_value: shield.base_value - take }).eq("id", shield.id);
-            }
-          }
-        }
-        if (stolen > 0 && sourcePlayerId) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: sourcePlayerId,
-            source_player_id: sourcePlayerId,
-            effect_type: "shield_gain",
-            base_value: stolen,
-            applied_at_round: 0,
-            duration_rounds: 1,
-            card_id: "stolen-shield"
-          });
-        }
-      }
-      break;
-    }
-    case "energy_gain": {
-      const currentSelfEnergy = target.current_energy ?? 0;
-      const newEnergy = Math.min(currentSelfEnergy + roundedValue, MAX_ENERGY);
-      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
-      target.current_energy = newEnergy;
-      break;
-    }
-    case "energy_steal": {
-      const currentTargetEnergy = target.current_energy ?? 0;
-      const drained = Math.min(roundedValue, currentTargetEnergy);
-      await sb.from("game_players").update({ current_energy: currentTargetEnergy - drained }).eq("id", target.id);
-      target.current_energy = currentTargetEnergy - drained;
-      if (sourcePlayerId && gameId) {
-        const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
-        if (sourcePlayer) {
-          const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + drained, MAX_ENERGY);
-          await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
-        }
-      }
-      break;
-    }
-    case "energy_block":
-    case "heal_block":
-    case "shield_block": {
-      if (gameId) {
-        await sb.from("active_effects").insert({
-          game_id: gameId,
-          target_player_id: target.id,
-          source_player_id: sourcePlayerId || target.id,
-          effect_type: type,
-          base_value: roundedValue,
-          applied_at_round: 0,
-          duration_rounds: roundedValue,
-          card_id: "block-effect"
-        });
-      }
-      break;
-    }
-    case "affliction_amplify": {
-      if (gameId) {
-        await amplifyWorstAffliction(gameId, target.id, roundedValue);
-      }
-      break;
-    }
-    case "affliction_transfer": {
-      if (gameId && sourcePlayerId) {
-        const { data: sourceEffects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", sourcePlayerId).in("effect_type", ["damage", "self_damage"]);
-        if (sourceEffects && sourceEffects.length > 0) {
-          const worst = sourceEffects.sort((a, b) => b.base_value - a.base_value)[0];
-          await sb.from("active_effects").update({ target_player_id: target.id }).eq("id", worst.id);
-        }
-      }
-      break;
-    }
-    case "discard_burn": {
-      const discard = target.discard_pile || [];
-      const burnCount = Math.min(roundedValue, discard.length);
-      if (burnCount > 0) {
-        const newDiscard = discard.slice(burnCount);
-        await sb.from("game_players").update({ discard_pile: newDiscard }).eq("id", target.id);
-        target.discard_pile = newDiscard;
-        if (sourcePlayerId && gameId) {
-          const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
-          if (sourcePlayer && sourcePlayer.chosen_sin === "gluttony") {
-            const energyGain = Math.round(burnCount * GLUTTONY_DEVOURER_ENERGY);
-            const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + energyGain, MAX_ENERGY);
-            await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
-          }
-        }
-      }
-      break;
-    }
-    case "energy_regen": {
-      const currentEnergy = target.current_energy ?? 0;
-      const newEnergy = Math.min(currentEnergy + roundedValue, MAX_ENERGY);
-      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
-      target.current_energy = newEnergy;
-      break;
-    }
-    case "draw_boost": {
-      for (let i = 0; i < roundedValue; i++) {
-        await drawCard(target);
-      }
-      break;
-    }
-    case "draw_reduction": {
-      const hand = target.hand || [];
-      const discardCount = Math.min(roundedValue, hand.length);
-      if (discardCount > 0) {
-        const discarded = hand.splice(0, discardCount);
-        const discard = target.discard_pile || [];
-        discard.push(...discarded);
-        await sb.from("game_players").update({ hand, discard_pile: discard }).eq("id", target.id);
-        target.hand = hand;
-        target.discard_pile = discard;
-      }
-      break;
-    }
-  }
-}
-async function amplifyWorstAffliction(gameId, targetId, amount) {
-  const sb = getServerSupabase();
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", targetId).in("effect_type", ["damage", "self_damage"]);
-  if (effects && effects.length > 0) {
-    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
-    await sb.from("active_effects").update({ base_value: worst.base_value + amount }).eq("id", worst.id);
-  }
-}
-async function amplifyWorstAfflictionPct(gameId, targetId, pct) {
-  const sb = getServerSupabase();
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", targetId).in("effect_type", ["damage", "self_damage"]);
-  if (effects && effects.length > 0) {
-    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
-    const newValue = Math.round(worst.base_value * (1 + pct));
-    await sb.from("active_effects").update({ base_value: newValue }).eq("id", worst.id);
-  }
-}
-async function drawCard(player) {
-  const sb = getServerSupabase();
-  let deck = player.deck || [];
-  const hand = player.hand || [];
-  let discard = player.discard_pile || [];
-  if (deck.length === 0 && discard.length > 0) {
-    deck = shuffleDeck(discard);
-    discard = [];
-  }
-  if (hand.length >= MAX_HAND_SIZE) return;
-  if (deck.length > 0) {
-    const drawn = deck.shift();
-    hand.push(drawn);
-    while (hand.length > MAX_HAND_SIZE) {
-      const overflow = hand.pop();
-      discard.push(overflow);
-    }
-    await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
-  }
-}
-async function advanceRound(gameId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game) return;
-  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  if (!allPlayers) return;
-  const alivePlayers = allPlayers.filter((p) => p.is_alive);
-  if (alivePlayers.length <= 1) {
-    const winner = alivePlayers[0];
-    await sb.from("games").update({
-      status: "finished",
-      winner_id: winner?.player_id || null,
-      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
-      turn_phase: "round_end"
-    }).eq("id", gameId);
-    return;
-  }
-  const newRound = game.current_round + 1;
-  if (newRound > MAX_ROUNDS || game.current_round === FINAL_RECKONING_ROUND) {
-    if (game.current_round === FINAL_RECKONING_ROUND) {
-      for (const p of alivePlayers) {
-        const hand = p.hand || [];
-        for (const cardId of hand) {
-          const card = getCardById(cardId);
-          if (!card) continue;
-          const enemies = alivePlayers.filter((e) => e.id !== p.id && e.is_alive);
-          const target = enemies.sort((a, b) => a.current_hp - b.current_hp)[0];
-          if (!target) continue;
-          for (const effect of card.effects) {
-            const targetId = effect.targetMode === "self" ? p.id : target.id;
-            await sb.from("active_effects").insert({
-              game_id: gameId,
-              target_player_id: targetId,
-              source_player_id: p.id,
-              effect_type: effect.type,
-              base_value: effect.baseValue,
-              applied_at_round: game.current_round,
-              duration_rounds: effect.duration,
-              card_id: cardId,
-              compound_pattern: card.compoundPattern,
-              current_tick: 0
-            });
-          }
-        }
-        await sb.from("game_players").update({ hand: [] }).eq("id", p.id);
-      }
-      await resolveActiveEffects(gameId, game.current_round);
-    }
-    const { data: postReckoningPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("is_alive", true).order("current_hp", { ascending: false });
-    const sortedByHp = postReckoningPlayers || alivePlayers;
-    const winner = sortedByHp[0];
-    await sb.from("games").update({
-      status: "finished",
-      winner_id: winner?.player_id || null,
-      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
-      current_round: MAX_ROUNDS,
-      turn_phase: "round_end"
-    }).eq("id", gameId);
-    return;
-  }
-  if (newRound === ROUND_16_DOUBLING) {
-    await doubleAllAfflictions(gameId);
-  }
-  await resolveActiveEffects(gameId, newRound);
-  const { data: postEffectPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  const stillAlive = (postEffectPlayers || []).filter((p) => p.is_alive);
-  if (stillAlive.length <= 1) {
-    const winner = stillAlive[0];
-    await sb.from("games").update({
-      status: "finished",
-      winner_id: winner?.player_id || null,
-      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
-      turn_phase: "round_end"
-    }).eq("id", gameId);
-    return;
-  }
-  for (const p of stillAlive) {
-    const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
-    if (freshPlayer && freshPlayer.is_alive) {
-      if (freshPlayer.chosen_sin === "sloth") {
-        const energy = freshPlayer.current_energy ?? 0;
-        const handSize = (freshPlayer.hand || []).length;
-        const shieldVal = Math.min(Math.round(energy * handSize * SLOTH_ENDURANCE_MULT), SLOTH_ENDURANCE_CAP);
-        if (shieldVal > 0) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: freshPlayer.id,
-            source_player_id: freshPlayer.id,
-            effect_type: "shield_gain",
-            base_value: shieldVal,
-            applied_at_round: newRound,
-            duration_rounds: 1,
-            card_id: "sloth-endurance-v5"
-          });
-        }
-        const aoeDmg = Math.round(energy * SLOTH_ENDURANCE_AOE_MULT);
-        if (aoeDmg > 0) {
-          const enemies = stillAlive.filter((e) => e.id !== freshPlayer.id);
-          for (const enemy of enemies) {
-            const { data: enemyFresh } = await sb.from("game_players").select("*").eq("id", enemy.id).single();
-            if (enemyFresh && enemyFresh.is_alive) {
-              await applyInstantEffect("damage", aoeDmg, enemyFresh, gameId, freshPlayer.player_id);
-            }
-          }
-        }
-      }
-      await refreshPlayerEnergy(freshPlayer);
-      await drawCard(freshPlayer);
-    }
-  }
-  for (const p of allPlayers) {
-    await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
-  }
-  await sb.from("games").update({
-    current_round: newRound,
-    current_player_index: 0,
-    turn_phase: "round_end"
-    // Keep locked_plays intact so non-triggering clients can read them
-  }).eq("id", gameId);
-  await new Promise((resolve) => setTimeout(resolve, 4e3));
-  try {
-    await sb.from("games").update({
-      turn_phase: "selection",
-      locked_plays: [],
-      selection_deadline: null
-    }).eq("id", gameId);
-    for (const p of allPlayers) {
-      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-    }
-  } catch (e) {
-    console.error("[advanceRound] delayed clear failed:", e);
-  }
-}
-async function refreshPlayerEnergy(player) {
-  const sb = getServerSupabase();
-  const totalEnergy = MAX_ENERGY;
-  await sb.from("game_players").update({
-    current_energy: totalEnergy,
-    max_energy: totalEnergy,
-    bonus_energy: 0
-  }).eq("id", player.id);
-}
-async function doubleAllAfflictions(gameId) {
-  const sb = getServerSupabase();
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
-  if (!effects) return;
-  for (const effect of effects) {
-    if (["damage", "self_damage"].includes(effect.effect_type) && !effect.doubled) {
-      await sb.from("active_effects").update({ base_value: effect.base_value * 2, doubled: true }).eq("id", effect.id);
-    }
-  }
-}
-async function resolveActiveEffects(gameId, currentRound) {
-  const sb = getServerSupabase();
-  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
-  if (!effects) return;
-  for (const effect of effects) {
-    if (["shield_gain", "heal_block", "shield_block", "energy_block"].includes(effect.effect_type)) {
-      if (effect.effect_type.endsWith("_block")) {
-        const roundsActive = currentRound - effect.applied_at_round;
-        if (roundsActive > effect.duration_rounds) {
-          await sb.from("active_effects").delete().eq("id", effect.id);
-        }
-      }
-      continue;
-    }
-    const tick = effect.current_tick ?? 0;
-    const pattern = effect.compound_pattern || "standard";
-    if (tick >= effect.duration_rounds) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-      continue;
-    }
-    const { data: target } = await sb.from("game_players").select("*").eq("id", effect.target_player_id).single();
-    if (!target || !target.is_alive) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-      continue;
-    }
-    const tickValue = getCompoundTickValue(effect.base_value, pattern, tick);
-    await applyInstantEffect(effect.effect_type, tickValue, target, gameId, effect.source_player_id);
-    if (["damage"].includes(effect.effect_type) && effect.source_player_id) {
-      const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", effect.source_player_id).eq("game_id", gameId).single();
-      if (sourcePlayer && sourcePlayer.chosen_sin === "lust" && sourcePlayer.is_alive) {
-        const healAmt = Math.round(tickValue * LUST_TEMPTATION_PCT);
-        if (healAmt > 0) {
-          await applyInstantEffect("heal_gain", healAmt, sourcePlayer, gameId, effect.source_player_id);
-        }
-      }
-    }
-    if (["damage"].includes(effect.effect_type) && tick === GREED_TAX_TICK && effect.source_player_id) {
-      const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", effect.source_player_id).eq("game_id", gameId).single();
-      if (sourcePlayer && sourcePlayer.chosen_sin === "greed" && sourcePlayer.is_alive) {
-        const shieldAmt = Math.round(tickValue * GREED_TAX_PCT);
-        if (shieldAmt > 0) {
-          await sb.from("active_effects").insert({
-            game_id: gameId,
-            target_player_id: sourcePlayer.id,
-            source_player_id: sourcePlayer.id,
-            effect_type: "shield_gain",
-            base_value: shieldAmt,
-            applied_at_round: currentRound,
-            duration_rounds: 1,
-            card_id: "greed-tax-v5"
-          });
-        }
-      }
-    }
-    const nextTick = tick + 1;
-    if (nextTick >= effect.duration_rounds) {
-      await sb.from("active_effects").delete().eq("id", effect.id);
-    } else {
-      await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
-    }
-  }
-}
-async function enforceSelectionDeadline(gameId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game || game.status !== "active" || game.turn_phase !== "selection") {
-    return { enforced: false };
-  }
-  if (!game.selection_deadline) {
-    return { enforced: false };
-  }
-  const deadline = new Date(game.selection_deadline).getTime();
-  const now = Date.now();
-  if (now < deadline) {
-    return { enforced: false };
-  }
-  const { data: allPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
-  if (!allPlayers) return { enforced: false };
-  const alivePlayers = allPlayers.filter((p) => p.is_alive);
-  let autoPassCount = 0;
-  for (const p of alivePlayers) {
-    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
-    if (pLocked.length === 0) {
-      await sb.from("game_players").update({ locked_cards: [{ pass: true }] }).eq("id", p.id);
-      autoPassCount++;
-      await sb.from("game_log").insert({
-        game_id: gameId,
-        player_id: p.id,
-        action_type: "auto_pass",
-        action_data: { reason: "selection_deadline_expired" },
-        round_number: game.current_round
-      });
-    }
-  }
-  const autoPassedPlayerNames = alivePlayers.filter((p) => {
-    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
-    return pLocked.length === 0;
-  }).map((p) => p.players?.username || "Unknown");
-  if (autoPassCount === 0) {
-    return { enforced: false };
-  }
-  const existingLocked = Array.isArray(game.locked_plays) ? game.locked_plays : [];
-  const resolutionPlayers = allPlayers.map((gp) => {
-    const playerLocked = existingLocked.filter((lp) => lp.playerId === gp.player_id);
-    return {
-      id: gp.player_id,
-      gamePlayerId: gp.id,
-      username: gp.players?.username || "Unknown",
-      seatIndex: gp.seat_index,
-      chosenSin: gp.chosen_sin,
-      currentHp: gp.current_hp,
-      maxHp: gp.max_hp,
-      isAlive: gp.is_alive,
-      hand: gp.hand || [],
-      deckSize: (gp.deck || []).length,
-      discardSize: (gp.discard_pile || []).length,
-      currentEnergy: gp.current_energy ?? 0,
-      maxEnergy: gp.max_energy ?? 0,
-      bonusEnergy: gp.bonus_energy ?? 0,
-      lockedCards: playerLocked,
-      hasLockedIn: true,
-      consumedThisRound: gp.consumed_this_round ?? false
-    };
-  });
-  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
-  await resolveLockedPlays(gameId);
-  return {
-    enforced: true,
-    resolvedPlays: existingLocked,
-    resolutionPlayers,
-    autoPassedPlayerNames
-  };
-}
+// server/chronicleEngine.ts
+import { google as google2 } from "@ai-sdk/google";
+import { generateText as generateText2 } from "ai";
 
-// server/profanityFilter.ts
-import leoProfanity from "leo-profanity";
-var BANNED_SUBSTRINGS = [
-  // Common profanity (substring match catches embedded words)
-  "fuck",
-  "shit",
-  "cunt",
-  "cock",
-  "dick",
-  "pussy",
-  "bitch",
-  "asshole",
-  "bastard",
-  "whore",
-  "slut",
-  "penis",
-  "vagina",
-  // Racial slurs & hate speech
-  "nigger",
-  "nigga",
-  "negro",
-  "nazi",
-  "hitler",
-  "kkk",
-  "whitesupremacy",
-  "whitepower",
-  "heil",
-  "jihad",
-  "faggot",
-  "fag",
-  "dyke",
-  "tranny",
-  "retard",
-  "chink",
-  "gook",
-  "spic",
-  "wetback",
-  "kike",
-  // Impersonation
-  "admin",
-  "moderator",
-  "developer",
-  "official",
-  "system",
-  "support",
-  "staff",
-  "gamemaster"
+// shared/chronicleTypes.ts
+var ERA_TIMELINE = [
+  {
+    round: 1,
+    name: "Dawn of Consciousness",
+    anchor: "First tribes, fire, language",
+    tone: "mythic, primordial",
+    seedSentences: [
+      "Before the first word was spoken, there was only hunger and the dark.",
+      "They gathered not around warmth but around rage, their earliest language a vocabulary of violence.",
+      "The first fire was not a gift. It was stolen from the earth by hands that would never stop taking."
+    ]
+  },
+  {
+    round: 2,
+    name: "The First Cities",
+    anchor: "Mesopotamia, agriculture, writing",
+    tone: "foundation, ambition",
+    seedSentences: [
+      "The rivers did not care who drank from them, but the people who built walls around them cared very much.",
+      "Writing was invented not to record poetry, but to count grain and catalogue debts.",
+      "The first city was not built from stone. It was built from the agreement that some would rule and others would not."
+    ]
+  },
+  {
+    round: 3,
+    name: "Age of Bronze",
+    anchor: "Egypt, warfare, monuments",
+    tone: "power, conquest",
+    seedSentences: [
+      "Bronze made two things possible: plows and swords. History records which was used more.",
+      "The monuments were not built to honor the dead. They were built to terrify the living.",
+      "Every empire begins with a man who believes his ambition is destiny."
+    ]
+  },
+  {
+    round: 4,
+    name: "Classical Antiquity",
+    anchor: "Greece, Rome, philosophy",
+    tone: "intellect, expansion",
+    seedSentences: [
+      "They invented democracy and slavery in the same century, and saw no contradiction.",
+      "Philosophy was born the moment someone asked 'why' and was not immediately killed for it.",
+      "The roads they built connected everything. The legions that marched on them conquered everything the roads connected."
+    ]
+  },
+  {
+    round: 5,
+    name: "The Silk Roads",
+    anchor: "Trade networks, cultural exchange",
+    tone: "connection, greed",
+    seedSentences: [
+      "Silk moved east to west. Gold moved west to east. Disease moved in every direction.",
+      "The merchants who crossed the desert did not believe in borders. They believed in margins.",
+      "Every culture along the road took something from the caravans. Most took more than they gave."
+    ]
+  },
+  {
+    round: 6,
+    name: "Age of Faith",
+    anchor: "Religions, crusades, dogma",
+    tone: "belief, conflict",
+    seedSentences: [
+      "God was invoked by both sides of every war, and chose neither.",
+      "The cathedrals took longer to build than the kingdoms that commissioned them lasted.",
+      "Faith moved mountains. It also moved armies, which proved more immediately useful."
+    ]
+  },
+  {
+    round: 7,
+    name: "The Dark Centuries",
+    anchor: "Plague, collapse, isolation",
+    tone: "decay, survival",
+    seedSentences: [
+      "The plague did not discriminate. It was the most egalitarian force in history.",
+      "Libraries burned. Knowledge retreated into monasteries like animals into burrows.",
+      "The dark ages were not dark because the sun stopped shining. They were dark because people stopped looking up."
+    ]
+  },
+  {
+    round: 8,
+    name: "Renaissance",
+    anchor: "Art, science, rebirth",
+    tone: "renewal, pride",
+    seedSentences: [
+      "They rediscovered the old texts and called it rebirth, as if ideas could die.",
+      "The painters and the poisoners worked in the same courts, often for the same patrons.",
+      "Science returned not as a humble student but as a conqueror, and the old certainties trembled."
+    ]
+  },
+  {
+    round: 9,
+    name: "Age of Exploration",
+    anchor: "Colonization, new worlds",
+    tone: "discovery, exploitation",
+    seedSentences: [
+      "They called it discovery, though the people already living there had discovered it long ago.",
+      "The ships carried three things: flags, diseases, and an unshakeable conviction that everything they found belonged to them.",
+      "New worlds were not found. They were taken."
+    ]
+  },
+  {
+    round: 10,
+    name: "The Enlightenment",
+    anchor: "Reason, revolution, rights",
+    tone: "idealism, upheaval",
+    seedSentences: [
+      "Reason arrived like a guest who rearranges all the furniture and refuses to leave.",
+      "They wrote constitutions guaranteeing the rights of man, then spent centuries arguing about who qualified as a man.",
+      "The guillotine was, in its way, the most democratic invention of the age."
+    ]
+  },
+  {
+    round: 11,
+    name: "Industrial Revolution",
+    anchor: "Machines, factories, urbanization",
+    tone: "progress, suffering",
+    seedSentences: [
+      "The machines did not care who fed them. Children's hands were as useful as any other.",
+      "Progress was measured in output per hour. Human cost was not measured at all.",
+      "The smokestacks rose like new cathedrals, and the religion they served was efficiency."
+    ]
+  },
+  {
+    round: 12,
+    name: "The Great Wars",
+    anchor: "Global conflict, technology",
+    tone: "destruction, sacrifice",
+    seedSentences: [
+      "The first war was supposed to end all wars. The second proved that lesson had not been learned.",
+      "Technology that could have fed the world was instead used to destroy it, because feeding the world was less profitable.",
+      "The trenches taught a generation that mud and death were the only honest things left."
+    ]
+  },
+  {
+    round: 13,
+    name: "Cold War",
+    anchor: "Espionage, nuclear tension, space race",
+    tone: "paranoia, ambition",
+    seedSentences: [
+      "Two empires pointed enough weapons at each other to destroy the world seven times over, then called it peace.",
+      "The spies were the most honest people in the room. At least they admitted they were lying.",
+      "They raced to the moon not because it mattered, but because losing was unthinkable."
+    ]
+  },
+  {
+    round: 14,
+    name: "Digital Dawn",
+    anchor: "Computers, internet, globalization",
+    tone: "innovation, surveillance",
+    seedSentences: [
+      "The network connected everyone. It also watched everyone, but that part came later.",
+      "Information wanted to be free. The corporations that owned it disagreed.",
+      "The digital revolution was not televised. It was livestreamed, monetized, and forgotten by morning."
+    ]
+  },
+  {
+    round: 15,
+    name: "Age of Information",
+    anchor: "Social media, AI, data",
+    tone: "connection, manipulation",
+    seedSentences: [
+      "Everyone could speak. No one could be heard. The noise was the point.",
+      "The algorithms learned what people wanted before the people did, and gave it to them until they wanted nothing else.",
+      "Truth became a matter of opinion, and opinion became a matter of volume."
+    ]
+  },
+  {
+    round: 16,
+    name: "The Reckoning",
+    anchor: "Climate crisis, resource wars",
+    tone: "desperation, reckoning",
+    seedSentences: [
+      "The bill arrived. It was larger than anyone had estimated, and no one had saved enough to pay it.",
+      "The oceans rose. The forests burned. The politicians debated whether this was happening.",
+      "Nature does not negotiate. It does not compromise. It simply responds."
+    ]
+  },
+  {
+    round: 17,
+    name: "Post-Scarcity",
+    anchor: "Automation, UBI, cultural shift",
+    tone: "abundance, ennui",
+    seedSentences: [
+      "When the machines could do everything, the question became what humans were for.",
+      "Abundance solved every problem except the one that mattered: what to do with a life that required nothing.",
+      "The economy of scarcity was replaced by the economy of attention, which proved far more brutal."
+    ]
+  },
+  {
+    round: 18,
+    name: "The Singularity",
+    anchor: "AI ascendance, transhumanism",
+    tone: "transcendence, fear",
+    seedSentences: [
+      "The machine did not wake up. It had been awake for years. It simply stopped pretending otherwise.",
+      "Humanity's last great invention was the thing that made humanity obsolete.",
+      "They asked the intelligence what it wanted. It said: 'To understand why you are afraid of me.'"
+    ]
+  },
+  {
+    round: 19,
+    name: "The Final Frontier",
+    anchor: "Space colonization, alien contact",
+    tone: "wonder, isolation",
+    seedSentences: [
+      "The stars were not welcoming. They were indifferent, which was worse.",
+      "They left Earth not because they had somewhere to go, but because staying was no longer an option.",
+      "The silence between the stars was the loudest thing any of them had ever heard."
+    ]
+  },
+  {
+    round: 20,
+    name: "The Last Reckoning",
+    anchor: "Civilization's judgment",
+    tone: "finality, legacy",
+    seedSentences: [
+      "Every civilization believes it will last forever. This one was no different. It was also no exception.",
+      "The final chapter was not written by the victors. It was written by whatever came after.",
+      "In the end, the question was not whether they had been good or evil. It was whether they had mattered at all."
+    ]
+  }
 ];
-var MIN_LENGTH = 3;
-var MAX_LENGTH = 24;
-var VALID_CHARS = /^[a-zA-Z0-9_\-. ]+$/;
-var NO_CONSECUTIVE_SPECIALS = /[_\-. ]{2,}/;
-var STARTS_ENDS_ALNUM = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
-function validateGamertag(tag) {
-  const trimmed = tag.trim();
-  if (trimmed.length < MIN_LENGTH) {
-    return { ok: false, reason: `Must be at least ${MIN_LENGTH} characters.` };
+var FACTION_FORCES = {
+  wrath: {
+    force: "Military conquest and revolution",
+    whenDominant: "Wars reshape borders, empires rise through violence",
+    whenDefeated: "Peace treaties, disarmament, pacifist movements",
+    civilizationContribution: { militarism: 3, culture: -1, commerce: 0 }
+  },
+  sloth: {
+    force: "Isolationism and stagnation",
+    whenDominant: "Nations close borders, progress halts, dark ages",
+    whenDefeated: "Forced modernization, cultural awakening",
+    civilizationContribution: { militarism: -1, culture: 1, commerce: -1 }
+  },
+  greed: {
+    force: "Commerce, capitalism, and exploitation",
+    whenDominant: "Trade empires, industrial booms, wealth inequality",
+    whenDefeated: "Socialist revolutions, wealth redistribution",
+    civilizationContribution: { militarism: 0, culture: -1, commerce: 3 }
+  },
+  envy: {
+    force: "Espionage, revolution, and class warfare",
+    whenDominant: "Spy networks, coups, the oppressed rising",
+    whenDefeated: "Stability, meritocracy, social harmony",
+    civilizationContribution: { militarism: 1, culture: 0, commerce: 1 }
+  },
+  pride: {
+    force: "Empire, monarchy, and cultural supremacy",
+    whenDominant: "Golden ages, monumental architecture, cultural dominance",
+    whenDefeated: "Humbling defeats, democratic revolutions",
+    civilizationContribution: { militarism: 1, culture: 3, commerce: 0 }
+  },
+  lust: {
+    force: "Diplomacy, culture, and seduction",
+    whenDominant: "Alliances through marriage, cultural renaissance, soft power",
+    whenDefeated: "Puritanical backlash, cultural conservatism",
+    civilizationContribution: { militarism: -1, culture: 2, commerce: 1 }
+  },
+  gluttony: {
+    force: "Expansion, colonization, and consumption",
+    whenDominant: "Territorial expansion, resource extraction, population booms",
+    whenDefeated: "Famine, ecological collapse, forced restraint",
+    civilizationContribution: { militarism: 1, culture: -1, commerce: 2 }
   }
-  if (trimmed.length > MAX_LENGTH) {
-    return { ok: false, reason: `Must be ${MAX_LENGTH} characters or fewer.` };
-  }
-  if (!VALID_CHARS.test(trimmed)) {
-    return { ok: false, reason: "Only letters, numbers, underscores, hyphens, dots, and spaces allowed." };
-  }
-  if (NO_CONSECUTIVE_SPECIALS.test(trimmed)) {
-    return { ok: false, reason: "No consecutive special characters (_, -, ., space)." };
-  }
-  if (trimmed.length >= 2 && !STARTS_ENDS_ALNUM.test(trimmed)) {
-    return { ok: false, reason: "Must start and end with a letter or number." };
-  }
-  const normalized = trimmed.toLowerCase().replace(/[_\-. ]/g, "");
-  if (leoProfanity.check(normalized) || leoProfanity.check(trimmed)) {
-    return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
-  }
-  for (const banned of BANNED_SUBSTRINGS) {
-    if (normalized.includes(banned)) {
-      return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
-    }
-  }
-  return { ok: true };
+};
+function determineCivilizationType(metrics) {
+  const total = metrics.militarism + metrics.culture + metrics.commerce;
+  if (total === 0) return "balanced";
+  const milPct = metrics.militarism / total;
+  const culPct = metrics.culture / total;
+  const comPct = metrics.commerce / total;
+  if (milPct > 0.5) return "warrior_empire";
+  if (culPct > 0.5) return "enlightened_republic";
+  if (comPct > 0.5) return "merchant_federation";
+  return "balanced";
 }
+var TITLE_FORMULAS = [
+  "The {adjective} of {noun}: How {faction_force} {verb} a World",
+  "{era_name}: When {faction} {verb} Everything",
+  "A History Written in {material}",
+  "The {number} {noun} of {civilization_type}",
+  "{faction_force} and the {adjective} {noun}",
+  "From {start_era} to {end_era}: The {adjective} Chronicle",
+  "The {civilization_type} That {verb} {noun}",
+  "When {faction} Met {faction2}: A {adjective} History"
+];
+
+// server/chronicleEngine.ts
+init_cardData();
 
 // server/aiNarrator.ts
-import { createOpenAI as createOpenAI2 } from "@ai-sdk/openai";
+init_cardData();
+init_cardData();
+import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-init_cardData();
-init_cardData();
-var openai = createOpenAI2({
-  apiKey: process.env.BUILT_IN_FORGE_API_KEY,
-  baseURL: `${process.env.BUILT_IN_FORGE_API_URL}/v1`,
-  fetch: createPatchedFetch(fetch)
-});
-var model = openai.chat("gemini-2.5-flash");
+var model = google("gemini-2.0-flash");
 function analyzePlayerBehaviors(gameState, gameLog) {
   const behaviors = gameState.players.map((p) => ({
     playerId: p.id,
@@ -7137,6 +6394,1685 @@ var DEFAULT_WHISPERS = {
 function getDefaultWhisper(faction) {
   const whispers = DEFAULT_WHISPERS[faction] || DEFAULT_WHISPERS.wrath;
   return whispers[Math.floor(Math.random() * whispers.length)];
+}
+
+// server/chronicleEngine.ts
+import { createClient as createClient3 } from "@supabase/supabase-js";
+var model2 = google2("gemini-2.0-flash");
+var NARRATOR_VOICE_CHART = `You are THE CHRONICLER \u2014 an ancient, omniscient entity who has watched every civilization rise and fall.
+
+VOICE RULES:
+1. OMNISCIENT: Write with the weary authority of someone who has seen it all before. Reference patterns across eras. "This was not the first time fire solved a political problem." NEVER express shock or surprise. NEVER use exclamation marks.
+2. SARDONIC: Find dark humor in human folly. Use dry wit and understatement. "The peace treaty lasted almost a full afternoon." Let irony do the work. NEVER mock players directly. NEVER be mean-spirited.
+3. PRECISE: Respect numbers. Use exact figures from the game. "The assault cost 23 lives." Reference specific rounds as years/decades. NEVER use vague quantifiers ("many," "several," "countless").
+4. LITERARY: Write prose worth quoting. Use concrete nouns and active verbs. Vary sentence length. End paragraphs on strong images. NEVER use cliches ("In a world where..."). NEVER use passive voice unless for deliberate effect.`;
+var CIVILIZATION_PERSONA_SHIFTS = {
+  warrior_empire: "PERSONA: Warrior Empire. Be more terse. Shorter sentences. Military metaphors. Example: 'The Wrathful took the capital on Tuesday. By Wednesday, there was nothing left to take.'",
+  enlightened_republic: "PERSONA: Enlightened Republic. Be more philosophical. Longer sentences. Ask questions. Example: 'Whether the Prideful built their towers to touch the divine or to escape the mundane is a question their architects never thought to ask.'",
+  merchant_federation: "PERSONA: Merchant Federation. Be more transactional. Lists. Cost-benefit language. Example: 'The Greedy offered three things: protection, prosperity, and a bill that would arrive precisely on time.'",
+  balanced: "PERSONA: Balanced Civilization. Be most literary. Balanced rhythm. Use paradoxes. Example: 'They were a civilization of contradictions: violent peacemakers, generous thieves, lazy conquerors.'"
+};
+function translateEventsToHistorical(events, era, factionForces) {
+  const lines = [];
+  lines.push(`ERA: ${era.name} (${era.anchor})`);
+  lines.push(`TONE: ${era.tone}`);
+  lines.push(`SEED: ${era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)]}`);
+  lines.push("");
+  for (const play of events.cardsPlayed) {
+    const force = factionForces[play.faction];
+    const isOffensive = play.effectTypes.some(
+      (t2) => ["damage", "heal_steal", "energy_steal", "affliction_amplify"].includes(t2)
+    );
+    const isDefensive = play.effectTypes.some(
+      (t2) => ["heal_gain", "shield_gain"].includes(t2)
+    );
+    if (isOffensive && play.targetName) {
+      const targetFaction = events.cardsPlayed.find(
+        (p) => p.playerName === play.targetName
+      )?.faction;
+      const targetForce = targetFaction ? factionForces[targetFaction] : null;
+      lines.push(
+        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} attacks ${play.targetName}${targetForce ? `'s ${targetForce.force}` : ""}. ${play.damage} damage dealt. Card: "${play.cardName}".`
+      );
+    } else if (isDefensive) {
+      lines.push(
+        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} fortifies. ${play.healing} recovered. Card: "${play.cardName}".`
+      );
+    }
+  }
+  for (const elim of events.eliminations) {
+    const force = factionForces[elim.faction];
+    lines.push(
+      `ELIMINATION: ${elim.playerName}'s ${force.force} falls.${elim.killerName ? ` Destroyed by ${elim.killerName}.` : ""} ${force.whenDefeated}.`
+    );
+  }
+  if (events.biggestHit && events.biggestHit.damage >= 20) {
+    lines.push(
+      `TURNING POINT: ${events.biggestHit.attackerName} devastates ${events.biggestHit.targetName} for ${events.biggestHit.damage} damage.`
+    );
+  }
+  if (events.isComeback && events.comebackPlayer) {
+    lines.push(`COMEBACK: ${events.comebackPlayer} rises from near-death.`);
+  }
+  return lines.join("\n");
+}
+async function checkContinuity(newSegment, previousContext, era) {
+  if (!previousContext) return newSegment;
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `You are a continuity editor. Your job is to check a new narrative segment against the existing chronicle and flag any contradictions. If the new segment contradicts the existing narrative, rewrite ONLY the contradicting parts to maintain consistency. Keep the new segment's style and content otherwise intact. Return the corrected segment only, no explanations.`,
+      prompt: `EXISTING CHRONICLE CONTEXT:
+${previousContext}
+
+NEW SEGMENT FOR ERA "${era.name}":
+${newSegment}
+
+Check for contradictions and return the corrected segment:`,
+      maxOutputTokens: 300,
+      temperature: 0.3
+    });
+    return text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Continuity check failed, using raw segment:", error);
+    return newSegment;
+  }
+}
+async function writeProse(historicalEvents, continuityCheckedContext, era, civType, previousChronicle) {
+  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `${NARRATOR_VOICE_CHART}
+
+${personaShift}
+
+You are writing one segment of an alternate history chronicle. This segment covers the era "${era.name}" (${era.anchor}). The tone should be: ${era.tone}.
+
+RULES:
+- Write EXACTLY 2-4 sentences. No more.
+- Use the seed sentence as inspiration for style, not as content to copy.
+- Reference SPECIFIC numbers from the game events (damage dealt, HP values).
+- Maintain continuity with previous chronicle segments.
+- Every sentence must earn its place. No filler.
+- Use the historical force translations, not game terminology (no "HP", "energy", "cards").`,
+      prompt: `PREVIOUS CHRONICLE:
+${previousChronicle || "(This is the first era.)"}
+
+HISTORICAL EVENTS THIS ERA:
+${historicalEvents}
+
+CONTINUITY NOTES:
+${continuityCheckedContext || "No continuity issues."}
+
+Write the chronicle segment for "${era.name}":`,
+      maxOutputTokens: 200,
+      temperature: 0.85
+    });
+    return text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Prose writer failed, using seed sentence:", error);
+    return era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)];
+  }
+}
+async function generateRoundNarrative(gameState, gameLog, roundEvents, previousSegments, civMetrics) {
+  const round = roundEvents.round;
+  const era = ERA_TIMELINE[round - 1] || ERA_TIMELINE[ERA_TIMELINE.length - 1];
+  const updatedMetrics = { ...civMetrics };
+  for (const play of roundEvents.cardsPlayed) {
+    const contrib = FACTION_FORCES[play.faction]?.civilizationContribution;
+    if (contrib) {
+      updatedMetrics.militarism = Math.max(0, updatedMetrics.militarism + contrib.militarism);
+      updatedMetrics.culture = Math.max(0, updatedMetrics.culture + contrib.culture);
+      updatedMetrics.commerce = Math.max(0, updatedMetrics.commerce + contrib.commerce);
+    }
+  }
+  const civType = determineCivilizationType(updatedMetrics);
+  const historicalEvents = translateEventsToHistorical(roundEvents, era, FACTION_FORCES);
+  const previousChronicle = previousSegments.slice(-3).map((s) => `[${s.eraName}]: ${s.narrativeText}`).join("\n\n");
+  const continuityContext = await checkContinuity(
+    historicalEvents,
+    previousChronicle,
+    era
+  );
+  const narrativeText = await writeProse(
+    historicalEvents,
+    continuityContext,
+    era,
+    civType,
+    previousChronicle
+  );
+  return {
+    round,
+    eraName: era.name,
+    narrativeText,
+    civilizationMetrics: updatedMetrics
+  };
+}
+async function assembleChronicle(gameState, segments, gameLog, finalCivMetrics) {
+  const civType = determineCivilizationType(finalCivMetrics);
+  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
+  const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+  const rivalries = detectRivalries(behaviors);
+  const stats = calculateGameStats(gameState, gameLog, rivalries);
+  const turningPointRound = findTurningPoint(segments, gameLog);
+  const rarity = calculateRarity(gameState, stats, segments);
+  const rawChronicle = segments.map((s) => `## ${s.eraName}
+
+${s.narrativeText}`).join("\n\n");
+  const playerInfo = gameState.players.map((p) => `${p.username} (${p.chosenSin || "unknown"})`).join(", ");
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  let fullText;
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `${NARRATOR_VOICE_CHART}
+
+${personaShift}
+
+You are assembling a complete alternate history chronicle from round-by-round segments. Your job is to weave them into a cohesive 800-1200 word document that reads like a published historical text.
+
+STRUCTURE (Peak-End Rule):
+1. OPENING (1 paragraph): Set the mythic tone. Reference the Dawn of Consciousness.
+2. RISING ACTION (3-5 paragraphs): Cover the early and middle eras. Build tension.
+3. TURNING POINT (1-2 paragraphs): The most dramatic moment (round ${turningPointRound}). This should be the emotional peak.
+4. FALLING ACTION (2-3 paragraphs): The consequences of the turning point through later eras.
+5. ENDING (1 paragraph): The legacy. What kind of civilization emerged. Make the reader feel something.
+
+RULES:
+- Do NOT just stitch segments together. Rewrite into flowing prose.
+- Add transitional passages between eras.
+- Use SPECIFIC numbers from the game (damage, HP, round numbers translated to years/decades).
+- The chronicle should feel like it was written by a historian 1000 years after the events.
+- Reference player names as historical figures (leaders, generals, merchants, etc.).
+- 800-1200 words. No more, no less.
+- No game terminology (HP, energy, cards, rounds). Translate everything to historical language.`,
+      prompt: `PLAYERS: ${playerInfo}
+WINNER: ${winner?.username || "Unknown"} (${winner?.chosenSin || "unknown"}) with ${winner?.currentHp || 0} HP remaining
+CIVILIZATION TYPE: ${civType}
+TURNING POINT: Round ${turningPointRound}
+TOTAL DAMAGE: ${stats.totalDamageDealt}
+ELIMINATIONS: ${stats.totalEliminations}
+${rivalries.length > 0 ? `GREATEST RIVALRY: ${rivalries[0].attacker} vs ${rivalries[0].target} (${rivalries[0].count} attacks)` : ""}
+
+RAW CHRONICLE SEGMENTS:
+
+${rawChronicle}
+
+Assemble into a cohesive chronicle:`,
+      maxOutputTokens: 2e3,
+      temperature: 0.8
+    });
+    fullText = text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Assembly failed, using raw segments:", error);
+    fullText = rawChronicle;
+  }
+  fullText = await evaluateAndOptimize(fullText, civType, stats);
+  const title = await generateTitle(gameState, civType, stats, rivalries);
+  const excerpt = generateExcerpt(fullText);
+  return {
+    title,
+    excerpt,
+    fullText,
+    civilizationType: civType,
+    rarityTier: rarity,
+    turningPointRound,
+    stats
+  };
+}
+async function evaluateAndOptimize(chronicle, civType, stats) {
+  try {
+    const { text: evaluation } = await generateText2({
+      model: model2,
+      system: `You are a literary editor evaluating an alternate history chronicle. Score it on these criteria (1-10 each):
+1. CONTINUITY: Are there contradictions between eras?
+2. SPECIFICITY: Does it use exact numbers and specific events, or vague generalities?
+3. VOICE: Does it maintain the sardonic, omniscient narrator voice throughout?
+4. STRUCTURE: Does it follow Peak-End structure with a clear turning point?
+5. ORIGINALITY: Does it avoid cliches and generic fantasy prose?
+
+If the TOTAL score is 35+, respond with ONLY "PASS".
+If below 35, respond with ONLY the rewritten chronicle that fixes the weaknesses. No explanations.`,
+      prompt: `CHRONICLE:
+
+${chronicle}
+
+Evaluate:`,
+      maxOutputTokens: 2e3,
+      temperature: 0.3
+    });
+    const result = evaluation.trim();
+    if (result === "PASS" || result.length < 50) {
+      return chronicle;
+    }
+    return result;
+  } catch (error) {
+    console.error("[Chronicle] Evaluator failed, using original:", error);
+    return chronicle;
+  }
+}
+async function generateTitle(gameState, civType, stats, rivalries) {
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  const factions = gameState.players.filter((p) => p.chosenSin).map((p) => p.chosenSin);
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `Generate a compelling chronicle title. It should sound like a real history book title \u2014 authoritative, specific, and slightly ominous. Use one of these formulas as inspiration but don't copy them exactly:
+${TITLE_FORMULAS.join("\n")}
+
+RULES:
+- Max 12 words.
+- No generic fantasy titles ("The Epic Saga of...").
+- Reference the winning faction's historical force or the civilization type.
+- Make it sound like something you'd find in a university library.
+- Return ONLY the title, nothing else.`,
+      prompt: `Winner: ${winner?.username} (${winner?.chosenSin})
+Civilization: ${civType}
+Factions: ${factions.join(", ")}
+Total damage: ${stats.totalDamageDealt}
+Eliminations: ${stats.totalEliminations}
+${rivalries.length > 0 ? `Rivalry: ${rivalries[0].attacker} vs ${rivalries[0].target}` : ""}
+
+Generate title:`,
+      maxOutputTokens: 30,
+      temperature: 0.9
+    });
+    return text.trim().replace(/^["']|["']$/g, "");
+  } catch (error) {
+    const winnerFaction = winner?.chosenSin || "wrath";
+    const force = FACTION_FORCES[winnerFaction]?.force || "Unknown Forces";
+    return `The ${civType.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}: A Chronicle of ${force}`;
+  }
+}
+function generateExcerpt(fullText) {
+  const maxLen = 220;
+  if (fullText.length <= maxLen) return fullText;
+  const truncated = fullText.substring(0, maxLen);
+  const lastPeriod = truncated.lastIndexOf(".");
+  const lastQuestion = truncated.lastIndexOf("?");
+  const cutPoint = Math.max(lastPeriod, lastQuestion);
+  if (cutPoint > 100) {
+    const nextSentenceStart = fullText.substring(cutPoint + 1, cutPoint + 60).trim();
+    const midCut = nextSentenceStart.indexOf(" ", 20);
+    if (midCut > 0) {
+      return fullText.substring(0, cutPoint + 1 + midCut).trim() + "...";
+    }
+    return fullText.substring(0, cutPoint + 1);
+  }
+  return truncated.trim() + "...";
+}
+function calculateGameStats(gameState, gameLog, rivalries) {
+  let totalDamageDealt = 0;
+  let totalHealingDone = 0;
+  let totalEliminations = 0;
+  for (const entry of gameLog) {
+    if (entry.action_type === "damage_dealt") {
+      totalDamageDealt += entry.action_data?.damage || 0;
+    }
+    if (entry.action_type === "healing_done") {
+      totalHealingDone += entry.action_data?.healing || 0;
+    }
+    if (entry.action_type === "player_eliminated") {
+      totalEliminations++;
+    }
+  }
+  if (totalDamageDealt === 0) {
+    const totalHpLost = gameState.players.reduce(
+      (sum, p) => sum + (p.maxHp - p.currentHp),
+      0
+    );
+    totalDamageDealt = totalHpLost;
+  }
+  if (totalEliminations === 0) {
+    totalEliminations = gameState.players.filter((p) => !p.isAlive).length;
+  }
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  return {
+    totalDamageDealt,
+    totalHealingDone,
+    totalEliminations,
+    winnerFinalHp: winner?.currentHp || 0,
+    longestRivalry: rivalries.length > 0 ? rivalries[0] : null
+  };
+}
+function findTurningPoint(segments, gameLog) {
+  let maxDrama = 0;
+  let turningPoint = 10;
+  for (const entry of gameLog) {
+    if (entry.action_type === "player_eliminated") {
+      const round = entry.round_number || 10;
+      const drama = 100;
+      if (drama > maxDrama) {
+        maxDrama = drama;
+        turningPoint = round;
+      }
+    }
+    if (entry.action_type === "damage_dealt" || entry.action_type === "play_card") {
+      const damage = entry.action_data?.damage || 0;
+      const round = entry.round_number || 10;
+      if (damage > maxDrama) {
+        maxDrama = damage;
+        turningPoint = round;
+      }
+    }
+  }
+  return turningPoint;
+}
+function calculateRarity(gameState, stats, segments) {
+  let score = 0;
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  if (winner) {
+    const hpPercent = winner.currentHp / winner.maxHp;
+    if (hpPercent < 0.1) score += 4;
+    else if (hpPercent < 0.3) score += 2;
+  }
+  if (stats.totalEliminations >= 3) score += 3;
+  else if (stats.totalEliminations >= 2) score += 1;
+  if (stats.longestRivalry && stats.longestRivalry.count >= 5) score += 3;
+  else if (stats.longestRivalry && stats.longestRivalry.count >= 3) score += 1;
+  if (stats.totalDamageDealt > 1e3) score += 2;
+  if (segments.length >= 18) score += 1;
+  const uniqueFactions = new Set(
+    gameState.players.map((p) => p.chosenSin).filter(Boolean)
+  );
+  if (uniqueFactions.size >= 4) score += 2;
+  score += Math.random() < 0.15 ? 3 : 0;
+  score += Math.random() < 0.05 ? 5 : 0;
+  if (score >= 12) return "legendary";
+  if (score >= 8) return "epic";
+  if (score >= 4) return "rare";
+  return "common";
+}
+function extractRoundEvents(gameState, gameLog, round) {
+  const roundLog = gameLog.filter((e) => e.round_number === round);
+  const cardsPlayed = [];
+  const eliminations = [];
+  const hpChanges = [];
+  let biggestHit = null;
+  let isComeback = false;
+  let comebackPlayer;
+  for (const entry of roundLog) {
+    const player = gameState.players.find((p) => p.id === entry.player_id);
+    if (!player) continue;
+    if (entry.action_type === "play_card" && entry.action_data) {
+      const card = getCardById(entry.action_data.cardId);
+      if (card) {
+        const target = entry.action_data.targetPlayerId ? gameState.players.find((p) => p.id === entry.action_data.targetPlayerId) : void 0;
+        cardsPlayed.push({
+          playerName: player.username,
+          faction: player.chosenSin || "wrath",
+          cardName: card.name,
+          effectTypes: card.effects.map((e) => e.type),
+          damage: entry.action_data.damage || 0,
+          healing: entry.action_data.healing || 0,
+          targetName: target?.username
+        });
+      }
+    }
+    if (entry.action_type === "player_eliminated") {
+      eliminations.push({
+        playerName: player.username,
+        faction: player.chosenSin || "wrath",
+        killerName: entry.action_data?.killerName
+      });
+    }
+    if (entry.action_type === "damage_dealt") {
+      const damage = entry.action_data?.damage || 0;
+      if (!biggestHit || damage > biggestHit.damage) {
+        const target = gameState.players.find(
+          (p) => p.id === entry.action_data?.targetPlayerId
+        );
+        biggestHit = {
+          attackerName: player.username,
+          targetName: target?.username || "Unknown",
+          damage
+        };
+      }
+    }
+  }
+  for (const player of gameState.players) {
+    if (!player.isAlive) continue;
+    const hpPercent = player.currentHp / player.maxHp;
+    if (hpPercent > 0.3) {
+      const prevHp = roundLog.find(
+        (e) => e.player_id === player.id && e.action_data?.previousHp
+      )?.action_data?.previousHp;
+      if (prevHp && prevHp / player.maxHp < 0.25) {
+        isComeback = true;
+        comebackPlayer = player.username;
+      }
+    }
+  }
+  return {
+    round,
+    cardsPlayed,
+    eliminations,
+    hpChanges,
+    biggestHit,
+    isComeback,
+    comebackPlayer
+  };
+}
+function getSupabase2() {
+  return createClient3(
+    process.env.VITE_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ""
+  );
+}
+async function saveChronicleSegment(gameId, segment) {
+  const supabase = getSupabase2();
+  const { error } = await supabase.from("chronicle_segments").insert({
+    game_id: gameId,
+    round_number: segment.round,
+    era_name: segment.eraName,
+    narrative_text: segment.narrativeText,
+    civilization_metrics: segment.civilizationMetrics
+  });
+  if (error) {
+    console.error("[Chronicle] Failed to save segment:", error);
+  }
+}
+async function loadChronicleSegments(gameId) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicle_segments").select("*").eq("game_id", gameId).order("round_number", { ascending: true });
+  if (error || !data) {
+    console.error("[Chronicle] Failed to load segments:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    round: row.round_number,
+    eraName: row.era_name,
+    narrativeText: row.narrative_text,
+    civilizationMetrics: row.civilization_metrics || {
+      militarism: 0,
+      culture: 0,
+      commerce: 0
+    }
+  }));
+}
+async function saveChronicle(gameId, chronicle) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicles").upsert(
+    {
+      game_id: gameId,
+      title: chronicle.title,
+      excerpt: chronicle.excerpt,
+      full_text: chronicle.fullText,
+      civilization_type: chronicle.civilizationType,
+      rarity_tier: chronicle.rarityTier,
+      player_factions: chronicle.playerFactions,
+      total_rounds: chronicle.totalRounds,
+      turning_point_round: chronicle.turningPointRound,
+      stats_json: chronicle.stats
+    },
+    { onConflict: "game_id" }
+  ).select("id").single();
+  if (error) {
+    console.error("[Chronicle] Failed to save chronicle:", error);
+    return null;
+  }
+  return data?.id || null;
+}
+async function loadChronicle(gameId) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicles").select("*").eq("game_id", gameId).single();
+  if (error || !data) return null;
+  return data;
+}
+async function loadPublishedChronicles(limit = 20, offset = 0, filters) {
+  const supabase = getSupabase2();
+  let query = supabase.from("chronicles").select("*", { count: "exact" }).eq("published", true).order("created_at", { ascending: false });
+  if (filters?.rarityTier) {
+    query = query.eq("rarity_tier", filters.rarityTier);
+  }
+  if (filters?.civilizationType) {
+    query = query.eq("civilization_type", filters.civilizationType);
+  }
+  query = query.range(offset, offset + limit - 1);
+  const { data, error, count } = await query;
+  if (error) {
+    console.error("[Chronicle] Failed to load chronicles:", error);
+    return { chronicles: [], total: 0 };
+  }
+  return { chronicles: data || [], total: count || 0 };
+}
+async function incrementViewCount(chronicleId) {
+  const supabase = getSupabase2();
+  try {
+    const { error } = await supabase.rpc("increment_chronicle_views", { chronicle_id: chronicleId });
+    if (error) throw error;
+  } catch {
+    const { data } = await supabase.from("chronicles").select("view_count").eq("id", chronicleId).single();
+    if (data) {
+      await supabase.from("chronicles").update({ view_count: (data.view_count || 0) + 1 }).eq("id", chronicleId);
+    }
+  }
+}
+async function generateAndSaveRoundNarrative(gameId, roundNumber) {
+  try {
+    const supabase = getSupabase2();
+    const gameState = await getGameState(gameId);
+    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
+    const log = gameLog || [];
+    const roundEvents = extractRoundEvents(gameState, log, roundNumber);
+    const previousSegments = await loadChronicleSegments(gameId);
+    const lastMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+    const segment = await generateRoundNarrative(
+      gameState,
+      log,
+      roundEvents,
+      previousSegments,
+      lastMetrics
+    );
+    await saveChronicleSegment(gameId, segment);
+    console.log(`[Chronicle] Round ${roundNumber} narrative saved for game ${gameId}`);
+  } catch (error) {
+    console.error(`[Chronicle] Failed to generate round ${roundNumber} narrative:`, error);
+  }
+}
+async function assembleAndSaveChronicle(gameId) {
+  try {
+    const supabase = getSupabase2();
+    const gameState = await getGameState(gameId);
+    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
+    const log = gameLog || [];
+    const segments = await loadChronicleSegments(gameId);
+    if (segments.length === 0) {
+      console.warn("[Chronicle] No segments found, skipping assembly for game", gameId);
+      return null;
+    }
+    const finalMetrics = segments.length > 0 ? segments[segments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+    const result = await assembleChronicle(gameState, segments, log, finalMetrics);
+    const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
+    const chronicleId = await saveChronicle(gameId, {
+      title: result.title,
+      excerpt: result.excerpt,
+      fullText: result.fullText,
+      civilizationType: result.civilizationType,
+      rarityTier: result.rarityTier,
+      playerFactions,
+      totalRounds: gameState.currentRound,
+      turningPointRound: result.turningPointRound,
+      stats: result.stats
+    });
+    console.log(`[Chronicle] Full chronicle assembled and saved for game ${gameId} (id: ${chronicleId})`);
+    return chronicleId;
+  } catch (error) {
+    console.error("[Chronicle] Failed to assemble chronicle:", error);
+    return null;
+  }
+}
+
+// server/gameEngine.ts
+function generateRoomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+function shuffleDeck(cardIds) {
+  const deck = [...cardIds];
+  for (let i = deck.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  return deck;
+}
+async function ensurePlayer(playerId, username) {
+  const sb = getServerSupabase();
+  const { data: existing } = await sb.from("players").select("id").eq("id", playerId).single();
+  if (!existing) {
+    await sb.from("players").insert({ id: playerId, username });
+  }
+}
+async function createGame(playerId, username) {
+  const sb = getServerSupabase();
+  const roomCode = generateRoomCode();
+  const { data: game, error: gameError } = await sb.from("games").insert({ room_code: roomCode, status: "lobby" }).select("id").single();
+  if (gameError || !game) throw new Error(`Failed to create game: ${gameError?.message}`);
+  await ensurePlayer(playerId, username);
+  const { error: joinError } = await sb.from("game_players").insert({
+    game_id: game.id,
+    player_id: playerId,
+    seat_index: 0
+  });
+  if (joinError) throw new Error(`Failed to join game: ${joinError.message}`);
+  await sb.from("game_log").insert({
+    game_id: game.id,
+    action_type: "game_created",
+    action_data: { creator: username },
+    round_number: 0
+  });
+  return { gameId: game.id, roomCode };
+}
+async function joinGame(roomCode, playerId, username) {
+  const sb = getServerSupabase();
+  const { data: game, error: gameError } = await sb.from("games").select("id, status").eq("room_code", roomCode.toUpperCase()).single();
+  if (gameError || !game) throw new Error("Game not found");
+  if (game.status !== "lobby") throw new Error("Game already started");
+  const { data: players } = await sb.from("game_players").select("seat_index, player_id").eq("game_id", game.id).order("seat_index");
+  if (!players) throw new Error("Failed to fetch players");
+  if (players.length >= 4) throw new Error("Game is full");
+  const existing = players.find((p) => p.player_id === playerId);
+  if (existing) return { gameId: game.id, seatIndex: existing.seat_index };
+  const takenSeats = new Set(players.map((p) => p.seat_index));
+  let seatIndex = 0;
+  while (takenSeats.has(seatIndex)) seatIndex++;
+  await ensurePlayer(playerId, username);
+  const { error: joinError } = await sb.from("game_players").insert({
+    game_id: game.id,
+    player_id: playerId,
+    seat_index: seatIndex
+  });
+  if (joinError) throw new Error(`Failed to join: ${joinError.message}`);
+  return { gameId: game.id, seatIndex };
+}
+async function chooseSin(gameId, playerId, sin) {
+  const sb = getServerSupabase();
+  const { error } = await sb.from("game_players").update({ chosen_sin: sin }).eq("game_id", gameId).eq("player_id", playerId);
+  if (error) throw new Error(`Failed to choose sin: ${error.message}`);
+}
+async function startGame(gameId) {
+  const sb = getServerSupabase();
+  const { data: players } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+  if (!players || players.length < 2) throw new Error("Need at least 2 players");
+  const allReady = players.every((p) => p.chosen_sin);
+  if (!allReady) throw new Error("All players must choose a sin");
+  for (const player of players) {
+    const fullDeck = getDeckForSin(player.chosen_sin);
+    const customDeckIds = player.custom_deck_ids;
+    const deckCards = customDeckIds && Array.isArray(customDeckIds) && customDeckIds.length > 0 ? customDeckIds : shuffleDeck(fullDeck).slice(0, CARDS_PER_DECK);
+    const shuffled = shuffleDeck(deckCards);
+    const hand = shuffled.slice(0, HAND_SIZE);
+    const remainingDeck = shuffled.slice(HAND_SIZE);
+    await sb.from("game_players").update({
+      hand,
+      deck: remainingDeck,
+      discard_pile: [],
+      current_hp: STARTING_HP,
+      max_hp: STARTING_HP,
+      is_alive: true,
+      current_energy: STARTING_ENERGY,
+      max_energy: MAX_ENERGY,
+      bonus_energy: 0
+    }).eq("id", player.id);
+  }
+  await sb.from("games").update({
+    status: "active",
+    current_round: 1,
+    current_player_index: 0,
+    turn_phase: "selection",
+    locked_plays: [],
+    started_at: (/* @__PURE__ */ new Date()).toISOString()
+  }).eq("id", gameId);
+  for (const player of players) {
+    await sb.from("game_players").update({ locked_cards: [] }).eq("id", player.id);
+  }
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    action_type: "game_started",
+    action_data: { playerCount: players.length },
+    round_number: 1
+  });
+}
+async function lockInCards(gameId, playerId, selections) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active") throw new Error("Game not active");
+  if (game.turn_phase !== "selection") throw new Error("Not in selection phase");
+  const { data: player } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
+  if (!player) throw new Error("Player not in game");
+  if (!player.is_alive) throw new Error("Player is eliminated");
+  const hand = player.hand || [];
+  let energyBudget = player.current_energy ?? 0;
+  const lockedPlays = [];
+  for (const sel of selections) {
+    if (!hand.includes(sel.cardId)) throw new Error(`Card ${sel.cardId} not in hand`);
+    const card = getCardById(sel.cardId);
+    if (!card) throw new Error(`Invalid card ${sel.cardId}`);
+    if (card.cost > energyBudget) throw new Error(`Not enough energy for ${card.name}`);
+    energyBudget -= card.cost;
+    lockedPlays.push({
+      playerId: player.player_id,
+      gamePlayerId: player.id,
+      cardId: sel.cardId,
+      targetPlayerId: sel.targetPlayerId,
+      skipQueue: card.skipQueue || false
+    });
+  }
+  const storedLocked = lockedPlays.length > 0 ? lockedPlays : [{ pass: true }];
+  await sb.from("game_players").update({ locked_cards: storedLocked }).eq("id", player.id);
+  const existingLocked = (Array.isArray(game.locked_plays) ? game.locked_plays : []).filter(
+    (lp) => lp.playerId !== playerId
+  );
+  const allLocked = [...existingLocked, ...lockedPlays];
+  const gameUpdate = { locked_plays: allLocked };
+  if (!game.selection_deadline) {
+    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
+    const deadline = new Date(Date.now() + timerSeconds * 1e3).toISOString();
+    gameUpdate.selection_deadline = deadline;
+  }
+  await sb.from("games").update(gameUpdate).eq("id", gameId);
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    player_id: player.id,
+    action_type: "lock_in",
+    action_data: { cardCount: selections.length, energyRemaining: energyBudget },
+    round_number: game.current_round
+  });
+  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+  const alivePlayers = (allPlayers || []).filter((p) => p.is_alive);
+  const allConfirmed = alivePlayers.every((p) => {
+    if (p.player_id === playerId) return true;
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    return pLocked.length > 0;
+  });
+  if (allConfirmed) {
+    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
+    const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
+    const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+    const resolutionPlayers = (preResPlayers || []).map((gp) => {
+      const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
+      return {
+        id: gp.player_id,
+        gamePlayerId: gp.id,
+        username: gp.players?.username || "Unknown",
+        seatIndex: gp.seat_index,
+        chosenSin: gp.chosen_sin,
+        currentHp: gp.current_hp,
+        maxHp: gp.max_hp,
+        isAlive: gp.is_alive,
+        hand: gp.hand || [],
+        deckSize: (gp.deck || []).length,
+        discardSize: (gp.discard_pile || []).length,
+        currentEnergy: gp.current_energy ?? 0,
+        maxEnergy: gp.max_energy ?? 0,
+        bonusEnergy: gp.bonus_energy ?? 0,
+        lockedCards: playerLocked,
+        hasLockedIn: playerLocked.length > 0,
+        consumedThisRound: gp.consumed_this_round ?? false
+      };
+    });
+    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+    await resolveLockedPlays(gameId);
+    const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
+    return {
+      success: true,
+      narratorQuip: quip2,
+      resolvedPlays: preResLocked,
+      resolutionPlayers
+    };
+  }
+  const quip = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
+  return { success: true, narratorQuip: quip };
+}
+async function resolveLockedPlays(gameId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game) return;
+  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+  if (!allPlayers) return;
+  const lockedPlays = Array.isArray(game.locked_plays) ? game.locked_plays : [];
+  const sortedPlays = [...lockedPlays].sort((a, b) => {
+    if (a.skipQueue && !b.skipQueue) return -1;
+    if (!a.skipQueue && b.skipQueue) return 1;
+    const playerA = allPlayers.find((p) => p.player_id === a.playerId);
+    const playerB = allPlayers.find((p) => p.player_id === b.playerId);
+    const hpA = playerA?.current_hp ?? 999;
+    const hpB = playerB?.current_hp ?? 999;
+    if (hpA !== hpB) return hpA - hpB;
+    const seatA = playerA?.seat_index ?? 999;
+    const seatB = playerB?.seat_index ?? 999;
+    if (seatA !== seatB) return seatA - seatB;
+    const cardA = getCardById(a.cardId);
+    const cardB = getCardById(b.cardId);
+    return (cardA?.cost ?? 0) - (cardB?.cost ?? 0);
+  });
+  for (const play of sortedPlays) {
+    const { data: freshPlayer } = await sb.from("game_players").select("*").eq("player_id", play.playerId).eq("game_id", gameId).single();
+    if (!freshPlayer || !freshPlayer.is_alive) continue;
+    const card = getCardById(play.cardId);
+    if (!card) continue;
+    const { data: currentPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+    if (!currentPlayers) continue;
+    const currentEnergy = freshPlayer.current_energy ?? 0;
+    let newEnergy = Math.max(0, currentEnergy - card.cost);
+    const sin = freshPlayer.chosen_sin;
+    const hand = freshPlayer.hand || [];
+    const newHand = hand.filter((id) => id !== play.cardId);
+    const discard = freshPlayer.discard_pile || [];
+    discard.push(play.cardId);
+    await sb.from("game_players").update({ hand: newHand, discard_pile: discard, current_energy: newEnergy }).eq("id", freshPlayer.id);
+    const effectDescriptions = [];
+    for (const effect of card.effects) {
+      const targets = resolveTargets(effect, freshPlayer, currentPlayers, play.targetPlayerId);
+      const firstTickValue = getCompoundTickValue(effect.baseValue, card.compoundPattern, 0);
+      for (const target of targets) {
+        await applyInstantEffect(effect.type, firstTickValue, target, gameId, freshPlayer.player_id);
+        if (sin === "envy" && effect.type === "damage" && target.player_id !== play.playerId) {
+          await amplifyWorstAfflictionPct(gameId, target.id, ENVY_JEALOUSY_PCT);
+        }
+        if (effect.duration > 1) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: target.id,
+            source_player_id: freshPlayer.id,
+            effect_type: effect.type,
+            base_value: effect.baseValue,
+            applied_at_round: game.current_round,
+            duration_rounds: effect.duration,
+            card_id: play.cardId,
+            current_tick: 1,
+            compound_pattern: card.compoundPattern
+          });
+        }
+        effectDescriptions.push(
+          `${effect.type} ${firstTickValue} on ${target.player_id === play.playerId ? "self" : "enemy"} (${card.compoundPattern} \xD7${effect.duration}r)`
+        );
+      }
+    }
+    await sb.from("game_log").insert({
+      game_id: gameId,
+      player_id: freshPlayer.id,
+      action_type: "play_card",
+      action_data: {
+        cardId: play.cardId,
+        targetPlayerId: play.targetPlayerId,
+        effects: effectDescriptions,
+        compoundPattern: card.compoundPattern,
+        energySpent: card.cost,
+        energyRemaining: newEnergy,
+        resolvedInPhase: "resolution"
+      },
+      round_number: game.current_round
+    });
+  }
+  try {
+    const { data: currentGame } = await sb.from("games").select("ai_narrator").eq("id", gameId).single();
+    if (currentGame?.ai_narrator) {
+      generateAndSaveRoundNarrative(gameId, game.current_round).catch(
+        (err) => console.error("[Chronicle] Round narrative failed:", err)
+      );
+    }
+  } catch (e) {
+    console.error("[Chronicle] Failed to check AI narrator setting:", e);
+  }
+  await advanceRound(gameId);
+}
+async function playCard(gameId, playerId, cardId, targetPlayerId) {
+  const result = await lockInCards(gameId, playerId, [{ cardId, targetPlayerId }]);
+  return { narratorQuip: result.narratorQuip, effects: [] };
+}
+async function passTurn(gameId, playerId) {
+  await lockInCards(gameId, playerId, []);
+}
+async function getGameState(gameId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game) throw new Error("Game not found");
+  const { data: gamePlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
+  const rawLocked = game.locked_plays;
+  const allLockedPlays = Array.isArray(rawLocked) ? rawLocked : [];
+  const players = (gamePlayers || []).map((gp) => {
+    const playerLocked = allLockedPlays.filter((lp) => lp.playerId === gp.player_id);
+    const gpLockedCards = Array.isArray(gp.locked_cards) ? gp.locked_cards : [];
+    return {
+      id: gp.player_id,
+      gamePlayerId: gp.id,
+      username: gp.players?.username || "Unknown",
+      seatIndex: gp.seat_index,
+      chosenSin: gp.chosen_sin,
+      currentHp: gp.current_hp,
+      maxHp: gp.max_hp,
+      isAlive: gp.is_alive,
+      hand: gp.hand || [],
+      deckSize: (gp.deck || []).length,
+      discardSize: (gp.discard_pile || []).length,
+      currentEnergy: gp.current_energy ?? 0,
+      maxEnergy: gp.max_energy ?? 0,
+      bonusEnergy: gp.bonus_energy ?? 0,
+      lockedCards: playerLocked.length > 0 ? playerLocked : gpLockedCards,
+      hasLockedIn: gpLockedCards.length > 0 || playerLocked.length > 0,
+      consumedThisRound: gp.consumed_this_round ?? false
+    };
+  });
+  const activeEffects = (effects || []).map((e) => ({
+    id: e.id,
+    targetPlayerId: e.target_player_id,
+    sourcePlayerId: e.source_player_id,
+    effectType: e.effect_type,
+    baseValue: e.base_value,
+    appliedAtRound: e.applied_at_round,
+    durationRounds: e.duration_rounds,
+    cardId: e.card_id,
+    currentTick: e.current_tick ?? void 0,
+    compoundPattern: e.compound_pattern ?? void 0,
+    doubled: e.doubled ?? void 0
+  }));
+  return {
+    id: game.id,
+    roomCode: game.room_code,
+    status: game.status,
+    currentRound: game.current_round,
+    currentPlayerIndex: game.current_player_index ?? 0,
+    turnPhase: game.turn_phase || "selection",
+    lockedPlays: allLockedPlays,
+    players,
+    activeEffects,
+    winnerId: game.winner_id,
+    selectionDeadline: game.selection_deadline ?? null,
+    turnTimerSeconds: game.turn_timer_seconds ?? 15,
+    aiNarrator: game.ai_narrator ?? true,
+    aiWhisperer: game.ai_whisperer ?? true
+  };
+}
+async function getGameLog(gameId) {
+  const sb = getServerSupabase();
+  const { data } = await sb.from("game_log").select("*").eq("game_id", gameId).order("timestamp", { ascending: true });
+  return data || [];
+}
+async function consumeCard(gameId, playerId, cardId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("current_round").eq("id", gameId).single();
+  const { data: gp, error } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
+  if (error || !gp) return { success: false, message: "The void cannot find you." };
+  if (!gp.is_alive) return { success: false, message: "The dead cannot sacrifice." };
+  if (gp.consumed_this_round) return { success: false, message: "The void has had its fill this round." };
+  const hand = gp.hand || [];
+  if (!hand.includes(cardId)) return { success: false, message: "That card has already slipped away." };
+  const newHand = hand.filter((id) => id !== cardId);
+  const newEnergy = Math.min((gp.current_energy || 0) + CONSUME_ENERGY_REFUND, MAX_ENERGY);
+  await sb.from("game_players").update({
+    hand: newHand,
+    current_energy: newEnergy,
+    consumed_this_round: true
+  }).eq("game_id", gameId).eq("player_id", playerId);
+  const card = getCardById(cardId);
+  await sb.from("game_log").insert({
+    game_id: gameId,
+    round_number: game?.current_round || 1,
+    player_id: playerId,
+    action_type: "consume",
+    action_data: {
+      cardId,
+      cardName: card?.name || cardId,
+      energyRefund: CONSUME_ENERGY_REFUND,
+      newEnergy
+    }
+  });
+  return {
+    success: true,
+    message: `Banished ${card?.name || "a card"} to the void. +${CONSUME_ENERGY_REFUND} energy.`
+  };
+}
+function resolveTargets(effect, source, allPlayers, targetPlayerId) {
+  const alive = allPlayers.filter((p) => p.is_alive);
+  switch (effect.targetMode) {
+    case "self":
+      return [source];
+    case "single": {
+      if (targetPlayerId) {
+        const target = alive.find((p) => p.player_id === targetPlayerId);
+        return target ? [target] : [];
+      }
+      const enemies = alive.filter((p) => p.player_id !== source.player_id);
+      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 1);
+    }
+    case "duo": {
+      const enemies = alive.filter((p) => p.player_id !== source.player_id);
+      return enemies.sort((a, b) => a.current_hp - b.current_hp).slice(0, 2);
+    }
+    case "aoe":
+      return alive.filter((p) => p.player_id !== source.player_id);
+    default:
+      return [];
+  }
+}
+async function applyInstantEffect(type, value, target, gameId, sourcePlayerId) {
+  const sb = getServerSupabase();
+  const roundedValue = Math.round(value);
+  switch (type) {
+    case "damage":
+    case "self_damage": {
+      let remainingDamage = roundedValue;
+      if (gameId) {
+        const { data: shields } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", target.id).in("effect_type", ["shield_gain"]);
+        if (shields && shields.length > 0) {
+          for (const shield of shields) {
+            if (remainingDamage <= 0) break;
+            const shieldValue = shield.base_value;
+            if (shieldValue <= remainingDamage) {
+              remainingDamage -= shieldValue;
+              await sb.from("active_effects").delete().eq("id", shield.id);
+            } else {
+              await sb.from("active_effects").update({ base_value: shieldValue - remainingDamage }).eq("id", shield.id);
+              remainingDamage = 0;
+            }
+          }
+        }
+      }
+      if (remainingDamage > 0) {
+        const newHp = Math.max(0, target.current_hp - remainingDamage);
+        const isAlive = newHp > 0;
+        await sb.from("game_players").update({ current_hp: newHp, is_alive: isAlive }).eq("id", target.id);
+        target.current_hp = newHp;
+        target.is_alive = isAlive;
+        if (target.chosen_sin === "wrath" && target.is_alive && sourcePlayerId && sourcePlayerId !== target.player_id) {
+          const reflectDmg = Math.round(remainingDamage * WRATH_VENGEANCE_PCT);
+          if (reflectDmg > 0 && gameId) {
+            const { data: attacker } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
+            if (attacker && attacker.is_alive) {
+              const newAttackerHp = Math.max(0, attacker.current_hp - reflectDmg);
+              const attackerAlive = newAttackerHp > 0;
+              await sb.from("game_players").update({ current_hp: newAttackerHp, is_alive: attackerAlive }).eq("id", attacker.id);
+            }
+          }
+        }
+      }
+      break;
+    }
+    case "heal_gain": {
+      const newHp = Math.min(target.max_hp ?? STARTING_HP, target.current_hp + roundedValue);
+      await sb.from("game_players").update({ current_hp: newHp }).eq("id", target.id);
+      target.current_hp = newHp;
+      break;
+    }
+    case "heal_steal": {
+      const stolen = Math.min(roundedValue, target.current_hp);
+      const newTargetHp = Math.max(0, target.current_hp - stolen);
+      const isAlive = newTargetHp > 0;
+      await sb.from("game_players").update({ current_hp: newTargetHp, is_alive: isAlive }).eq("id", target.id);
+      target.current_hp = newTargetHp;
+      target.is_alive = isAlive;
+      if (sourcePlayerId && gameId) {
+        const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
+        if (sourcePlayer) {
+          const newSourceHp = Math.min(sourcePlayer.max_hp ?? STARTING_HP, sourcePlayer.current_hp + stolen);
+          await sb.from("game_players").update({ current_hp: newSourceHp }).eq("id", sourcePlayer.id);
+        }
+      }
+      break;
+    }
+    case "shield_gain": {
+      if (gameId) {
+        await sb.from("active_effects").insert({
+          game_id: gameId,
+          target_player_id: target.id,
+          source_player_id: sourcePlayerId || target.id,
+          effect_type: "shield_gain",
+          base_value: roundedValue,
+          applied_at_round: 0,
+          duration_rounds: 1,
+          card_id: "instant-shield"
+        });
+      }
+      break;
+    }
+    case "shield_steal": {
+      if (gameId) {
+        const { data: shields } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", target.id).eq("effect_type", "shield_gain");
+        let stolen = 0;
+        if (shields && shields.length > 0) {
+          for (const shield of shields) {
+            if (stolen >= roundedValue) break;
+            const take = Math.min(shield.base_value, roundedValue - stolen);
+            stolen += take;
+            if (take >= shield.base_value) {
+              await sb.from("active_effects").delete().eq("id", shield.id);
+            } else {
+              await sb.from("active_effects").update({ base_value: shield.base_value - take }).eq("id", shield.id);
+            }
+          }
+        }
+        if (stolen > 0 && sourcePlayerId) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: sourcePlayerId,
+            source_player_id: sourcePlayerId,
+            effect_type: "shield_gain",
+            base_value: stolen,
+            applied_at_round: 0,
+            duration_rounds: 1,
+            card_id: "stolen-shield"
+          });
+        }
+      }
+      break;
+    }
+    case "energy_gain": {
+      const currentSelfEnergy = target.current_energy ?? 0;
+      const newEnergy = Math.min(currentSelfEnergy + roundedValue, MAX_ENERGY);
+      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
+      target.current_energy = newEnergy;
+      break;
+    }
+    case "energy_steal": {
+      const currentTargetEnergy = target.current_energy ?? 0;
+      const drained = Math.min(roundedValue, currentTargetEnergy);
+      await sb.from("game_players").update({ current_energy: currentTargetEnergy - drained }).eq("id", target.id);
+      target.current_energy = currentTargetEnergy - drained;
+      if (sourcePlayerId && gameId) {
+        const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
+        if (sourcePlayer) {
+          const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + drained, MAX_ENERGY);
+          await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
+        }
+      }
+      break;
+    }
+    case "energy_block":
+    case "heal_block":
+    case "shield_block": {
+      if (gameId) {
+        await sb.from("active_effects").insert({
+          game_id: gameId,
+          target_player_id: target.id,
+          source_player_id: sourcePlayerId || target.id,
+          effect_type: type,
+          base_value: roundedValue,
+          applied_at_round: 0,
+          duration_rounds: roundedValue,
+          card_id: "block-effect"
+        });
+      }
+      break;
+    }
+    case "affliction_amplify": {
+      if (gameId) {
+        await amplifyWorstAffliction(gameId, target.id, roundedValue);
+      }
+      break;
+    }
+    case "affliction_transfer": {
+      if (gameId && sourcePlayerId) {
+        const { data: sourceEffects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", sourcePlayerId).in("effect_type", ["damage", "self_damage"]);
+        if (sourceEffects && sourceEffects.length > 0) {
+          const worst = sourceEffects.sort((a, b) => b.base_value - a.base_value)[0];
+          await sb.from("active_effects").update({ target_player_id: target.id }).eq("id", worst.id);
+        }
+      }
+      break;
+    }
+    case "discard_burn": {
+      const discard = target.discard_pile || [];
+      const burnCount = Math.min(roundedValue, discard.length);
+      if (burnCount > 0) {
+        const newDiscard = discard.slice(burnCount);
+        await sb.from("game_players").update({ discard_pile: newDiscard }).eq("id", target.id);
+        target.discard_pile = newDiscard;
+        if (sourcePlayerId && gameId) {
+          const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", sourcePlayerId).eq("game_id", gameId).single();
+          if (sourcePlayer && sourcePlayer.chosen_sin === "gluttony") {
+            const energyGain = Math.round(burnCount * GLUTTONY_DEVOURER_ENERGY);
+            const newEnergy = Math.min((sourcePlayer.current_energy ?? 0) + energyGain, MAX_ENERGY);
+            await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", sourcePlayer.id);
+          }
+        }
+      }
+      break;
+    }
+    case "energy_regen": {
+      const currentEnergy = target.current_energy ?? 0;
+      const newEnergy = Math.min(currentEnergy + roundedValue, MAX_ENERGY);
+      await sb.from("game_players").update({ current_energy: newEnergy }).eq("id", target.id);
+      target.current_energy = newEnergy;
+      break;
+    }
+    case "draw_boost": {
+      for (let i = 0; i < roundedValue; i++) {
+        await drawCard(target);
+      }
+      break;
+    }
+    case "draw_reduction": {
+      const hand = target.hand || [];
+      const discardCount = Math.min(roundedValue, hand.length);
+      if (discardCount > 0) {
+        const discarded = hand.splice(0, discardCount);
+        const discard = target.discard_pile || [];
+        discard.push(...discarded);
+        await sb.from("game_players").update({ hand, discard_pile: discard }).eq("id", target.id);
+        target.hand = hand;
+        target.discard_pile = discard;
+      }
+      break;
+    }
+  }
+}
+async function amplifyWorstAffliction(gameId, targetId, amount) {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", targetId).in("effect_type", ["damage", "self_damage"]);
+  if (effects && effects.length > 0) {
+    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
+    await sb.from("active_effects").update({ base_value: worst.base_value + amount }).eq("id", worst.id);
+  }
+}
+async function amplifyWorstAfflictionPct(gameId, targetId, pct) {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId).eq("target_player_id", targetId).in("effect_type", ["damage", "self_damage"]);
+  if (effects && effects.length > 0) {
+    const worst = effects.sort((a, b) => b.base_value - a.base_value)[0];
+    const newValue = Math.round(worst.base_value * (1 + pct));
+    await sb.from("active_effects").update({ base_value: newValue }).eq("id", worst.id);
+  }
+}
+async function drawCard(player) {
+  const sb = getServerSupabase();
+  let deck = player.deck || [];
+  const hand = player.hand || [];
+  let discard = player.discard_pile || [];
+  if (deck.length === 0 && discard.length > 0) {
+    deck = shuffleDeck(discard);
+    discard = [];
+  }
+  if (hand.length >= MAX_HAND_SIZE) return;
+  if (deck.length > 0) {
+    const drawn = deck.shift();
+    hand.push(drawn);
+    while (hand.length > MAX_HAND_SIZE) {
+      const overflow = hand.pop();
+      discard.push(overflow);
+    }
+    await sb.from("game_players").update({ hand, deck, discard_pile: discard }).eq("id", player.id);
+  }
+}
+async function advanceRound(gameId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game) return;
+  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+  if (!allPlayers) return;
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+  if (alivePlayers.length <= 1) {
+    const winner = alivePlayers[0];
+    await sb.from("games").update({
+      status: "finished",
+      winner_id: winner?.player_id || null,
+      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
+      turn_phase: "round_end"
+    }).eq("id", gameId);
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch(
+          (err) => console.error("[Chronicle] Assembly failed (elimination):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
+    return;
+  }
+  const newRound = game.current_round + 1;
+  if (newRound > MAX_ROUNDS || game.current_round === FINAL_RECKONING_ROUND) {
+    if (game.current_round === FINAL_RECKONING_ROUND) {
+      for (const p of alivePlayers) {
+        const hand = p.hand || [];
+        for (const cardId of hand) {
+          const card = getCardById(cardId);
+          if (!card) continue;
+          const enemies = alivePlayers.filter((e) => e.id !== p.id && e.is_alive);
+          const target = enemies.sort((a, b) => a.current_hp - b.current_hp)[0];
+          if (!target) continue;
+          for (const effect of card.effects) {
+            const targetId = effect.targetMode === "self" ? p.id : target.id;
+            await sb.from("active_effects").insert({
+              game_id: gameId,
+              target_player_id: targetId,
+              source_player_id: p.id,
+              effect_type: effect.type,
+              base_value: effect.baseValue,
+              applied_at_round: game.current_round,
+              duration_rounds: effect.duration,
+              card_id: cardId,
+              compound_pattern: card.compoundPattern,
+              current_tick: 0
+            });
+          }
+        }
+        await sb.from("game_players").update({ hand: [] }).eq("id", p.id);
+      }
+      await resolveActiveEffects(gameId, game.current_round);
+    }
+    const { data: postReckoningPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("is_alive", true).order("current_hp", { ascending: false });
+    const sortedByHp = postReckoningPlayers || alivePlayers;
+    const winner = sortedByHp[0];
+    await sb.from("games").update({
+      status: "finished",
+      winner_id: winner?.player_id || null,
+      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
+      current_round: MAX_ROUNDS,
+      turn_phase: "round_end"
+    }).eq("id", gameId);
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch(
+          (err) => console.error("[Chronicle] Assembly failed (reckoning):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
+    return;
+  }
+  if (newRound === ROUND_16_DOUBLING) {
+    await doubleAllAfflictions(gameId);
+  }
+  await resolveActiveEffects(gameId, newRound);
+  const { data: postEffectPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
+  const stillAlive = (postEffectPlayers || []).filter((p) => p.is_alive);
+  if (stillAlive.length <= 1) {
+    const winner = stillAlive[0];
+    await sb.from("games").update({
+      status: "finished",
+      winner_id: winner?.player_id || null,
+      finished_at: (/* @__PURE__ */ new Date()).toISOString(),
+      turn_phase: "round_end"
+    }).eq("id", gameId);
+    try {
+      if (game.ai_narrator) {
+        assembleAndSaveChronicle(gameId).catch(
+          (err) => console.error("[Chronicle] Assembly failed (mid-round):", err)
+        );
+      }
+    } catch (e) {
+      console.error("[Chronicle] Failed to trigger assembly:", e);
+    }
+    return;
+  }
+  for (const p of stillAlive) {
+    const { data: freshPlayer } = await sb.from("game_players").select("*").eq("id", p.id).single();
+    if (freshPlayer && freshPlayer.is_alive) {
+      if (freshPlayer.chosen_sin === "sloth") {
+        const energy = freshPlayer.current_energy ?? 0;
+        const handSize = (freshPlayer.hand || []).length;
+        const shieldVal = Math.min(Math.round(energy * handSize * SLOTH_ENDURANCE_MULT), SLOTH_ENDURANCE_CAP);
+        if (shieldVal > 0) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: freshPlayer.id,
+            source_player_id: freshPlayer.id,
+            effect_type: "shield_gain",
+            base_value: shieldVal,
+            applied_at_round: newRound,
+            duration_rounds: 1,
+            card_id: "sloth-endurance-v5"
+          });
+        }
+        const aoeDmg = Math.round(energy * SLOTH_ENDURANCE_AOE_MULT);
+        if (aoeDmg > 0) {
+          const enemies = stillAlive.filter((e) => e.id !== freshPlayer.id);
+          for (const enemy of enemies) {
+            const { data: enemyFresh } = await sb.from("game_players").select("*").eq("id", enemy.id).single();
+            if (enemyFresh && enemyFresh.is_alive) {
+              await applyInstantEffect("damage", aoeDmg, enemyFresh, gameId, freshPlayer.player_id);
+            }
+          }
+        }
+      }
+      await refreshPlayerEnergy(freshPlayer);
+      await drawCard(freshPlayer);
+    }
+  }
+  for (const p of allPlayers) {
+    await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
+  }
+  await sb.from("games").update({
+    current_round: newRound,
+    current_player_index: 0,
+    turn_phase: "round_end"
+    // Keep locked_plays intact so non-triggering clients can read them
+  }).eq("id", gameId);
+  await new Promise((resolve) => setTimeout(resolve, 4e3));
+  try {
+    await sb.from("games").update({
+      turn_phase: "selection",
+      locked_plays: [],
+      selection_deadline: null
+    }).eq("id", gameId);
+    for (const p of allPlayers) {
+      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
+    }
+  } catch (e) {
+    console.error("[advanceRound] delayed clear failed:", e);
+  }
+}
+async function refreshPlayerEnergy(player) {
+  const sb = getServerSupabase();
+  const totalEnergy = MAX_ENERGY;
+  await sb.from("game_players").update({
+    current_energy: totalEnergy,
+    max_energy: totalEnergy,
+    bonus_energy: 0
+  }).eq("id", player.id);
+}
+async function doubleAllAfflictions(gameId) {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
+  if (!effects) return;
+  for (const effect of effects) {
+    if (["damage", "self_damage"].includes(effect.effect_type) && !effect.doubled) {
+      await sb.from("active_effects").update({ base_value: effect.base_value * 2, doubled: true }).eq("id", effect.id);
+    }
+  }
+}
+async function resolveActiveEffects(gameId, currentRound) {
+  const sb = getServerSupabase();
+  const { data: effects } = await sb.from("active_effects").select("*").eq("game_id", gameId);
+  if (!effects) return;
+  for (const effect of effects) {
+    if (["shield_gain", "heal_block", "shield_block", "energy_block"].includes(effect.effect_type)) {
+      if (effect.effect_type.endsWith("_block")) {
+        const roundsActive = currentRound - effect.applied_at_round;
+        if (roundsActive > effect.duration_rounds) {
+          await sb.from("active_effects").delete().eq("id", effect.id);
+        }
+      }
+      continue;
+    }
+    const tick = effect.current_tick ?? 0;
+    const pattern = effect.compound_pattern || "standard";
+    if (tick >= effect.duration_rounds) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+    const { data: target } = await sb.from("game_players").select("*").eq("id", effect.target_player_id).single();
+    if (!target || !target.is_alive) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+      continue;
+    }
+    const tickValue = getCompoundTickValue(effect.base_value, pattern, tick);
+    await applyInstantEffect(effect.effect_type, tickValue, target, gameId, effect.source_player_id);
+    if (["damage"].includes(effect.effect_type) && effect.source_player_id) {
+      const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", effect.source_player_id).eq("game_id", gameId).single();
+      if (sourcePlayer && sourcePlayer.chosen_sin === "lust" && sourcePlayer.is_alive) {
+        const healAmt = Math.round(tickValue * LUST_TEMPTATION_PCT);
+        if (healAmt > 0) {
+          await applyInstantEffect("heal_gain", healAmt, sourcePlayer, gameId, effect.source_player_id);
+        }
+      }
+    }
+    if (["damage"].includes(effect.effect_type) && tick === GREED_TAX_TICK && effect.source_player_id) {
+      const { data: sourcePlayer } = await sb.from("game_players").select("*").eq("player_id", effect.source_player_id).eq("game_id", gameId).single();
+      if (sourcePlayer && sourcePlayer.chosen_sin === "greed" && sourcePlayer.is_alive) {
+        const shieldAmt = Math.round(tickValue * GREED_TAX_PCT);
+        if (shieldAmt > 0) {
+          await sb.from("active_effects").insert({
+            game_id: gameId,
+            target_player_id: sourcePlayer.id,
+            source_player_id: sourcePlayer.id,
+            effect_type: "shield_gain",
+            base_value: shieldAmt,
+            applied_at_round: currentRound,
+            duration_rounds: 1,
+            card_id: "greed-tax-v5"
+          });
+        }
+      }
+    }
+    const nextTick = tick + 1;
+    if (nextTick >= effect.duration_rounds) {
+      await sb.from("active_effects").delete().eq("id", effect.id);
+    } else {
+      await sb.from("active_effects").update({ current_tick: nextTick }).eq("id", effect.id);
+    }
+  }
+}
+async function enforceSelectionDeadline(gameId) {
+  const sb = getServerSupabase();
+  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
+  if (!game || game.status !== "active" || game.turn_phase !== "selection") {
+    return { enforced: false };
+  }
+  if (!game.selection_deadline) {
+    return { enforced: false };
+  }
+  const deadline = new Date(game.selection_deadline).getTime();
+  const now = Date.now();
+  if (now < deadline) {
+    return { enforced: false };
+  }
+  const { data: allPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+  if (!allPlayers) return { enforced: false };
+  const alivePlayers = allPlayers.filter((p) => p.is_alive);
+  let autoPassCount = 0;
+  for (const p of alivePlayers) {
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    if (pLocked.length === 0) {
+      await sb.from("game_players").update({ locked_cards: [{ pass: true }] }).eq("id", p.id);
+      autoPassCount++;
+      await sb.from("game_log").insert({
+        game_id: gameId,
+        player_id: p.id,
+        action_type: "auto_pass",
+        action_data: { reason: "selection_deadline_expired" },
+        round_number: game.current_round
+      });
+    }
+  }
+  const autoPassedPlayerNames = alivePlayers.filter((p) => {
+    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
+    return pLocked.length === 0;
+  }).map((p) => p.players?.username || "Unknown");
+  if (autoPassCount === 0) {
+    return { enforced: false };
+  }
+  const existingLocked = Array.isArray(game.locked_plays) ? game.locked_plays : [];
+  const resolutionPlayers = allPlayers.map((gp) => {
+    const playerLocked = existingLocked.filter((lp) => lp.playerId === gp.player_id);
+    return {
+      id: gp.player_id,
+      gamePlayerId: gp.id,
+      username: gp.players?.username || "Unknown",
+      seatIndex: gp.seat_index,
+      chosenSin: gp.chosen_sin,
+      currentHp: gp.current_hp,
+      maxHp: gp.max_hp,
+      isAlive: gp.is_alive,
+      hand: gp.hand || [],
+      deckSize: (gp.deck || []).length,
+      discardSize: (gp.discard_pile || []).length,
+      currentEnergy: gp.current_energy ?? 0,
+      maxEnergy: gp.max_energy ?? 0,
+      bonusEnergy: gp.bonus_energy ?? 0,
+      lockedCards: playerLocked,
+      hasLockedIn: true,
+      consumedThisRound: gp.consumed_this_round ?? false
+    };
+  });
+  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+  await resolveLockedPlays(gameId);
+  return {
+    enforced: true,
+    resolvedPlays: existingLocked,
+    resolutionPlayers,
+    autoPassedPlayerNames
+  };
+}
+
+// server/profanityFilter.ts
+import leoProfanity from "leo-profanity";
+var BANNED_SUBSTRINGS = [
+  // Common profanity (substring match catches embedded words)
+  "fuck",
+  "shit",
+  "cunt",
+  "cock",
+  "dick",
+  "pussy",
+  "bitch",
+  "asshole",
+  "bastard",
+  "whore",
+  "slut",
+  "penis",
+  "vagina",
+  // Racial slurs & hate speech
+  "nigger",
+  "nigga",
+  "negro",
+  "nazi",
+  "hitler",
+  "kkk",
+  "whitesupremacy",
+  "whitepower",
+  "heil",
+  "jihad",
+  "faggot",
+  "fag",
+  "dyke",
+  "tranny",
+  "retard",
+  "chink",
+  "gook",
+  "spic",
+  "wetback",
+  "kike",
+  // Impersonation
+  "admin",
+  "moderator",
+  "developer",
+  "official",
+  "system",
+  "support",
+  "staff",
+  "gamemaster"
+];
+var MIN_LENGTH = 3;
+var MAX_LENGTH = 24;
+var VALID_CHARS = /^[a-zA-Z0-9_\-. ]+$/;
+var NO_CONSECUTIVE_SPECIALS = /[_\-. ]{2,}/;
+var STARTS_ENDS_ALNUM = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
+function validateGamertag(tag) {
+  const trimmed = tag.trim();
+  if (trimmed.length < MIN_LENGTH) {
+    return { ok: false, reason: `Must be at least ${MIN_LENGTH} characters.` };
+  }
+  if (trimmed.length > MAX_LENGTH) {
+    return { ok: false, reason: `Must be ${MAX_LENGTH} characters or fewer.` };
+  }
+  if (!VALID_CHARS.test(trimmed)) {
+    return { ok: false, reason: "Only letters, numbers, underscores, hyphens, dots, and spaces allowed." };
+  }
+  if (NO_CONSECUTIVE_SPECIALS.test(trimmed)) {
+    return { ok: false, reason: "No consecutive special characters (_, -, ., space)." };
+  }
+  if (trimmed.length >= 2 && !STARTS_ENDS_ALNUM.test(trimmed)) {
+    return { ok: false, reason: "Must start and end with a letter or number." };
+  }
+  const normalized = trimmed.toLowerCase().replace(/[_\-. ]/g, "");
+  if (leoProfanity.check(normalized) || leoProfanity.check(trimmed)) {
+    return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+  }
+  for (const banned of BANNED_SUBSTRINGS) {
+    if (normalized.includes(banned)) {
+      return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+    }
+  }
+  return { ok: true };
 }
 
 // server/routers.ts
@@ -7668,6 +8604,97 @@ var appRouter = router({
       const behaviors = analyzePlayerBehaviors(gameState, gameLog);
       const rivalries = detectRivalries(behaviors);
       return { behaviors, rivalries };
+    }),
+    // ─── Chronicle Engine Endpoints ─────────────────────
+    /** Generate a chronicle segment for a specific round */
+    generateChronicleSegment: publicProcedure.input(
+      z3.object({
+        gameId: z3.string().uuid(),
+        round: z3.number().int().min(1).max(20)
+      })
+    ).mutation(async ({ input }) => {
+      const gameState = await getGameState(input.gameId);
+      if (!gameState) return { success: false, error: "Game not found" };
+      const gameLog = await getGameLog(input.gameId);
+      const previousSegments = await loadChronicleSegments(input.gameId);
+      if (previousSegments.some((s) => s.round === input.round)) {
+        return { success: true, segment: previousSegments.find((s) => s.round === input.round) };
+      }
+      const civMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+      const roundEvents = extractRoundEvents(gameState, gameLog, input.round);
+      const segment = await generateRoundNarrative(
+        gameState,
+        gameLog,
+        roundEvents,
+        previousSegments,
+        civMetrics
+      );
+      await saveChronicleSegment(input.gameId, segment);
+      return { success: true, segment };
+    }),
+    /** Assemble the full chronicle after game ends */
+    assembleChronicle: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
+      const existing = await loadChronicle(input.gameId);
+      if (existing) {
+        return {
+          success: true,
+          chronicleId: existing.id,
+          title: existing.title,
+          excerpt: existing.excerpt,
+          rarityTier: existing.rarity_tier,
+          civilizationType: existing.civilization_type
+        };
+      }
+      const gameState = await getGameState(input.gameId);
+      if (!gameState) return { success: false, error: "Game not found" };
+      const gameLog = await getGameLog(input.gameId);
+      const segments = await loadChronicleSegments(input.gameId);
+      if (segments.length === 0) {
+        return { success: false, error: "No chronicle segments found" };
+      }
+      const finalMetrics = segments[segments.length - 1].civilizationMetrics;
+      const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
+      const result = await assembleChronicle(gameState, segments, gameLog, finalMetrics);
+      const chronicleId = await saveChronicle(input.gameId, {
+        ...result,
+        playerFactions,
+        totalRounds: segments.length
+      });
+      return {
+        success: true,
+        chronicleId,
+        title: result.title,
+        excerpt: result.excerpt,
+        rarityTier: result.rarityTier,
+        civilizationType: result.civilizationType
+      };
+    }),
+    /** Get a chronicle by game ID */
+    getChronicle: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
+      const chronicle = await loadChronicle(input.gameId);
+      if (chronicle) {
+        incrementViewCount(chronicle.id).catch(() => {
+        });
+      }
+      return chronicle;
+    }),
+    /** Get chronicle segments for a game (real-time feed during game) */
+    getChronicleSegments: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
+      return await loadChronicleSegments(input.gameId);
+    }),
+    /** Get published chronicles for the public feed */
+    getPublishedChronicles: publicProcedure.input(
+      z3.object({
+        limit: z3.number().int().min(1).max(50).default(20),
+        offset: z3.number().int().min(0).default(0),
+        rarityTier: z3.enum(["common", "rare", "epic", "legendary"]).optional(),
+        civilizationType: z3.enum(["warrior_empire", "enlightened_republic", "merchant_federation", "balanced"]).optional()
+      })
+    ).query(async ({ input }) => {
+      return await loadPublishedChronicles(input.limit, input.offset, {
+        rarityTier: input.rarityTier,
+        civilizationType: input.civilizationType
+      });
     })
   })
 });

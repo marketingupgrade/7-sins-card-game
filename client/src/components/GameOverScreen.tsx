@@ -12,7 +12,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { RotateCcw } from "lucide-react";
+import { RotateCcw, BookOpen, Loader2, Download } from "lucide-react";
+import { trpc } from "@/lib/trpc";
 import { ICON_URLS } from "@/lib/assetUrls";
 import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
@@ -312,6 +313,125 @@ function StatCard({ icon, value, label, color, delay }: {
         <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1" style={{ fontFamily: "var(--font-heading)" }}>
           {label}
         </p>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Chronicle Section (Zeigarnik tension + CTA) ────────────────────────────
+
+function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; sinColor: string; showContent: boolean }) {
+  const [, setLocation] = useLocation();
+  const { data: chronicle, isLoading } = trpc.game.getChronicle.useQuery(
+    { gameId },
+    {
+      refetchInterval: (query) => {
+        // Keep polling every 5s until chronicle is ready
+        return query.state.data ? false : 5000;
+      },
+    }
+  );
+
+  const chronicleReady = chronicle && chronicle.id;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: showContent ? 4.6 : 2.3 }}
+      className="w-full max-w-xl mb-4"
+    >
+      <div
+        className="rounded-xl px-5 py-5 border relative overflow-hidden text-center"
+        style={{
+          background: chronicleReady
+            ? `linear-gradient(135deg, ${sinColor}12, ${sinColor}04)`
+            : 'linear-gradient(135deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
+          borderColor: chronicleReady ? `${sinColor}30` : 'rgba(255,255,255,0.08)',
+        }}
+      >
+        {!chronicleReady ? (
+          /* Zeigarnik tension state — chronicle is being written */
+          <div className="flex flex-col items-center gap-3">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            >
+              <Loader2 className="w-6 h-6 text-white/30" />
+            </motion.div>
+            <div>
+              <p
+                className="text-sm font-bold tracking-wider mb-1"
+                style={{ fontFamily: "var(--font-heading)", color: sinColor }}
+              >
+                The Chronicler is writing...
+              </p>
+              <p className="text-xs text-white/30 italic" style={{ fontFamily: "var(--font-body)" }}>
+                Your battle is being woven into an alternate history of civilization
+              </p>
+            </div>
+            {/* Animated quill dots */}
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 rounded-full"
+                  style={{ background: sinColor }}
+                  animate={{ opacity: [0.2, 1, 0.2] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Chronicle ready — reveal with CTA */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center gap-3"
+          >
+            <BookOpen className="w-6 h-6" style={{ color: sinColor }} />
+            <div>
+              <p
+                className="text-sm font-bold tracking-wider mb-1"
+                style={{ fontFamily: "var(--font-heading)", color: sinColor }}
+              >
+                {chronicle.title || "Your Chronicle Awaits"}
+              </p>
+              {chronicle.excerpt && (
+                <p className="text-xs text-white/40 italic leading-relaxed max-w-sm mx-auto" style={{ fontFamily: "var(--font-body)" }}>
+                  "{chronicle.excerpt}"
+                </p>
+              )}
+              {chronicle.rarity_tier && chronicle.rarity_tier !== 'common' && (
+                <span
+                  className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest"
+                  style={{
+                    background: chronicle.rarity_tier === 'legendary' ? 'linear-gradient(135deg, #fbbf24, #f59e0b)'
+                      : chronicle.rarity_tier === 'epic' ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                      : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                    color: chronicle.rarity_tier === 'legendary' ? '#000' : '#fff',
+                  }}
+                >
+                  {chronicle.rarity_tier}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setLocation(`/chronicles/${chronicle.id}`)}
+              className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 flex items-center gap-2"
+              style={{
+                background: `linear-gradient(135deg, ${sinColor}, ${sinColor}cc)`,
+                color: sinColor === '#f0f0f0' ? '#000' : '#fff',
+                boxShadow: `0 4px 20px ${sinColor}40`,
+              }}
+            >
+              <BookOpen className="w-4 h-4" />
+              Read Your Chronicle
+            </button>
+          </motion.div>
+        )}
       </div>
     </motion.div>
   );
@@ -807,6 +927,11 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                 </button>
               </div>
             </motion.div>
+
+            {/* ── AI CHRONICLE CTA ── */}
+            {gameId && (
+              <ChronicleSection gameId={gameId} sinColor={sinColor} showContent={showContent} />
+            )}
 
             {/* ── ACTION BUTTONS ── */}
             <motion.div

@@ -75,6 +75,17 @@ import {
   buildMatchContext,
   detectRivalries,
 } from "./aiNarrator";
+import {
+  generateRoundNarrative,
+  assembleChronicle,
+  saveChronicleSegment,
+  loadChronicleSegments,
+  saveChronicle,
+  loadChronicle,
+  loadPublishedChronicles,
+  incrementViewCount,
+  extractRoundEvents,
+} from "./chronicleEngine";
 
 export const appRouter = router({
   system: systemRouter,
@@ -790,6 +801,133 @@ export const appRouter = router({
         const behaviors = analyzePlayerBehaviors(gameState, gameLog);
         const rivalries = detectRivalries(behaviors);
         return { behaviors, rivalries };
+      }),
+
+    // ─── Chronicle Engine Endpoints ─────────────────────
+
+    /** Generate a chronicle segment for a specific round */
+    generateChronicleSegment: publicProcedure
+      .input(
+        z.object({
+          gameId: z.string().uuid(),
+          round: z.number().int().min(1).max(20),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const gameState = await getGameState(input.gameId);
+        if (!gameState) return { success: false, error: "Game not found" };
+
+        const gameLog = await getGameLog(input.gameId);
+        const previousSegments = await loadChronicleSegments(input.gameId);
+
+        // Don't regenerate if already exists
+        if (previousSegments.some((s) => s.round === input.round)) {
+          return { success: true, segment: previousSegments.find((s) => s.round === input.round) };
+        }
+
+        const civMetrics = previousSegments.length > 0
+          ? previousSegments[previousSegments.length - 1].civilizationMetrics
+          : { militarism: 0, culture: 0, commerce: 0 };
+
+        const roundEvents = extractRoundEvents(gameState, gameLog, input.round);
+        const segment = await generateRoundNarrative(
+          gameState,
+          gameLog,
+          roundEvents,
+          previousSegments,
+          civMetrics
+        );
+
+        await saveChronicleSegment(input.gameId, segment);
+        return { success: true, segment };
+      }),
+
+    /** Assemble the full chronicle after game ends */
+    assembleChronicle: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        // Check if chronicle already exists
+        const existing = await loadChronicle(input.gameId);
+        if (existing) {
+          return {
+            success: true,
+            chronicleId: existing.id,
+            title: existing.title,
+            excerpt: existing.excerpt,
+            rarityTier: existing.rarity_tier,
+            civilizationType: existing.civilization_type,
+          };
+        }
+
+        const gameState = await getGameState(input.gameId);
+        if (!gameState) return { success: false, error: "Game not found" };
+
+        const gameLog = await getGameLog(input.gameId);
+        const segments = await loadChronicleSegments(input.gameId);
+
+        if (segments.length === 0) {
+          return { success: false, error: "No chronicle segments found" };
+        }
+
+        const finalMetrics = segments[segments.length - 1].civilizationMetrics;
+        const playerFactions = gameState.players
+          .filter((p) => p.chosenSin)
+          .map((p) => ({ name: p.username, faction: p.chosenSin as string }));
+
+        const result = await assembleChronicle(gameState, segments, gameLog, finalMetrics);
+
+        const chronicleId = await saveChronicle(input.gameId, {
+          ...result,
+          playerFactions: playerFactions as any,
+          totalRounds: segments.length,
+        });
+
+        return {
+          success: true,
+          chronicleId,
+          title: result.title,
+          excerpt: result.excerpt,
+          rarityTier: result.rarityTier,
+          civilizationType: result.civilizationType,
+        };
+      }),
+
+    /** Get a chronicle by game ID */
+    getChronicle: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .query(async ({ input }) => {
+        const chronicle = await loadChronicle(input.gameId);
+        if (chronicle) {
+          // Increment view count asynchronously
+          incrementViewCount(chronicle.id).catch(() => {});
+        }
+        return chronicle;
+      }),
+
+    /** Get chronicle segments for a game (real-time feed during game) */
+    getChronicleSegments: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .query(async ({ input }) => {
+        return await loadChronicleSegments(input.gameId);
+      }),
+
+    /** Get published chronicles for the public feed */
+    getPublishedChronicles: publicProcedure
+      .input(
+        z.object({
+          limit: z.number().int().min(1).max(50).default(20),
+          offset: z.number().int().min(0).default(0),
+          rarityTier: z.enum(["common", "rare", "epic", "legendary"]).optional(),
+          civilizationType: z
+            .enum(["warrior_empire", "enlightened_republic", "merchant_federation", "balanced"])
+            .optional(),
+        })
+      )
+      .query(async ({ input }) => {
+        return await loadPublishedChronicles(input.limit, input.offset, {
+          rarityTier: input.rarityTier as any,
+          civilizationType: input.civilizationType as any,
+        });
       }),
   }),
 });
