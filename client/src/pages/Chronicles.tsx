@@ -2,8 +2,8 @@
  * Chronicles Feed — The Social Proof Engine
  *
  * Public feed of AI-generated alternate histories created by player matches.
- * Each card shows: rarity badge, title, open-loop excerpt, civilization type,
- * player names with factions, view count, and date.
+ * Each card shows: cover art thumbnail, rarity badge, title, open-loop excerpt,
+ * civilization type, player names with factions, view count, and date.
  *
  * Design principles (from v3 execution prompt):
  * - Show the humans, not just the stories (player names + factions)
@@ -11,6 +11,7 @@
  * - Show view counts (Bandwagon Effect)
  * - Civilization type filters as identity badges
  * - "Chronicle of the Week" featured banner
+ * - Cover art thumbnails for visual appeal
  *
  * Behavioral hooks:
  * - Social Proof (Cialdini): real people played this
@@ -32,6 +33,7 @@ import {
   Filter,
   ChevronRight,
   Scroll,
+  ImageIcon,
 } from "lucide-react";
 
 // ---- Rarity Config ----
@@ -127,14 +129,6 @@ export default function Chronicles() {
       (c.view_count || 0) > (best.view_count || 0) ? c : best
     );
   }, [chronicles]);
-
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-zinc-100">
@@ -280,6 +274,7 @@ interface ChronicleCardProps {
     total_rounds: number;
     view_count: number;
     created_at: string;
+    cover_image_url?: string | null;
   };
   featured?: boolean;
 }
@@ -293,75 +288,105 @@ function ChronicleCard({ chronicle, featured }: ChronicleCardProps) {
     ? chronicle.player_factions
     : [];
 
+  const hasCoverArt = !!chronicle.cover_image_url;
+
   return (
     <Link href={`/chronicle/${chronicle.game_id}`}>
       <div
-        className={`group relative rounded-lg border p-5 transition-all duration-300 cursor-pointer hover:translate-y-[-2px] ${
+        className={`group relative rounded-lg border overflow-hidden transition-all duration-300 cursor-pointer hover:translate-y-[-2px] ${
           featured
             ? `${rarity.border} ${rarity.glow} bg-gradient-to-br from-zinc-900/90 via-zinc-900/70 to-amber-950/20`
             : `${rarity.border} ${rarity.glow} bg-zinc-900/60 hover:bg-zinc-900/80`
         }`}
       >
-        {/* Top row: rarity + date */}
-        <div className="flex items-center justify-between mb-3">
-          <span className={`text-xs font-[Cinzel] tracking-widest ${rarity.color}`}>
-            {rarity.label === "Common" ? "" : `✦ ${rarity.label.toUpperCase()}`}
-          </span>
-          <span className="text-xs text-zinc-600">
-            {new Date(chronicle.created_at).toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-              year: "numeric",
-            })}
-          </span>
-        </div>
-
-        {/* Title */}
-        <h3
-          className={`font-[Cinzel] text-lg leading-snug mb-3 transition-colors ${
-            featured ? "text-amber-200 group-hover:text-amber-100" : "text-zinc-200 group-hover:text-amber-200"
-          }`}
-        >
-          {chronicle.title}
-        </h3>
-
-        {/* Excerpt (Open Loop) */}
-        {chronicle.excerpt && (
-          <p className="text-zinc-400 font-['Cormorant_Garamond'] text-base italic leading-relaxed mb-4 line-clamp-2">
-            "{chronicle.excerpt}"
-          </p>
-        )}
-
-        {/* Civilization type + rounds + players */}
-        <div className="flex items-center gap-3 mb-3 text-xs">
-          <span className={`flex items-center gap-1 ${civ.color}`}>
-            <CivIcon className="w-3.5 h-3.5" />
-            <span className="font-[Cinzel] tracking-wider">{civ.label}</span>
-          </span>
-          <span className="text-zinc-600">·</span>
-          <span className="text-zinc-500">{chronicle.total_rounds} rounds</span>
-          <span className="text-zinc-600">·</span>
-          <span className="text-zinc-500">{playerFactions.length} players</span>
-        </div>
-
-        {/* Player factions */}
-        {playerFactions.length > 0 && (
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs mb-3">
-            {playerFactions.map((pf, i) => (
-              <span key={i} className="flex items-center gap-1">
-                <span className={SIN_COLORS[pf.faction] || "text-zinc-400"}>
-                  {pf.faction ? pf.faction.charAt(0).toUpperCase() + pf.faction.slice(1) : "?"}
+        {/* Cover Art Thumbnail */}
+        {hasCoverArt && (
+          <div className="relative w-full h-36 overflow-hidden">
+            <img
+              src={chronicle.cover_image_url!}
+              alt={`Cover art for ${chronicle.title}`}
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              loading="lazy"
+            />
+            {/* Gradient overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/40 to-transparent" />
+            {/* Rarity badge on image */}
+            {rarity.label !== "Common" && (
+              <div className="absolute top-2 right-2">
+                <span className={`px-2 py-0.5 text-[10px] font-[Cinzel] tracking-widest rounded-sm backdrop-blur-sm bg-black/40 ${rarity.color}`}>
+                  ✦ {rarity.label.toUpperCase()}
                 </span>
-                <span className="text-zinc-500">{pf.name}</span>
-              </span>
-            ))}
+              </div>
+            )}
           </div>
         )}
 
-        {/* View count */}
-        <div className="flex items-center gap-1.5 text-xs text-zinc-600">
-          <Eye className="w-3 h-3" />
-          <span>{chronicle.view_count || 0} reads</span>
+        <div className="p-5">
+          {/* Top row: rarity + date (only show rarity here if no cover art) */}
+          <div className="flex items-center justify-between mb-3">
+            {!hasCoverArt ? (
+              <span className={`text-xs font-[Cinzel] tracking-widest ${rarity.color}`}>
+                {rarity.label === "Common" ? "" : `✦ ${rarity.label.toUpperCase()}`}
+              </span>
+            ) : (
+              <span />
+            )}
+            <span className="text-xs text-zinc-600">
+              {new Date(chronicle.created_at).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+
+          {/* Title */}
+          <h3
+            className={`font-[Cinzel] text-lg leading-snug mb-3 transition-colors ${
+              featured ? "text-amber-200 group-hover:text-amber-100" : "text-zinc-200 group-hover:text-amber-200"
+            }`}
+          >
+            {chronicle.title}
+          </h3>
+
+          {/* Excerpt (Open Loop) */}
+          {chronicle.excerpt && (
+            <p className="text-zinc-400 font-['Cormorant_Garamond'] text-base italic leading-relaxed mb-4 line-clamp-2">
+              &ldquo;{chronicle.excerpt}&rdquo;
+            </p>
+          )}
+
+          {/* Civilization type + rounds + players */}
+          <div className="flex items-center gap-3 mb-3 text-xs">
+            <span className={`flex items-center gap-1 ${civ.color}`}>
+              <CivIcon className="w-3.5 h-3.5" />
+              <span className="font-[Cinzel] tracking-wider">{civ.label}</span>
+            </span>
+            <span className="text-zinc-600">&middot;</span>
+            <span className="text-zinc-500">{chronicle.total_rounds} rounds</span>
+            <span className="text-zinc-600">&middot;</span>
+            <span className="text-zinc-500">{playerFactions.length} players</span>
+          </div>
+
+          {/* Player factions */}
+          {playerFactions.length > 0 && (
+            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs mb-3">
+              {playerFactions.map((pf, i) => (
+                <span key={i} className="flex items-center gap-1">
+                  <span className={SIN_COLORS[pf.faction] || "text-zinc-400"}>
+                    {pf.faction ? pf.faction.charAt(0).toUpperCase() + pf.faction.slice(1) : "?"}
+                  </span>
+                  <span className="text-zinc-500">{pf.name}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* View count */}
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+            <Eye className="w-3 h-3" />
+            <span>{chronicle.view_count || 0} reads</span>
+          </div>
         </div>
 
         {/* Hover arrow */}

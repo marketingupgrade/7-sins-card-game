@@ -326,8 +326,11 @@ function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; s
     { gameId },
     {
       refetchInterval: (query) => {
-        // Keep polling every 5s until chronicle is ready
-        return query.state.data ? false : 5000;
+        const data = query.state.data;
+        // Poll until chronicle exists AND cover art is loaded (or 60s timeout)
+        if (!data) return 5000;
+        if (!data.cover_image_url) return 8000; // Slower poll for cover art
+        return false;
       },
     }
   );
@@ -391,7 +394,19 @@ function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; s
             transition={{ duration: 0.5 }}
             className="flex flex-col items-center gap-3"
           >
-            <BookOpen className="w-6 h-6" style={{ color: sinColor }} />
+            {/* Cover art thumbnail */}
+            {chronicle.cover_image_url && (
+              <div className="w-full h-28 rounded-lg overflow-hidden mb-1 relative">
+                <img
+                  src={chronicle.cover_image_url}
+                  alt="Chronicle cover"
+                  className="w-full h-full object-cover"
+                  loading="lazy"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              </div>
+            )}
+            {!chronicle.cover_image_url && <BookOpen className="w-6 h-6" style={{ color: sinColor }} />}
             <div>
               <p
                 className="text-sm font-bold tracking-wider mb-1"
@@ -419,7 +434,7 @@ function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; s
               )}
             </div>
             <button
-              onClick={() => setLocation(`/chronicles/${chronicle.id}`)}
+              onClick={() => setLocation(`/chronicle/${chronicle.game_id || gameId}`)}
               className="mt-2 px-6 py-2.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 flex items-center gap-2"
               style={{
                 background: `linear-gradient(135deg, ${sinColor}, ${sinColor}cc)`,

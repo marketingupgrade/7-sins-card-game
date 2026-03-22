@@ -21,6 +21,7 @@
     "@babylonjs/core": "^8.54.1",
     "@babylonjs/gui": "^8.54.1",
     "@babylonjs/loaders": "^8.54.1",
+    "@google/genai": "^1.46.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",

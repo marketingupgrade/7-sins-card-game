@@ -84,6 +84,26 @@ const FACTION_COLORS: Record<string, string> = {
 
 const CHANGELOG: PatchNote[] = [
   {
+    version: "6.1.0",
+    date: "March 2026",
+    title: "The Illuminated Manuscripts",
+    summary: "Every chronicle now receives a unique AI-generated cover illustration, themed to its civilization type and rarity tier. Warrior Empires get dramatic oil paintings in crimson and iron. Enlightened Republics get luminous Renaissance frescoes. Merchant Federations get Dutch Golden Age harbor scenes. Legendary chronicles feature divine light and celestial phenomena. Art is generated via Google Imagen 4.0 and stored permanently.",
+    major: true,
+    changes: [
+      { category: "feature", text: "AI-generated cover art for every chronicle via Google Imagen 4.0 API — unique illustrations themed to civilization type, rarity tier, and dominant factions" },
+      { category: "feature", text: "4 distinct art style systems: Warrior Empire (oil painting, chiaroscuro), Enlightened Republic (Renaissance fresco, sfumato), Merchant Federation (Dutch Golden Age, warm candlelight), Balanced (mixed media, woodcut + watercolor)" },
+      { category: "feature", text: "Rarity-scaled visual intensity: Common (subdued), Rare (vivid + golden light), Epic (dramatic + purple aurora), Legendary (transcendent + divine celestial phenomena)" },
+      { category: "feature", text: "Faction visual elements in cover art: Wrath shows flames and shattered armor, Greed shows gold mountains, Envy shows shadowy mirrors, Sloth shows overgrown ruins" },
+      { category: "feature", text: "Era-aware art direction: early turning points get ancient/primordial aesthetics, mid-game gets medieval/industrial, late-game gets modern/futuristic" },
+      { category: "feature", text: "Cover art hero image on ChronicleView page with parallax gradient overlay and title treatment" },
+      { category: "feature", text: "Cover art thumbnails on Chronicles feed cards with hover zoom effect" },
+      { category: "feature", text: "Cover art thumbnail in GameOverScreen chronicle section with polling for async generation" },
+      { category: "feature", text: "generateCoverArt tRPC endpoint for retroactively generating art for existing chronicles" },
+      { category: "feature", text: "47 new vitest tests for cover art prompt builder — all 618 tests passing" },
+      { category: "fix", text: "GameOverScreen 'Read Your Chronicle' button now navigates to correct /chronicle/:gameId URL" },
+    ],
+  },
+  {
     version: "6.0.0",
     date: "March 2026",
     title: "The Chronicle Engine",

@@ -1,6 +1,7 @@
 /**
  * ChronicleView — The Three-Layer Progressive Disclosure
  *
+ * Layer 0 (Hero): Full-bleed cover art with title overlay (if available).
  * Layer 1 (Story): Full narrative with literary typography. Nothing else.
  * Layer 2 (Identity): Civilization type, rarity, player factions.
  * Layer 3 (Action): Download, Share, Play Again CTAs.
@@ -24,6 +25,7 @@ import {
   Sparkles,
   Scale,
   ArrowLeft,
+  ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -61,6 +63,13 @@ const RARITY_GLOW: Record<string, string> = {
   legendary: "text-amber-400",
 };
 
+const RARITY_BORDER_COLOR: Record<string, string> = {
+  common: "border-zinc-700/30",
+  rare: "border-blue-500/30",
+  epic: "border-purple-500/40",
+  legendary: "border-amber-500/50",
+};
+
 const SIN_COLORS: Record<string, string> = {
   wrath: "text-red-400",
   sloth: "text-purple-400",
@@ -74,6 +83,7 @@ const SIN_COLORS: Record<string, string> = {
 export default function ChronicleView() {
   const { gameId } = useParams<{ gameId: string }>();
   const [layer2Visible, setLayer2Visible] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
   const layer2Ref = useRef<HTMLDivElement>(null);
 
   const { data: chronicle, isLoading } = trpc.game.getChronicle.useQuery(
@@ -162,7 +172,9 @@ export default function ChronicleView() {
   const civConfig = CIV_CONFIG[chronicle.civilization_type] || CIV_CONFIG.balanced;
   const CivIcon = civConfig.icon;
   const rarityColor = RARITY_GLOW[chronicle.rarity_tier] || "";
+  const rarityBorder = RARITY_BORDER_COLOR[chronicle.rarity_tier] || "";
   const playerFactions = Array.isArray(chronicle.player_factions) ? chronicle.player_factions : [];
+  const hasCoverArt = !!chronicle.cover_image_url;
 
   // Split text into paragraphs for drop cap treatment
   const paragraphs = (chronicle.full_text || "").split("\n\n").filter((p: string) => p.trim());
@@ -173,34 +185,94 @@ export default function ChronicleView() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0F] text-zinc-100">
+      {/* ─── LAYER 0: THE COVER ART HERO ─── */}
+      {hasCoverArt && (
+        <div className="relative w-full h-[50vh] min-h-[320px] max-h-[500px] overflow-hidden">
+          {/* Cover image */}
+          <img
+            src={chronicle.cover_image_url!}
+            alt={`Cover art for ${chronicle.title}`}
+            className={`w-full h-full object-cover transition-opacity duration-700 ${
+              imageLoaded ? "opacity-100" : "opacity-0"
+            }`}
+            onLoad={() => setImageLoaded(true)}
+          />
+
+          {/* Loading placeholder */}
+          {!imageLoaded && (
+            <div className="absolute inset-0 bg-zinc-900 flex items-center justify-center">
+              <ImageIcon className="w-12 h-12 text-zinc-700 animate-pulse" />
+            </div>
+          )}
+
+          {/* Gradient overlays */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0F] via-[#0A0A0F]/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0F]/60 via-transparent to-transparent" />
+
+          {/* Back link on hero */}
+          <div className="absolute top-6 left-6 z-10">
+            <Link
+              href="/chronicles"
+              className="text-white/60 hover:text-white text-sm font-[Cinzel] tracking-wider inline-flex items-center gap-1.5 transition-colors backdrop-blur-sm bg-black/20 px-3 py-1.5 rounded"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Chronicles
+            </Link>
+          </div>
+
+          {/* Title overlay on hero */}
+          <div className="absolute bottom-0 left-0 right-0 px-6 pb-8">
+            <div className="max-w-[680px] mx-auto">
+              {/* Rarity badge */}
+              {chronicle.rarity_tier !== "common" && (
+                <div className={`mb-3 text-xs font-[Cinzel] tracking-[0.2em] ${rarityColor}`}>
+                  ✦ {chronicle.rarity_tier.toUpperCase()} CHRONICLE
+                </div>
+              )}
+              <h1
+                className="font-[Cinzel] text-2xl sm:text-3xl md:text-[36px] leading-tight text-[#C9A84C] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                style={{ fontWeight: 700 }}
+              >
+                {chronicle.title}
+              </h1>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── LAYER 1: THE STORY ─── */}
       <div className="relative">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 via-transparent to-transparent pointer-events-none" />
+        {/* Subtle gradient overlay (only when no cover art) */}
+        {!hasCoverArt && (
+          <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 via-transparent to-transparent pointer-events-none" />
+        )}
 
-        <div className="relative max-w-[680px] mx-auto px-6 pt-16 pb-12">
-          {/* Back link */}
-          <Link
-            href="/chronicles"
-            className="text-amber-500/50 hover:text-amber-400 text-sm font-[Cinzel] tracking-wider mb-10 inline-flex items-center gap-1.5 transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" /> Chronicles
-          </Link>
+        <div className={`relative max-w-[680px] mx-auto px-6 ${hasCoverArt ? "pt-8" : "pt-16"} pb-12`}>
+          {/* Back link (only when no cover art — it's on the hero otherwise) */}
+          {!hasCoverArt && (
+            <Link
+              href="/chronicles"
+              className="text-amber-500/50 hover:text-amber-400 text-sm font-[Cinzel] tracking-wider mb-10 inline-flex items-center gap-1.5 transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" /> Chronicles
+            </Link>
+          )}
 
-          {/* Rarity badge (if not common) */}
-          {chronicle.rarity_tier !== "common" && (
+          {/* Rarity badge (only when no cover art — it's on the hero otherwise) */}
+          {!hasCoverArt && chronicle.rarity_tier !== "common" && (
             <div className={`mb-6 text-xs font-[Cinzel] tracking-[0.2em] ${rarityColor}`}>
               ✦ {chronicle.rarity_tier.toUpperCase()} CHRONICLE
             </div>
           )}
 
-          {/* Title — Cinzel Decorative style */}
-          <h1
-            className="font-[Cinzel] text-2xl sm:text-3xl md:text-[32px] leading-tight text-[#C9A84C] mb-10"
-            style={{ fontWeight: 700 }}
-          >
-            {chronicle.title}
-          </h1>
+          {/* Title (only when no cover art — it's on the hero otherwise) */}
+          {!hasCoverArt && (
+            <h1
+              className="font-[Cinzel] text-2xl sm:text-3xl md:text-[32px] leading-tight text-[#C9A84C] mb-10"
+              style={{ fontWeight: 700 }}
+            >
+              {chronicle.title}
+            </h1>
+          )}
 
           {/* Drop cap + first paragraph */}
           <div className="font-['Cormorant_Garamond'] text-lg leading-[1.7] text-zinc-300 mb-8">

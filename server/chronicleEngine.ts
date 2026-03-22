@@ -818,6 +818,7 @@ export async function incrementViewCount(chronicleId: string): Promise<void> {
 // ---- High-Level Wrappers (called from gameEngine.ts) ----
 
 import { getGameState } from "./gameEngine";
+import { generateAndSaveCoverArt } from "./chronicleCoverArt";
 
 /**
  * High-level wrapper: generate a round narrative and save it.
@@ -924,6 +925,26 @@ export async function assembleAndSaveChronicle(
     });
 
     console.log(`[Chronicle] Full chronicle assembled and saved for game ${gameId} (id: ${chronicleId})`);
+
+    // Fire-and-forget: generate cover art asynchronously
+    // This never blocks the chronicle save — art appears later
+    const dominantFactions = playerFactions
+      .map((pf) => pf.faction as SinType)
+      .filter(Boolean);
+
+    generateAndSaveCoverArt({
+      gameId,
+      title: result.title,
+      civilizationType: result.civilizationType,
+      rarityTier: result.rarityTier,
+      dominantFactions,
+      turningPointRound: result.turningPointRound,
+      totalEliminations: result.stats.totalEliminations,
+      excerpt: result.excerpt,
+    }).catch((err) => {
+      console.error(`[Chronicle] Cover art generation failed for ${gameId}:`, err);
+    });
+
     return chronicleId;
   } catch (error) {
     console.error("[Chronicle] Failed to assemble chronicle:", error);

@@ -2064,3 +2064,16 @@
 - [x] Update server/chronicleEngine.ts to use Google Gemini directly
 - [x] Remove Forge API dependency from AI code (no more patchedFetch)
 - [x] Validate API key with vitest test (440ms response time)
+
+### AI-Generated Chronicle Cover Art
+- [x] Study existing image generation infrastructure (server/_core/imageGeneration.ts)
+- [x] Add cover_image_url column to Supabase chronicles table
+- [x] Build cover art prompt generator based on civilization type, rarity tier, and chronicle title
+- [x] Generate cover art during chronicle assembly and save URL to database
+- [x] Display cover art in Chronicles feed page (card thumbnails)
+- [x] Display cover art as hero image in ChronicleView page
+- [x] Add cover art to GameOverScreen chronicle section
+- [x] Write tests for cover art prompt generation (47 tests passing)
+- [x] Update patch notes (v6.1.0 "The Illuminated Manuscripts")
+- [x] Add generateCoverArt tRPC endpoint for existing chronicles
+- [ ] Push to GitHub

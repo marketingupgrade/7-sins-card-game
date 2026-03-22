@@ -86,6 +86,7 @@ import {
   incrementViewCount,
   extractRoundEvents,
 } from "./chronicleEngine";
+import { generateAndSaveCoverArt } from "./chronicleCoverArt";
 
 export const appRouter = router({
   system: systemRouter,
@@ -856,6 +857,7 @@ export const appRouter = router({
             excerpt: existing.excerpt,
             rarityTier: existing.rarity_tier,
             civilizationType: existing.civilization_type,
+            coverImageUrl: existing.cover_image_url || null,
           };
         }
 
@@ -928,6 +930,36 @@ export const appRouter = router({
           rarityTier: input.rarityTier as any,
           civilizationType: input.civilizationType as any,
         });
+      }),
+
+    /** Generate cover art for an existing chronicle that doesn't have one */
+    generateCoverArt: publicProcedure
+      .input(z.object({ gameId: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        const chronicle = await loadChronicle(input.gameId);
+        if (!chronicle) {
+          return { success: false, error: "Chronicle not found" };
+        }
+        if (chronicle.cover_image_url) {
+          return { success: true, coverImageUrl: chronicle.cover_image_url };
+        }
+
+        const playerFactions = Array.isArray(chronicle.player_factions)
+          ? chronicle.player_factions.map((pf: any) => pf.faction).filter(Boolean)
+          : [];
+
+        const coverUrl = await generateAndSaveCoverArt({
+          gameId: input.gameId,
+          title: chronicle.title,
+          civilizationType: chronicle.civilization_type,
+          rarityTier: chronicle.rarity_tier,
+          dominantFactions: playerFactions,
+          turningPointRound: chronicle.turning_point_round || 10,
+          totalEliminations: chronicle.stats_json?.totalEliminations || 0,
+          excerpt: chronicle.excerpt,
+        });
+
+        return { success: !!coverUrl, coverImageUrl: coverUrl };
       }),
   }),
 });
