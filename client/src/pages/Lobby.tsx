@@ -7,7 +7,7 @@
  * aesthetics. Every line of text drips with contempt.
  */
 
-import { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, useParams } from "wouter";
@@ -195,6 +195,8 @@ export default function Lobby() {
   const [selectedTimer, setSelectedTimer] = useState<number>(DEFAULT_TURN_TIMER);
   const [aiNarratorEnabled, setAiNarratorEnabled] = useState(true);
   const [aiWhispererEnabled, setAiWhispererEnabled] = useState(true);
+  const [hoveredSin, setHoveredSin] = useState<SinType | null>(null);
+  const hoverTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => { setCurrentPage("lobby"); }, [setCurrentPage]);
   useEffect(() => { musicEngine.init(); musicEngine.setScene("menu"); }, []);
@@ -578,7 +580,7 @@ export default function Lobby() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
             data-tutorial="sin-selection"
-            className="w-full max-w-lg mb-6"
+            className="w-full max-w-4xl mb-6"
           >
             <OrnamentDivider className="mb-4" />
             <h2
@@ -589,155 +591,152 @@ export default function Lobby() {
             </h2>
             <p className="text-xs text-candle/35 text-center mb-5" style={{ fontFamily: "var(--font-body)" }}>
               {factionUnlocks.isUnlocked
-                ? "Kneel before the altar. All four paths lead to damnation."
+                ? "Kneel before the altar. All seven paths lead to damnation."
                 : `Complete ${factionUnlocks.gamesRemaining} more ritual${factionUnlocks.gamesRemaining !== 1 ? "s" : ""} to unlock Greed & Envy.`}
             </p>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-3">
               {ALL_SINS.map((sin) => {
                 const cfg = SIN_CONFIG[sin];
                 const isLocked = !factionUnlocks.isFactionAvailable(sin);
                 const portrait = FACTION_PORTRAITS[sin];
                 const spellIcon = SIN_ARCHETYPE_ICONS[sin];
+                const isHovered = hoveredSin === sin;
 
                 if (isLocked) {
                   return (
-                    <StonePanel key={sin} className="p-3 text-center opacity-50">
-                      <div className="absolute inset-0 opacity-10 rounded-xl overflow-hidden">
-                        <img src={portrait} alt="" className="w-full h-full object-cover blur-sm" />
-                      </div>
-                      <div className="relative z-10">
-                        <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
-                          <img src={spellIcon} alt={cfg.label} className="w-9 h-9 object-contain opacity-20" />
-                          <Lock className="w-4 h-4 text-candle/40 absolute -bottom-0.5 -right-0.5" />
+                    <div key={sin} className="flex flex-col">
+                      <StonePanel className="p-3 text-center opacity-50 h-full">
+                        <div className="absolute inset-0 opacity-10 rounded-xl overflow-hidden">
+                          <img src={portrait} alt="" className="w-full h-full object-cover blur-sm" />
                         </div>
-                        <h3 className="text-base font-black text-candle/30 tracking-wider mb-1"
-                          style={{ fontFamily: "var(--font-display)" }}>
-                          {cfg.label}
-                        </h3>
-                        <p className="text-xs text-candle/30 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
-                          Sealed — {factionUnlocks.gamesRemaining} rituals remain
-                        </p>
-                        <div className="mt-2 mx-auto w-3/4 h-1.5 rounded-full bg-candle/10 overflow-hidden">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${factionUnlocks.progress * 100}%` }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="h-full rounded-full bg-gradient-to-r from-candle/40 to-candle/60"
-                          />
+                        <div className="relative z-10">
+                          <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
+                            <img src={spellIcon} alt={cfg.label} className="w-9 h-9 object-contain opacity-20" />
+                            <Lock className="w-4 h-4 text-candle/40 absolute -bottom-0.5 -right-0.5" />
+                          </div>
+                          <h3 className="text-sm font-black text-candle/30 tracking-wider mb-1"
+                            style={{ fontFamily: "var(--font-display)" }}>
+                            {cfg.label}
+                          </h3>
+                          <p className="text-[10px] text-candle/30 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                            Sealed
+                          </p>
+                          <div className="mt-2 mx-auto w-3/4 h-1 rounded-full bg-candle/10 overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${factionUnlocks.progress * 100}%` }}
+                              transition={{ duration: 0.8, ease: "easeOut" }}
+                              className="h-full rounded-full bg-gradient-to-r from-candle/40 to-candle/60"
+                            />
+                          </div>
+                          <p className="text-[9px] text-candle/30 mt-1 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
+                            {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD}
+                          </p>
                         </div>
-                        <p className="text-[10px] text-candle/30 mt-1.5 uppercase tracking-[0.15em]" style={{ fontFamily: "var(--font-heading)" }}>
-                          {factionUnlocks.gamesPlayed}/{UNLOCK_THRESHOLD} RITUALS
-                        </p>
-                      </div>
-                    </StonePanel>
+                      </StonePanel>
+                    </div>
                   );
                 }
 
                 const passive = PASSIVE_INFO[sin];
-                const swot = FACTION_SWOT[sin];
 
                 return (
                   <motion.button
                     key={sin}
-                    whileHover={{ scale: 1.03, y: -4 }}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => handleChooseSin(sin)}
-                    className="text-left group"
+                    onMouseEnter={() => {
+                      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                      setHoveredSin(sin);
+                    }}
+                    onMouseLeave={() => {
+                      hoverTimeoutRef.current = setTimeout(() => setHoveredSin(null), 150);
+                    }}
+                    className="text-left group flex flex-col"
                   >
-                    <StonePanel className="p-0 overflow-hidden transition-shadow duration-300 hover:shadow-[0_0_25px_var(--color-${cfg.color}/0.2)]">
-                      {/* Portrait */}
+                    <StonePanel className="p-0 overflow-hidden h-full transition-all duration-300">
+                      {/* Hover glow overlay */}
+                      {isHovered && (
+                        <div className="absolute inset-0 rounded-xl pointer-events-none z-20 transition-opacity duration-300"
+                          style={{
+                            boxShadow: `0 0 20px var(--color-${cfg.color}-glow), 0 0 40px color-mix(in oklch, var(--color-${cfg.color}) 20%, transparent)`,
+                            border: `1px solid color-mix(in oklch, var(--color-${cfg.color}) 40%, transparent)`,
+                            borderRadius: 'inherit',
+                          }}
+                        />
+                      )}
+                      {/* Portrait — fixed aspect ratio */}
                       <div className="w-full aspect-[3/4] relative overflow-hidden">
                         <img
                           src={portrait}
                           alt={`${cfg.label} faction`}
-                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                          className={`w-full h-full object-cover transition-transform duration-700 ${
+                            isHovered ? 'scale-110' : 'scale-100'
+                          }`}
                           loading="lazy"
                         />
                         {/* Gradient overlays */}
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c14] via-[#0f0c14]/50 to-transparent" />
-                        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0c14]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                        <div className={`absolute inset-0 bg-gradient-to-b from-[#0f0c14]/30 to-transparent transition-opacity duration-500 ${
+                          isHovered ? 'opacity-100' : 'opacity-0'
+                        }`} />
 
                         {/* Sin icon badge */}
-                        <div className="absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center
+                        <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center
                           bg-black/50 border border-candle/20 backdrop-blur-sm">
-                          <img src={spellIcon} alt="" className="w-5 h-5 object-contain"
+                          <img src={spellIcon} alt="" className="w-4 h-4 object-contain"
                             style={{ filter: `drop-shadow(0 0 4px var(--color-${cfg.color}))` }} />
                         </div>
 
+                        {/* Hover glow ring */}
+                        <div className={`absolute inset-0 rounded-xl transition-opacity duration-300 pointer-events-none ${
+                          isHovered ? 'opacity-100' : 'opacity-0'
+                        }`}
+                          style={{ boxShadow: `inset 0 0 30px var(--color-${cfg.color}-dim)` }}
+                        />
+
                         {/* Latin name overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3">
-                          <p className="text-xs tracking-[0.3em] text-candle/50 uppercase mb-0.5"
+                        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                          <p className="text-[10px] tracking-[0.3em] text-candle/50 uppercase mb-0.5"
                             style={{ fontFamily: "var(--font-heading)" }}>
                             {cfg.latin}
                           </p>
-                          <h3 className={`text-lg font-black text-${cfg.color} tracking-wider`}
+                          <h3 className={`text-base font-black text-${cfg.color} tracking-wider`}
                             style={{ fontFamily: "var(--font-display)" }}>
                             {cfg.label}
                           </h3>
                         </div>
                       </div>
 
-                      {/* Description + Passive */}
-                      <div className="p-3 pt-2">
-                        <p className="text-xs text-foreground/60 leading-relaxed mb-2"
+                      {/* Description + Passive — fixed height */}
+                      <div className="p-2.5 pt-2">
+                        <p className="text-[11px] text-foreground/60 leading-relaxed mb-2 line-clamp-2"
                           style={{ fontFamily: "var(--font-body)" }}>
                           {cfg.desc}
                         </p>
 
-                        {/* Passive ability */}
-                        <div className="mb-2 p-2 rounded-lg border border-candle/10 bg-candle/5">
-                          <p className="text-[10px] tracking-[0.2em] text-candle/50 uppercase mb-1"
+                        {/* Passive ability — compact */}
+                        <div className="p-1.5 rounded-lg border border-candle/10 bg-candle/5">
+                          <p className="text-[9px] tracking-[0.15em] text-candle/50 uppercase mb-0.5"
                             style={{ fontFamily: "var(--font-heading)" }}>
-                            {passive.icon} Passive: {passive.name}
+                            {passive.icon} {passive.name}
                           </p>
-                          <p className="text-[11px] text-candle/70 leading-snug"
+                          <p className="text-[10px] text-candle/60 leading-snug line-clamp-2"
                             style={{ fontFamily: "var(--font-body)" }}>
                             {passive.description}
                           </p>
                         </div>
 
-                        {/* SWOT mini-grid — visible on hover */}
-                        <div className="hidden group-hover:block">
-                          <div className="grid grid-cols-2 gap-1 mb-2">
-                            <div className="p-1.5 rounded bg-green-900/20 border border-green-500/10">
-                              <p className="text-[9px] text-green-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Strengths</p>
-                              {swot.strengths.slice(0, 2).map((s, i) => (
-                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
-                              ))}
-                            </div>
-                            <div className="p-1.5 rounded bg-red-900/20 border border-red-500/10">
-                              <p className="text-[9px] text-red-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Weaknesses</p>
-                              {swot.weaknesses.slice(0, 2).map((s, i) => (
-                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
-                              ))}
-                            </div>
-                            <div className="p-1.5 rounded bg-blue-900/20 border border-blue-500/10">
-                              <p className="text-[9px] text-blue-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Opportunities</p>
-                              {swot.opportunities.slice(0, 1).map((s, i) => (
-                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
-                              ))}
-                            </div>
-                            <div className="p-1.5 rounded bg-amber-900/20 border border-amber-500/10">
-                              <p className="text-[9px] text-amber-400/70 uppercase tracking-wider mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>Threats</p>
-                              {swot.threats.slice(0, 1).map((s, i) => (
-                                <p key={i} className="text-[10px] text-candle/60 leading-tight">{s}</p>
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-[10px] text-candle/50 italic leading-snug"
-                            style={{ fontFamily: "var(--font-body)" }}>
-                            {swot.playstyle}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-[10px] text-candle/40 uppercase tracking-[0.2em]"
+                        <div className="flex items-center justify-between mt-1.5">
+                          <span className="text-[9px] text-candle/40 uppercase tracking-[0.15em]"
                             style={{ fontFamily: "var(--font-heading)" }}>
                             {cfg.subtitle}
                           </span>
-                          <div className="w-1.5 h-1.5 rounded-full animate-pulse"
-                            style={{ background: `var(--color-${cfg.color})`, boxShadow: `0 0 6px var(--color-${cfg.color})` }} />
+                          <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                            isHovered ? 'scale-150' : ''
+                          }`}
+                            style={{ background: `var(--color-${cfg.color})`, boxShadow: `0 0 ${isHovered ? '10' : '4'}px var(--color-${cfg.color})` }} />
                         </div>
                       </div>
                     </StonePanel>
@@ -745,6 +744,71 @@ export default function Lobby() {
                 );
               })}
             </div>
+
+            {/* SWOT Detail Panel — appears below grid on hover */}
+            <AnimatePresence mode="wait">
+              {hoveredSin && (() => {
+                const cfg = SIN_CONFIG[hoveredSin];
+                const swot = FACTION_SWOT[hoveredSin];
+                return (
+                  <motion.div
+                    key={hoveredSin}
+                    initial={{ opacity: 0, y: -8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    transition={{ duration: 0.2 }}
+                    className="mt-3"
+                    onMouseEnter={() => {
+                      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+                    }}
+                    onMouseLeave={() => {
+                      hoverTimeoutRef.current = setTimeout(() => setHoveredSin(null), 150);
+                    }}
+                  >
+                    <StonePanel className="p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <img src={SIN_ARCHETYPE_ICONS[hoveredSin]} alt="" className="w-5 h-5 object-contain"
+                          style={{ filter: `drop-shadow(0 0 4px var(--color-${cfg.color}))` }} />
+                        <h4 className={`text-sm font-bold text-${cfg.color} tracking-wider uppercase`}
+                          style={{ fontFamily: "var(--font-heading)" }}>
+                          {cfg.label} — {cfg.subtitle}
+                        </h4>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+                        <div className="p-2 rounded-lg bg-green-900/15 border border-green-500/10">
+                          <p className="text-[9px] text-green-400/70 uppercase tracking-wider mb-1 font-semibold" style={{ fontFamily: "var(--font-heading)" }}>Strengths</p>
+                          {swot.strengths.slice(0, 2).map((s, i) => (
+                            <p key={i} className="text-[10px] text-candle/60 leading-tight mb-0.5">{s}</p>
+                          ))}
+                        </div>
+                        <div className="p-2 rounded-lg bg-red-900/15 border border-red-500/10">
+                          <p className="text-[9px] text-red-400/70 uppercase tracking-wider mb-1 font-semibold" style={{ fontFamily: "var(--font-heading)" }}>Weaknesses</p>
+                          {swot.weaknesses.slice(0, 2).map((s, i) => (
+                            <p key={i} className="text-[10px] text-candle/60 leading-tight mb-0.5">{s}</p>
+                          ))}
+                        </div>
+                        <div className="p-2 rounded-lg bg-blue-900/15 border border-blue-500/10">
+                          <p className="text-[9px] text-blue-400/70 uppercase tracking-wider mb-1 font-semibold" style={{ fontFamily: "var(--font-heading)" }}>Opportunities</p>
+                          {swot.opportunities.slice(0, 2).map((s, i) => (
+                            <p key={i} className="text-[10px] text-candle/60 leading-tight mb-0.5">{s}</p>
+                          ))}
+                        </div>
+                        <div className="p-2 rounded-lg bg-amber-900/15 border border-amber-500/10">
+                          <p className="text-[9px] text-amber-400/70 uppercase tracking-wider mb-1 font-semibold" style={{ fontFamily: "var(--font-heading)" }}>Threats</p>
+                          {swot.threats.slice(0, 2).map((s, i) => (
+                            <p key={i} className="text-[10px] text-candle/60 leading-tight mb-0.5">{s}</p>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-xs text-candle/50 italic leading-snug text-center"
+                        style={{ fontFamily: "var(--font-body)" }}>
+                        "{swot.playstyle}"
+                      </p>
+                    </StonePanel>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
           </motion.div>
         )}
 

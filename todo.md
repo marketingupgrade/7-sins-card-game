@@ -2187,3 +2187,14 @@
 - [x] pointer-events-none on outer container, pointer-events-auto only on inner card
 - [x] Updated tests (823 total passing)
 - [x] Push to GitHub
+
+### v6.6.3 — Fix Desktop Lobby Hover States
+- [x] FIX: Sin selection cards have broken hover/expand layout on desktop
+- [x] Removed hidden group-hover:block SWOT grid that caused card height expansion on hover
+- [x] Replaced whileHover scale animation with state-based hover tracking (no layout shift)
+- [x] Cards now have uniform fixed height with subtle hover effects (image zoom, glow dot pulse)
+- [x] Added inline-style glow overlay on hover (box-shadow with sin color)
+- [x] SWOT detail panel now appears below the grid as a separate animated panel
+- [x] Widened container from max-w-lg to max-w-4xl with 7-column grid on desktop
+- [x] Added missing --font-display CSS variable (was undefined, now maps to Uncial Antiqua)
+- [ ] Push to GitHub
