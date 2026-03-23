@@ -120,11 +120,30 @@ describe("Mobile touch blocking fix", () => {
   describe("CathedralTransition", () => {
     const src = readComponent("CathedralTransition.tsx");
 
-    it("should already use pointer-events-none on outer container", () => {
+    it("should use pointer-events-none on outer container", () => {
       const fixedLine = src.split("\n").find(
-        (l) => l.includes("fixed inset-0") && l.includes("pointer-events-none")
+        (l) => l.includes("fixed") && l.includes("pointer-events-none")
       );
       expect(fixedLine).toBeDefined();
+    });
+
+    it("should NOT use full-screen inset-0 background (non-blocking banner)", () => {
+      // The transition should be a floating banner, not a full-screen overlay
+      const hasInsetX = src.includes("inset-x-0");
+      const hasInset0FullScreen = src.split("\n").some(
+        (l) => l.includes("fixed inset-0") && l.includes("background")
+      );
+      expect(hasInsetX).toBe(true);
+      expect(hasInset0FullScreen).toBe(false);
+    });
+
+    it("should have tap-to-dismiss functionality", () => {
+      expect(src).toContain("onClick={dismiss}");
+      expect(src).toContain("tap to dismiss");
+    });
+
+    it("should have a safety timeout fallback", () => {
+      expect(src).toContain("SAFETY_TIMEOUT");
     });
   });
 

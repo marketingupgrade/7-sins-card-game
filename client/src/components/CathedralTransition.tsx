@@ -1,13 +1,14 @@
 /**
- * CathedralTransition — Branded between-round transition overlay
+ * CathedralTransition — Branded between-round narrator quote
  *
  * Shows a dramatic narrator quote with cathedral aesthetic between rounds.
- * Appears briefly (2.5s) when a new round starts, reinforcing the brand
- * atmosphere and giving players a moment to process the previous round.
+ * Renders as a NON-BLOCKING floating banner in the center of the screen
+ * (no full-screen overlay, no solid background) so gameplay is never blocked.
+ * Auto-dismisses after 2.5s with a hard safety fallback at 3.5s.
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { playBellToll, playWhisper, playEliminationToll, playDeepResonance } from "@/lib/cathedralSounds";
 
 /* ─── Narrator Quotes Pool ─── */
@@ -67,6 +68,9 @@ function getQuotePool(round: number, maxRounds: number): string[] {
   return ROUND_QUOTES.early;
 }
 
+const DISPLAY_DURATION = 2500;
+const SAFETY_TIMEOUT = 3500;
+
 export default function CathedralTransition({
   round,
   maxRounds,
@@ -76,10 +80,32 @@ export default function CathedralTransition({
 }: CathedralTransitionProps) {
   const [quote, setQuote] = useState("");
   const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const safetyRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastTriggerRef = useRef<string>("");
 
+  const dismiss = useCallback(() => {
+    setVisible(false);
+    if (timerRef.current) { clearTimeout(timerRef.current); timerRef.current = null; }
+    if (safetyRef.current) { clearTimeout(safetyRef.current); safetyRef.current = null; }
+  }, []);
+
+  // Force dismiss when show goes false (parent says it's done)
+  useEffect(() => {
+    if (!show) {
+      dismiss();
+    }
+  }, [show, dismiss]);
+
+  // Trigger transition when show becomes true with a new round/type combo
   useEffect(() => {
     if (!show) return;
 
+    const triggerKey = `${type}-${round}`;
+    if (triggerKey === lastTriggerRef.current) return;
+    lastTriggerRef.current = triggerKey;
+
+    // Pick a quote
     if (type === "elimination") {
       const pool = ELIMINATION_QUOTES;
       setQuote(pool[Math.floor(Math.random() * pool.length)]);
@@ -91,18 +117,37 @@ export default function CathedralTransition({
     setVisible(true);
 
     // Play cathedral sound cue
-    if (type === "elimination") {
-      playEliminationToll();
-    } else if (round >= maxRounds) {
-      playDeepResonance();
-    } else {
-      playBellToll(round > maxRounds * 0.7 ? "deep" : round > maxRounds * 0.35 ? "normal" : "soft");
-      playWhisper();
+    try {
+      if (type === "elimination") {
+        playEliminationToll();
+      } else if (round >= maxRounds) {
+        playDeepResonance();
+      } else {
+        playBellToll(round > maxRounds * 0.7 ? "deep" : round > maxRounds * 0.35 ? "normal" : "soft");
+        playWhisper();
+      }
+    } catch {
+      // Sound errors should never block gameplay
     }
 
-    const timer = setTimeout(() => setVisible(false), 2800);
-    return () => clearTimeout(timer);
-  }, [show, round, type, maxRounds]);
+    // Normal dismiss timer
+    timerRef.current = setTimeout(dismiss, DISPLAY_DURATION);
+    // Hard safety fallback — ALWAYS dismiss even if something goes wrong
+    safetyRef.current = setTimeout(dismiss, SAFETY_TIMEOUT);
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (safetyRef.current) clearTimeout(safetyRef.current);
+    };
+  }, [show, round, type, maxRounds, dismiss]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (safetyRef.current) clearTimeout(safetyRef.current);
+    };
+  }, []);
 
   return (
     <AnimatePresence>
@@ -111,70 +156,88 @@ export default function CathedralTransition({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at center, oklch(0.08 0.02 280 / 0.95), oklch(0.05 0.01 280 / 0.98))",
-          }}
+          transition={{ duration: 0.4 }}
+          className="fixed inset-x-0 top-1/3 z-[55] flex items-center justify-center pointer-events-none"
+          onClick={dismiss}
         >
-          {/* Cathedral glow */}
           <div
-            className="absolute inset-0 opacity-20"
+            className="relative text-center px-8 py-6 max-w-lg mx-auto rounded-lg pointer-events-auto cursor-pointer"
             style={{
-              background: "radial-gradient(circle at 50% 30%, oklch(0.75 0.12 85 / 0.15), transparent 60%)",
+              background: "radial-gradient(ellipse at center, oklch(0.08 0.02 280 / 0.92), oklch(0.05 0.01 280 / 0.88))",
+              boxShadow: "0 0 40px oklch(0.75 0.12 85 / 0.08), 0 0 80px oklch(0.05 0.01 280 / 0.3)",
+              border: "1px solid oklch(0.75 0.12 85 / 0.1)",
             }}
-          />
-
-          <div className="relative text-center px-8 max-w-lg">
-            {/* Decorative line */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="h-px w-32 mx-auto mb-6"
-              style={{ background: "linear-gradient(90deg, transparent, oklch(0.75 0.12 85 / 0.4), transparent)" }}
+          >
+            {/* Cathedral glow */}
+            <div
+              className="absolute inset-0 opacity-20 rounded-lg"
+              style={{
+                background: "radial-gradient(circle at 50% 30%, oklch(0.75 0.12 85 / 0.15), transparent 60%)",
+              }}
             />
 
-            {/* Round / Event label */}
-            <motion.p
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="text-xs tracking-[0.4em] uppercase mb-4"
-              style={{
-                fontFamily: "var(--font-heading)",
-                color: type === "elimination" ? "oklch(0.65 0.25 25 / 0.7)" : "oklch(0.75 0.12 85 / 0.5)",
-              }}
-            >
-              {type === "elimination"
-                ? `${eliminatedName || "A sinner"} has fallen`
-                : round >= maxRounds
-                  ? "The Final Reckoning"
-                  : `Rite ${round}`}
-            </motion.p>
+            <div className="relative">
+              {/* Decorative line */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.4, delay: 0.1 }}
+                className="h-px w-24 mx-auto mb-4"
+                style={{ background: "linear-gradient(90deg, transparent, oklch(0.75 0.12 85 / 0.4), transparent)" }}
+              />
 
-            {/* Quote */}
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="text-lg sm:text-xl italic leading-relaxed"
-              style={{
-                fontFamily: "var(--font-narrator)",
-                color: "oklch(0.85 0.08 85 / 0.5)",
-              }}
-            >
-              "{quote}"
-            </motion.p>
+              {/* Round / Event label */}
+              <motion.p
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="text-xs tracking-[0.4em] uppercase mb-3"
+                style={{
+                  fontFamily: "var(--font-heading)",
+                  color: type === "elimination" ? "oklch(0.65 0.25 25 / 0.7)" : "oklch(0.75 0.12 85 / 0.5)",
+                }}
+              >
+                {type === "elimination"
+                  ? `${eliminatedName || "A sinner"} has fallen`
+                  : round >= maxRounds
+                    ? "The Final Reckoning"
+                    : `Rite ${round}`}
+              </motion.p>
 
-            {/* Decorative line */}
-            <motion.div
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: 0.6, delay: 0.7 }}
-              className="h-px w-32 mx-auto mt-6"
-              style={{ background: "linear-gradient(90deg, transparent, oklch(0.75 0.12 85 / 0.4), transparent)" }}
-            />
+              {/* Quote */}
+              <motion.p
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25, duration: 0.4 }}
+                className="text-base sm:text-lg italic leading-relaxed"
+                style={{
+                  fontFamily: "var(--font-narrator)",
+                  color: "oklch(0.85 0.08 85 / 0.5)",
+                }}
+              >
+                "{quote}"
+              </motion.p>
+
+              {/* Decorative line */}
+              <motion.div
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.4, delay: 0.35 }}
+                className="h-px w-24 mx-auto mt-4"
+                style={{ background: "linear-gradient(90deg, transparent, oklch(0.75 0.12 85 / 0.4), transparent)" }}
+              />
+
+              {/* Tap to dismiss hint (mobile) */}
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.3 }}
+                transition={{ delay: 1.5 }}
+                className="text-[10px] tracking-widest uppercase mt-3"
+                style={{ color: "oklch(0.75 0.12 85 / 0.3)" }}
+              >
+                tap to dismiss
+              </motion.p>
+            </div>
           </div>
         </motion.div>
       )}

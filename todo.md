@@ -2177,3 +2177,13 @@
 - [x] Reduced z-index from z-[9990] to z-[100] to avoid blocking other UI
 - [x] Write tests for the fix (19 new tests, 820 total passing)
 - [x] Push to GitHub
+
+### v6.6.2 — Critical: Cathedral Transition Stuck
+- [x] FIX: CathedralTransition rewritten as non-blocking floating banner (no full-screen overlay)
+- [x] Add safety timeout fallback (SAFETY_TIMEOUT at 3.5s) so overlay always auto-dismisses
+- [x] Add tap-to-dismiss functionality for mobile users
+- [x] Force dismiss when parent show prop goes false (race condition fix)
+- [x] Dedup triggers with lastTriggerRef to prevent re-firing on same round
+- [x] pointer-events-none on outer container, pointer-events-auto only on inner card
+- [x] Updated tests (823 total passing)
+- [ ] Push to GitHub
