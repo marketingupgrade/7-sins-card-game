@@ -2186,4 +2186,4 @@
 - [x] Dedup triggers with lastTriggerRef to prevent re-firing on same round
 - [x] pointer-events-none on outer container, pointer-events-auto only on inner card
 - [x] Updated tests (823 total passing)
-- [ ] Push to GitHub
+- [x] Push to GitHub
