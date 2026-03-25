@@ -51,6 +51,228 @@
 
     <!-- Preconnect to Supabase (database/auth calls) -->
     <link rel="dns-prefetch" href="https://supabase.co" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "VideoGame",
+          "@id": "https://www.7sinscardgame.com/#game",
+          "name": "7 Deadly Sins Card Game",
+          "alternateName": ["7 Sins Card Game", "Seven Deadly Sins Card Game"],
+          "url": "https://www.7sinscardgame.com",
+          "description": "A free strategic 4-player PvP card game where seven deadly sins clash in a gothic cathedral. Choose your sin faction, master Fibonacci compound mechanics, and outlast your rivals across 20 rounds of divine judgment.",
+          "image": {
+            "@type": "ImageObject",
+            "url": "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png",
+            "width": 1200,
+            "height": 630
+          },
+          "screenshot": "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png",
+          "applicationCategory": "Game",
+          "applicationSubCategory": "Strategy Card Game",
+          "gamePlatform": ["Web Browser", "Desktop", "Mobile"],
+          "operatingSystem": "Any (Web Browser)",
+          "playMode": ["MultiPlayer", "SinglePlayer"],
+          "numberOfPlayers": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 4
+          },
+          "genre": ["Strategy", "Card Game", "PvP", "Gothic", "Dark Fantasy"],
+          "inLanguage": "en",
+          "datePublished": "2025-12-01",
+          "dateModified": "2026-03-25",
+          "softwareVersion": "6.6",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD",
+            "availability": "https://schema.org/InStock",
+            "url": "https://www.7sinscardgame.com"
+          },
+          "author": {
+            "@id": "https://www.7sinscardgame.com/#organization"
+          },
+          "creator": {
+            "@id": "https://www.7sinscardgame.com/#organization"
+          },
+          "publisher": {
+            "@id": "https://www.7sinscardgame.com/#organization"
+          },
+          "characterAttribute": [
+            {"@type": "Thing", "name": "Wrath", "description": "The Destroyer. Aggressive burn faction with Vengeance passive that reflects 2 damage when hit."},
+            {"@type": "Thing", "name": "Sloth", "description": "The Immovable. Defensive fortress faction with Inertia passive that reduces all incoming damage by 1."},
+            {"@type": "Thing", "name": "Greed", "description": "The Hoarder. Resource manipulation faction with Tithe passive that gains +1 energy when playing 3+ cost cards."},
+            {"@type": "Thing", "name": "Pride", "description": "The Untouchable. Combo and superiority faction with Supremacy passive granting +2 damage when at highest HP."},
+            {"@type": "Thing", "name": "Envy", "description": "The Mimic. Theft and copy faction with Covet passive that copies the last card played by any opponent."},
+            {"@type": "Thing", "name": "Gluttony", "description": "The Devourer. Consumption and healing faction with Feast passive that heals 2 HP when defeating a card."},
+            {"@type": "Thing", "name": "Lust", "description": "The Seducer. Charm and control faction with Temptation passive that forces a random opponent to discard when playing charm cards."}
+          ],
+          "gameLocation": {
+            "@type": "Place",
+            "name": "The Cathedral of Sins",
+            "description": "A gothic cathedral where sinners clash in divine judgment"
+          },
+          "featureList": [
+            "7 unique sin factions with distinct playstyles and passive abilities",
+            "Fibonacci compound scaling mechanic for escalating power",
+            "AI-powered narrator with dynamic commentary",
+            "Practice mode against AI opponents",
+            "Custom deck builder with 140+ unique cards",
+            "20-round matches with energy management system",
+            "Real-time multiplayer with up to 4 players",
+            "Gothic dark fantasy art style",
+            "Community features and player chronicles"
+          ],
+          "keywords": "deadly sins card game, strategy card game, free online card game, PvP card game, gothic card game, multiplayer card game, browser card game, dark fantasy card game, seven deadly sins game",
+          "gameTip": {
+            "@type": "CreativeWork",
+            "name": "How to Play",
+            "url": "https://www.7sinscardgame.com/how-to-play"
+          },
+          "isAccessibleForFree": true,
+          "isFamilyFriendly": false
+        },
+        {
+          "@type": "Organization",
+          "@id": "https://www.7sinscardgame.com/#organization",
+          "name": "7 Deadly Sins Card Game",
+          "url": "https://www.7sinscardgame.com",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png",
+            "width": 192,
+            "height": 192
+          },
+          "description": "Creator of the 7 Deadly Sins Card Game, a free-to-play strategic PvP card game set in a gothic cathedral."
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.7sinscardgame.com/#website",
+          "name": "7 Deadly Sins Card Game",
+          "url": "https://www.7sinscardgame.com",
+          "description": "Official website of the 7 Deadly Sins Card Game. Play free, choose your sin, and battle in the Cathedral.",
+          "publisher": {
+            "@id": "https://www.7sinscardgame.com/#organization"
+          },
+          "inLanguage": "en",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": {
+              "@type": "EntryPoint",
+              "urlTemplate": "https://www.7sinscardgame.com/blog?q={search_term_string}"
+            },
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "@id": "https://www.7sinscardgame.com/#breadcrumb",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://www.7sinscardgame.com"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "How to Play",
+              "item": "https://www.7sinscardgame.com/how-to-play"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "Practice",
+              "item": "https://www.7sinscardgame.com/practice"
+            },
+            {
+              "@type": "ListItem",
+              "position": 4,
+              "name": "Deck Builder",
+              "item": "https://www.7sinscardgame.com/deck-builder"
+            },
+            {
+              "@type": "ListItem",
+              "position": 5,
+              "name": "Community",
+              "item": "https://www.7sinscardgame.com/community"
+            },
+            {
+              "@type": "ListItem",
+              "position": 6,
+              "name": "Chronicles",
+              "item": "https://www.7sinscardgame.com/chronicles"
+            },
+            {
+              "@type": "ListItem",
+              "position": 7,
+              "name": "Blog",
+              "item": "https://www.7sinscardgame.com/blog"
+            }
+          ]
+        },
+        {
+          "@type": "FAQPage",
+          "@id": "https://www.7sinscardgame.com/#faq",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "What is the 7 Deadly Sins Card Game?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The 7 Deadly Sins Card Game is a free-to-play strategic PvP card game where 2-4 players each choose one of seven sin factions (Wrath, Sloth, Greed, Pride, Envy, Gluttony, Lust) and battle across 20 rounds in a gothic cathedral setting. Each faction has unique cards, a passive ability, and distinct playstyle built around Fibonacci compound scaling mechanics."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How many players can play the 7 Deadly Sins Card Game?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The game supports 1 to 4 players. You can practice solo against AI opponents, or play multiplayer matches with 2, 3, or 4 human players. Each player chooses a different sin faction, and no two players can pick the same sin in a match."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is the 7 Deadly Sins Card Game free to play?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, the 7 Deadly Sins Card Game is completely free to play. It runs directly in your web browser with no downloads, installations, or in-app purchases required. Simply visit 7sinscardgame.com and start playing."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What are the seven sin factions and their abilities?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "The seven factions are: Wrath (aggressive burn, Vengeance passive reflects 2 damage), Sloth (defensive fortress, Inertia passive reduces incoming damage by 1), Greed (resource manipulation, Tithe passive gains +1 energy on 3+ cost cards), Pride (combo superiority, Supremacy passive grants +2 damage at highest HP), Envy (theft and copy, Covet passive copies opponent's last played card), Gluttony (consumption healing, Feast passive heals 2 HP on card defeat), and Lust (charm control, Temptation passive forces opponent discard on charm cards)."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How does the energy system work in the 7 Deadly Sins Card Game?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Players start with 2 energy and gain +1 energy per round, up to a maximum of 7. Each card has an energy cost to play. The escalating energy system creates a natural arc from early skirmishes to late-game power plays, with Fibonacci compound scaling making later rounds increasingly impactful."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can I play the 7 Deadly Sins Card Game on mobile?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, the game is fully responsive and works on any device with a modern web browser, including smartphones and tablets. No app download is needed."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>

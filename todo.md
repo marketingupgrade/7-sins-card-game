@@ -2218,3 +2218,11 @@
 - [ ] Update llms.txt and llms-full.txt with Wikidata entity reference — SKIPPED: pending Wikidata creation
 - [ ] Update Schema.org structured data with Wikidata sameAs — SKIPPED: pending Wikidata creation
 - [ ] Push to GitHub
+
+### v6.6.7 — SEO: JSON-LD Structured Data (VideoGame Schema)
+- [x] Add VideoGame schema.org JSON-LD to index.html
+- [x] Include Organization schema for the developer/publisher
+- [x] Include WebSite schema with SearchAction for sitelinks search box
+- [x] Include FAQPage schema for common game questions (6 FAQs)
+- [x] Include BreadcrumbList schema for site navigation (7 items)
+- [x] Validate JSON-LD syntax (Python json.loads pass)
