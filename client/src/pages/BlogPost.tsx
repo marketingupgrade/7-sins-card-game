@@ -153,6 +153,8 @@ export default function BlogPost() {
       // Featured image for OG/Twitter (falls back to site-wide banner)
       const featuredImg = (post as any).featuredImage || "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png";
       setMeta("property", "og:image", featuredImg);
+      setMeta("property", "og:image:width", "1200");
+      setMeta("property", "og:image:height", "630");
 
       // Twitter Card meta tags
       setMeta("name", "twitter:card", "summary_large_image");

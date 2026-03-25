@@ -2276,3 +2276,18 @@
 ### v6.7.2 — Add stale-while-revalidate to prerender Cache-Control
 - [x] Update Cache-Control headers in prerender middleware to include stale-while-revalidate=43200 (12h)
 - [ ] Push to GitHub
+
+### v6.7.3 — Client-side dynamic OG meta tags and Article schema for blog posts
+- [x] Assessed BlogPost.tsx — already has comprehensive client-side meta handling
+- [x] OG meta tags already present: og:title, og:description, og:image, og:type=article, og:url, og:site_name, article:published_time, article:modified_time, article:section
+- [x] Twitter Card tags already present: twitter:card=summary_large_image, twitter:title, twitter:description, twitter:image
+- [x] Article JSON-LD + BreadcrumbList + dynamic FAQPage schema already on client side
+- [x] Meta tags update on SPA navigation (useEffect with cleanup on unmount)
+- [x] Verified prerender serves all social crawlers (Facebook, Twitter, Discord, LinkedIn, WhatsApp) with X-Prerendered: true and full OG/Twitter meta
+- [ ] Push to GitHub
+
+### v6.7.4 — Add og:image dimensions for optimal social preview cards
+- [x] Add og:image:width=1200 and og:image:height=630 to prerender middleware
+- [x] Add og:image:width=1200 and og:image:height=630 to BlogPost.tsx client-side
+- [x] Add og:image:width and og:image:height to index.html default OG tags (already present)
+- [ ] Push to GitHub

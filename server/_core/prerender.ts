@@ -98,6 +98,8 @@ function buildHtmlPage(opts: {
   <meta property="og:title" content="${safeTitle}">
   <meta property="og:description" content="${safeDesc}">
   <meta property="og:image" content="${ogImage}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta property="og:url" content="${url}">
   <meta property="og:site_name" content="7 Deadly Sins Card Game">`;
 
