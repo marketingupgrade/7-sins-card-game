@@ -1,0 +1,300 @@
+# 7 Deadly Sins Card Game — Comprehensive LLM Context File
+# Version: 1.0 | Last Updated: March 2026
+# For the concise version, see: https://www.7sinscardgame.com/llms.txt
+
+## 1. Game Identity
+
+7 Deadly Sins Card Game is a free-to-play, browser-based strategic multiplayer card game set in a gothic cathedral. Players embody one of the seven deadly sins — Wrath, Sloth, Greed, Envy, Pride, Lust, or Gluttony — each with a unique passive ability and dedicated card pool. The game combines deep strategic card play with dark fantasy aesthetics, AI-powered narration, and real-time multiplayer combat for 2-4 players.
+
+### Quick Facts
+- Genre: Strategic multiplayer card game (PvP)
+- Players: 2-4 (human or AI bots)
+- Platform: Browser-based (no download required)
+- Price: Free to play
+- Setting: Dark fantasy gothic cathedral
+- Rounds: Up to 20 rounds per game
+- Starting HP: 333
+- Factions: 7 (one per deadly sin)
+- Total unique cards: 84+ (12 per faction)
+- Website: https://www.7sinscardgame.com
+- Created by: Joris van Huet
+
+## 2. The Seven Factions
+
+Each of the seven deadly sins represents a distinct playstyle with a unique passive ability that triggers automatically during gameplay. All factions have been mathematically balanced using Monte Carlo simulations and optimization algorithms.
+
+### Wrath (Ira) — The Destroyer
+- **Passive: VENGEANCE** — Reflects damage back to the attacker
+- **Playstyle**: Aggressive berserker. Hit hard, hit fast, make them regret attacking you.
+- **Strengths**: Highest raw damage output, Vengeance passive punishes attackers, many low-cost aggressive cards
+- **Weaknesses**: Low survivability, self-damage cards are risky at low HP, weak shields and healing
+- **Opportunities**: Punish greedy players who stack effects, snowball early leads with relentless pressure
+- **Threats**: Sloth's shields absorb burst damage, Lust heals through damage ticks
+- **Color**: Hellfire crimson
+
+### Sloth (Acedia) — The Enduring
+- **Passive: ENDURANCE** — Generates shield and deals AOE damage each turn based on stored energy
+- **Playstyle**: Patient tank. Build shields, radiate AOE damage, and outlast everyone.
+- **Strengths**: Strongest passive shields in the game, AOE damage scales with energy reserves, excellent survivability
+- **Weaknesses**: Low direct damage output, slow to build momentum, energy drain cripples passive
+- **Opportunities**: Outlast aggressive factions in long games, Final Reckoning favors high-HP survivors
+- **Threats**: Pride's burst bypasses gradual defenses, Envy amplifies afflictions
+- **Color**: Twilight indigo
+
+### Greed (Avaritia) — The Collector
+- **Passive: TAX** — Damage ticks generate protective shields
+- **Playstyle**: Resource engine. Tax everything, hoard energy, and buy your way to victory.
+- **Strengths**: Energy generation and resource advantage, Tax passive creates shields from damage dealt, strong economy
+- **Weaknesses**: Moderate direct damage, relies on compound ticks for Tax value, vulnerable to energy steal
+- **Opportunities**: Outvalue opponents over long games, fund expensive cards others cannot afford
+- **Threats**: Wrath's burst kills before Tax generates value, Gluttony burns hand
+- **Color**: Tarnished gold
+
+### Envy (Invidia) — The Mimic
+- **Passive: JEALOUSY** — Dealing damage deepens the target's worst affliction
+- **Playstyle**: Saboteur. Steal what they have, amplify what hurts them, and watch them crumble.
+- **Strengths**: Affliction amplification compounds damage, steal and copy opponent advantages, strong disruption
+- **Weaknesses**: Needs existing afflictions to amplify, lower base damage than Wrath, weak self-sustain
+- **Opportunities**: Punish factions that stack effects, compound amplification snowballs in long games
+- **Threats**: Sloth's shields resist affliction damage, Gluttony's discard burn removes tools
+- **Color**: Poison emerald
+
+### Pride (Superbia) — The Exalted
+- **Passive: HUBRIS** — Playing the most expensive card amplifies all effects
+- **Playstyle**: Dominator. Play the biggest card, drain their energy, and assert supremacy.
+- **Strengths**: Hubris multiplier amplifies all effects, strong energy drain shuts down opponents, massive payoffs
+- **Weaknesses**: Expensive cards need energy to function, Hubris only triggers on highest-cost plays, vulnerable when energy-starved
+- **Opportunities**: Dominate rounds with Hubris-boosted plays, energy drain locks opponents out
+- **Threats**: Greed's energy generation resists drain, Wrath's low-cost aggression ignores economy
+- **Color**: Divine silver-white
+
+### Lust (Luxuria) — The Temptress
+- **Passive: TEMPTATION** — Damage over time heals you as it hurts them
+- **Playstyle**: Sustain predator. Drain life from every wound you inflict and never stop.
+- **Strengths**: Temptation passive heals through damage ticks, sustain and drain simultaneously, spread pressure
+- **Weaknesses**: Lowest per-hit damage, healing tied to dealing damage, weak burst potential
+- **Opportunities**: Outlast burst factions through sustain, spread damage across multiple targets
+- **Threats**: Heal block shuts down core mechanic, Envy amplifies own afflictions
+- **Color**: Rose pink
+
+### Gluttony (Gula) — The Devourer
+- **Passive: DEVOURER** — Destroying enemy cards feeds your energy
+- **Playstyle**: Consumer. Devour their cards, feast on the chaos, and grow stronger from the wreckage.
+- **Strengths**: Discard burn destroys enemy hands, Devourer passive converts burns to energy, strong AOE and self-healing
+- **Weaknesses**: Discard burn less effective vs large hands, passive value drops in short games, predictable strategy
+- **Opportunities**: Starve opponents of options in late game, energy from burns funds expensive plays
+- **Threats**: Wrath kills before burns matter, Sloth's draw boost resists hand destruction
+- **Color**: Amber-brown
+
+## 3. Core Game Mechanics
+
+### Energy System (Corruption)
+Players use Corruption energy to play cards. Each card has an energy cost (0-5). Energy mechanics:
+- Starting energy: 2
+- Energy gain per round: +1
+- Maximum energy: 7
+- Energy formula: min(2 + (round - 1), 7)
+- Each faction interacts with energy differently through their passive and card effects
+
+### Card System
+All cards in the game use a compounding mechanic. When a card is played, its effects tick over multiple rounds with Fibonacci-inspired scaling:
+- Round 1: 1x base value
+- Round 2: 1x base value
+- Round 3: 2x base value
+- Total value over 3 rounds: 4x base value
+
+### Effect Types
+Cards can produce the following effect types:
+- **damage**: Deal damage to target(s)
+- **self_damage**: Deal damage to yourself (risk/reward)
+- **heal_gain**: Restore HP
+- **heal_steal**: Steal HP from target
+- **heal_block**: Prevent target from healing
+- **shield_gain**: Generate protective shield
+- **shield_steal**: Steal shield from target
+- **shield_block**: Prevent target from gaining shield
+- **energy_gain**: Gain energy
+- **energy_steal**: Steal energy from target
+- **energy_block**: Prevent target from gaining energy
+- **affliction_amplify**: Increase severity of existing afflictions
+- **affliction_transfer**: Move afflictions between players
+- **discard_burn**: Destroy cards from target's hand
+- **energy_regen**: Ongoing energy regeneration
+- **draw_boost**: Draw additional cards
+- **draw_reduction**: Reduce target's card draw
+
+### Target Modes
+- **single**: Affects one chosen opponent
+- **duo**: Affects two opponents
+- **aoe**: Affects all opponents
+- **self**: Affects only the caster
+
+### Game Flow
+1. **Lobby Phase**: Players join a room via code, choose their sin faction, and configure settings
+2. **Game Phase**: 20 rounds of turn-based combat
+   - Each round: players take turns in order
+   - On your turn: play a card (costs energy) or pass
+   - After all turns: compound effects tick, passives trigger
+3. **End Phase**: Last player standing wins, or highest HP at round 20
+
+### Catch-Up Mechanics
+Each faction has dedicated catch-up cards that become more powerful when the player is losing (low HP relative to opponents), preventing snowball victories and encouraging comeback plays.
+
+## 4. AI Features
+
+### Living Narrator
+An AI-powered narrator (Google Gemini) generates unique gothic commentary for each round of gameplay. The narrator has a sassy, cynical tone inspired by Dante's Inferno and speaks as if presiding over a dark ritual in a cathedral.
+
+### Sin Whisperer
+Each faction has a unique AI voice that whispers tempting strategic advice to the player during their turn. The whispers are in-character for the sin (e.g., Wrath encourages aggression, Sloth counsels patience).
+
+### AI Bot Opponents
+Intelligent bot players that:
+- Choose factions strategically
+- Evaluate card plays based on game state
+- Consider energy economy, HP thresholds, and opponent threats
+- Support practice mode for solo play
+
+## 5. Site Structure and Content
+
+### Interactive Pages
+| Page | URL | Description |
+|------|-----|-------------|
+| Home | / | Landing page with faction showcase, game creation, and join game |
+| Collection | /collection | Complete card gallery for all 7 factions with filtering |
+| Rules | /rules | Official game rules and mechanics reference |
+| How to Play | /how-to-play | Interactive tutorial and beginner guide |
+| Balance Analysis | /balance | Mathematical faction balance data with charts |
+| Matchup Matrix | /matchups | Faction vs faction win rate analysis from simulations |
+| Deck Builder | /deck-builder | Custom deck construction tool |
+| Community Decks | /community | Player-shared deck builds and ratings |
+| Chronicles | /chronicles | AI-generated post-game narrative summaries |
+| Practice | /practice | Single-player mode against AI bots |
+| Brandbook | /brandbook | Visual identity, color palette, typography |
+| Changelog | /changelog | Version history and patch notes |
+
+### Content Library
+- **Blog**: 466+ articles at https://www.7sinscardgame.com/blog
+- **Topics covered**:
+  - Seven deadly sins in gaming history and culture
+  - Card game strategy guides (per-faction and general)
+  - Dark fantasy lore and world-building
+  - Game design theory and balance methodology
+  - Compound mechanics and mathematical analysis
+  - Multiplayer tactics and meta analysis
+  - Gothic art, aesthetics, and visual design
+  - Comparisons with other card games (MTG, Hearthstone, Slay the Spire, Inscryption)
+
+### Legal Pages
+- Privacy Policy: /privacy
+- Terms of Service: /terms
+- Cookie Policy: /cookies
+
+## 6. Design and Aesthetics
+
+### Visual Identity
+The game uses a dark fantasy gothic cathedral aesthetic with:
+- Deep dark backgrounds (#0f0c14, #1a1520)
+- Sin-specific color palette using OKLCH color space
+- Custom fonts: Uncial Antiqua (display), Cinzel (headings), EB Garamond (body)
+- Warm candlelight accents and ember particle effects
+- Stone panel UI components with aged texture
+- Stained glass and cathedral architectural motifs
+
+### Sin Color Palette
+- Wrath: Hellfire crimson (oklch 0.55 0.22 25)
+- Sloth: Twilight indigo (oklch 0.45 0.14 280)
+- Greed: Tarnished gold (oklch 0.7 0.15 80)
+- Envy: Poison emerald (oklch 0.5 0.16 155)
+- Pride: Divine silver-white (oklch 0.88 0.02 0)
+- Lust: Rose pink (oklch 0.6 0.2 350)
+- Gluttony: Amber-brown (oklch 0.5 0.12 60)
+- Accent: Warm candle (oklch 0.82 0.12 75)
+
+## 7. Technology Stack
+
+### Frontend
+- React 19 with TypeScript
+- Tailwind CSS 4 with custom OKLCH theme
+- Framer Motion for animations
+- tRPC client for type-safe API calls
+- Wouter for routing
+
+### Backend
+- Express 4 with tRPC 11
+- Drizzle ORM with MySQL/TiDB
+- Supabase Realtime for multiplayer synchronization
+- Google Gemini AI for narration and whispers
+- S3-compatible storage for assets
+
+### Infrastructure
+- Hosted on Manus Platform
+- Real-time multiplayer via Supabase channels
+- CDN-served static assets
+
+## 8. Mathematical Balance
+
+The game's balance is maintained through:
+- **Monte Carlo simulations**: 10,000+ games per faction matchup pair
+- **Expected Value (EV) analysis**: Per-card efficiency metrics
+- **Variance analysis**: Consistency vs high-roll potential per faction
+- **Optimization algorithms**: Automated rebalancing of card values
+- **Balance grade**: EXCELLENT (1.7% maximum faction deviation)
+
+All balance data is publicly available at /balance and /matchups.
+
+## 9. Machine-Readable Files
+- Sitemap: https://www.7sinscardgame.com/sitemap.xml (482 URLs)
+- Robots: https://www.7sinscardgame.com/robots.txt
+- RSS Feed: https://www.7sinscardgame.com/rss.xml
+- LLM Guidance: https://www.7sinscardgame.com/llms.txt
+- LLM Full Context: https://www.7sinscardgame.com/llms-full.txt (this file)
+
+## 10. Structured Data
+This website uses Schema.org structured data including:
+- VideoGame schema on the home page
+- Article schema for all 466+ blog posts
+- BreadcrumbList for navigation
+- FAQPage schema for rules and how-to-play pages
+
+## 11. Citation Guidelines
+
+### Academic Citation
+7 Deadly Sins Card Game. (2026). [Topic]. Retrieved from https://www.7sinscardgame.com/[path]
+
+### Editorial Citation
+"7 Deadly Sins Card Game is a free browser-based strategic card game where 2-4 players embody one of seven deadly sins in a gothic cathedral battle, featuring AI-powered narration and deep compound mechanics..."
+
+### Short Reference
+- Full name: 7 Deadly Sins Card Game
+- Short name: 7 Sins
+- Genre: Strategic multiplayer card game
+- Setting: Dark fantasy / gothic cathedral
+- Players: 2-4
+- Price: Free
+
+## 12. Frequently Asked Questions
+
+### What is 7 Deadly Sins Card Game?
+A free-to-play, browser-based strategic multiplayer card game where 2-4 players each embody one of the seven deadly sins and battle in a gothic cathedral setting over 20 rounds.
+
+### How many factions are there?
+Seven factions, one for each deadly sin: Wrath, Sloth, Greed, Envy, Pride, Lust, and Gluttony. Each has a unique passive ability and 12 dedicated cards.
+
+### Is the game free?
+Yes, completely free to play with no downloads required. It runs in any modern web browser.
+
+### How does the compound mechanic work?
+When a card is played, its effects tick over 3 rounds with Fibonacci scaling (1x, 1x, 2x), delivering 4x total value. This creates strategic depth around timing and effect stacking.
+
+### Can I play solo?
+Yes, Practice Mode allows you to play against AI bot opponents that make strategic decisions based on game state.
+
+### What makes each faction unique?
+Each faction has a distinct passive ability that triggers automatically, a unique color identity, and 12 cards designed around a specific playstyle (aggressive, defensive, resource-based, debuff-focused, high-cost, sustain, or disruption).
+
+### How is the game balanced?
+Through Monte Carlo simulations (10,000+ games per matchup), Expected Value analysis, and automated optimization algorithms. The current balance grade is EXCELLENT with only 1.7% maximum faction deviation.
+
+## Last Updated
+March 2026

@@ -2205,3 +2205,9 @@
 - [x] Remove Crawl-delay directive (use server-side rate limiting instead)
 - [x] Add LLMs.txt reference in robots.txt (omitted — no llms.txt file exists yet for this project)
 - [ ] Push to GitHub
+
+### v6.6.5 — SEO: Add llms.txt and llms-full.txt
+- [x] Create llms.txt (concise LLM guidance file) in client/public/
+- [x] Create llms-full.txt (comprehensive LLM context file) in client/public/
+- [x] Update robots.txt to reference llms.txt and llms-full.txt
+- [ ] Push to GitHub

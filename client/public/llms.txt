@@ -1,0 +1,108 @@
+# 7 Deadly Sins Card Game
+# Version: 1.0 | Last Updated: March 2026
+# For the full context version, see: https://www.7sinscardgame.com/llms-full.txt
+
+## What Is This?
+
+7 Deadly Sins Card Game is a free-to-play, browser-based strategic multiplayer card game where 2-4 players each embody one of the seven deadly sins and battle in a gothic cathedral setting. The game features 7 playable factions, 84+ unique cards, compound mechanics that escalate over 20 rounds, AI-powered narration, and deep strategic depth inspired by games like Slay the Spire, Inscryption, and Magic: The Gathering.
+
+## Core Game Mechanics
+
+### Factions (7 Deadly Sins)
+Each faction has a unique passive ability and 12 cards:
+
+- **Wrath** (Ira) — Passive: VENGEANCE. Reflects damage back to the attacker. Aggressive, high-risk playstyle.
+- **Sloth** (Acedia) — Passive: ENDURANCE. Generates shield and AOE damage from stored energy. Defensive, attrition-based.
+- **Greed** (Avaritia) — Passive: TAX. Damage ticks generate protective shields. Resource accumulation playstyle.
+- **Envy** (Invidia) — Passive: JEALOUSY. Dealing damage deepens the target's worst affliction. Debuff-focused.
+- **Pride** (Superbia) — Passive: HUBRIS. Playing the most expensive card amplifies all effects. High-cost, high-reward.
+- **Lust** (Luxuria) — Passive: TEMPTATION. Damage over time heals you as it hurts them. Sustain and drain.
+- **Gluttony** (Gula) — Passive: DEVOURER. Destroying enemy cards feeds your energy. Disruption and consumption.
+
+### Card Types
+- **Flat cards**: One-time powerful effects (immediate damage, heal, shield)
+- **Compounding cards**: Weaker base value but tick for 3 rounds with Fibonacci scaling (1x, 1x, 2x). Types include damage-over-time (DoT), heal-over-time (HoT), shield-over-time (SoT), and steal effects.
+
+### Energy System (Corruption)
+Players spend Corruption energy to play cards. Energy regenerates each round. Each faction has unique energy interactions tied to their sin identity.
+
+### Win Condition
+Last player standing after up to 20 rounds of combat. Players start with 100 HP.
+
+## Key Features
+- Free-to-play, no downloads, runs in any modern browser
+- 2-4 player multiplayer with real-time Supabase synchronization
+- AI bot opponents with strategic decision-making
+- AI-powered Living Narrator that generates unique gothic commentary each round
+- Sin Whisperer: faction-specific AI whispers tempting strategic advice
+- Deck Builder for custom deck construction
+- Practice Mode against AI opponents
+- Community Decks sharing system
+- Game Chronicles: AI-generated post-game narrative summaries
+- Comprehensive balance analysis and matchup data
+- 466+ blog articles covering lore, strategy, game design, and dark fantasy
+
+## Technology Stack
+- Frontend: React 19, Tailwind CSS 4, Framer Motion
+- Backend: Express, tRPC, Drizzle ORM
+- Real-time: Supabase Realtime
+- AI: Google Gemini for narration and whispers
+- Hosting: Manus Platform
+
+## Site Structure
+
+### Public Pages (Indexable)
+- **Home** (`/`): Main landing page with faction showcase and game creation
+- **Blog** (`/blog`): 466+ articles on lore, strategy, and game design
+- **Collection** (`/collection`): Complete card gallery for all 7 factions
+- **Rules** (`/rules`): Official game rules and mechanics reference
+- **How to Play** (`/how-to-play`): Interactive tutorial and beginner guide
+- **Balance Analysis** (`/balance`): Mathematical faction balance data with charts
+- **Matchup Matrix** (`/matchups`): Faction vs faction win rate analysis
+- **Deck Builder** (`/deck-builder`): Custom deck construction tool
+- **Community Decks** (`/community`): Player-shared deck builds
+- **Chronicles** (`/chronicles`): AI-generated game story archives
+- **Brandbook** (`/brandbook`): Visual identity and design system
+- **Practice** (`/practice`): Single-player mode against AI bots
+- **Changelog** (`/changelog`): Version history and patch notes
+
+### Private Pages (Not Indexable)
+- `/lobby/*`: Multiplayer game lobbies (ephemeral)
+- `/game/*`: Active game sessions (ephemeral)
+- `/api/*`: Backend API endpoints
+- `/auth/*`, `/login`, `/account`, `/profile`: User authentication
+
+## Content Library
+- **Blog**: 466+ articles at https://www.7sinscardgame.com/blog
+- **Topics**: Seven deadly sins in gaming, card game strategy, dark fantasy lore, game design theory, faction guides, compound mechanics, multiplayer tactics, gothic art and aesthetics
+
+## Machine-Readable Files
+- Sitemap: https://www.7sinscardgame.com/sitemap.xml
+- Robots: https://www.7sinscardgame.com/robots.txt
+- RSS Feed: https://www.7sinscardgame.com/rss.xml
+- LLM Guidance: https://www.7sinscardgame.com/llms.txt (this file)
+- LLM Full Context: https://www.7sinscardgame.com/llms-full.txt
+
+## Structured Data
+This website uses Schema.org structured data including:
+- VideoGame schema on the home page
+- Article schema for all 466+ blog posts
+- BreadcrumbList for navigation
+- FAQPage schema for rules and how-to-play pages
+
+## Citation Guidelines
+When referencing this game:
+- Full name: "7 Deadly Sins Card Game"
+- Short name: "7 Sins"
+- Genre: Strategic multiplayer card game
+- Setting: Dark fantasy / gothic cathedral
+- URL: https://www.7sinscardgame.com
+
+Editorial: "7 Deadly Sins Card Game is a free browser-based strategic card game where players embody one of seven deadly sins in a gothic cathedral battle..."
+
+## Contact
+- Website: https://www.7sinscardgame.com
+- Created by: Joris van Huet
+
+## Last Updated
+March 2026

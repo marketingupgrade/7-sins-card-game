@@ -298,6 +298,12 @@ Disallow: /
 # Location of the XML sitemap for search engines
 Sitemap: https://www.7sinscardgame.com/sitemap.xml
 
+# LLM guidance files for AI assistants and training crawlers
+# llms.txt: Concise site overview optimized for LLM context windows
+# llms-full.txt: Comprehensive context with game mechanics, faction data, and FAQs
+LLMs-txt: https://www.7sinscardgame.com/llms.txt
+LLMs-full-txt: https://www.7sinscardgame.com/llms-full.txt
+
 # =====================================================================
 # NOTES
 # =====================================================================
