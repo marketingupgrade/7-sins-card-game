@@ -2211,3 +2211,10 @@
 - [x] Create llms-full.txt (comprehensive LLM context file) in client/public/
 - [x] Update robots.txt to reference llms.txt and llms-full.txt
 - [ ] Push to GitHub
+
+### v6.6.6 — SEO: Wikidata Entity + LLMs Link Tags
+- [ ] Create Wikidata entry for 7 Deadly Sins Card Game (video game entity) — SKIPPED: sandbox IP blocked by Wikimedia, do manually later
+- [x] Add link rel=alternate tags in index.html for llms.txt and llms-full.txt
+- [ ] Update llms.txt and llms-full.txt with Wikidata entity reference — SKIPPED: pending Wikidata creation
+- [ ] Update Schema.org structured data with Wikidata sameAs — SKIPPED: pending Wikidata creation
+- [ ] Push to GitHub
