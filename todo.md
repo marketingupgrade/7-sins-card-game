@@ -2272,3 +2272,7 @@
 - [x] Related posts links (3 per article) included in prerendered blog HTML for internal linking
 - [x] Cache-Control headers: public, max-age=3600, s-maxage=86400 for CDN caching
 - [ ] Push to GitHub
+
+### v6.7.2 — Add stale-while-revalidate to prerender Cache-Control
+- [x] Update Cache-Control headers in prerender middleware to include stale-while-revalidate=43200 (12h)
+- [ ] Push to GitHub
