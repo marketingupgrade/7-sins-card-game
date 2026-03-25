@@ -8,6 +8,7 @@ import { registerChatRoutes } from "./chat";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { prerenderMiddleware } from "./prerender";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -189,6 +190,10 @@ async function startServer() {
       createContext,
     })
   );
+  // Prerender middleware: serves full HTML to bots/crawlers for SEO
+  // Must be before Vite/static catch-all so bots get rendered content
+  app.use(prerenderMiddleware());
+
   // development mode uses Vite, production mode uses static files
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

@@ -2258,3 +2258,17 @@
 - [x] Fixed homepage URL format in sitemap test (trailing slash)
 - [x] All 33 SEO tests passing
 - [ ] Push to GitHub
+
+### v6.7.1 — SSR/Prerendering for Blog Posts and Key Pages
+- [x] Assess current Express+Vite architecture for SSR feasibility (middleware-based prerender approach)
+- [x] Implement server-side HTML rendering for blog post pages (/blog/:slug) with full article content from Supabase
+- [x] Implement server-side HTML rendering for 17 static pages (home, how-to-play, rules, faq, blog, community, deck-builder, chronicles, practice, balance, changelog, collection, matchups, terms, privacy, cookies, brandbook)
+- [x] Inject proper meta tags (OG, canonical, description, title, article:published_time, article:modified_time) in prerendered HTML
+- [x] Inject Article JSON-LD structured data in prerendered blog post HTML (headline, datePublished, dateModified, author, publisher, keywords, wordCount, timeRequired)
+- [x] Bot/crawler detection (28 patterns: Google, Bing, Yandex, Baidu, DuckDuckBot, social crawlers, AI bots) to serve prerendered HTML vs SPA
+- [x] Test prerendered output with curl (Googlebot, Bingbot, GPTBot) — all return X-Prerendered: true with full HTML
+- [x] Write vitest tests for prerendering (33 tests, all passing)
+- [x] All 889 tests passing across 40 test files
+- [x] Related posts links (3 per article) included in prerendered blog HTML for internal linking
+- [x] Cache-Control headers: public, max-age=3600, s-maxage=86400 for CDN caching
+- [ ] Push to GitHub
