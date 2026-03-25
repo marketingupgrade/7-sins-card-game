@@ -2198,3 +2198,10 @@
 - [x] Widened container from max-w-lg to max-w-4xl with 7-column grid on desktop
 - [x] Added missing --font-display CSS variable (was undefined, now maps to Uncial Antiqua)
 - [ ] Push to GitHub
+
+### v6.6.4 — SEO: Robots.txt & Sitemap Update
+- [x] Rewrite robots.txt based on CausalityEngine template (full AI/social/SEO crawler coverage)
+- [x] Update sitemap.xml with all current routes, correct lastmod dates, and missing pages (how-to-play, practice, community, chronicles)
+- [x] Remove Crawl-delay directive (use server-side rate limiting instead)
+- [x] Add LLMs.txt reference in robots.txt (omitted — no llms.txt file exists yet for this project)
+- [ ] Push to GitHub

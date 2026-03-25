@@ -1,54 +1,314 @@
-# 7 Deadly Sins Card Game - robots.txt
-# Maximum crawlability for all search engines and AI crawlers
+# =====================================================================
+# robots.txt for 7sinscardgame.com
+# Last Updated: Mar 25, 2026
+#
+# Strategy: Maximum AI visibility (SEO + AEO + GEO)
+# All reputable crawlers are allowed full access to maximize
+# citation potential across search engines, answer engines,
+# and generative AI platforms.
+# =====================================================================
 
+# ---------------------------------------------------------------------
+# SECTION 1: DEFAULT RULES (all crawlers)
+# ---------------------------------------------------------------------
+# Allow all reputable crawlers full access to the site to ensure
+# maximum visibility in search engines and AI assistants.
 User-agent: *
 Allow: /
-Allow: /blog
-Allow: /blog/*
-Allow: /collection
-Allow: /balance
-Allow: /matchups
-Allow: /rules
-Allow: /changelog
-Allow: /deck-builder
-Allow: /brandbook
 
-# Disallow internal/private routes
+# Disallow crawling of private/dynamic areas that should not be indexed.
+# Game sessions and lobbies are ephemeral and player-specific.
 Disallow: /api/
 Disallow: /lobby/
 Disallow: /game/
+Disallow: /auth/
+Disallow: /login/
+Disallow: /account/
+Disallow: /profile/
+Disallow: /reset-password/
+Disallow: /preview/
+Disallow: /draft/
+Disallow: /internal/
+Disallow: /private/
+Disallow: /_private/
 
-# Sitemap location
-Sitemap: https://www.7sinscardgame.com/sitemap.xml
+# Prevent duplicate content from UTM/tracking parameters
+Disallow: /*?utm_*
+Disallow: /*?ref=*
+Disallow: /*?fbclid=*
+Disallow: /*?gclid=*
 
-# Crawl-delay (be polite but allow frequent crawling)
-Crawl-delay: 1
+# ---------------------------------------------------------------------
+# SECTION 2: SEARCH ENGINE CRAWLERS
+# Explicit allow rules for major search engines
+# ---------------------------------------------------------------------
 
-# Explicitly allow AI crawlers for AEO/GEO visibility
-User-agent: GPTBot
-Allow: /
-Allow: /blog/*
-
-User-agent: ChatGPT-User
-Allow: /
-Allow: /blog/*
-
-User-agent: Claude-Web
-Allow: /
-Allow: /blog/*
-
-User-agent: PerplexityBot
-Allow: /
-Allow: /blog/*
-
-User-agent: Applebot
-Allow: /
-Allow: /blog/*
-
-User-agent: Bingbot
-Allow: /
-Allow: /blog/*
-
+# --- Google ---
 User-agent: Googlebot
 Allow: /
-Allow: /blog/*
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /
+
+# --- Bing / Microsoft ---
+User-agent: Bingbot
+Allow: /
+
+User-agent: msnbot
+Allow: /
+
+# --- Yandex ---
+User-agent: YandexBot
+Allow: /
+
+# --- Baidu ---
+User-agent: Baiduspider
+Allow: /
+
+# --- DuckDuckGo ---
+User-agent: DuckDuckBot
+Allow: /
+
+# --- Brave Search ---
+User-agent: BraveSearch
+Allow: /
+
+# --- Mojeek ---
+User-agent: MojeekBot
+Allow: /
+
+# --- Naver (South Korea) ---
+User-agent: Yeti
+Allow: /
+
+# --- Qwant (EU) ---
+User-agent: Qwantify
+Allow: /
+
+# --- Ecosia (uses Bing, but has its own crawler) ---
+User-agent: Ecosia
+Allow: /
+
+# ---------------------------------------------------------------------
+# SECTION 2B: AI-POWERED SEARCH / ANSWER ENGINE CRAWLERS
+# These power AI search features and answer engines
+# ---------------------------------------------------------------------
+
+# --- OpenAI ---
+# ChatGPT browsing mode (retrieves pages during user conversations)
+User-agent: ChatGPT-User
+Allow: /
+
+# --- Google Gemini ---
+User-agent: Google-Extended
+Allow: /
+
+# --- Perplexity ---
+User-agent: PerplexityBot
+Allow: /
+
+# --- Anthropic (Claude) ---
+User-agent: Claude-Web
+Allow: /
+User-agent: ClaudeBot
+Allow: /
+
+# --- You.com ---
+User-agent: YouBot
+Allow: /
+
+# --- Apple ---
+# Primary crawler (indexes webpages for Siri and Spotlight)
+User-agent: Applebot
+Allow: /
+
+# Extended crawler (collects data for Apple Intelligence models)
+User-agent: Applebot-Extended
+Allow: /
+
+# --- Amazon (Alexa, Rufus) ---
+User-agent: Amazonbot
+Allow: /
+
+# ---------------------------------------------------------------------
+# SECTION 3: AI TRAINING CRAWLERS
+# These crawlers collect data for model training.
+# Allowing them increases the probability of brand recognition
+# in future model versions.
+# ---------------------------------------------------------------------
+
+# OpenAI model training crawler
+User-agent: GPTBot
+Allow: /
+
+# Anthropic model training crawler
+User-agent: anthropic-ai
+Allow: /
+
+# Cohere (language models)
+User-agent: cohere-ai
+Allow: /
+
+# Allen Institute (Semantic Scholar and AI research tools)
+User-agent: AI2Bot
+Allow: /
+
+# Common Crawl (open dataset used by many AI projects)
+User-agent: CCBot
+Allow: /
+
+# Diffbot (structured data for ML pipelines)
+User-agent: Diffbot
+Allow: /
+
+# Hugging Face dataset crawler
+User-agent: HuggingFaceBot
+Allow: /
+
+# Omgili (forums, comments, discussion boards)
+User-agent: omgili
+Allow: /
+
+# Timpi (decentralized search)
+User-agent: TimpiBot
+Allow: /
+
+# ICC-Crawler (NICT, Japan)
+User-agent: ICC-Crawler
+Allow: /
+
+# Webz.io (AI training datasets)
+User-agent: Giga2025Bot
+Allow: /
+
+# ---------------------------------------------------------------------
+# SECTION 4: SOCIAL MEDIA CRAWLERS
+# Enable rich link previews across all social platforms
+# ---------------------------------------------------------------------
+
+# Meta (Facebook/Instagram) - Open Graph previews
+User-agent: facebookexternalhit
+Allow: /
+
+# Meta fallback fetcher
+User-agent: meta-externalagent
+Allow: /
+
+# Meta AI crawler
+User-agent: Meta-ExternalFetcher
+Allow: /
+
+# Meta web indexer (powers Meta AI search features)
+User-agent: Meta-WebIndexer
+Allow: /
+
+# LinkedIn
+User-agent: LinkedInBot
+Allow: /
+
+# TikTok/ByteDance
+User-agent: Bytespider
+Allow: /
+
+# Twitter/X card validator
+User-agent: Twitterbot
+Allow: /
+
+# Pinterest crawler
+User-agent: Pinterest
+Allow: /
+
+# Slack link unfurler
+User-agent: Slackbot
+Allow: /
+
+# Discord link preview
+User-agent: Discordbot
+Allow: /
+
+# WhatsApp link preview
+User-agent: WhatsApp
+Allow: /
+
+# Telegram link preview
+User-agent: TelegramBot
+Allow: /
+
+# Reddit link preview
+User-agent: Redditbot
+Allow: /
+
+# ---------------------------------------------------------------------
+# SECTION 5: SEO & ANALYTICS CRAWLERS
+# Allow SEO tools to audit and monitor site health
+# ---------------------------------------------------------------------
+
+# Ahrefs SEO crawler
+User-agent: AhrefsBot
+Allow: /
+
+# SEMrush SEO crawler
+User-agent: SemrushBot
+Allow: /
+
+# Moz SEO crawler
+User-agent: rogerbot
+Allow: /
+
+# Screaming Frog SEO spider
+User-agent: Screaming Frog SEO Spider
+Allow: /
+
+# ---------------------------------------------------------------------
+# SECTION 6: KNOWN MALICIOUS / UNWANTED SCRAPERS
+# Block scrapers that provide no SEO, AEO, or GEO value
+# ---------------------------------------------------------------------
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: SemrushBot-BA
+Disallow: /
+
+User-agent: PetalBot
+Disallow: /
+
+User-agent: MegaIndex.ru
+Disallow: /
+
+User-agent: Sogou
+Disallow: /
+
+User-agent: AhrefsSiteAudit
+Disallow: /
+
+# =====================================================================
+# INDEXING DIRECTIVES
+# =====================================================================
+
+# Location of the XML sitemap for search engines
+Sitemap: https://www.7sinscardgame.com/sitemap.xml
+
+# =====================================================================
+# NOTES
+# =====================================================================
+# Crawl-delay removed from global scope. The previous Crawl-delay: 1
+#   applied to ALL crawlers including Googlebot (which ignores it) and
+#   could throttle beneficial AI crawlers. Server-side rate limiting
+#   is the recommended approach instead.
+#
+# UTM/tracking parameter paths are disallowed to prevent duplicate
+#   content indexing from campaign URLs.
+#
+# Game sessions (/lobby/*, /game/*) are ephemeral multiplayer rooms
+#   and should never be indexed.
+# =====================================================================
