@@ -35,6 +35,7 @@ import {
   Scroll,
   ImageIcon,
 } from "lucide-react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ---- Rarity Config ----
 const RARITY_CONFIG = {
@@ -109,6 +110,12 @@ type RarityFilter = "common" | "rare" | "epic" | "legendary" | undefined;
 type CivFilter = "warrior_empire" | "enlightened_republic" | "merchant_federation" | "balanced" | undefined;
 
 export default function Chronicles() {
+  usePageMeta({
+    title: "Chronicles — Battle History",
+    description: "Browse epic battle chronicles from the Cathedral of Sins. AI-narrated match replays with dramatic commentary and strategic analysis.",
+    canonicalPath: "/chronicles",
+  });
+
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>(undefined);
   const [civFilter, setCivFilter] = useState<CivFilter>(undefined);
   const [showFilters, setShowFilters] = useState(false);

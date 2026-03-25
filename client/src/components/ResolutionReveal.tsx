@@ -354,7 +354,7 @@ export default function ResolutionReveal({
             >
               <img
                 src={FACTION_PORTRAITS[caster.chosenSin as SinType]}
-                alt=""
+                alt="Faction portrait"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -415,7 +415,7 @@ export default function ResolutionReveal({
               <div className="absolute inset-0">
                 <img
                   src={CARD_ART_URLS[currentCard.id] || ""}
-                  alt=""
+                  alt="Card illustration"
                   className="w-full h-full object-cover"
                   loading="eager"
                 />
@@ -547,7 +547,7 @@ export default function ResolutionReveal({
                   ) : isSelf ? (
                     <>
                       <div className="w-5 h-5 rounded-full overflow-hidden border" style={{ borderColor: theme.color }}>
-                        <img src={FACTION_PORTRAITS[caster?.chosenSin as SinType]} alt="" className="w-full h-full object-cover" />
+                        <img src={FACTION_PORTRAITS[caster?.chosenSin as SinType]} alt="Faction portrait" className="w-full h-full object-cover" />
                       </div>
                       <span className="text-xs font-bold uppercase tracking-wider" style={{ color: theme.color, fontFamily: "var(--font-heading)" }}>
                         SELF
@@ -556,7 +556,7 @@ export default function ResolutionReveal({
                   ) : target ? (
                     <>
                       <div className="w-5 h-5 rounded-full overflow-hidden border border-red-500/40">
-                        <img src={FACTION_PORTRAITS[(target.chosenSin as SinType) || "wrath"]} alt="" className="w-full h-full object-cover" />
+                        <img src={FACTION_PORTRAITS[(target.chosenSin as SinType) || "wrath"]} alt="Faction portrait" className="w-full h-full object-cover" />
                       </div>
                       <span className="text-xs font-bold text-red-400 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                         {target.username}

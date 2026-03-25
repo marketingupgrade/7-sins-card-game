@@ -115,7 +115,7 @@ export const MobileAfflictionSheet = memo(function MobileAfflictionSheet({
 
               {/* Header */}
               <div className="px-4 pb-2 flex items-center gap-2">
-                <img src={ICON_URLS.buff_generic} alt="" className="w-5 h-5 object-contain opacity-70" />
+                <img src={ICON_URLS.buff_generic} alt="" aria-hidden="true" className="w-5 h-5 object-contain opacity-70" />
                 <span className="text-sm font-bold text-candle/90 uppercase tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
                   {player.username} — Active Afflictions
                 </span>

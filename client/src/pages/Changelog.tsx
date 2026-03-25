@@ -17,6 +17,7 @@ import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -793,6 +794,12 @@ const FILTER_OPTIONS: { value: ChangeCategory | "all"; label: string }[] = [
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function Changelog() {
+  usePageMeta({
+    title: "Changelog — Version History",
+    description: "Complete version history and patch notes for the 7 Deadly Sins Card Game. Track every balance change, new feature, and bug fix.",
+    canonicalPath: "/changelog",
+  });
+
   const [filter, setFilter] = useState<ChangeCategory | "all">("all");
 
   const filteredChangelog = useMemo(() => {

@@ -21,6 +21,7 @@ import {
   getCompoundTickValue,
 } from "@shared/gameTypes";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
 const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -493,6 +494,12 @@ function FilterPill({
 
 // ─── Main Collection Page ───────────────────────────────────
 export default function Collection() {
+  usePageMeta({
+    title: "Card Collection — All 140+ Cards",
+    description: "Browse the complete card collection for all 7 sin factions. Filter by faction, cost, type, and rarity. View card art, stats, and compound effects.",
+    canonicalPath: "/collection",
+  });
+
   const [selectedSin, setSelectedSin] = useState<SinType | "all">("all");
   const [selectedTier, setSelectedTier] = useState<CardTier | "all">("all");
   const [selectedEffect, setSelectedEffect] = useState<EffectType | "all">("all");

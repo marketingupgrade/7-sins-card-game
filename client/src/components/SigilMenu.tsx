@@ -283,7 +283,7 @@ function UserSection({ onClose }: { onClose: () => void }) {
         {avatarUrl ? (
           <img
             src={avatarUrl}
-            alt=""
+            alt="" aria-hidden="true"
             className="w-8 h-8 rounded-full border border-amber-500/20 object-cover shrink-0"
           />
         ) : (

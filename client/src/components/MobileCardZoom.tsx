@@ -185,7 +185,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                   </h3>
                   {/* Faction + Rarity + Keyword */}
                   <div className="flex items-center flex-wrap" style={{ gap: "5px", marginTop: "3px" }}>
-                    {sinIcon && <img src={sinIcon} alt="" className="w-4 h-4" />}
+                    {sinIcon && <img src={sinIcon} alt="" aria-hidden="true" className="w-4 h-4" />}
                     <span
                       className="text-xs uppercase tracking-wider font-bold"
                       style={{ color: sinColor }}
@@ -253,7 +253,7 @@ export const MobileCardZoom = memo(function MobileCardZoom({
                   return (
                     <div key={i} className="flex items-start" style={{ gap: "8px" }}>
                       {iconUrl ? (
-                        <img src={iconUrl} alt="" className="w-5 h-5 flex-shrink-0" style={{ marginTop: "2px" }} />
+                        <img src={iconUrl} alt="Card effect icon" className="w-5 h-5 flex-shrink-0" style={{ marginTop: "2px" }} />
                       ) : (
                         <span className="text-sm" style={{ marginTop: "2px", color: sinColor }}>{"\u2726"}</span>
                       )}

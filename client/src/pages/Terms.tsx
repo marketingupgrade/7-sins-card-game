@@ -10,8 +10,15 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function Terms() {
+  usePageMeta({
+    title: "Terms of Service",
+    description: "Terms of service for the 7 Deadly Sins Card Game. Read our usage terms, intellectual property rights, and user responsibilities.",
+    canonicalPath: "/terms",
+  });
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={12} />

@@ -150,7 +150,7 @@ export default function BattleLog({ isOpen, onClose, logEntries, players, curren
               <div className="flex items-center gap-2">
                 <img
                   src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg"
-                  alt=""
+                  alt="" aria-hidden="true"
                   className="w-5 h-5 opacity-70"
                 />
                 <h2
@@ -179,7 +179,7 @@ export default function BattleLog({ isOpen, onClose, logEntries, players, curren
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <img
                     src="https://game-icons.net/icons/ffffff/000000/1x1/delapouite/empty-hourglass.svg"
-                    alt=""
+                    alt="Card illustration"
                     className="w-10 h-10 opacity-30 mb-3"
                   />
                   <p className="text-candle/40 text-sm" style={{ fontFamily: "var(--font-body)" }}>
@@ -312,7 +312,7 @@ function CardPlayEntry({
           {casterSin && FACTION_PORTRAITS[casterSin] ? (
             <img
               src={FACTION_PORTRAITS[casterSin]}
-              alt=""
+              alt="Faction portrait"
               className="w-full h-full object-cover"
               loading="lazy"
             />
@@ -356,7 +356,7 @@ function CardPlayEntry({
             {cardArt && (
               <img
                 src={cardArt}
-                alt=""
+                alt="" aria-hidden="true"
                 className="w-4 h-4 rounded-sm object-cover"
                 loading="lazy"
               />
@@ -516,7 +516,7 @@ function CardHoverTooltip({ card, anchorEl }: { card: CardDefinition; anchorEl: 
             <div>
               <h3 className="text-sm font-black text-candle" style={{ fontFamily: "var(--font-heading)" }}>{card.name}</h3>
               <div className="flex items-center gap-1.5 mt-0.5">
-                {sinIcon && <img src={sinIcon} alt="" className="w-3.5 h-3.5" />}
+                {sinIcon && <img src={sinIcon} alt="" aria-hidden="true" className="w-3.5 h-3.5" />}
                 <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: sinColor }}>{card.sin}</span>
                 <span className="text-[10px] text-candle/40 uppercase">{card.tier}</span>
               </div>
@@ -535,7 +535,7 @@ function CardHoverTooltip({ card, anchorEl }: { card: CardDefinition; anchorEl: 
               return (
                 <div key={i} className="flex items-start gap-1.5">
                   {iconUrl ? (
-                    <img src={iconUrl} alt="" className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <img src={iconUrl} alt="" aria-hidden="true" className="w-4 h-4 mt-0.5 flex-shrink-0" />
                   ) : (
                     <span className="text-xs mt-0.5">✦</span>
                   )}
@@ -642,7 +642,7 @@ function CardPreviewPopup({ card, onClose }: { card: CardDefinition; onClose: ()
             <div>
               <h3 className="text-lg font-black text-candle" style={{ fontFamily: "var(--font-heading)" }}>{card.name}</h3>
               <div className="flex items-center gap-2 mt-0.5">
-                {sinIcon && <img src={sinIcon} alt="" className="w-4 h-4" />}
+                {sinIcon && <img src={sinIcon} alt="" aria-hidden="true" className="w-4 h-4" />}
                 <span className="text-xs uppercase tracking-wider font-bold" style={{ color: sinColor }}>{card.sin}</span>
                 <span className="text-xs text-candle/40 uppercase">{card.tier}</span>
                 <span className="text-xs text-candle/40">{PATTERN_LABELS[card.compoundPattern] || card.compoundPattern}</span>
@@ -662,7 +662,7 @@ function CardPreviewPopup({ card, onClose }: { card: CardDefinition; onClose: ()
               return (
                 <div key={i} className="flex items-start gap-2">
                   {iconUrl ? (
-                    <img src={iconUrl} alt="" className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                    <img src={iconUrl} alt="Card effect icon" className="w-5 h-5 mt-0.5 flex-shrink-0" />
                   ) : (
                     <span className="text-sm mt-0.5">✦</span>
                   )}

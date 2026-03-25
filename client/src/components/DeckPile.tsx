@@ -66,7 +66,7 @@ function CardBack({ sin, size = "sm" }: { sin: SinType; size?: "sm" | "lg" }) {
       {/* Faction portrait watermark */}
       <img
         src={FACTION_PORTRAITS[sin]}
-        alt=""
+        alt="Faction portrait"
         draggable={false}
         className="absolute inset-0 w-full h-full object-cover"
         style={{ opacity: 0.22, mixBlendMode: "luminosity" }}

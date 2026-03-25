@@ -15,6 +15,7 @@ import { motion } from "framer-motion";
 import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* Lazy-load the discussion thread to keep initial bundle lean */
 const DiscussionThread = lazy(() => import("@/components/DiscussionThread"));
@@ -273,6 +274,12 @@ function TableOfContents() {
    ═══════════════════════════════════════════════════════════════ */
 
 export default function BalanceAnalysis() {
+  usePageMeta({
+    title: "Balance Analysis — Faction Power Rankings",
+    description: "Deep statistical analysis of all 7 sin factions. Win rates, matchup data, card tier lists, and meta insights for competitive play.",
+    canonicalPath: "/balance",
+  });
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative">
       {/* Atmospheric background */}

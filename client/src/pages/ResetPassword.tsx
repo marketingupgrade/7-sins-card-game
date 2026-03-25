@@ -10,8 +10,16 @@ import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function ResetPassword() {
+  usePageMeta({
+    title: "Reset Password",
+    description: "Reset your password for the 7 Deadly Sins Card Game account.",
+    canonicalPath: "/reset-password",
+    noindex: true,
+  });
+
   const [, navigate] = useLocation();
   const { user, updatePassword, isLoading: authLoading } = useSupabaseAuth();
 

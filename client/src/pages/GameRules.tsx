@@ -44,6 +44,7 @@ import {
 } from "@shared/gameTypes";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* ─── Faction Config ────────────────────────────────────────── */
 const FACTIONS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -363,6 +364,12 @@ function EffectRow({
 
 /* ─── Main Page ─────────────────────────────────────────────── */
 export default function GameRules() {
+  usePageMeta({
+    title: "Game Rules — Complete Rulebook",
+    description: "The complete rulebook for the 7 Deadly Sins Card Game. Energy system, card types, compound mechanics, passive abilities, and win conditions explained.",
+    canonicalPath: "/rules",
+  });
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg)] text-white relative overflow-hidden">
       {/* Background effects */}

@@ -16,6 +16,7 @@ import { useMemo } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/_core/hooks/useAuth";
 import type { SinType } from "@shared/gameTypes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 
@@ -143,6 +144,13 @@ function loadStats(): PlayerStats {
 }
 
 export default function Profile() {
+  usePageMeta({
+    title: "Your Profile — Stats & Achievements",
+    description: "View your personal stats, win rates per faction, match history, and achievements in the 7 Deadly Sins Card Game.",
+    canonicalPath: "/profile",
+    noindex: true,
+  });
+
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const stats = useMemo(() => loadStats(), []);

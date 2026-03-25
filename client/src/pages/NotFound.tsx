@@ -7,8 +7,16 @@ import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { useLocation } from "wouter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function NotFound() {
+  usePageMeta({
+    title: "Page Not Found",
+    description: "The page you're looking for doesn't exist. Return to the Cathedral of Sins.",
+    canonicalPath: "/404",
+    noindex: true,
+  });
+
   const [, setLocation] = useLocation();
 
   return (

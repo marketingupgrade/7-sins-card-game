@@ -22,6 +22,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── CDN Asset URLs ───────────────────────────────────────────────
 const CDN = {
@@ -447,6 +448,12 @@ function TableOfContents({ activeSection }: { activeSection: string }) {
 // ─── Main Brandbook Page ──────────────────────────────────────────
 
 export default function Brandbook() {
+  usePageMeta({
+    title: "Brand Book — Visual Identity Guide",
+    description: "The official brand book for the 7 Deadly Sins Card Game. Typography, color palette, iconography, and design principles for the gothic cathedral aesthetic.",
+    canonicalPath: "/brandbook",
+  });
+
   const [activeSection, setActiveSection] = useState("brand-essence");
   const mainRef = useRef<HTMLDivElement>(null);
 

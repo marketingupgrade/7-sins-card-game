@@ -29,6 +29,7 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { SinType, PASSIVE_INFO } from "@shared/gameTypes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { encodeDeck } from "@/lib/deckCodes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
 const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -241,7 +242,7 @@ function LogMatchModal({
                     : {}
                 }
               >
-                <img src={SIN_ARCHETYPE_ICONS[sin]} alt="" className="w-5 h-5" />
+                <img src={SIN_ARCHETYPE_ICONS[sin]} alt="Sin faction icon" className="w-5 h-5" />
                 <span className="capitalize font-medium">{sin}</span>
               </button>
             ))}
@@ -474,7 +475,7 @@ function PublishModal({
                 >
                   <img
                     src={SIN_ARCHETYPE_ICONS[deck.faction as SinType]}
-                    alt=""
+                    alt="Sin faction icon"
                     className="w-5 h-5"
                   />
                   <div className="flex-1 min-w-0">
@@ -910,7 +911,7 @@ const DeckCard = memo(function DeckCard({
             <div key={id} className="flex-1 relative" style={{ zIndex: 5 - i }}>
               <img
                 src={CARD_ART_URLS[id] || ""}
-                alt=""
+                alt="Card illustration"
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
@@ -923,7 +924,7 @@ const DeckCard = memo(function DeckCard({
           className="absolute top-2 left-2 flex items-center gap-1.5 px-2 py-1 rounded-full backdrop-blur-md"
           style={{ backgroundColor: `${sinColor}20`, border: `1px solid ${sinColor}40` }}
         >
-          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="" className="w-4 h-4" />
+          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="" aria-hidden="true" className="w-4 h-4" />
           <span className="text-xs font-semibold capitalize" style={{ color: sinColor }}>
             {SIN_LABELS[faction]}
           </span>
@@ -1056,6 +1057,12 @@ const DeckCard = memo(function DeckCard({
 
 // ─── Main Page Component ────────────────────────────────────
 export default function CommunityDecks() {
+  usePageMeta({
+    title: "Community Decks — Shared Builds",
+    description: "Discover and share deck builds created by the community. Browse top-rated decks for every sin faction, copy builds, and share your own strategies.",
+    canonicalPath: "/community",
+  });
+
   const { user } = useSupabaseAuth();
   const [, navigate] = useLocation();
 
@@ -1361,7 +1368,7 @@ export default function CommunityDecks() {
                     : {}
                 }
               >
-                <img src={SIN_ARCHETYPE_ICONS[sin]} alt="" className="w-3.5 h-3.5" />
+                <img src={SIN_ARCHETYPE_ICONS[sin]} alt="" aria-hidden="true" className="w-3.5 h-3.5" />
                 {SIN_LABELS[sin]}
               </button>
             ))}

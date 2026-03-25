@@ -11,8 +11,15 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function Cookies() {
+  usePageMeta({
+    title: "Cookie Policy",
+    description: "Cookie policy for the 7 Deadly Sins Card Game website. Learn about the cookies we use and how to manage your preferences.",
+    canonicalPath: "/cookies",
+  });
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={12} />

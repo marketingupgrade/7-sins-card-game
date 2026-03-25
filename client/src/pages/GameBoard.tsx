@@ -88,6 +88,7 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useAINarrator } from "@/hooks/useAINarrator";
 import SinWhisper from "@/components/SinWhisper";
 import { getSinHexColor, getSinCssVar } from "@/lib/sinColors";
+import { usePageMeta } from "@/hooks/usePageMeta";
 const CardImpactVFX = lazy(() => import("@/components/CardImpactVFX"));
 const BloomOverlay = lazy(() => import("@/components/BloomOverlay"));
 const SparkleTrail = lazy(() => import("@/components/SparkleTrail"));
@@ -100,6 +101,12 @@ interface ActionFeedEntry {
 }
 
 export default function GameBoard() {
+  usePageMeta({
+    title: "Battle in Progress",
+    description: "Live game board for the 7 Deadly Sins Card Game.",
+    noindex: true,
+  });
+
   const { gameId } = useParams<{ gameId: string }>();
   const playerId = usePlayerId();
   const [, setLocation] = useLocation();
@@ -1170,7 +1177,7 @@ export default function GameBoard() {
       <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1.5 md:gap-2">
-            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
+            <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" aria-hidden="true" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
             <span className="text-sm md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
               <span className="hidden md:inline">Rite </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>

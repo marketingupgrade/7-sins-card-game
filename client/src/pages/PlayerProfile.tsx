@@ -23,6 +23,7 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import type { SinType } from "@shared/gameTypes";
 import { encodeDeck } from "@/lib/deckCodes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
 const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -171,7 +172,7 @@ function ProfileDeckCard({ deck, winRate, onImport }: {
       <div className="h-1" style={{ backgroundColor: sinColor }} />
       <div className="p-4">
         <div className="flex items-start gap-3">
-          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="" className="w-8 h-8 flex-shrink-0 mt-0.5" />
+          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="Sin faction icon" className="w-8 h-8 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <h4 className="text-white font-semibold text-sm truncate">{deck.deckName}</h4>
             <div className="flex items-center gap-2 mt-0.5 text-xs text-zinc-500">
@@ -240,14 +241,14 @@ function MatchRow({ match, idx }: { match: MatchHistoryEntry; idx: number }) {
         title={isWin ? "Victory" : "Defeat"}
       />
       {/* Deck info */}
-      <img src={SIN_ARCHETYPE_ICONS[deckFaction]} alt="" className="w-5 h-5 flex-shrink-0" />
+      <img src={SIN_ARCHETYPE_ICONS[deckFaction]} alt="Sin faction icon" className="w-5 h-5 flex-shrink-0" />
       <div className="flex-1 min-w-0">
         <span className="text-white text-sm truncate block">{match.deckName || "Unknown Deck"}</span>
       </div>
       {/* vs Opponent */}
       <div className="flex items-center gap-1.5 text-xs text-zinc-400">
         <span>vs</span>
-        <img src={SIN_ARCHETYPE_ICONS[oppFaction]} alt="" className="w-4 h-4" />
+        <img src={SIN_ARCHETYPE_ICONS[oppFaction]} alt="" aria-hidden="true" className="w-4 h-4" />
         <span className="capitalize" style={{ color: oppColor }}>{match.opponentFaction}</span>
       </div>
       {/* Result label */}
@@ -295,7 +296,7 @@ function FactionBreakdown({ matches }: { matches: MatchHistoryEntry[] }) {
         const barWidth = maxTotal > 0 ? (s.total / maxTotal) * 100 : 0;
         return (
           <div key={s.faction} className="flex items-center gap-3">
-            <img src={SIN_ARCHETYPE_ICONS[s.faction]} alt="" className="w-5 h-5 flex-shrink-0" />
+            <img src={SIN_ARCHETYPE_ICONS[s.faction]} alt="Sin faction icon" className="w-5 h-5 flex-shrink-0" />
             <div className="flex-1">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-white text-xs capitalize">{s.faction}</span>
@@ -322,6 +323,11 @@ function FactionBreakdown({ matches }: { matches: MatchHistoryEntry[] }) {
 
 // ─── Main Component ─────────────────────────────────────────
 export default function PlayerProfile() {
+  usePageMeta({
+    title: "Player Profile",
+    description: "View player statistics, match history, and faction preferences in the 7 Deadly Sins Card Game.",
+  });
+
   const params = useParams<{ gamertag: string }>();
   const [, navigate] = useLocation();
   const { user } = useSupabaseAuth();
@@ -671,7 +677,7 @@ export default function PlayerProfile() {
                       const faction = deck.faction as SinType;
                       return (
                         <div key={deck.id} className="flex items-center gap-3 py-2 px-3 bg-zinc-800/30 rounded-lg">
-                          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="" className="w-5 h-5" />
+                          <img src={SIN_ARCHETYPE_ICONS[faction]} alt="" aria-hidden="true" className="w-5 h-5" />
                           <span className="text-white text-sm flex-1 truncate">{deck.deckName}</span>
                           <span className="flex items-center gap-1 text-xs text-zinc-500">
                             <svg className="w-3 h-3 text-rose-400" fill="currentColor" viewBox="0 0 20 20">

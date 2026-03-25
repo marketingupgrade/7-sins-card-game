@@ -22,6 +22,7 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* ─── Faction Config ────────────────────────────────────────── */
 const FACTIONS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
@@ -464,7 +465,7 @@ function MatchupDrillDown({
         <div className="p-5 pb-0">
           <div className="flex items-center gap-3 mb-1">
             <div className="flex items-center gap-2">
-              <img src={SIN_ARCHETYPE_ICONS[attacker]} alt="" className="w-8 h-8" />
+              <img src={SIN_ARCHETYPE_ICONS[attacker]} alt="Sin faction icon" className="w-8 h-8" />
               <div>
                 <span className="text-sm font-bold uppercase tracking-wider" style={{ color: FACTION_COLORS[attacker], fontFamily: "var(--font-heading)" }}>
                   {FACTION_LABELS[attacker]}
@@ -488,7 +489,7 @@ function MatchupDrillDown({
                 </span>
                 <p className="text-[9px] text-white/25">{PASSIVE_INFO[defender].name}</p>
               </div>
-              <img src={SIN_ARCHETYPE_ICONS[defender]} alt="" className="w-8 h-8" />
+              <img src={SIN_ARCHETYPE_ICONS[defender]} alt="Sin faction icon" className="w-8 h-8" />
             </div>
             <button
               onClick={onClose}
@@ -667,6 +668,12 @@ function DynamicCard({
 
 /* ─── Main Page ─────────────────────────────────────────────── */
 export default function MatchupMatrix() {
+  usePageMeta({
+    title: "Matchup Matrix — Faction vs Faction",
+    description: "Interactive matchup matrix showing win rates for every faction combination. Identify your strongest and weakest matchups with heatmap visualization.",
+    canonicalPath: "/matchups",
+  });
+
   const [hoveredCell, setHoveredCell] = useState<string | null>(null);
   const [drilldownCell, setDrilldownCell] = useState<string | null>(null);
 
@@ -878,12 +885,12 @@ export default function MatchupMatrix() {
                 }}
               >
                 <div className="flex items-center gap-3 mb-2">
-                  <img src={SIN_ARCHETYPE_ICONS[tooltipInfo.attacker]} alt="" className="w-6 h-6" />
+                  <img src={SIN_ARCHETYPE_ICONS[tooltipInfo.attacker]} alt="Sin faction icon" className="w-6 h-6" />
                   <span className="text-sm font-bold" style={{ color: FACTION_COLORS[tooltipInfo.attacker], fontFamily: "var(--font-heading)" }}>
                     {FACTION_LABELS[tooltipInfo.attacker]}
                   </span>
                   <span className="text-white/30 text-xs">vs</span>
-                  <img src={SIN_ARCHETYPE_ICONS[tooltipInfo.defender]} alt="" className="w-6 h-6" />
+                  <img src={SIN_ARCHETYPE_ICONS[tooltipInfo.defender]} alt="Sin faction icon" className="w-6 h-6" />
                   <span className="text-sm font-bold" style={{ color: FACTION_COLORS[tooltipInfo.defender], fontFamily: "var(--font-heading)" }}>
                     {FACTION_LABELS[tooltipInfo.defender]}
                   </span>
@@ -939,7 +946,7 @@ export default function MatchupMatrix() {
                   <div className="flex items-center justify-between">
                     <span className="text-white/40">Best vs</span>
                     <span className="flex items-center gap-1">
-                      <img src={SIN_ARCHETYPE_ICONS[best.opponent]} alt="" className="w-3.5 h-3.5" />
+                      <img src={SIN_ARCHETYPE_ICONS[best.opponent]} alt="" aria-hidden="true" className="w-3.5 h-3.5" />
                       <span style={{ color: "rgba(134, 239, 172, 0.8)" }} className="font-mono">
                         {best.rate.toFixed(1)}%
                       </span>
@@ -948,7 +955,7 @@ export default function MatchupMatrix() {
                   <div className="flex items-center justify-between">
                     <span className="text-white/40">Worst vs</span>
                     <span className="flex items-center gap-1">
-                      <img src={SIN_ARCHETYPE_ICONS[worst.opponent]} alt="" className="w-3.5 h-3.5" />
+                      <img src={SIN_ARCHETYPE_ICONS[worst.opponent]} alt="" aria-hidden="true" className="w-3.5 h-3.5" />
                       <span style={{ color: "rgba(252, 165, 165, 0.8)" }} className="font-mono">
                         {worst.rate.toFixed(1)}%
                       </span>

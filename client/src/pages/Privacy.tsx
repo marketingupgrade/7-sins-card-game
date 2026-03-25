@@ -11,8 +11,15 @@
 import { Link } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function Privacy() {
+  usePageMeta({
+    title: "Privacy Policy",
+    description: "Privacy policy for the 7 Deadly Sins Card Game. Learn how we collect, use, and protect your personal data.",
+    canonicalPath: "/privacy",
+  });
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
       <EmberField count={12} />

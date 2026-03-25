@@ -405,7 +405,7 @@ export default function PlayerAfflictionTable({
                 <div className="flex items-center gap-2">
                   <img
                     src={ICON_URLS.buff_generic}
-                    alt=""
+                    alt="" aria-hidden="true"
                     className="w-4 h-4 object-contain opacity-70"
                   />
                   <span

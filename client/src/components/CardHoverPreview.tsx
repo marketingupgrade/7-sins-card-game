@@ -146,7 +146,7 @@ export const CardHoverPreview = memo(function CardHoverPreview({
                     {card.name}
                   </h3>
                   <div className="flex items-center gap-2 mt-1">
-                    {sinIcon && <img src={sinIcon} alt="" className="w-4 h-4" />}
+                    {sinIcon && <img src={sinIcon} alt="" aria-hidden="true" className="w-4 h-4" />}
                     <span className="text-xs uppercase tracking-wider font-bold" style={{ color: sinColor }}>
                       {card.sin}
                     </span>
@@ -199,7 +199,7 @@ export const CardHoverPreview = memo(function CardHoverPreview({
                   return (
                     <div key={i} className="flex items-start gap-2">
                       {iconUrl ? (
-                        <img src={iconUrl} alt="" className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                        <img src={iconUrl} alt="Card effect icon" className="w-5 h-5 flex-shrink-0 mt-0.5" />
                       ) : (
                         <span className="text-sm mt-0.5" style={{ color: sinColor }}>{"\u2726"}</span>
                       )}

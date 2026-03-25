@@ -2226,3 +2226,35 @@
 - [x] Include FAQPage schema for common game questions (6 FAQs)
 - [x] Include BreadcrumbList schema for site navigation (7 items)
 - [x] Validate JSON-LD syntax (Python json.loads pass)
+
+### v6.6.8 — SEO/AEO/GEO Comprehensive Audit
+- [x] Audit SEO: technical, on-page, content, link factors
+- [x] Audit AEO: featured snippets, FAQ schema, voice search, PAA readiness
+- [x] Audit GEO: AI visibility, entity presence, structured data, llms.txt
+- [x] Compile audit report with scores and prioritized recommendations
+- [x] Deliver audit report
+
+### v6.7.0 — Implement All SEO/AEO/GEO Audit Recommendations
+#### Priority 1 (Critical)
+- [x] Add canonical tag via usePageMeta hook (dynamic per page, cleanup on unmount)
+- [x] Add document.title + meta description to all 24 pages via usePageMeta hook
+- [x] Verified H1 on Home page (GlitchTitle renders <h1>)
+- [x] Add 9 missing pages to dynamic sitemap (how-to-play, practice, community, chronicles, terms, privacy, cookies, brandbook, faq)
+#### Priority 2 (High)
+- [x] Add HowTo schema to /how-to-play page (6-step guide with totalTime, estimatedCost, tools)
+- [x] Fix 61 empty alt="" tags with contextual descriptions + aria-hidden for decorative images
+- [x] Add sameAs to Organization and VideoGame schemas (Discord, GitHub, Reddit, Twitch)
+- [x] Add Organization logo to JSON-LD schema
+- [x] Whitelist analytics domain in CSP (script-src, connect-src, worker-src blob:)
+#### Priority 3 (Medium)
+- [x] Add Speakable schema to index.html (cssSelector targeting h1, meta description)
+- [x] Create visible FAQ page at /faq (15 questions, 4 categories, FAQPage schema)
+- [x] Add web app manifest (site.webmanifest) with icons and theme
+- [x] Add 5 more internal links from Home footer (FAQ, Practice, Terms, Privacy, Cookies)
+- [x] Verified noindex on /lobby/*, /game/*, /account, /profile, /reset-password pages
+#### Test Fixes & Validation
+- [x] Fixed gamePlatform type (array to string "Web Browser")
+- [x] Added WebPage entity with SpeakableSpecification to JSON-LD @graph (6 entities total)
+- [x] Fixed homepage URL format in sitemap test (trailing slash)
+- [x] All 33 SEO tests passing
+- [ ] Push to GitHub

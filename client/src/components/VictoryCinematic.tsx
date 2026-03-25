@@ -104,7 +104,7 @@ export default function VictoryCinematic({ show, isWinner, winnerName, winnerSin
         {(step === "title" || step === "winner" || step === "fade") && (
           <motion.img
             src={FACTION_PORTRAITS[winnerSin]}
-            alt=""
+            alt="Faction portrait"
             className="absolute inset-0 w-full h-full object-cover"
             initial={{ opacity: 0, scale: 1.1 }}
             animate={{ opacity: 0.12, scale: 1 }}

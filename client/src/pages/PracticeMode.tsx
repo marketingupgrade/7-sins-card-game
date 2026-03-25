@@ -23,6 +23,7 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { PASSIVE_INFO } from "@shared/gameTypes";
 import type { SinType } from "@shared/gameTypes";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // Dynamic imports for game engine (same pattern as Home.tsx)
 const lazyGameEngine = () => import("@/lib/gameEngine");
@@ -112,6 +113,12 @@ const PRACTICE_STEPS: PracticeStep[] = [
 ];
 
 export default function PracticeMode() {
+  usePageMeta({
+    title: "Practice Mode — Train Against AI",
+    description: "Practice your strategies against AI opponents. Choose your faction, select difficulty, and master compound mechanics before entering ranked play.",
+    canonicalPath: "/practice",
+  });
+
   const playerId = usePlayerId();
   const [, setLocation] = useLocation();
   const [phase, setPhase] = useState<"select_sin" | "briefing" | "launching">("select_sin");
@@ -291,7 +298,7 @@ export default function PracticeMode() {
                       {/* Info */}
                       <div className="p-3">
                         <div className="flex items-center gap-2 mb-1">
-                          <img src={SIN_ARCHETYPE_ICONS[item.sin]} alt="" className="w-4 h-4" />
+                          <img src={SIN_ARCHETYPE_ICONS[item.sin]} alt="" aria-hidden="true" className="w-4 h-4" />
                           <span
                             className="text-sm font-bold tracking-wider"
                             style={{ fontFamily: "var(--font-heading)", color }}
@@ -522,7 +529,7 @@ export default function PracticeMode() {
               >
                 <img
                   src={selectedSin ? SIN_ARCHETYPE_ICONS[selectedSin] : ""}
-                  alt=""
+                  alt="Sin faction icon"
                   className="w-full h-full object-contain"
                   style={{ filter: `drop-shadow(0 0 10px ${SIN_COLORS[selectedSin || "wrath"]}60)` }}
                 />

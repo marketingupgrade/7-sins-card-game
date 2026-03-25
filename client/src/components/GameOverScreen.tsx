@@ -554,7 +554,7 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
         >
           <img
             src={FACTION_PORTRAITS_HD[mySin]}
-            alt=""
+            alt="Faction portrait"
             className="w-full h-full object-cover"
             style={{ filter: isPlayerWinner ? 'saturate(1.3)' : 'saturate(0.4) brightness(0.6)' }}
           />
@@ -706,13 +706,13 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                     >
                       {stats.totalShieldApplied > 0 && (
                         <span className="flex items-center gap-1.5">
-                          <img src={ICON_URLS.shield_generic} alt="" className="w-3.5 h-3.5 object-contain opacity-50" />
+                          <img src={ICON_URLS.shield_generic} alt="" aria-hidden="true" className="w-3.5 h-3.5 object-contain opacity-50" />
                           {stats.totalShieldApplied} ward applied
                         </span>
                       )}
                       {stats.compoundingEffectsUsed > 0 && (
                         <span className="flex items-center gap-1.5">
-                          <img src={ICON_URLS.energy_generic} alt="" className="w-3.5 h-3.5 object-contain opacity-50" />
+                          <img src={ICON_URLS.energy_generic} alt="" aria-hidden="true" className="w-3.5 h-3.5 object-contain opacity-50" />
                           {stats.compoundingEffectsUsed} stacking effects
                         </span>
                       )}

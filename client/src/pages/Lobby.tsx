@@ -29,6 +29,7 @@ import { useNarrator } from "@/hooks/useNarrator";
 import QuickStartModal, { useQuickStartNeeded } from "@/components/QuickStartModal";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
 import { PASSIVE_INFO, FACTION_SWOT, TIMER_OPTIONS, DEFAULT_TURN_TIMER } from "@shared/gameTypes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const LobbyBabylonScene = lazy(() => import("@/components/LobbyBabylonScene"));
 
@@ -178,6 +179,12 @@ function StonePanel({ children, className = "", glow = false }: { children: Reac
 }
 
 export default function Lobby() {
+  usePageMeta({
+    title: "Game Lobby",
+    description: "Choose your sin faction and prepare for battle in the Cathedral of Sins.",
+    noindex: true,
+  });
+
   const { gameId } = useParams<{ gameId: string }>();
   const playerId = usePlayerId();
   const { user } = useAuth();
@@ -348,7 +355,7 @@ export default function Lobby() {
     return (
       <div className="min-h-screen bg-arena flex flex-col items-center justify-center gap-4">
         <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
-          <img src={ICON_URLS.debuff_wrath} alt="" className="w-10 h-10 object-contain opacity-30" />
+          <img src={ICON_URLS.debuff_wrath} alt="" aria-hidden="true" className="w-10 h-10 object-contain opacity-30" />
         </motion.div>
         <p className="text-sm text-candle/40" style={{ fontFamily: "var(--font-body)" }}>
           Opening the cathedral doors...
@@ -509,7 +516,7 @@ export default function Lobby() {
                     {/* Portrait background */}
                     {portrait && (
                       <div className="absolute inset-0 opacity-15 rounded-xl overflow-hidden">
-                        <img src={portrait} alt="" className="w-full h-full object-cover" />
+                        <img src={portrait} alt="Character portrait" className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c14] via-[#0f0c14]/80 to-transparent" />
                       </div>
                     )}
@@ -563,7 +570,7 @@ export default function Lobby() {
                 className="rounded-xl border border-dashed border-candle/10 p-4 flex flex-col items-center justify-center gap-2"
               >
                 <div className="w-8 h-8 rounded-full border border-candle/10 flex items-center justify-center">
-                  <img src={ICON_URLS.debuff_wrath} alt="" className="w-4 h-4 object-contain opacity-15" />
+                  <img src={ICON_URLS.debuff_wrath} alt="" aria-hidden="true" className="w-4 h-4 object-contain opacity-15" />
                 </div>
                 <span className="text-xs text-candle/30 italic" style={{ fontFamily: "var(--font-body)" }}>
                   Empty pew...
@@ -608,7 +615,7 @@ export default function Lobby() {
                     <div key={sin} className="flex flex-col">
                       <StonePanel className="p-3 text-center opacity-50 h-full">
                         <div className="absolute inset-0 opacity-10 rounded-xl overflow-hidden">
-                          <img src={portrait} alt="" className="w-full h-full object-cover blur-sm" />
+                          <img src={portrait} alt="" aria-hidden="true" className="w-full h-full object-cover blur-sm" />
                         </div>
                         <div className="relative z-10">
                           <div className="relative mx-auto mb-2 w-9 h-9 flex items-center justify-center">
@@ -685,7 +692,7 @@ export default function Lobby() {
                         {/* Sin icon badge */}
                         <div className="absolute top-2 right-2 w-7 h-7 rounded-full flex items-center justify-center
                           bg-black/50 border border-candle/20 backdrop-blur-sm">
-                          <img src={spellIcon} alt="" className="w-4 h-4 object-contain"
+                          <img src={spellIcon} alt="" aria-hidden="true" className="w-4 h-4 object-contain"
                             style={{ filter: `drop-shadow(0 0 4px var(--color-${cfg.color}))` }} />
                         </div>
 
@@ -767,7 +774,7 @@ export default function Lobby() {
                   >
                     <StonePanel className="p-4">
                       <div className="flex items-center gap-2 mb-3">
-                        <img src={SIN_ARCHETYPE_ICONS[hoveredSin]} alt="" className="w-5 h-5 object-contain"
+                        <img src={SIN_ARCHETYPE_ICONS[hoveredSin]} alt="Sin faction icon" className="w-5 h-5 object-contain"
                           style={{ filter: `drop-shadow(0 0 4px var(--color-${cfg.color}))` }} />
                         <h4 className={`text-sm font-bold text-${cfg.color} tracking-wider uppercase`}
                           style={{ fontFamily: "var(--font-heading)" }}>
@@ -904,7 +911,7 @@ export default function Lobby() {
                             >
                               <img
                                 src={SIN_ARCHETYPE_ICONS[myPlayer.chosenSin as SinType]}
-                                alt=""
+                                alt="Sin faction icon"
                                 className="w-5 h-5 object-contain"
                               />
                             </div>

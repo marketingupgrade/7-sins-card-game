@@ -24,6 +24,7 @@ import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { PASSIVE_INFO } from "@shared/gameTypes";
 import type { SinType } from "@shared/gameTypes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* ─── Narrator Flavor Text ─── */
 function NarratorQuote({ children }: { children: React.ReactNode }) {
@@ -543,7 +544,7 @@ function FactionQuickGuide() {
               color: activeSin === f.sin ? f.color : undefined,
             }}
           >
-            <img src={SIN_ARCHETYPE_ICONS[f.sin]} alt="" className="w-4 h-4" />
+            <img src={SIN_ARCHETYPE_ICONS[f.sin]} alt="" aria-hidden="true" className="w-4 h-4" />
             {f.name}
           </button>
         ))}
@@ -692,6 +693,44 @@ function TableOfContents() {
 
 /* ═══ MAIN PAGE ═══ */
 export default function HowToPlay() {
+  usePageMeta({
+    title: "How to Play \u2014 Beginner's Guide",
+    description: "Learn how to play the 7 Deadly Sins Card Game step by step. Choose your sin faction, understand energy management, master compound mechanics, and win your first match.",
+    canonicalPath: "/how-to-play",
+  });
+
+  // HowTo schema for rich search results
+  useEffect(() => {
+    let scriptTag = document.querySelector('script[data-howto-schema]');
+    if (!scriptTag) {
+      scriptTag = document.createElement("script");
+      scriptTag.setAttribute("type", "application/ld+json");
+      scriptTag.setAttribute("data-howto-schema", "true");
+      document.head.appendChild(scriptTag);
+    }
+    scriptTag.textContent = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: "How to Play the 7 Deadly Sins Card Game",
+      description: "A step-by-step guide to playing the 7 Deadly Sins Card Game, from choosing your sin faction to winning your first match.",
+      totalTime: "PT15M",
+      estimatedCost: { "@type": "MonetaryAmount", currency: "USD", value: "0" },
+      tool: [{ "@type": "HowToTool", name: "Web browser (Chrome, Firefox, Safari, Edge)" }],
+      step: [
+        { "@type": "HowToStep", position: 1, name: "Choose Your Sin Faction", text: "Select one of seven deadly sin factions: Wrath, Sloth, Greed, Pride, Envy, Gluttony, or Lust. Each has unique cards and a passive ability that defines your playstyle." },
+        { "@type": "HowToStep", position: 2, name: "Understand Your Energy", text: "You start with 2 energy and gain +1 per round (max 7). Each card costs energy to play. Plan your turns around the escalating energy curve." },
+        { "@type": "HowToStep", position: 3, name: "Build Your Deck", text: "Customize your deck from 20+ faction-specific cards. Balance attack, defense, and utility cards. Optimize your energy curve for consistent plays each round." },
+        { "@type": "HowToStep", position: 4, name: "Play Cards Strategically", text: "Each round, play cards from your hand. Chain same-type cards for Fibonacci compound scaling (1x, 1x, 2x, 3x, 5x). Target opponents wisely." },
+        { "@type": "HowToStep", position: 5, name: "Use Your Passive Ability", text: "Your faction passive triggers automatically. Wrath reflects damage, Sloth reduces it, Greed gains energy, Pride boosts damage at high HP, Envy copies cards, Gluttony heals, Lust forces discards." },
+        { "@type": "HowToStep", position: 6, name: "Win the Match", text: "Survive 20 rounds with the most HP, or eliminate all opponents. The player with the highest HP at the end wins. Use compound mechanics for devastating late-game plays." },
+      ],
+    });
+    return () => {
+      const schema = document.querySelector('script[data-howto-schema]');
+      if (schema) schema.remove();
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-[var(--color-page-bg)] text-white relative overflow-hidden">
       {/* Background */}

@@ -21,6 +21,7 @@ import { ALL_CARDS } from "@shared/cardData";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { trpc } from "@/lib/trpc";
 import type { SinType, CardDefinition } from "@shared/gameTypes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
 const SIN_COLORS: Record<SinType, string> = {
@@ -341,6 +342,13 @@ function PurgeConfirmDialog({
 
 // ─── Main Component ─────────────────────────────────────────
 export default function Account() {
+  usePageMeta({
+    title: "Account Settings",
+    description: "Manage your 7 Deadly Sins Card Game account settings, email, and preferences.",
+    canonicalPath: "/account",
+    noindex: true,
+  });
+
   const { user, displayName, avatarUrl, signOut, isLoading } = useSupabaseAuth();
   const [, navigate] = useLocation();
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
@@ -496,7 +504,7 @@ export default function Account() {
             {avatarUrl ? (
               <img
                 src={avatarUrl}
-                alt=""
+                alt="" aria-hidden="true"
                 className="w-16 h-16 rounded-full border-2 border-amber-500/20 object-cover shrink-0"
               />
             ) : (
@@ -599,7 +607,7 @@ export default function Account() {
                   <div className="flex items-center gap-2 mb-2">
                     <img
                       src={SIN_ARCHETYPE_ICONS[faction as SinType]}
-                      alt=""
+                      alt="" aria-hidden="true"
                       className="w-4 h-4 object-contain"
                     />
                     <span

@@ -47,11 +47,12 @@ async function startServer() {
       "Content-Security-Policy",
       [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline'",
+        "script-src 'self' 'unsafe-inline' https://*.umami.is",
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: blob: https://xqotfmrlhqiayiyjijpl.supabase.co https://*.supabase.co",
         "font-src 'self' https://xqotfmrlhqiayiyjijpl.supabase.co",
-        "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+        "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.umami.is",
+        "worker-src 'self' blob:",
         "frame-ancestors 'none'",
         "base-uri 'self'",
         "form-action 'self'",
@@ -72,12 +73,21 @@ async function startServer() {
       const staticPages = [
         { loc: "/", priority: "1.0", changefreq: "weekly" },
         { loc: "/blog", priority: "0.9", changefreq: "daily" },
+        { loc: "/how-to-play", priority: "0.9", changefreq: "monthly" },
         { loc: "/collection", priority: "0.8", changefreq: "monthly" },
+        { loc: "/rules", priority: "0.8", changefreq: "monthly" },
+        { loc: "/practice", priority: "0.8", changefreq: "monthly" },
+        { loc: "/deck-builder", priority: "0.7", changefreq: "monthly" },
+        { loc: "/community", priority: "0.7", changefreq: "weekly" },
+        { loc: "/chronicles", priority: "0.7", changefreq: "weekly" },
         { loc: "/balance", priority: "0.7", changefreq: "monthly" },
         { loc: "/matchups", priority: "0.7", changefreq: "monthly" },
-        { loc: "/rules", priority: "0.8", changefreq: "monthly" },
         { loc: "/changelog", priority: "0.5", changefreq: "weekly" },
-        { loc: "/deck-builder", priority: "0.7", changefreq: "monthly" },
+        { loc: "/faq", priority: "0.8", changefreq: "monthly" },
+        { loc: "/brandbook", priority: "0.4", changefreq: "monthly" },
+        { loc: "/terms", priority: "0.3", changefreq: "yearly" },
+        { loc: "/privacy", priority: "0.3", changefreq: "yearly" },
+        { loc: "/cookies", priority: "0.3", changefreq: "yearly" },
       ];
 
       let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;

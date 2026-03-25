@@ -28,6 +28,7 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 const CIV_CONFIG: Record<string, { label: string; icon: typeof Crown; color: string; description: string }> = {
   warrior_empire: {
@@ -81,6 +82,12 @@ const SIN_COLORS: Record<string, string> = {
 };
 
 export default function ChronicleView() {
+  usePageMeta({
+    title: "Battle Chronicle",
+    description: "Relive an epic battle from the Cathedral of Sins. Full match replay with AI narrator commentary.",
+    noindex: true,
+  });
+
   const { gameId } = useParams<{ gameId: string }>();
   const [layer2Visible, setLayer2Visible] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);

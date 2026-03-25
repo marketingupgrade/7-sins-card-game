@@ -29,6 +29,7 @@ import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
 import { STRATEGIES, autoFillByStrategy, type StrategyType } from "@/lib/deckStrategies";
 import { encodeDeck, decodeDeck, validateDeckCode } from "@/lib/deckCodes";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
 const MAX_DECK_SIZE = 30;
@@ -319,7 +320,7 @@ function CardDetailPopup({
             <img src={artUrl} alt={card.name} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center" style={{ background: `${sinColor}15` }}>
-              <img src={SIN_ARCHETYPE_ICONS[card.sin]} alt="" className="w-16 h-16 opacity-40" />
+              <img src={SIN_ARCHETYPE_ICONS[card.sin]} alt="Card illustration" className="w-16 h-16 opacity-40" />
             </div>
           )}
           <div className="absolute inset-0" style={{ background: "linear-gradient(to bottom, transparent 30%, #0a0a0a)" }} />
@@ -356,7 +357,7 @@ function CardDetailPopup({
             const iconUrl = getEffectIconUrl(effect.type, card.sin);
             return (
               <div key={i} className="flex items-start gap-3 p-2 rounded-lg bg-white/5">
-                {iconUrl && <img src={iconUrl} alt="" className="w-5 h-5 mt-0.5 object-contain shrink-0" />}
+                {iconUrl && <img src={iconUrl} alt="Card effect icon" className="w-5 h-5 mt-0.5 object-contain shrink-0" />}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-bold" style={{ color: sinColor }}>
@@ -570,7 +571,7 @@ const DeckSlot = memo(function DeckSlot({
       {/* Tiny art */}
       <button onClick={onViewDetail} className="w-7 h-9 rounded overflow-hidden bg-black shrink-0 cursor-pointer hover:ring-1 hover:ring-amber-500/30 transition-all">
         {artUrl ? (
-          <img src={artUrl} alt="" className="w-full h-full object-cover scale-[1.15]" loading="lazy" />
+          <img src={artUrl} alt="" aria-hidden="true" className="w-full h-full object-cover scale-[1.15]" loading="lazy" />
         ) : (
           <div className="w-full h-full" style={{ background: `${sinColor}20` }} />
         )}
@@ -1101,6 +1102,12 @@ function ManaCurve({ cards, sinColor }: { cards: CardDefinition[]; sinColor: str
 
 // ─── Main Component ─────────────────────────────────────────
 export default function DeckBuilder() {
+  usePageMeta({
+    title: "Deck Builder — Build Your Strategy",
+    description: "Build and customize your deck from 140+ unique cards across 7 sin factions. Optimize energy curves, test synergies, and share your builds.",
+    canonicalPath: "/deck-builder",
+  });
+
   const { user } = useSupabaseAuth();
   const searchString = useSearch();
   const urlImportProcessed = useRef(false);
@@ -1547,7 +1554,7 @@ export default function DeckBuilder() {
                       className="flex items-center gap-3 p-3 rounded-lg border border-white/5 bg-black/30 hover:bg-black/50 transition-all group"
                     >
                       <div className="w-10 h-10 rounded-full overflow-hidden border shrink-0" style={{ borderColor: `${color}30` }}>
-                        <img src={SIN_ARCHETYPE_ICONS[deck.faction]} alt="" className="w-full h-full object-cover" />
+                        <img src={SIN_ARCHETYPE_ICONS[deck.faction]} alt="Sin faction icon" className="w-full h-full object-cover" />
                       </div>
 
                       <div className="min-w-0 flex-1">
@@ -1624,7 +1631,7 @@ export default function DeckBuilder() {
             {/* Faction badge */}
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-full overflow-hidden border-2 shadow-lg" style={{ borderColor: `${sinColor}50`, boxShadow: `0 0 12px ${sinColor}20` }}>
-                <img src={SIN_ARCHETYPE_ICONS[selectedFaction]} alt="" className="w-full h-full object-cover" />
+                <img src={SIN_ARCHETYPE_ICONS[selectedFaction]} alt="Sin faction icon" className="w-full h-full object-cover" />
               </div>
               <div className="flex items-baseline gap-2">
                 <h2 className="text-base font-bold tracking-wider uppercase" style={{ fontFamily: "var(--font-heading)", color: sinColor }}>

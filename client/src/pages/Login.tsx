@@ -12,6 +12,7 @@ import { useState } from "react";
 import { useLocation, Link } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import EmberField from "@/components/EmberField";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 type EmailMode = "signin" | "signup" | "forgot";
 
@@ -46,6 +47,12 @@ function TwitchIcon() {
 }
 
 export default function Login() {
+  usePageMeta({
+    title: "Sign In",
+    description: "Sign in to the 7 Deadly Sins Card Game to save your progress, build decks, and compete in ranked matches.",
+    canonicalPath: "/login",
+  });
+
   const [, navigate] = useLocation();
   const {
     user,

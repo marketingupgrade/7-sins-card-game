@@ -147,7 +147,7 @@ export const MobileBattleOverview = memo(function MobileBattleOverview({
                   >
                     <img
                       src={FACTION_PORTRAITS[player.chosenSin as SinType]}
-                      alt=""
+                      alt="Faction portrait"
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />

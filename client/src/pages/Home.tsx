@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "wouter";
@@ -116,19 +117,16 @@ export default function Home() {
 
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);
 
+  usePageMeta({
+    title: "7 Deadly Sins Card Game \u2014 Free PvP Online Card Game",
+    description: "Play the 7 Deadly Sins Card Game free online. A dark fantasy PvP card game inspired by mythology, demonology, and the seven deadly sins. No download required.",
+    canonicalPath: "/",
+    noSuffix: true,
+  });
+
   // SEO: WebSite + VideoGame schema for rich search results
   useEffect(() => {
     const baseUrl = "https://www.7sinscardgame.com";
-    document.title = "7 Deadly Sins Card Game \u2014 Free PvP Online Card Game";
-
-    // Meta description
-    let metaDesc = document.querySelector('meta[name="description"]');
-    if (!metaDesc) {
-      metaDesc = document.createElement("meta");
-      metaDesc.setAttribute("name", "description");
-      document.head.appendChild(metaDesc);
-    }
-    metaDesc.setAttribute("content", "Play the 7 Deadly Sins Card Game free online. A dark fantasy PvP card game inspired by mythology, demonology, and the seven deadly sins. No download required.");
 
     let scriptTag = document.querySelector('script[data-home-schema]');
     if (!scriptTag) {
@@ -484,7 +482,7 @@ export default function Home() {
                       boxShadow: `0 0 20px color-mix(in oklch, var(--color-${currentSin.color}) 30%, transparent)`,
                     }}
                   >
-                    <img src={SIN_ARCHETYPE_ICONS[currentSin.key]} alt="" className="w-4 h-4" />
+                    <img src={SIN_ARCHETYPE_ICONS[currentSin.key]} alt="" aria-hidden="true" className="w-4 h-4" />
                     {isCreating ? "OPENING THE GATES..." : "CREATE GAME"}
                   </motion.button>
 
@@ -641,7 +639,7 @@ export default function Home() {
               <div className="flex items-center justify-center gap-4 mt-4 text-xs tracking-[0.1em] text-white/30 uppercase" style={{ fontFamily: "var(--font-heading)" }}>
                 <span className="flex items-center gap-1"><Users className="w-3 h-3" /> 2-4</span>
                 <span className="text-white/10">&middot;</span>
-                <span className="flex items-center gap-1"><img src={ICON_URLS.energy_generic} alt="" className="w-3 h-3 object-contain" /> Real-time</span>
+                <span className="flex items-center gap-1"><img src={ICON_URLS.energy_generic} alt="" aria-hidden="true" className="w-3 h-3 object-contain" /> Real-time</span>
                 <span className="text-white/10">&middot;</span>
                 <span className="flex items-center gap-1"><Bot className="w-3 h-3" /> Bots</span>
               </div>
@@ -674,6 +672,11 @@ export default function Home() {
                 { label: "Matchup Matrix", href: "/matchups" },
                 { label: "Chronicles", href: "/chronicles" },
                 { label: "Patch Notes", href: "/changelog" },
+                { label: "Practice Mode", href: "/practice" },
+                { label: "FAQ", href: "/faq" },
+                { label: "Terms", href: "/terms" },
+                { label: "Privacy", href: "/privacy" },
+                { label: "Cookies", href: "/cookies" },
               ].map((link) => (
                 <Link
                   key={link.href}

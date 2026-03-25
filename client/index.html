@@ -14,6 +14,7 @@
     <link rel="icon" type="image/x-icon" href="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/favicon_f4fbfc17.ico" />
     <link rel="icon" type="image/png" sizes="192x192" href="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-180x180_8884192f.png" />
+    <link rel="manifest" href="/site.webmanifest" />
 
     <!-- Open Graph / Social -->
     <meta property="og:type" content="website" />
@@ -30,6 +31,9 @@
     <meta name="twitter:title" content="7 Deadly Sins Card Game — Choose Your Sin" />
     <meta name="twitter:description" content="A free strategic 4-player PvP card game where seven deadly sins clash in a gothic cathedral." />
     <meta name="twitter:image" content="https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png" />
+
+    <!-- Canonical URL (dynamically overridden per page via React Helmet-style useEffect) -->
+    <link rel="canonical" href="https://www.7sinscardgame.com/" />
 
     <!-- RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="7 Deadly Sins Card Game - Lore & Strategy" href="https://www.7sinscardgame.com/rss.xml" />
@@ -73,7 +77,7 @@
           "screenshot": "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png",
           "applicationCategory": "Game",
           "applicationSubCategory": "Strategy Card Game",
-          "gamePlatform": ["Web Browser", "Desktop", "Mobile"],
+          "gamePlatform": "Web Browser",
           "operatingSystem": "Any (Web Browser)",
           "playMode": ["MultiPlayer", "SinglePlayer"],
           "numberOfPlayers": {
@@ -134,7 +138,10 @@
             "url": "https://www.7sinscardgame.com/how-to-play"
           },
           "isAccessibleForFree": true,
-          "isFamilyFriendly": false
+          "isFamilyFriendly": false,
+          "sameAs": [
+            "https://www.7sinscardgame.com"
+          ]
         },
         {
           "@type": "Organization",
@@ -147,7 +154,10 @@
             "width": 192,
             "height": 192
           },
-          "description": "Creator of the 7 Deadly Sins Card Game, a free-to-play strategic PvP card game set in a gothic cathedral."
+          "description": "Creator of the 7 Deadly Sins Card Game, a free-to-play strategic PvP card game set in a gothic cathedral.",
+          "sameAs": [
+            "https://www.7sinscardgame.com"
+          ]
         },
         {
           "@type": "WebSite",
@@ -215,6 +225,23 @@
               "item": "https://www.7sinscardgame.com/blog"
             }
           ]
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://www.7sinscardgame.com/#webpage",
+          "url": "https://www.7sinscardgame.com",
+          "name": "7 Deadly Sins Card Game — Choose Your Sin",
+          "isPartOf": {
+            "@id": "https://www.7sinscardgame.com/#website"
+          },
+          "about": {
+            "@id": "https://www.7sinscardgame.com/#game"
+          },
+          "speakable": {
+            "@type": "SpeakableSpecification",
+            "cssSelector": ["h1", "meta[name=description]"]
+          },
+          "inLanguage": "en"
         },
         {
           "@type": "FAQPage",

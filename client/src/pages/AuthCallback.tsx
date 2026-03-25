@@ -9,8 +9,16 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
+import { usePageMeta } from "@/hooks/usePageMeta";
 
 export default function AuthCallback() {
+  usePageMeta({
+    title: "Authenticating",
+    description: "Completing authentication for the 7 Deadly Sins Card Game.",
+    canonicalPath: "/auth/callback",
+    noindex: true,
+  });
+
   const [, navigate] = useLocation();
   const { user, isLoading } = useSupabaseAuth();
 
