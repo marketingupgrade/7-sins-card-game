@@ -8974,8 +8974,6 @@ async function createContext(opts) {
 }
 
 // api/_source.ts
-import { readFileSync } from "fs";
-import { join } from "path";
 var app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -9404,33 +9402,11 @@ app.use(
     createContext
   })
 );
-var spaHtml = null;
-function getSpaHtml() {
-  if (spaHtml) return spaHtml;
-  try {
-    const possiblePaths = [
-      join(__dirname, "..", "index.html"),
-      join(process.cwd(), "dist", "public", "index.html"),
-      join(process.cwd(), "index.html")
-    ];
-    for (const p of possiblePaths) {
-      try {
-        spaHtml = readFileSync(p, "utf-8");
-        return spaHtml;
-      } catch {
-        continue;
-      }
-    }
-  } catch {
-  }
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>window.location.reload()</script></body></html>`;
-}
 app.get("*", (req, res) => {
-  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
-  const html = getSpaHtml();
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-  return res.status(200).send(html);
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  return res.redirect(302, req.path);
 });
 var source_default = app;
 export {

@@ -2306,3 +2306,14 @@
 - [x] Added SPA fallback in API function: non-bot requests get index.html, bots get prerendered HTML
 - [x] All 889 tests passing, API function builds cleanly (361.4kb), prerender verified with curl
 - [ ] Push to GitHub
+
+### v6.7.6 — Vercel Edge Middleware for Bot Detection
+- [x] Create middleware.ts at project root for Vercel Edge Middleware
+- [x] Implement bot/crawler user-agent detection at the edge (28+ patterns: search engines, AI crawlers, social media, SEO tools, validators)
+- [x] Route bot requests for blog/* and 17 static pages to /api for prerendering via @vercel/functions rewrite()
+- [x] Route non-bot requests directly to static assets (SPA) via next() passthrough
+- [x] Simplified vercel.json from 20+ rewrites to 4 (api/*, sitemap.xml, rss.xml, SPA fallback)
+- [x] Removed SPA fallback (getSpaHtml/readFileSync) from api/_source.ts — replaced with simple 302 redirect
+- [x] Configured middleware matcher with 18 specific paths (17 static + /blog/:slug) to minimize edge invocations
+- [x] 85 new vitest tests: bot detection (28+ patterns), path matching (17 static + blog slugs), routing decisions
+- [x] All 974 tests passing across 41 test files, build succeeds (api/index.mjs 360.6kb)

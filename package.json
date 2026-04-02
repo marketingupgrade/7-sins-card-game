@@ -59,6 +59,7 @@
     "@tsparticles/engine": "^3.9.1",
     "@tsparticles/react": "^3.0.0",
     "@tsparticles/slim": "^3.9.1",
+    "@vercel/functions": "^3.4.3",
     "ai": "^6.0.38",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",

@@ -18,8 +18,8 @@ import { registerChatRoutes } from "../server/_core/chat";
 import { appRouter } from "../server/routers";
 import { createContext } from "../server/_core/context";
 import { getAllBlogSlugs, getRecentBlogPosts, getBlogPostBySlug } from "../server/db-supabase";
-import { readFileSync } from "fs";
-import { join } from "path";
+// Note: readFileSync/join no longer needed — Edge Middleware handles SPA routing.
+// Only bot requests reach this serverless function now.
 
 const app = express();
 
@@ -452,45 +452,15 @@ app.use(
   })
 );
 
-// ─── SPA fallback for non-bot requests on prerender routes ─────────────
-// When Vercel rewrites /blog/:slug, /how-to-play, etc. to /api,
-// non-bot requests need to be served the SPA index.html.
-// We read it from the filesystem (Vercel bundles it in the output).
-let spaHtml: string | null = null;
-function getSpaHtml(): string {
-  if (spaHtml) return spaHtml;
-  try {
-    // In Vercel serverless, the static output is at ../index.html relative to api/
-    const possiblePaths = [
-      join(__dirname, "..", "index.html"),
-      join(process.cwd(), "dist", "public", "index.html"),
-      join(process.cwd(), "index.html"),
-    ];
-    for (const p of possiblePaths) {
-      try {
-        spaHtml = readFileSync(p, "utf-8");
-        return spaHtml;
-      } catch {
-        continue;
-      }
-    }
-  } catch {
-    // fallback
-  }
-  // Minimal fallback that redirects to the same URL (forces Vercel edge to serve static)
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>window.location.reload()</script></body></html>`;
-}
-
-// Catch-all: serve SPA HTML for any unhandled GET request that reaches the API function
-// This handles non-bot requests for /blog/:slug, /how-to-play, etc.
+// ─── Catch-all for unhandled routes ──────────────────────────────────
+// With Edge Middleware handling bot→API routing, only bot requests
+// should reach this serverless function. Any unmatched routes get a 404.
 app.get("*", (req, res) => {
-  // Skip API routes
-  if (req.path.startsWith("/api/")) return res.status(404).json({ error: "Not found" });
-  
-  const html = getSpaHtml();
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=0, must-revalidate");
-  return res.status(200).send(html);
+  if (req.path.startsWith("/api/")) {
+    return res.status(404).json({ error: "Not found" });
+  }
+  // If a non-bot request somehow reaches here, redirect to the SPA root
+  return res.redirect(302, req.path);
 });
 
 export default app;
