@@ -2291,3 +2291,18 @@
 - [x] Add og:image:width=1200 and og:image:height=630 to BlogPost.tsx client-side
 - [x] Add og:image:width and og:image:height to index.html default OG tags (already present)
 - [ ] Push to GitHub
+
+### v6.7.5 — Fix SEO/AEO/GEO domain references for actual hosting (not Manus)
+- [ ] Audit all domain references across codebase (sitemap, robots.txt, llms.txt, JSON-LD, canonical, OG, prerender)
+- [ ] Fix any Manus hosting domain references to use 7sinscardgame.com
+- [ ] Ensure canonical URLs, OG URLs, and sitemaps all point to production domain
+- [ ] Verify prerender middleware uses correct production domain
+- [ ] Run tests and verify
+- [ ] Push to GitHub
+
+### v6.7.5 — Fix Vercel rewrites for SEO static files and prerender routing
+- [x] Add explicit headers for static SEO files (robots.txt, llms.txt, llms-full.txt) to ensure correct Content-Type
+- [x] Route blog/:slug and 17 static pages through API function for server-side prerender on Vercel
+- [x] Added SPA fallback in API function: non-bot requests get index.html, bots get prerendered HTML
+- [x] All 889 tests passing, API function builds cleanly (361.4kb), prerender verified with curl
+- [ ] Push to GitHub

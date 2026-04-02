@@ -9,6 +9,24 @@
       "maxDuration": 30
     }
   },
+  "headers": [
+    {
+      "source": "/robots.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    },
+    {
+      "source": "/llms-full.txt",
+      "headers": [{ "key": "Content-Type", "value": "text/plain; charset=utf-8" }]
+    },
+    {
+      "source": "/site.webmanifest",
+      "headers": [{ "key": "Content-Type", "value": "application/manifest+json" }]
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -20,6 +38,70 @@
     },
     {
       "source": "/rss.xml",
+      "destination": "/api"
+    },
+    {
+      "source": "/blog/:slug",
+      "destination": "/api"
+    },
+    {
+      "source": "/how-to-play",
+      "destination": "/api"
+    },
+    {
+      "source": "/rules",
+      "destination": "/api"
+    },
+    {
+      "source": "/faq",
+      "destination": "/api"
+    },
+    {
+      "source": "/community",
+      "destination": "/api"
+    },
+    {
+      "source": "/chronicles",
+      "destination": "/api"
+    },
+    {
+      "source": "/practice",
+      "destination": "/api"
+    },
+    {
+      "source": "/balance",
+      "destination": "/api"
+    },
+    {
+      "source": "/changelog",
+      "destination": "/api"
+    },
+    {
+      "source": "/collection",
+      "destination": "/api"
+    },
+    {
+      "source": "/matchups",
+      "destination": "/api"
+    },
+    {
+      "source": "/deck-builder",
+      "destination": "/api"
+    },
+    {
+      "source": "/terms",
+      "destination": "/api"
+    },
+    {
+      "source": "/privacy",
+      "destination": "/api"
+    },
+    {
+      "source": "/cookies",
+      "destination": "/api"
+    },
+    {
+      "source": "/brandbook",
       "destination": "/api"
     },
     {
