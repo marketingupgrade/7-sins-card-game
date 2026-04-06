@@ -132,6 +132,61 @@ function ProjectileTrail({ gradient, delay = 0 }: { gradient: string; delay?: nu
   );
 }
 
+/* ─── HP Tracker Mini-Bar ──────────────────────────────────── */
+function HpTrackerBar({ player, preHp }: { player: PlayerState; preHp: number }) {
+  const maxHp = player.maxHp || 333;
+  const currentHp = player.currentHp;
+  const delta = currentHp - preHp;
+  const pctNow = Math.max(0, (currentHp / maxHp) * 100);
+  const pctPre = Math.max(0, (preHp / maxHp) * 100);
+  const hpColor = pctNow > 60 ? "#22c55e" : pctNow > 30 ? "#eab308" : "#ef4444";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2 min-w-[140px]"
+    >
+      <span className="text-[10px] font-bold text-white/60 truncate max-w-[60px]" style={{ fontFamily: "var(--font-heading)" }}>
+        {player.username?.slice(0, 8)}
+      </span>
+      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+        {/* Previous HP ghost bar */}
+        {delta < 0 && (
+          <motion.div
+            initial={{ width: `${pctPre}%` }}
+            animate={{ width: `${pctNow}%` }}
+            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+            className="h-full rounded-full absolute"
+            style={{ background: "rgba(239,68,68,0.3)" }}
+          />
+        )}
+        <motion.div
+          initial={{ width: `${pctPre}%` }}
+          animate={{ width: `${pctNow}%` }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="h-full rounded-full relative"
+          style={{ background: hpColor, boxShadow: `0 0 6px ${hpColor}60` }}
+        />
+      </div>
+      {delta !== 0 && (
+        <motion.span
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-[10px] font-black tabular-nums"
+          style={{
+            color: delta > 0 ? "#22c55e" : "#ef4444",
+            fontFamily: "var(--font-heading)",
+            textShadow: `0 0 4px ${delta > 0 ? "rgba(34,197,94,0.5)" : "rgba(239,68,68,0.5)"}`,
+          }}
+        >
+          {delta > 0 ? "+" : ""}{delta}
+        </motion.span>
+      )}
+    </motion.div>
+  );
+}
+
 /* ─── Main Component ───────────────────────────────────────── */
 interface ResolutionRevealProps {
   lockedPlays: LockedPlay[];
@@ -213,11 +268,23 @@ export default function ResolutionReveal({
     // Phase 3: Projectile launches (800ms after announce)
     addTimer(() => setPhase("projectile"), 900);
 
-    // Phase 4: Impact (1200ms after announce)
+    // Phase 4: Impact (1200ms after announce) — play sin-specific sound
     addTimer(() => {
       setPhase("impact");
       setScreenShake(true);
       setShowImpactParticles(true);
+      // Sin-specific impact sounds for immersion
+      const play = sortedPlays[idx];
+      const casterPlayer = players.find(p => p.id === play?.playerId);
+      const casterSin = casterPlayer?.chosenSin || "wrath";
+      const playCard = play ? CARD_MAP[play.cardId] : null;
+      const hasHeal = playCard?.effects.some(e => e.type === "heal_gain" || e.type === "heal_steal");
+      const hasShield = playCard?.effects.some(e => e.type === "shield_gain" || e.type === "shield_steal");
+      try {
+        if (hasHeal) soundEngine.playSinHeal(casterSin);
+        else if (hasShield) soundEngine.playSinShield(casterSin);
+        else soundEngine.playSinDamage(casterSin);
+      } catch {}
       addTimer(() => setScreenShake(false), 300);
       addTimer(() => setShowImpactParticles(false), 800);
     }, 1300);
@@ -305,6 +372,32 @@ export default function ResolutionReveal({
               background: `radial-gradient(ellipse at center, ${theme.color}08 0%, rgba(0,0,0,0.5) 70%, rgba(0,0,0,0.7) 100%)`,
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* HP Tracker sidebar — shows all alive players' HP during resolution */}
+      <AnimatePresence>
+        {phase !== "idle" && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="absolute left-2 top-10 z-50 flex flex-col gap-1.5 p-2 rounded-lg"
+            style={{
+              background: "rgba(0,0,0,0.5)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              maxWidth: "180px",
+            }}
+          >
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-white/30 mb-0.5" style={{ fontFamily: "var(--font-heading)" }}>
+              HP Tracker
+            </span>
+            {players.filter(p => p.isAlive).map((p) => (
+              <HpTrackerBar key={p.id} player={p} preHp={p.currentHp} />
+            ))}
+          </motion.div>
         )}
       </AnimatePresence>
 

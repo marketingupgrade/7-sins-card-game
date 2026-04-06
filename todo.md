@@ -2317,3 +2317,19 @@
 - [x] Configured middleware matcher with 18 specific paths (17 static + /blog/:slug) to minimize edge invocations
 - [x] 85 new vitest tests: bot detection (28+ patterns), path matching (17 static + blog slugs), routing decisions
 - [x] All 974 tests passing across 41 test files, build succeeds (api/index.mjs 360.6kb)
+
+### v6.7.7 — Round Freeze Fix + Timer Fix + Immersion Overhaul
+- [x] Investigate round transition logic for freeze/deadlock (race condition in lockInCards + enforceSelectionDeadline)
+- [x] Fix client-side lockInCards: atomic guard (compare-and-swap on turn_phase) to prevent double resolution
+- [x] Fix server-side lockInCards: atomic guard (compare-and-swap on turn_phase)
+- [x] Fix server-side advanceRound: removed 4-second blocking delay, single atomic update
+- [x] Fix server-side refreshPlayerEnergy: energy carry-over (currentUnspent + ENERGY_PER_TURN, cap MAX_ENERGY)
+- [x] Add atomic guard to server-side enforceSelectionDeadline (CAS on turn_phase=selection)
+- [x] Fix turn timer: does not activate during resolution animation (isShowingResolution/showRoundEndPrompt guards)
+- [x] Enhanced ResolutionReveal: sin-specific impact sounds (playSinDamage/playSinShield/playSinHeal)
+- [x] Enhanced ResolutionReveal: HP tracker sidebar showing real-time HP changes during animation
+- [x] Enhanced RoundEndPrompt: round summary with HP deltas, cards played, animated HP bars per player
+- [x] Wired preResolutionPlayers state through all 5 resolution trigger paths in GameBoard
+- [x] 41 new vitest tests covering atomic guard, energy carry-over, timer logic, sound selection, round summary
+- [x] All 1015 tests passing across 42 test files
+- [ ] Push all fixes to GitHub

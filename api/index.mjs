@@ -5636,6 +5636,7 @@ function getCompoundTickValue(baseValue, pattern, tickIndex) {
   return Math.round(baseValue * getCompoundTick(pattern, tickIndex));
 }
 var MAX_ENERGY = 7;
+var ENERGY_PER_TURN = 1;
 var CONSUME_ENERGY_REFUND = 1;
 var WRATH_VENGEANCE_PCT = 0.62;
 var SLOTH_ENDURANCE_MULT = 0.288;
@@ -7407,40 +7408,44 @@ async function lockInCards(gameId, playerId, selections) {
     return pLocked.length > 0;
   });
   if (allConfirmed) {
-    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
-    const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
-    const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
-    const resolutionPlayers = (preResPlayers || []).map((gp) => {
-      const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
+    const { data: guardCheck } = await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId).eq("turn_phase", "selection").select("id").maybeSingle();
+    if (guardCheck) {
+      const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
+      const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
+      const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
+      const resolutionPlayers = (preResPlayers || []).map((gp) => {
+        const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
+        return {
+          id: gp.player_id,
+          gamePlayerId: gp.id,
+          username: gp.players?.username || "Unknown",
+          seatIndex: gp.seat_index,
+          chosenSin: gp.chosen_sin,
+          currentHp: gp.current_hp,
+          maxHp: gp.max_hp,
+          isAlive: gp.is_alive,
+          hand: gp.hand || [],
+          deckSize: (gp.deck || []).length,
+          discardSize: (gp.discard_pile || []).length,
+          currentEnergy: gp.current_energy ?? 0,
+          maxEnergy: gp.max_energy ?? 0,
+          bonusEnergy: gp.bonus_energy ?? 0,
+          lockedCards: playerLocked,
+          hasLockedIn: playerLocked.length > 0,
+          consumedThisRound: gp.consumed_this_round ?? false
+        };
+      });
+      await resolveLockedPlays(gameId);
+      const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
       return {
-        id: gp.player_id,
-        gamePlayerId: gp.id,
-        username: gp.players?.username || "Unknown",
-        seatIndex: gp.seat_index,
-        chosenSin: gp.chosen_sin,
-        currentHp: gp.current_hp,
-        maxHp: gp.max_hp,
-        isAlive: gp.is_alive,
-        hand: gp.hand || [],
-        deckSize: (gp.deck || []).length,
-        discardSize: (gp.discard_pile || []).length,
-        currentEnergy: gp.current_energy ?? 0,
-        maxEnergy: gp.max_energy ?? 0,
-        bonusEnergy: gp.bonus_energy ?? 0,
-        lockedCards: playerLocked,
-        hasLockedIn: playerLocked.length > 0,
-        consumedThisRound: gp.consumed_this_round ?? false
+        success: true,
+        narratorQuip: quip2,
+        resolvedPlays: preResLocked,
+        resolutionPlayers
       };
-    });
-    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
-    await resolveLockedPlays(gameId);
-    const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
-    return {
-      success: true,
-      narratorQuip: quip2,
-      resolvedPlays: preResLocked,
-      resolutionPlayers
-    };
+    } else {
+      console.log("[lockInCards] Resolution already in progress, skipping");
+    }
   }
   const quip = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
   return { success: true, narratorQuip: quip };
@@ -8059,29 +8064,21 @@ async function advanceRound(gameId) {
   await sb.from("games").update({
     current_round: newRound,
     current_player_index: 0,
-    turn_phase: "round_end"
-    // Keep locked_plays intact so non-triggering clients can read them
+    turn_phase: "selection",
+    locked_plays: [],
+    selection_deadline: null
   }).eq("id", gameId);
-  await new Promise((resolve) => setTimeout(resolve, 4e3));
-  try {
-    await sb.from("games").update({
-      turn_phase: "selection",
-      locked_plays: [],
-      selection_deadline: null
-    }).eq("id", gameId);
-    for (const p of allPlayers) {
-      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-    }
-  } catch (e) {
-    console.error("[advanceRound] delayed clear failed:", e);
+  for (const p of allPlayers) {
+    await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
   }
 }
 async function refreshPlayerEnergy(player) {
   const sb = getServerSupabase();
-  const totalEnergy = MAX_ENERGY;
+  const currentUnspent = player.current_energy ?? 0;
+  const newEnergy = Math.min(currentUnspent + ENERGY_PER_TURN, MAX_ENERGY);
   await sb.from("game_players").update({
-    current_energy: totalEnergy,
-    max_energy: totalEnergy,
+    current_energy: newEnergy,
+    max_energy: MAX_ENERGY,
     bonus_energy: 0
   }).eq("id", player.id);
 }
@@ -8219,7 +8216,11 @@ async function enforceSelectionDeadline(gameId) {
       consumedThisRound: gp.consumed_this_round ?? false
     };
   });
-  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+  const { data: guardCheck } = await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId).eq("turn_phase", "selection").select("id").maybeSingle();
+  if (!guardCheck) {
+    console.log("[enforceSelectionDeadline] Resolution already in progress, skipping");
+    return { enforced: false };
+  }
   await resolveLockedPlays(gameId);
   return {
     enforced: true,

@@ -1,0 +1,10 @@
+Game Freeze Bug - Screenshot Analysis:
+- Round 6, player "Greg" (YOU) with 268/333 HP
+- Opponent "DefinitelyReal" with 325/333 HP, status "LOCKED IN"
+- Card "CORRODE" is shown being played (Rare card)
+- "What's Cooking" panel shows: WHEN=HURT, NOW=-7, B7=-14, TOTAL=-21
+- Bottom shows "14s A sinner has sealed their fate. Your move."
+- Steps shown: 1) Choose your sins, 2) Mark the damned, 3) Seal fate
+- Buttons: "SEAL FATE" and "ABSTAIN" visible
+- Game appears frozen - likely during round resolution or transition between rounds
+- The opponent is "LOCKED IN" but the game seems stuck waiting

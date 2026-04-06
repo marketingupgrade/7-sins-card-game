@@ -207,6 +207,7 @@ export default function GameBoard() {
   // Resolution Reveal: Cache lockedPlays so animation persists after server clears them
   const [cachedLockedPlays, setCachedLockedPlays] = useState<LockedPlay[]>([]);
   const [cachedResolutionPlayers, setCachedResolutionPlayers] = useState<PlayerState[]>([]);
+  const [preResolutionPlayers, setPreResolutionPlayers] = useState<PlayerState[]>([]);
   const [isShowingResolution, setIsShowingResolution] = useState(false);
   const resolutionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const prevRoundRef = useRef<number>(0);
@@ -223,6 +224,7 @@ export default function GameBoard() {
     setIsShowingResolution(false);
     setCachedLockedPlays([]);
     setCachedResolutionPlayers([]);
+    setPreResolutionPlayers([]);
     if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
   }, []);
 
@@ -232,6 +234,7 @@ export default function GameBoard() {
     setIsShowingResolution(false);
     setCachedLockedPlays([]);
     setCachedResolutionPlayers([]);
+    setPreResolutionPlayers([]);
     if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
     setShowLog(true);
   }, []);
@@ -247,6 +250,7 @@ export default function GameBoard() {
       setIsShowingResolution(false);
       setCachedLockedPlays([]);
       setCachedResolutionPlayers([]);
+      setPreResolutionPlayers([]);
     }, 6000);
   }, []);
 
@@ -258,6 +262,7 @@ export default function GameBoard() {
     if (lp && lp.length > 0 && !isShowingResolution) {
       setCachedLockedPlays([...lp]);
       setCachedResolutionPlayers([...gameState.players]);
+      setPreResolutionPlayers([...gameState.players]);
       setIsShowingResolution(true);
       // Safety fallback timer — if animation doesn't call onComplete, auto-dismiss
       if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
@@ -271,14 +276,11 @@ export default function GameBoard() {
           setIsShowingResolution(false);
           setCachedLockedPlays([]);
           setCachedResolutionPlayers([]);
+          setPreResolutionPlayers([]);
         }, 6000);
       }, maxDuration);
     }
-    prevRoundRef.current = gameState.currentRound;
-    return () => {
-      if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
-      if (roundEndPromptTimerRef.current) clearTimeout(roundEndPromptTimerRef.current);
-    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState?.lockedPlays, gameState?.currentRound, gameState?.players, isShowingResolution]);
 
   useEffect(() => {
@@ -319,6 +321,7 @@ export default function GameBoard() {
 
   useBotController({
     gameState,
+    onRefetch: refetch,
     onBotAction: (result) => {
       if (result.action === "play" && result.botName) {
         addToActionFeed(`${result.botName} sealed ${result.cardsPlayed || 0} sin${(result.cardsPlayed || 0) !== 1 ? "s" : ""}`);
@@ -341,6 +344,7 @@ export default function GameBoard() {
       if (plays.length > 0 && players.length > 0 && !isShowingResolution) {
         setCachedLockedPlays(plays);
         setCachedResolutionPlayers(players);
+        setPreResolutionPlayers([...players]);
         setIsShowingResolution(true);
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
         const maxDuration = Math.max(8000, plays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
@@ -352,11 +356,11 @@ export default function GameBoard() {
             setIsShowingResolution(false);
             setCachedLockedPlays([]);
             setCachedResolutionPlayers([]);
+            setPreResolutionPlayers([]);
           }, 6000);
         }, maxDuration);
       }
     },
-    onRefetch: refetch,
   });
 
   const myPlayer = gameState?.players.find((p) => p.id === playerId);
@@ -410,8 +414,12 @@ export default function GameBoard() {
   }, [turnPhase, gameState?.currentRound]);
 
   // Turn timer: Start countdown from server deadline when any player locks in
+  // CRITICAL: Do NOT start the timer while resolution animation is still playing.
+  // The DB may already be in 'selection' for the new round, but the player is still
+  // watching the previous round's card play-out animation.
   useEffect(() => {
     if (!gameState || !myPlayer || hasLockedIn || turnPhase !== "selection") return;
+    if (isShowingResolution || showRoundEndPrompt) return; // Wait for animation to finish
     if (gameState.selectionDeadline && !turnTimerActive) {
       // Calculate remaining seconds from server deadline
       const deadline = new Date(gameState.selectionDeadline).getTime();
@@ -429,7 +437,7 @@ export default function GameBoard() {
         soundEngine.play("card_play");
       }
     }
-  }, [gameState?.selectionDeadline, gameState?.players, hasLockedIn, turnPhase, turnTimerActive, playerId, myPlayer]);
+  }, [gameState?.selectionDeadline, gameState?.players, hasLockedIn, turnPhase, turnTimerActive, playerId, myPlayer, isShowingResolution, showRoundEndPrompt]);
 
   // Turn timer: Tick down every second (uses refs to avoid declaration-order issues)
   useEffect(() => {
@@ -480,6 +488,7 @@ export default function GameBoard() {
           if (result.resolvedPlays && result.resolutionPlayers) {
             setCachedLockedPlays(result.resolvedPlays);
             setCachedResolutionPlayers(result.resolutionPlayers);
+            setPreResolutionPlayers([...result.resolutionPlayers]);
             setIsShowingResolution(true);
           }
           // Show timeout narrator quip for each auto-passed player
@@ -725,6 +734,7 @@ export default function GameBoard() {
       if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
         setCachedLockedPlays(result.resolvedPlays);
         setCachedResolutionPlayers(result.resolutionPlayers);
+        setPreResolutionPlayers([...result.resolutionPlayers]);
         setIsShowingResolution(true);
         // Safety fallback timer
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
@@ -737,11 +747,12 @@ export default function GameBoard() {
             setIsShowingResolution(false);
             setCachedLockedPlays([]);
             setCachedResolutionPlayers([]);
+            setPreResolutionPlayers([]);
           }, 6000);
         }, maxDuration);
       }
 
-      refetch();
+      // Trigger floating damage numbers
     } catch (err: any) {
       console.error("[LockIn]", err);
       addMessage("Even sin has rules, mortal. Try again.", "info");
@@ -767,6 +778,7 @@ export default function GameBoard() {
       if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
         setCachedLockedPlays(result.resolvedPlays);
         setCachedResolutionPlayers(result.resolutionPlayers);
+        setPreResolutionPlayers([...result.resolutionPlayers]);
         setIsShowingResolution(true);
         if (resolutionTimerRef.current) clearTimeout(resolutionTimerRef.current);
         const maxDuration = Math.max(8000, result.resolvedPlays.filter(p => !("pass" in p) && p.cardId).length * 3500 + 3000);
@@ -778,11 +790,12 @@ export default function GameBoard() {
             setIsShowingResolution(false);
             setCachedLockedPlays([]);
             setCachedResolutionPlayers([]);
+            setPreResolutionPlayers([]);
           }, 6000);
         }, maxDuration);
       }
 
-      refetch();
+      // Reset selection state
     } catch (err: any) {
       console.error("[PassLockIn]", err);
       addMessage("Pass failed. Try again.", "info");
@@ -1307,6 +1320,10 @@ export default function GameBoard() {
                 currentRound={gameState.currentRound}
                 onViewBattleLog={viewBattleLogFromPrompt}
                 onContinue={dismissRoundEndPrompt}
+                resolvedPlays={cachedLockedPlays}
+                preResolutionPlayers={preResolutionPlayers}
+                postResolutionPlayers={gameState?.players}
+                currentPlayerId={playerId}
               />
             </Suspense>
             {/* Compact ritual circle */}
@@ -1474,6 +1491,10 @@ export default function GameBoard() {
                 onViewBattleLog={viewBattleLogFromPrompt}
                 onContinue={dismissRoundEndPrompt}
                 isMobile
+                resolvedPlays={cachedLockedPlays}
+                preResolutionPlayers={preResolutionPlayers}
+                postResolutionPlayers={gameState?.players}
+                currentPlayerId={playerId}
               />
             </Suspense>
           </div>

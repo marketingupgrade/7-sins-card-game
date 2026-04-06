@@ -22,6 +22,7 @@ import {
   LockedPlay,
   MAX_ROUNDS,
   MAX_ENERGY,
+  ENERGY_PER_TURN,
   PlayerState,
   SinType,
   STARTING_HP,
@@ -321,54 +322,69 @@ export async function lockInCards(
   });
 
   if (allConfirmed) {
-    // Capture the full locked plays + player state BEFORE resolution clears them
-    const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
-    const preResLocked: LockedPlay[] = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
+    // ATOMIC GUARD: Only transition to resolution if still in selection phase.
+    // This prevents double resolution when multiple clients/server detect allConfirmed simultaneously.
+    const { data: guardCheck } = await sb
+      .from("games")
+      .update({ turn_phase: "resolution", selection_deadline: null })
+      .eq("id", gameId)
+      .eq("turn_phase", "selection") // Compare-and-swap: only update if still in selection
+      .select("id")
+      .maybeSingle();
 
-    const { data: preResPlayers } = await sb
-      .from("game_players")
-      .select("*, players(username)")
-      .eq("game_id", gameId)
-      .order("seat_index");
+    if (guardCheck) {
+      // We won the race — this caller triggers resolution
+      // Capture the full locked plays + player state BEFORE resolution clears them
+      const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
+      const preResLocked: LockedPlay[] = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
 
-    const resolutionPlayers: PlayerState[] = (preResPlayers || []).map((gp: any) => {
-      const playerLocked = preResLocked.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
+      const { data: preResPlayers } = await sb
+        .from("game_players")
+        .select("*, players(username)")
+        .eq("game_id", gameId)
+        .order("seat_index");
+
+      const resolutionPlayers: PlayerState[] = (preResPlayers || []).map((gp: any) => {
+        const playerLocked = preResLocked.filter((lp: LockedPlay) => lp.playerId === gp.player_id);
+        return {
+          id: gp.player_id,
+          gamePlayerId: gp.id,
+          username: gp.players?.username || "Unknown",
+          seatIndex: gp.seat_index,
+          chosenSin: gp.chosen_sin,
+          currentHp: gp.current_hp,
+          maxHp: gp.max_hp,
+          isAlive: gp.is_alive,
+          hand: gp.hand || [],
+          deckSize: (gp.deck || []).length,
+          discardSize: (gp.discard_pile || []).length,
+          currentEnergy: gp.current_energy ?? 0,
+          maxEnergy: gp.max_energy ?? 0,
+          bonusEnergy: gp.bonus_energy ?? 0,
+          lockedCards: playerLocked,
+          hasLockedIn: playerLocked.length > 0,
+          consumedThisRound: gp.consumed_this_round ?? false,
+        };
+      });
+
+      await resolveLockedPlays(gameId);
+
+      const quip = selections.length === 0
+        ? "Choosing to do nothing? Bold strategy."
+        : selections.length === 1
+          ? "One card locked. Let fate decide."
+          : `${selections.length} cards locked. The arena trembles.`;
+
       return {
-        id: gp.player_id,
-        gamePlayerId: gp.id,
-        username: gp.players?.username || "Unknown",
-        seatIndex: gp.seat_index,
-        chosenSin: gp.chosen_sin,
-        currentHp: gp.current_hp,
-        maxHp: gp.max_hp,
-        isAlive: gp.is_alive,
-        hand: gp.hand || [],
-        deckSize: (gp.deck || []).length,
-        discardSize: (gp.discard_pile || []).length,
-        currentEnergy: gp.current_energy ?? 0,
-        maxEnergy: gp.max_energy ?? 0,
-        bonusEnergy: gp.bonus_energy ?? 0,
-        lockedCards: playerLocked,
-        hasLockedIn: playerLocked.length > 0,
-        consumedThisRound: gp.consumed_this_round ?? false,
+        success: true,
+        narratorQuip: quip,
+        resolvedPlays: preResLocked,
+        resolutionPlayers: resolutionPlayers,
       };
-    });
-
-    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
-    await resolveLockedPlays(gameId);
-
-    const quip = selections.length === 0
-      ? "Choosing to do nothing? Bold strategy."
-      : selections.length === 1
-        ? "One card locked. Let fate decide."
-        : `${selections.length} cards locked. The arena trembles.`;
-
-    return {
-      success: true,
-      narratorQuip: quip,
-      resolvedPlays: preResLocked,
-      resolutionPlayers: resolutionPlayers,
-    };
+    } else {
+      // Another caller already started resolution — skip
+      console.log("[lockInCards] Resolution already in progress, skipping");
+    }
   }
 
   const quip = selections.length === 0
@@ -1248,43 +1264,35 @@ async function advanceRound(gameId: string): Promise<void> {
     await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
   }
 
-  // Two-phase update: first set round_end (keeping locked_plays for client animation),
-  // then after a delay, transition to selection and clear locked_plays.
+  // Single atomic update: advance round AND transition to selection in one write.
+  // The client-side ResolutionReveal component handles animation timing independently
+  // via cached lockedPlays, so no server-side delay is needed.
   await sb.from("games").update({
     current_round: newRound,
     current_player_index: 0,
-    turn_phase: "round_end",
-    // Keep locked_plays intact so non-triggering clients can read them
+    turn_phase: "selection",
+    locked_plays: [],
+    selection_deadline: null,
   }).eq("id", gameId);
 
-  // Give clients 4 seconds to read the resolution data before clearing
-  // Use awaited delay instead of setTimeout to prevent orphaned callbacks
-  await new Promise(resolve => setTimeout(resolve, 4000));
-  try {
-    await sb.from("games").update({
-      turn_phase: "selection",
-      locked_plays: [],
-      selection_deadline: null,
-    }).eq("id", gameId);
-    // Also clear locked_cards on all players
-    for (const p of allPlayers) {
-      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-    }
-  } catch (e) {
-    console.error("[advanceRound] delayed clear failed:", e);
+  // Clear locked_cards on all players
+  for (const p of allPlayers) {
+    await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
   }
 }
 
-// ─── Helper: Refresh Player Energy (v4 — fixed 3/turn) ──────
+// ─── Helper: Refresh Player Energy (carry-over + gain) ──────
 async function refreshPlayerEnergy(player: any): Promise<void> {
   const sb = getServerSupabase();
-  const totalEnergy = MAX_ENERGY;
+  // Unspent energy carries over, add +1 per round gain, cap at MAX_ENERGY
+  const currentUnspent = player.current_energy ?? 0;
+  const newEnergy = Math.min(currentUnspent + ENERGY_PER_TURN, MAX_ENERGY);
 
   await sb
     .from("game_players")
     .update({
-      current_energy: totalEnergy,
-      max_energy: totalEnergy,
+      current_energy: newEnergy,
+      max_energy: MAX_ENERGY,
       bonus_energy: 0,
     })
     .eq("id", player.id);
@@ -1512,8 +1520,22 @@ export async function enforceSelectionDeadline(
     };
   });
 
-  // Transition to resolution
-  await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
+  // ATOMIC GUARD: Only transition to resolution if still in selection phase.
+  // This prevents double resolution when enforceSelectionDeadline races with lockInCards.
+  const { data: guardCheck } = await sb
+    .from("games")
+    .update({ turn_phase: "resolution", selection_deadline: null })
+    .eq("id", gameId)
+    .eq("turn_phase", "selection") // Compare-and-swap: only update if still in selection
+    .select("id")
+    .maybeSingle();
+
+  if (!guardCheck) {
+    // Another caller already started resolution — skip
+    console.log("[enforceSelectionDeadline] Resolution already in progress, skipping");
+    return { enforced: false };
+  }
+
   await resolveLockedPlays(gameId);
 
   return {

@@ -394,32 +394,46 @@ export async function lockInCards(
   let resolutionPlayers: PlayerState[] | undefined;
 
   if (allConfirmed) {
-    // Snapshot the locked plays + player states for the animation
-    resolvedPlays = [...allLocked];
-    resolutionPlayers = (allPlayers || []).map((gp: any) => ({
-      id: gp.player_id,
-      gamePlayerId: gp.id,
-      username: (gp as any).players?.username || gp.player_id?.slice(0, 8) || 'Unknown',
-      seatIndex: gp.seat_index,
-      chosenSin: gp.chosen_sin,
-      currentHp: gp.current_hp,
-      maxHp: gp.max_hp,
-      isAlive: gp.is_alive,
-      hand: gp.hand || [],
-      deckSize: (gp.deck || []).length,
-      discardSize: (gp.discard_pile || []).length,
-      currentEnergy: gp.current_energy ?? 0,
-      maxEnergy: gp.max_energy ?? 0,
-      bonusEnergy: gp.bonus_energy ?? 0,
-      lockedCards: [],
-      hasLockedIn: true,
-      consumedThisRound: gp.consumed_this_round ?? false,
-    }));
+    // ATOMIC GUARD: Only transition to resolution if still in selection phase.
+    // This prevents double resolution when multiple clients detect allConfirmed simultaneously.
+    const { data: guardCheck } = await sb
+      .from("games")
+      .update({ turn_phase: "resolution", selection_deadline: null })
+      .eq("id", gameId)
+      .eq("turn_phase", "selection") // Compare-and-swap: only update if still in selection
+      .select("id")
+      .maybeSingle();
 
-    // Transition to resolution phase (clear deadline)
-    await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId);
-    // Resolve all locked plays
-    await resolveLockedPlays(gameId);
+    if (guardCheck) {
+      // We won the race — this client triggers resolution
+      // Snapshot the locked plays + player states for the animation
+      resolvedPlays = [...allLocked];
+      resolutionPlayers = (allPlayers || []).map((gp: any) => ({
+        id: gp.player_id,
+        gamePlayerId: gp.id,
+        username: (gp as any).players?.username || gp.player_id?.slice(0, 8) || 'Unknown',
+        seatIndex: gp.seat_index,
+        chosenSin: gp.chosen_sin,
+        currentHp: gp.current_hp,
+        maxHp: gp.max_hp,
+        isAlive: gp.is_alive,
+        hand: gp.hand || [],
+        deckSize: (gp.deck || []).length,
+        discardSize: (gp.discard_pile || []).length,
+        currentEnergy: gp.current_energy ?? 0,
+        maxEnergy: gp.max_energy ?? 0,
+        bonusEnergy: gp.bonus_energy ?? 0,
+        lockedCards: [],
+        hasLockedIn: true,
+        consumedThisRound: gp.consumed_this_round ?? false,
+      }));
+
+      // Resolve all locked plays
+      await resolveLockedPlays(gameId);
+    } else {
+      // Another client already started resolution — skip
+      console.log("[lockInCards] Resolution already in progress, skipping");
+    }
   }
 
   const quip = selections.length === 0
@@ -1321,30 +1335,20 @@ async function advanceRound(gameId: string): Promise<void> {
     await sb.from("game_players").update({ consumed_this_round: false }).eq("id", p.id);
   }
 
-  // Two-phase update: first set round_end (keeping locked_plays for client animation),
-  // then after a delay, transition to selection and clear locked_plays.
+  // Single atomic update: advance round AND transition to selection in one write.
+  // The client-side ResolutionReveal component handles animation timing independently
+  // via cached lockedPlays, so no server-side delay is needed.
   await sb.from("games").update({
     current_round: newRound,
     current_player_index: 0,
-    turn_phase: "round_end",
-    // Keep locked_plays intact so non-triggering clients can read them
+    turn_phase: "selection",
+    locked_plays: [],
+    selection_deadline: null,
   }).eq("id", gameId);
 
-  // Give clients 4 seconds to read the resolution data before clearing
-  // Use awaited delay instead of setTimeout to prevent orphaned callbacks
-  await new Promise(resolve => setTimeout(resolve, 4000));
-  try {
-    await sb.from("games").update({
-      turn_phase: "selection",
-      locked_plays: [],
-      selection_deadline: null,
-    }).eq("id", gameId);
-    // Also clear locked_cards on all players
-    for (const p of allPlayers) {
-      await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-    }
-  } catch (e) {
-    console.error("[advanceRound] delayed clear failed:", e);
+  // Clear locked_cards on all players
+  for (const p of allPlayers) {
+    await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
   }
 }
 
