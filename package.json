@@ -140,7 +140,7 @@
       "dompurify": ">=3.3.2",
       "qs": ">=6.14.2",
       "lodash": ">=4.17.23",
-      "lodash-es": ">=4.17.23"
+      "lodash-es": ">=4.18.1"
     },
     "onlyBuiltDependencies": [
       "esbuild",
