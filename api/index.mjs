@@ -8312,6 +8312,121 @@ function validateGamertag(tag) {
   return { ok: true };
 }
 
+// server/indexnow.ts
+var INDEXNOW_KEY = "505b6460d365492eabc067eac9bfe230";
+var INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
+var SITE_HOST = "www.7sinscardgame.com";
+var BASE_URL = `https://${SITE_HOST}`;
+var MAX_URLS_PER_BATCH = 1e4;
+async function submitUrl(url) {
+  const fullUrl = url.startsWith("http") ? url : `${BASE_URL}${url}`;
+  const endpoint = `${INDEXNOW_ENDPOINT}?url=${encodeURIComponent(fullUrl)}&key=${INDEXNOW_KEY}`;
+  try {
+    const response = await fetch(endpoint, {
+      method: "GET",
+      headers: { "User-Agent": "7DeadlySins-IndexNow/1.0" }
+    });
+    return {
+      success: response.status === 200 || response.status === 202,
+      statusCode: response.status,
+      message: getStatusMessage(response.status),
+      urlCount: 1
+    };
+  } catch (error) {
+    return {
+      success: false,
+      statusCode: 0,
+      message: `Network error: ${error instanceof Error ? error.message : "Unknown"}`,
+      urlCount: 1
+    };
+  }
+}
+async function submitUrls(urls) {
+  if (urls.length === 0) {
+    return [{ success: true, statusCode: 200, message: "No URLs to submit", urlCount: 0 }];
+  }
+  const fullUrls = urls.map(
+    (url) => url.startsWith("http") ? url : `${BASE_URL}${url}`
+  );
+  const chunks = [];
+  for (let i = 0; i < fullUrls.length; i += MAX_URLS_PER_BATCH) {
+    chunks.push(fullUrls.slice(i, i + MAX_URLS_PER_BATCH));
+  }
+  const results = [];
+  for (const chunk of chunks) {
+    try {
+      const response = await fetch(INDEXNOW_ENDPOINT, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "User-Agent": "7DeadlySins-IndexNow/1.0"
+        },
+        body: JSON.stringify({
+          host: SITE_HOST,
+          key: INDEXNOW_KEY,
+          keyLocation: `${BASE_URL}/${INDEXNOW_KEY}.txt`,
+          urlList: chunk
+        })
+      });
+      results.push({
+        success: response.status === 200 || response.status === 202,
+        statusCode: response.status,
+        message: getStatusMessage(response.status),
+        urlCount: chunk.length
+      });
+    } catch (error) {
+      results.push({
+        success: false,
+        statusCode: 0,
+        message: `Network error: ${error instanceof Error ? error.message : "Unknown"}`,
+        urlCount: chunk.length
+      });
+    }
+  }
+  return results;
+}
+function buildAllSiteUrls(blogSlugs) {
+  const staticPages = [
+    "/",
+    "/blog",
+    "/how-to-play",
+    "/collection",
+    "/rules",
+    "/practice",
+    "/deck-builder",
+    "/community",
+    "/chronicles",
+    "/balance",
+    "/matchups",
+    "/changelog",
+    "/faq",
+    "/brandbook",
+    "/terms",
+    "/privacy",
+    "/cookies"
+  ];
+  const blogUrls = blogSlugs.map((slug) => `/blog/${slug}`);
+  return [...staticPages, ...blogUrls].map((path) => `${BASE_URL}${path}`);
+}
+function getStatusMessage(status) {
+  switch (status) {
+    case 200:
+      return "OK \u2014 URL(s) submitted successfully";
+    case 202:
+      return "Accepted \u2014 URL(s) received, key validation pending";
+    case 400:
+      return "Bad Request \u2014 Invalid format";
+    case 403:
+      return "Forbidden \u2014 Key not valid (not found or mismatch)";
+    case 422:
+      return "Unprocessable Entity \u2014 URL(s) don't belong to host or key mismatch";
+    case 429:
+      return "Too Many Requests \u2014 Rate limited (potential spam detection)";
+    default:
+      return `Unexpected response: HTTP ${status}`;
+  }
+}
+
 // server/routers.ts
 var appRouter = router({
   system: systemRouter,
@@ -8956,6 +9071,46 @@ var appRouter = router({
       });
       return { success: !!coverUrl, coverImageUrl: coverUrl };
     })
+  }),
+  /** IndexNow — Instant search engine indexing */
+  indexnow: router({
+    /** Submit a single URL to IndexNow (admin only) */
+    submitUrl: publicProcedure.input(z3.object({ url: z3.string().min(1).max(2048) })).mutation(async ({ input }) => {
+      const result = await submitUrl(input.url);
+      return result;
+    }),
+    /** Submit all site URLs (static pages + blog posts) to IndexNow */
+    submitAll: publicProcedure.mutation(async () => {
+      const slugData = await getAllBlogSlugs();
+      const slugs = slugData.map((s) => s.slug);
+      const allUrls = buildAllSiteUrls(slugs);
+      const results = await submitUrls(allUrls);
+      return {
+        totalUrls: allUrls.length,
+        batches: results,
+        allSuccess: results.every((r) => r.success)
+      };
+    }),
+    /** Submit only blog post URLs to IndexNow */
+    submitBlogPosts: publicProcedure.mutation(async () => {
+      const slugData = await getAllBlogSlugs();
+      const blogUrls = slugData.map((s) => `https://www.7sinscardgame.com/blog/${s.slug}`);
+      const results = await submitUrls(blogUrls);
+      return {
+        totalUrls: blogUrls.length,
+        batches: results,
+        allSuccess: results.every((r) => r.success)
+      };
+    }),
+    /** Submit specific URLs to IndexNow */
+    submitBatch: publicProcedure.input(z3.object({ urls: z3.array(z3.string().min(1).max(2048)).min(1).max(1e4) })).mutation(async ({ input }) => {
+      const results = await submitUrls(input.urls);
+      return {
+        totalUrls: input.urls.length,
+        batches: results,
+        allSuccess: results.every((r) => r.success)
+      };
+    })
   })
 });
 
@@ -8986,7 +9141,7 @@ app.use((_req, res, next) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
 });
-var BASE_URL = "https://www.7sinscardgame.com";
+var BASE_URL2 = "https://www.7sinscardgame.com";
 var OG_IMAGE = "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/og-banner-7a8HHUKyS9YrWQLuM7Cgyi.png";
 var FAVICON = "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/favicon_f4fbfc17.ico";
 var ICON_192 = "https://xqotfmrlhqiayiyjijpl.supabase.co/storage/v1/object/public/assets/7s-icon-192x192_8dcc7e63.png";
@@ -9152,8 +9307,8 @@ function buildPrerenderHtml(opts) {
   if (keywords) head += `
   <meta name="keywords" content="${escapeHtml(keywords)}">`;
   head += `
-  <link rel="alternate" type="application/rss+xml" title="7 Deadly Sins Card Game Blog" href="${BASE_URL}/rss.xml">
-  <link rel="alternate" type="text/plain" title="LLMs.txt" href="${BASE_URL}/llms.txt">`;
+  <link rel="alternate" type="application/rss+xml" title="7 Deadly Sins Card Game Blog" href="${BASE_URL2}/rss.xml">
+  <link rel="alternate" type="text/plain" title="LLMs.txt" href="${BASE_URL2}/llms.txt">`;
   if (jsonLd) head += `
   <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`;
   head += `
@@ -9179,13 +9334,13 @@ function buildArticleJsonLd(post) {
     "@type": "Article",
     headline: post.title,
     description: post.metaDescription,
-    url: `${BASE_URL}/blog/${post.slug}`,
+    url: `${BASE_URL2}/blog/${post.slug}`,
     image: post.featuredImage || OG_IMAGE,
     datePublished: post.publishedAt.toISOString(),
     dateModified: post.updatedAt.toISOString(),
-    author: { "@type": "Organization", name: "7 Deadly Sins Card Game", url: BASE_URL },
-    publisher: { "@type": "Organization", name: "7 Deadly Sins Card Game", url: BASE_URL, logo: { "@type": "ImageObject", url: ICON_192 } },
-    mainEntityOfPage: { "@type": "WebPage", "@id": `${BASE_URL}/blog/${post.slug}` },
+    author: { "@type": "Organization", name: "7 Deadly Sins Card Game", url: BASE_URL2 },
+    publisher: { "@type": "Organization", name: "7 Deadly Sins Card Game", url: BASE_URL2, logo: { "@type": "ImageObject", url: ICON_192 } },
+    mainEntityOfPage: { "@type": "WebPage", "@id": `${BASE_URL2}/blog/${post.slug}` },
     articleSection: post.category,
     keywords: post.keywords,
     wordCount: Math.round(post.readingTime * 200),
@@ -9205,7 +9360,7 @@ app.get("/blog/:slug", async (req, res, next) => {
     const html = buildPrerenderHtml({
       title: `${post.title} | 7 Deadly Sins Card Game Blog`,
       description: post.metaDescription,
-      url: `${BASE_URL}/blog/${post.slug}`,
+      url: `${BASE_URL2}/blog/${post.slug}`,
       ogImage: post.featuredImage || OG_IMAGE,
       articleContent: `<article>
         <h1>${escapeHtml(post.title)}</h1>
@@ -9237,7 +9392,7 @@ for (const pagePath of PRERENDER_STATIC_PATHS) {
     const html = buildPrerenderHtml({
       title: config.title,
       description: config.description,
-      url: `${BASE_URL}${pagePath}`,
+      url: `${BASE_URL2}${pagePath}`,
       articleContent: `<h1>${escapeHtml(config.title)}</h1><p>${escapeHtml(config.description)}</p>`
     });
     res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -9253,7 +9408,7 @@ app.get("/", (req, res, next) => {
   const html = buildPrerenderHtml({
     title: config.title,
     description: config.description,
-    url: BASE_URL,
+    url: BASE_URL2,
     articleContent: `<h1>${escapeHtml(config.title)}</h1><p>${escapeHtml(config.description)}</p>`
   });
   res.setHeader("Content-Type", "text/html; charset=utf-8");
@@ -9264,7 +9419,7 @@ app.get("/", (req, res, next) => {
 app.get("/sitemap.xml", async (_req, res) => {
   try {
     const slugs = await getAllBlogSlugs();
-    const baseUrl = BASE_URL;
+    const baseUrl = BASE_URL2;
     const staticPages = [
       { loc: "/", priority: "1.0", changefreq: "weekly" },
       { loc: "/blog", priority: "0.9", changefreq: "daily" },
@@ -9327,7 +9482,7 @@ app.get("/sitemap.xml", async (_req, res) => {
 app.get("/rss.xml", async (_req, res) => {
   try {
     const posts = await getRecentBlogPosts(50);
-    const baseUrl = BASE_URL;
+    const baseUrl = BASE_URL2;
     const now = posts.length > 0 && posts[0].publishedAt ? new Date(posts[0].publishedAt).toUTCString() : (/* @__PURE__ */ new Date()).toUTCString();
     let rss = `<?xml version="1.0" encoding="UTF-8"?>
 `;

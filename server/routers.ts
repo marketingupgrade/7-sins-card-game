@@ -87,6 +87,7 @@ import {
   extractRoundEvents,
 } from "./chronicleEngine";
 import { generateAndSaveCoverArt } from "./chronicleCoverArt";
+import { submitUrl, submitUrls, buildAllSiteUrls } from "./indexnow";
 
 export const appRouter = router({
   system: systemRouter,
@@ -960,6 +961,54 @@ export const appRouter = router({
         });
 
         return { success: !!coverUrl, coverImageUrl: coverUrl };
+      }),
+  }),
+
+  /** IndexNow — Instant search engine indexing */
+  indexnow: router({
+    /** Submit a single URL to IndexNow (admin only) */
+    submitUrl: publicProcedure
+      .input(z.object({ url: z.string().min(1).max(2048) }))
+      .mutation(async ({ input }) => {
+        const result = await submitUrl(input.url);
+        return result;
+      }),
+
+    /** Submit all site URLs (static pages + blog posts) to IndexNow */
+    submitAll: publicProcedure.mutation(async () => {
+      const slugData = await getAllBlogSlugs();
+      const slugs = slugData.map((s) => s.slug);
+      const allUrls = buildAllSiteUrls(slugs);
+      const results = await submitUrls(allUrls);
+      return {
+        totalUrls: allUrls.length,
+        batches: results,
+        allSuccess: results.every((r) => r.success),
+      };
+    }),
+
+    /** Submit only blog post URLs to IndexNow */
+    submitBlogPosts: publicProcedure.mutation(async () => {
+      const slugData = await getAllBlogSlugs();
+      const blogUrls = slugData.map((s) => `https://www.7sinscardgame.com/blog/${s.slug}`);
+      const results = await submitUrls(blogUrls);
+      return {
+        totalUrls: blogUrls.length,
+        batches: results,
+        allSuccess: results.every((r) => r.success),
+      };
+    }),
+
+    /** Submit specific URLs to IndexNow */
+    submitBatch: publicProcedure
+      .input(z.object({ urls: z.array(z.string().min(1).max(2048)).min(1).max(10000) }))
+      .mutation(async ({ input }) => {
+        const results = await submitUrls(input.urls);
+        return {
+          totalUrls: input.urls.length,
+          batches: results,
+          allSuccess: results.every((r) => r.success),
+        };
       }),
   }),
 });

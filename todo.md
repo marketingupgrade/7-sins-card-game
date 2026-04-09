@@ -2332,4 +2332,13 @@
 - [x] Wired preResolutionPlayers state through all 5 resolution trigger paths in GameBoard
 - [x] 41 new vitest tests covering atomic guard, energy carry-over, timer logic, sound selection, round summary
 - [x] All 1015 tests passing across 42 test files
-- [ ] Push all fixes to GitHub
+- [x] Push all fixes to GitHub (commit 6bf85e1)
+
+### v6.7.8 — IndexNow Protocol for Instant Search Engine Indexing
+- [x] Host key file at /505b6460d365492eabc067eac9bfe230.txt (client/public)
+- [x] Create server/indexnow.ts helper with submitUrl() and submitUrls() functions
+- [x] Blog posts are read-only (Supabase-managed) — added admin bulk endpoint instead of auto-hooks
+- [x] Add tRPC procedures: indexnow.submitUrl, indexnow.submitAll, indexnow.submitBlogPosts, indexnow.submitBatch
+- [x] 32 new vitest tests covering key file, URL building, status messages, batch chunking, POST/GET format
+- [x] All 1047 tests passing across 43 test files
+- [ ] Push to GitHub
