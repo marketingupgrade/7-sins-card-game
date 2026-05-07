@@ -83,7 +83,7 @@ export default function Login() {
     if (emailMode === "forgot") {
       const { error: err } = await resetPasswordForEmail(email);
       if (err) setError(err);
-      else setSuccess("Password reset link sent. Check your email.");
+      else setSuccess("A reset rite has been sent. Check your scrolls.");
     } else if (emailMode === "signin") {
       const { error: err } = await signInWithEmail(email, password);
       if (err) setError(err);
@@ -91,7 +91,7 @@ export default function Login() {
     } else {
       const { error: err } = await signUpWithEmail(email, password);
       if (err) setError(err);
-      else setSuccess("Check your email for a confirmation link. Then sign in.");
+      else setSuccess("Check your email for the confirmation rite. Then return.");
     }
     setLoading(false);
   };
@@ -211,12 +211,12 @@ export default function Login() {
                 style={{ fontFamily: "var(--font-heading)" }}
               >
                 {loading
-                  ? "Processing..."
+                  ? "The cathedral considers..."
                   : emailMode === "forgot"
-                    ? "Send Reset Link"
+                    ? "Send Reset Rite"
                     : emailMode === "signin"
-                      ? "Sign In"
-                      : "Create Account"}
+                      ? "Enter the Cathedral"
+                      : "Pledge a Sin"}
               </button>
 
               {/* Mode toggle links */}
@@ -292,7 +292,7 @@ export default function Login() {
 
             {/* Value prop */}
             <p className="text-center text-white/25 text-[11px] leading-relaxed mt-5" style={{ fontFamily: "var(--font-body)" }}>
-              Sign in to save your custom decks, track your match history, and unlock faction achievements.
+              The cathedral remembers those who return. Save your decks, your match history, your faction reckonings.
             </p>
           </div>
 

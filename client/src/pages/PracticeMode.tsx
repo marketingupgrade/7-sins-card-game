@@ -188,7 +188,7 @@ export default function PracticeMode() {
       setLocation(`/game/${gameId}`);
     } catch (err: any) {
       console.error("[PracticeMode] Failed to launch:", err);
-      setError("Failed to create practice game. Please try again.");
+      setError("The training grounds resist. Try again, mortal.");
       setPhase("select_sin");
       setIsLaunching(false);
     }

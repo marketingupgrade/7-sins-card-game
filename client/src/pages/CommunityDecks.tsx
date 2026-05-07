@@ -455,7 +455,7 @@ function PublishModal({
         <div className="mb-4">
           <label className="text-zinc-400 text-xs font-medium mb-2 block">Select a Saved Deck</label>
           {loading ? (
-            <div className="text-zinc-500 text-sm py-4 text-center">Loading your decks...</div>
+            <div className="text-zinc-500 text-sm py-4 text-center">Summoning your decks...</div>
           ) : savedDecks.length === 0 ? (
             <div className="text-zinc-500 text-sm py-4 text-center">
               No complete decks found. Build a 30-card deck in the{" "}
@@ -811,7 +811,7 @@ function CommentSection({
 
       {/* Threaded comments list */}
       {loading ? (
-        <div className="text-zinc-500 text-xs py-2">Loading comments...</div>
+        <div className="text-zinc-500 text-xs py-2">Gathering confessions...</div>
       ) : comments.length === 0 ? (
         <div className="text-zinc-600 text-xs py-1 text-center italic">
           No comments yet — be the first to share your thoughts

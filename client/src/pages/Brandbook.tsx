@@ -929,7 +929,7 @@ export default function Brandbook() {
 
         <BodyText>
           The project relies on a carefully curated technology stack. Each library was chosen for specific reasons,
-          and each has established best practices that must be followed to maintain the AAA quality standard.
+          and each has established best practices that must be followed to keep the cathedral standing.
           Below are the most critical guidelines organized by library category.
         </BodyText>
 

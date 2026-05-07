@@ -224,7 +224,7 @@ export default function CampaignFight() {
       setError(
         err instanceof Error
           ? err.message
-          : "Failed to start the mission. Please try again."
+          : "The arena refused you. Try again."
       );
       setIsLaunching(false);
       setShowStinger(false);

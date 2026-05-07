@@ -419,7 +419,7 @@ export default function PlayerProfile() {
       <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-2 border-amber-500/30 border-t-amber-500 rounded-full animate-spin mx-auto" />
-          <p className="text-zinc-500 text-sm mt-4">Loading profile...</p>
+          <p className="text-zinc-500 text-sm mt-4">Reading their record...</p>
         </div>
       </div>
     );

@@ -1417,7 +1417,7 @@ export default function DeckBuilder() {
       setSaveMessage("Deck saved!");
     } catch (err: any) {
       console.error("[SaveDeck]", err);
-      setSaveMessage("Save failed. Please try again.");
+      setSaveMessage("The cathedral refused the binding. Try again.");
     } finally {
       setIsSaving(false);
       setTimeout(() => setSaveMessage(null), 3000);
@@ -1861,7 +1861,7 @@ export default function DeckBuilder() {
                 style={{ fontFamily: "var(--font-heading)" }}
                 title={guestAtDeckLimit ? "Sign in to save more decks" : undefined}
               >
-                {isSaving ? "Saving..." : guestAtDeckLimit ? "Limit Reached" : "Save"}
+                {isSaving ? "Binding..." : guestAtDeckLimit ? "Limit Reached" : "Bind Deck"}
               </button>
             </div>
           </div>

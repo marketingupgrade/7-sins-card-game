@@ -91,7 +91,7 @@ function GamertagEditor({ playerId, currentTag }: { playerId: string; currentTag
       }
     },
     onError: (err) => {
-      setError(err.message || "Something went wrong.");
+      setError(err.message || "Even hell has its bureaucracy. Try again.");
     },
   });
 
@@ -443,7 +443,7 @@ export default function Account() {
       setTimeout(() => navigate("/"), 3000);
     } catch (err: any) {
       console.error("[Purge]", err);
-      setPurgeResult("Purge failed. Please try again or contact sinners@7sinscardgame.com.");
+      setPurgeResult("The purge resists. Try again, or send a confession to sinners@7sinscardgame.com.");
     } finally {
       setIsPurging(false);
       setShowPurgeDialog(false);

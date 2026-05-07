@@ -163,7 +163,7 @@ function CommentForm({
             color: "rgba(245, 158, 11, 0.9)",
           }}
         >
-          {isSubmitting ? "Posting..." : isReply ? "Reply" : "Post Comment"}
+          {isSubmitting ? "Confessing..." : isReply ? "Reply" : "Confess"}
         </button>
       </div>
     </form>
