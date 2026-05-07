@@ -151,8 +151,18 @@ export async function getBlogPosts(opts: {
     query = query.eq("category", opts.category);
   }
   if (opts.search) {
-    // Sanitize search input: strip PostgREST operators and special chars to prevent filter injection
-    const sanitized = opts.search.replace(/[.,%()\\]/g, " ").trim();
+    // Strip every PostgREST `.or()` metacharacter so user input can't break out
+    // of the value position. Removed:
+    //   . ,    — column/op/value and clause separators
+    //   ( )    — sub-group delimiters
+    //   :      — embedded operators / casts
+    //   % _ *  — SQL/LIKE wildcards (we add our own % around the value)
+    //   \ "    — quoting / escaping
+    // Plus a hard cap so a long string can't dominate the filter.
+    const sanitized = opts.search
+      .replace(/[.,%_*()"\\:]/g, " ")
+      .trim()
+      .slice(0, 64);
     if (sanitized.length > 0) {
       query = query.or(
         `title.ilike.%${sanitized}%,meta_description.ilike.%${sanitized}%,keywords.ilike.%${sanitized}%`
@@ -304,20 +314,20 @@ export async function createDiscussionComment(
   return { id: data.id };
 }
 
-export async function deleteDiscussionComment(commentId: number, guestId?: string): Promise<boolean> {
+export async function deleteDiscussionComment(commentId: number, guestId: string): Promise<boolean> {
   const sb = getSupabase();
   if (!sb) return false;
+  if (!guestId) return false;
 
-  // Verify ownership: only the author (matched by guest_id) can delete their comment
-  if (guestId) {
-    const { data: comment } = await sb
-      .from("discussion_comments")
-      .select("guest_id")
-      .eq("id", commentId)
-      .single();
-    if (!comment || comment.guest_id !== guestId) {
-      return false; // Not the author — deny deletion
-    }
+  // Verify ownership: only the author (matched by guest_id) can delete their comment.
+  // A missing or mismatched guest_id MUST short-circuit — this is the only auth gate.
+  const { data: comment } = await sb
+    .from("discussion_comments")
+    .select("guest_id")
+    .eq("id", commentId)
+    .single();
+  if (!comment || comment.guest_id !== guestId) {
+    return false;
   }
 
   // Delete child replies first

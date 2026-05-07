@@ -146,14 +146,21 @@ export const appRouter = router({
         return result;
       }),
 
-    /** Delete a comment — requires guestId for ownership verification */
+    /** Delete a comment — requires guestId; only the comment's author can delete it */
     delete: publicProcedure
       .input(z.object({
         commentId: z.number().int().positive(),
-        guestId: z.string().max(64).optional(),
+        guestId: z.string().min(1).max(64),
       }))
       .mutation(async ({ input }) => {
-        return deleteDiscussionComment(input.commentId, input.guestId);
+        const ok = await deleteDiscussionComment(input.commentId, input.guestId);
+        if (!ok) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Cannot delete this comment.",
+          });
+        }
+        return { success: true };
       }),
 
     /** Upvote a comment */

@@ -361,18 +361,18 @@ export default function DiscussionThread({
     [pageContext, guestId, replyingTo, fetchComments]
   );
 
-  // Delete comment
+  // Delete comment — server requires guestId so only the author can succeed
   const handleDelete = useCallback(
     async (commentId: number) => {
       try {
-        await trpcMutate("discussion.delete", { commentId });
+        await trpcMutate("discussion.delete", { commentId, guestId });
         // Optimistic: remove from local state immediately
         setComments((prev) => prev.filter((c) => c.id !== commentId && c.parentId !== commentId));
       } catch (err) {
         console.error("[Discussion] Failed to delete comment:", err);
       }
     },
-    []
+    [guestId]
   );
 
   // Upvote comment

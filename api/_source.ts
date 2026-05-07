@@ -26,12 +26,31 @@ const app = express();
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
-// Security headers
+// Security headers — keep in sync with server/_core/index.ts. Vercel routes
+// production traffic through this serverless entry, so missing CSP / X-Frame
+// here means production was previously running without those defenses even
+// though the express dev server set them.
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://*.umami.is",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://xqotfmrlhqiayiyjijpl.supabase.co https://*.supabase.co",
+      "font-src 'self' https://xqotfmrlhqiayiyjijpl.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.umami.is",
+      "worker-src 'self' blob:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+    ].join("; ")
+  );
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
 });

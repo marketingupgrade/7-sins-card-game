@@ -3,31 +3,20 @@
 ## 1. SECURITY AUDIT
 
 ### Critical Issues
-1. **Blog search SQL injection via Supabase `.or()` filter** (db-supabase.ts:155-157)
-   - `opts.search` is interpolated directly into the `.or()` filter string without escaping
-   - Zod validates max length (200) but doesn't sanitize special chars like `%`, `.`, `,`
-   - An attacker could inject PostgREST filter operators
-   - **Fix**: Sanitize search input to strip PostgREST operators
+1. ~~**Blog search SQL injection via Supabase `.or()` filter**~~ — **Fixed.** `getBlogPosts` now strips every PostgREST `.or()` metacharacter (`. , ( ) : % _ * " \`) before interpolation and caps the value at 64 chars (`server/db-supabase.ts`). Zod still validates max length 200 at the router boundary.
 
-2. **Discussion delete has NO ownership check** (routers.ts:127-129, db-supabase.ts:304)
-   - `discussion.delete` accepts any `commentId` and deletes it — no author verification
-   - Anyone can delete anyone's discussion comments
-   - **Fix**: Add guestId/userId ownership check to deleteDiscussionComment
+2. ~~**Discussion delete has NO ownership check**~~ — **Fixed.** `discussion.delete` requires `guestId` at the router (no longer optional), and `deleteDiscussionComment` short-circuits when the stored `guest_id` doesn't match — no fallthrough path. The router now throws `FORBIDDEN` instead of silently returning `false`. The client (`DiscussionThread.tsx`) passes the stored guestId. Covered by `server/discussion.auth.test.ts`.
 
 3. ~~**Discussion upvote has NO rate limiting**~~ — **Fixed.** `discussion.upvote` is now wrapped in an IP-based sliding-window limiter (`server/rateLimit.ts`, 30 upvotes / minute / IP). Per-instance only — see CODEBASE.md §11 limitation 4.
 
 4. ~~**User purge endpoint has NO auth verification**~~ — **Fixed.** `user.purge` now requires the caller's Supabase access token; the server verifies via `supabase.auth.getUser()` and rejects mismatches with `FORBIDDEN`/`UNAUTHORIZED`. Covered by `server/user.purge.test.ts`.
 
-5. **Blog content rendered via dangerouslySetInnerHTML without sanitization** (BlogPost.tsx:374)
-   - Blog content from Supabase is rendered as raw HTML with no DOMPurify
-   - If blog content is ever user-generated or compromised, this is XSS
-   - Currently mitigated by admin-only blog content, but fragile
-   - **Fix**: Add DOMPurify sanitization before rendering
+5. ~~**Blog content rendered via dangerouslySetInnerHTML without sanitization**~~ — **Already fixed in code.** `client/src/pages/BlogPost.tsx:13,285` imports DOMPurify and runs `DOMPurify.sanitize(renderContent(post.content), {...})` before injecting into the page. The audit note predates that change.
 
 ### Medium Issues
-6. **Client-side playerId is trusted for all mutations** — the entire auth model relies on client-generated UUIDs passed in requests. No server-side session verification for game/community operations. This is by design (Vercel deployment without Manus OAuth) but means any user can impersonate another by knowing their UUID.
+6. **Client-side playerId is trusted for all mutations** — the entire auth model still relies on client-generated UUIDs for game/community operations. The newly-added `accessToken` check on `user.purge` is the pattern to extend if/when other procedures need real auth (`deck.delete`, `community.unpublish`, etc. currently still trust the client UUID).
 
-7. **No Content-Security-Policy header** — the server sets X-Frame-Options, X-XSS-Protection, etc. but no CSP header, which is the modern defense against XSS.
+7. ~~**No Content-Security-Policy header**~~ — **Fixed.** CSP, X-Frame-Options, and frame-ancestors were already set in `server/_core/index.ts` (Express dev server) but were missing from `api/_source.ts` (the Vercel serverless entry that actually serves production traffic). Both paths now share the same header set.
 
 ### Good Practices Already in Place
 - Zod input validation on all endpoints with max lengths
