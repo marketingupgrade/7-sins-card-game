@@ -106,10 +106,10 @@ describe("isMissionUnlocked", () => {
   });
 
   it("coming-soon missions are never unlocked, even if their predecessor is cleared", () => {
-    // greed_2 is still stubbed; if you ship Greed Act 2, swap to another stub.
-    const stubMission = getMissionById("greed_2")!;
+    // envy_2 is still stubbed; if you ship Envy Act 2, swap to another stub.
+    const stubMission = getMissionById("envy_2")!;
     expect(stubMission.comingSoon).toBe(true);
-    expect(isMissionUnlocked(stubMission, new Set(["greed_1"]))).toBe(false);
+    expect(isMissionUnlocked(stubMission, new Set(["envy_1"]))).toBe(false);
   });
 
   it("act 2 unlocks only after act 1 is in completedIds", () => {

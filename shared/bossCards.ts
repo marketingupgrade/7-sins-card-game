@@ -102,6 +102,51 @@ export const BOSS_CARDS: CardDefinition[] = [
     ],
     description: "The Eternal has watched empires rise. Yours is small, brief, and predictable.",
   },
+
+  // ─── Greed Act 1 — The Counting House ────────────────────────
+  {
+    id: "boss_greed_1_tithe",
+    name: "Tithe",
+    sin: "greed",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" },
+      { type: "energy_steal", baseValue: 1, duration: 3, targetMode: "single" },
+    ],
+    description: "The clerk does not strike. He reckons. He notes. He bills.",
+  },
+
+  // ─── Greed Act 2 — The Vault ─────────────────────────────────
+  {
+    id: "boss_greed_2_ledger_strike",
+    name: "Ledger Strike",
+    sin: "greed",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 20, duration: 2, targetMode: "single" },
+      { type: "heal_steal", baseValue: 10, duration: 2, targetMode: "single" },
+    ],
+    description: "Octavia closes the book. Whatever you spent on this fight comes due now.",
+  },
+
+  // ─── Greed Act 3 — The Plutarch ──────────────────────────────
+  {
+    id: "boss_greed_3_liquidation",
+    name: "Liquidation",
+    sin: "greed",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 22, duration: 2, targetMode: "single" },
+      { type: "heal_steal", baseValue: 16, duration: 2, targetMode: "single" },
+    ],
+    description: "Cassivus does not negotiate. He liquidates.",
+  },
 ];
 
 const BOSS_CARD_MAP: Record<string, CardDefinition> = Object.fromEntries(

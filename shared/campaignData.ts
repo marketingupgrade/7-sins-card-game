@@ -260,6 +260,87 @@ const SLOTH_ACT_3: CampaignMission = {
   unlockedBy: "sloth_2",
 };
 
+// ─── Greed: The Counting House / The Vault / The Plutarch ───────
+
+const GREED_ACT_1: CampaignMission = {
+  id: "greed_1",
+  sin: "greed",
+  act: 1,
+  title: "The Counting House",
+  hook: "A clerk with a quill that draws blood as ink.",
+  intro:
+    "The Counting House isn't a building. It's an idea — that everything has a price, and someone has been keeping the receipts. " +
+    "Maeven doesn't speak unless she's asking for a number. " +
+    "She's been collecting on debts you don't remember owing, and keeping ledger on this fight for longer than you think. " +
+    "Don't let her finish the column.",
+  outro:
+    "Maeven hands you back what you didn't know she'd taken. She doesn't apologize — clerks never do. " +
+    "She writes a small note in your margin. You'll think about it later.",
+  defeatLine: "Maeven adds you to the column without ceremony. Just a small mark.",
+  playerDeck: playerStarterDeck("greed"),
+  boss: {
+    name: "The Clerk Maeven",
+    sin: "greed",
+    epithet: "Keeper of the Column",
+    deck: bossDeck("greed", "boss_greed_1_tithe"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const GREED_ACT_2: CampaignMission = {
+  id: "greed_2",
+  sin: "greed",
+  act: 2,
+  title: "The Vault",
+  hook: "A door behind a door behind a price.",
+  intro:
+    "Octavia keeps the Vault. The Vault keeps her. Nobody is sure which came first. " +
+    "The trick with Octavia is that she's been billing you for every step you've taken since you walked in. " +
+    "By the time you're standing in front of her, you owe more than you came in with. " +
+    "Pay the debt with damage. Or don't pay it at all.",
+  outro:
+    "Octavia opens a door behind her, just for a moment. You see something glinting in there. " +
+    "She closes it before you can ask. She nods, once. The Vault accepts you, conditionally.",
+  defeatLine: "Octavia tabulates your loss without surprise. The Vault was never going to be opened by you.",
+  playerDeck: playerStarterDeck("greed"),
+  boss: {
+    name: "Vault-Keeper Octavia",
+    sin: "greed",
+    epithet: "Door Behind the Door",
+    deck: bossDeck("greed", "boss_greed_2_ledger_strike"),
+    hpBoost: 90,
+  },
+  unlockedBy: "greed_1",
+};
+
+const GREED_ACT_3: CampaignMission = {
+  id: "greed_3",
+  sin: "greed",
+  act: 3,
+  title: "The Plutarch",
+  hook: "Owns most things, including the rules of this fight.",
+  intro:
+    "Cassivus does not enter. He arrives, the way weather arrives. " +
+    "He owns the Counting House. He owns the Vault. He owns, technically, the room you are standing in, the air you're breathing, and several minor parts of your liver. " +
+    "He doesn't fight people. He liquidates them. " +
+    "Make the liquidation expensive.",
+  outro:
+    "Cassivus does the closest thing to surprise his face has done in fifty years. " +
+    "He hands you a piece of paper. You realize it's a deed. To something. " +
+    "He doesn't say what. He'll tell you the next time you meet — if there is one.",
+  defeatLine: "Cassivus does not gloat. Cassivus does paperwork. Several documents related to your defeat have already been filed.",
+  playerDeck: playerStarterDeck("greed"),
+  boss: {
+    name: "Cassivus",
+    sin: "greed",
+    epithet: "The Plutarch",
+    deck: bossDeck("greed", "boss_greed_3_liquidation"),
+    hpBoost: 175,
+  },
+  unlockedBy: "greed_2",
+};
+
 // ─── Full mission list ───────────────────────────────────────────
 
 export const CAMPAIGN_MISSIONS: CampaignMission[] = [
@@ -271,9 +352,9 @@ export const CAMPAIGN_MISSIONS: CampaignMission[] = [
   SLOTH_ACT_2,
   SLOTH_ACT_3,
 
-  stub("greed_1", "greed", 1, "The Counting House", "A clerk with a quill that draws blood as ink."),
-  stub("greed_2", "greed", 2, "The Vault", "A door behind a door behind a price."),
-  stub("greed_3", "greed", 3, "The Plutarch", "Owns most things, including the rules of this fight."),
+  GREED_ACT_1,
+  GREED_ACT_2,
+  GREED_ACT_3,
 
   stub("envy_1", "envy", 1, "The Mirror", "Someone wearing your face. Smiling like they earned it."),
   stub("envy_2", "envy", 2, "The Twin", "Whatever you build, they build better, smaller, faster."),
