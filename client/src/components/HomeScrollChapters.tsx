@@ -525,7 +525,7 @@ function ChapterProof() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="II" side="left" />
         <div className="relative max-w-6xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-14">
@@ -845,7 +845,7 @@ function ChapterPillars() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-12">
@@ -904,7 +904,7 @@ function ChapterCampaign() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center justify-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center justify-center py-12 sm:py-16">
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none"
@@ -993,7 +993,7 @@ function ChapterThreshold() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -1178,7 +1178,7 @@ function ChapterVersus() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="III" side="right" color="#ef4444" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
@@ -1312,7 +1312,7 @@ function ChapterMechanic() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
         {/* Floating card silhouettes drifting in the background */}
         {[0, 1, 2].map((i) => (
@@ -1754,7 +1754,7 @@ function ChapterRules() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="V" side="right" color="#10b981" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
@@ -1881,7 +1881,7 @@ function ChapterBalance() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
@@ -1992,7 +1992,7 @@ function ChapterPromise() {
 
   return (
     <section ref={ref} className="relative">
-      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
+      <div className="relative w-full overflow-hidden flex items-center py-12 sm:py-16">
         <ChapterNumeral numeral="XI" side="right" color="#10b981" />
         <div
           aria-hidden="true"

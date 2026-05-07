@@ -294,7 +294,7 @@ export default function Home() {
   )), [heroIndex]);
 
   return (
-    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-x-hidden">
       {/* Anchor for the scrollytelling "Enter the Arena" smooth-scroll back to top */}
       <span id="hero" aria-hidden="true" />
       {/* ═══ Lightweight Atmospheric Background ═══ */}
