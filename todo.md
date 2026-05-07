@@ -1,5 +1,12 @@
 # 7 Deadly Sins Card Game - TODO
 
+> **Note**: This file is a historical changelog from v0 through v6.7.x — most items
+> are checked off, and the unchecked entries at the bottom are mostly residual
+> "Push to GitHub" lines from sections whose code has long since shipped (see
+> the git log and `client/src/pages/Changelog.tsx`). Treat any unchecked item
+> here with skepticism and verify against current code before acting on it.
+> The active task list lives in conversation / GitHub issues, not in this file.
+
 ## Core Infrastructure
 - [x] Install dependencies (Babylon.js, @supabase/supabase-js, motion)
 - [x] Configure dark neon cyberpunk theme (index.css, fonts)

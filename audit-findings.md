@@ -99,21 +99,18 @@ Pages now use `font-[Cinzel]` (no quotes) consistently — the previous `font-['
 3. ~~**getDeckCommentCount** (singular)~~ — Already removed (see Changelog v6.x). Only `getDeckCommentCounts` (batched) remains.
 
 ### Architecture Issues
-1. **db-supabase.ts is 950+ lines** — should be split into domain modules:
-   - `db/blog.ts`, `db/discussion.ts`, `db/deck.ts`, `db/community.ts`, `db/profile.ts`
+1. ~~**routers.ts is 700+ lines**~~ — **Resolved.** Split into `server/routers/` with one file per top-level domain (`auth`, `discussion`, `deck`, `community`, `profile`, `user`, `blog`, `game`, `indexnow`) plus an `index.ts` that composes them. The `from "./routers"` / `from "../../../server/routers"` imports still resolve via `routers/index.ts`.
 
-2. **routers.ts is 667 lines** — should be split into sub-routers:
-   - Already has logical sections but could use separate files
+2. **db-supabase.ts is ~1100 lines** — Still monolithic but well-sectioned with `// ─── X ───` markers. Splitting would touch every importer and only marginally improves comprehension. Defer until the file gains another major domain.
 
-3. **CommunityDecks.tsx is 1529 lines** — contains modals, cards, comments, and main page all in one file
-   - Should extract: GamertagModal, PublishModal, LogMatchModal, DeckCard, CommentSection
+3. **CommunityDecks.tsx is 1500+ lines** — Still monolithic. Modal extraction is mechanical but high state-coupling; defer until specific UX work needs to touch it.
 
 ### Type Safety
 - Many `any` types in row mappers (db-supabase.ts) — acceptable for Supabase SDK but could use generated types
 - Good Zod validation on all tRPC inputs
 
-### todo.md Inconsistency
-- The todo.md still has old unchecked items from v5.8.0 at the bottom (the original items before they were completed) — these were never cleaned up, creating confusion about what's actually done
+### todo.md Inconsistency — **Documented**
+The todo.md is effectively a historical changelog from v0 → v6.7.x. The "v5.8.0 unchecked items" the audit flagged are actually all checked off in the current file; what remains unchecked at the bottom is mostly residual "Push to GitHub" lines from sections whose code has long since shipped. A header note has been added to the top of `todo.md` so future readers don't treat it as an active task tracker.
 
 ---
 
@@ -137,11 +134,14 @@ Pages now use `font-[Cinzel]` (no quotes) consistently — the previous `font-['
 
 ### Priority 4 — Code Quality
 - [x] Remove dead db.ts (was renamed to db.deprecated.ts, now deleted)
-- [ ] Clean up duplicate todo.md entries
+- [x] Documented todo.md as a historical changelog (residual unchecked items are stale "push" lines, not pending work)
+- [x] Split `routers.ts` into per-domain sub-routers under `server/routers/`
 
-### Still Open (Larger Refactors)
-- [ ] Split `db-supabase.ts` (~970 LOC) into domain modules (blog, discussion, deck, community, profile)
-- [ ] Split `routers.ts` (~700 LOC) into sub-routers per domain
-- [ ] Split `CommunityDecks.tsx` (1500+ LOC) by extracting modals and DeckCard
-- [ ] Tighten generated Supabase types instead of the `any` row mappers
+### Still Open (Larger Refactors — explicitly deferred)
+- [ ] Split `db-supabase.ts` (~1100 LOC) into domain modules — defer; well-sectioned today and splitting touches every importer
+- [ ] Split `CommunityDecks.tsx` (1500+ LOC) — defer; modal extraction is mechanical but high state-coupling, do alongside specific UX work
+- [ ] Tighten generated Supabase types instead of the `any` row mappers — needs Supabase project access and a type-generation step
 - [ ] Move per-instance rate limit to Upstash/Redis if multi-lambda abuse becomes real
+
+### Bugs Caught Along The Way
+- [x] `game.chooseSin` Zod enum only accepted 4 sins (`wrath/sloth/greed/envy`) even though `SinType` lists all 7 and the Lobby UI surfaces all 7. Now accepts all `SinType` values.
