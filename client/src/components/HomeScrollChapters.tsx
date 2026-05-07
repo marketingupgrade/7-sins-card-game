@@ -9,20 +9,26 @@
  * Heights are responsive — mobile gets a tighter version of every chapter
  * via Tailwind `h-[Avh] sm:h-[Bvh]`. The ranges below are mobile / desktop.
  *
- *   01 Pitch       — 140 / 170 vh
- *   02 Receipts    — 150 / 180 vh
- *   03 vs Them     — 150 / 180 vh
- *   04 The Mechanic— 160 / 190 vh
- *   05 Rules       — 170 / 200 vh
- *   06 Pick a Sin  — 7 × 65 = 455 vh (was 700)
- *   07 Why Honest  — 160 / 190 vh
- *   08 Balance     — 170 / 200 vh
- *   09 Campaign    — 140 / 170 vh
- *   10 Voices      — 150 / 180 vh
- *   11 Promise     — 170 / 200 vh
- *   12 Threshold   — 110 / 130 vh
+ *   01 Pitch       — 110 / 140 vh
+ *   02 Receipts    — 120 / 150 vh
+ *   03 vs Them     — 120 / 150 vh
+ *   04 The Mechanic— 125 / 155 vh
+ *   05 Rules       — 130 / 160 vh
+ *   06 Pick a Sin  — 7 × 50 = 350 vh
+ *   07 Why Honest  — 125 / 155 vh
+ *   08 Balance     — 130 / 160 vh
+ *   09 Campaign    — 110 / 140 vh
+ *   10 Voices      — 120 / 150 vh
+ *   11 Promise     — 130 / 160 vh
+ *   12 Threshold   — 100 / 110 vh
  *
- * Mobile total ~22.6 viewport heights; desktop ~26.8 (was ~37).
+ * Mobile total ~17.6 viewport heights; desktop ~20.0 (was ~37 in
+ * the original, ~22.6 / ~26.8 last revision). Sticky-stage content
+ * also bumped denser so it fills the viewport instead of leaving
+ * the 40–50% black space the user flagged on real phones:
+ *   · Versus rows  py-3 → py-4 sm:py-6, cells 28px → 32/40px
+ *   · Pillar tiles p-6  → p-7 sm:p-9
+ *   · Stat tiles   p-5/6 → p-6 sm:p-8, numerals 4/5xl → 5/6xl
  */
 
 import {
@@ -261,7 +267,7 @@ function ChapterHook() {
   const arrowOp     = useTransform(scrollYProgress, [0.85, 0.96, 1.0], [0, 0.5, 0]);
 
   return (
-    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
+    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -378,7 +384,7 @@ function StatTile({
   return (
     <motion.div
       style={{ opacity, y }}
-      className="relative rounded-xl border bg-black/40 backdrop-blur-sm p-5 sm:p-6 overflow-hidden"
+      className="relative rounded-xl border bg-black/40 backdrop-blur-sm p-6 sm:p-8 overflow-hidden"
     >
       <div
         aria-hidden="true"
@@ -398,14 +404,14 @@ function StatTile({
         <Icon className="w-5 h-5 mb-3" style={{ color: stat.accent }} />
         <div className="flex items-baseline gap-1 mb-1">
           <motion.span
-            className="font-[Cinzel] text-4xl sm:text-5xl tabular-nums"
+            className="font-[Cinzel] text-5xl sm:text-6xl tabular-nums"
             style={{ color: stat.accent }}
           >
             {counted}
           </motion.span>
           {stat.suffix && (
             <span
-              className="font-[Cinzel] text-2xl sm:text-3xl"
+              className="font-[Cinzel] text-3xl sm:text-4xl"
               style={{ color: stat.accent, opacity: 0.85 }}
             >
               {stat.suffix}
@@ -435,7 +441,7 @@ function ChapterProof() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.4, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[150vh] sm:h-[180vh]">
+    <section ref={ref} className="relative h-[120vh] sm:h-[150vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="II" side="left" />
         <div className="relative max-w-6xl mx-auto px-6 w-full">
@@ -589,7 +595,7 @@ function ChapterSeven() {
   // ~0.65 viewports per sin (was 1.0). Cuts ~245vh out of the page without
   // hurting the crossfade. Mobile inherits — at 0.65 × 7 sins = 4.55 viewports
   // it's tight but still legible.
-  const heightVh = SIN_ORDER.length * 65;
+  const heightVh = SIN_ORDER.length * 50;
 
   return (
     <section ref={ref} className="relative" style={{ height: `${heightVh}vh` }}>
@@ -680,7 +686,7 @@ function PillarReveal({
   return (
     <motion.div
       style={{ opacity, y }}
-      className="relative rounded-xl border bg-black/30 backdrop-blur-sm p-6"
+      className="relative rounded-xl border bg-black/30 backdrop-blur-sm p-7 sm:p-9"
     >
       <div
         className="absolute inset-0 rounded-xl pointer-events-none"
@@ -731,7 +737,7 @@ function ChapterPillars() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
 
   return (
-    <section ref={ref} className="relative h-[160vh] sm:h-[190vh]">
+    <section ref={ref} className="relative h-[125vh] sm:h-[155vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
@@ -790,7 +796,7 @@ function ChapterCampaign() {
   const ctaScale     = useTransform(scrollYProgress, [0.55, 0.85], [0.92, 1]);
 
   return (
-    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
+    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -879,7 +885,7 @@ function ChapterThreshold() {
   const ctaOpacity     = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
 
   return (
-    <section ref={ref} className="relative h-[110vh] sm:h-[130vh]">
+    <section ref={ref} className="relative h-[100vh] sm:h-[110vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <div
           aria-hidden="true"
@@ -999,16 +1005,16 @@ function VersusCell({ row, col }: { row: VersusRow; col: keyof Omit<VersusRow, "
   const positive = col === "paid" || col === "download" ? !value : value;
   return (
     <div
-      className="flex items-center justify-center w-7 h-7 rounded-md"
+      className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-md"
       style={{
         background: positive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.10)",
         border: `1px solid ${positive ? "rgba(16,185,129,0.35)" : "rgba(239,68,68,0.25)"}`,
       }}
     >
       {positive ? (
-        <Check className="w-3.5 h-3.5" style={{ color: "#10b981" }} />
+        <Check className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#10b981" }} />
       ) : (
-        <XMark className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+        <XMark className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: "#ef4444" }} />
       )}
     </div>
   );
@@ -1033,7 +1039,7 @@ function VersusRowReveal({
   return (
     <motion.div
       style={{ opacity, x }}
-      className="grid grid-cols-[1.1fr_repeat(5,minmax(0,1fr))] items-center gap-2 sm:gap-4 py-3 border-b border-white/5"
+      className="grid grid-cols-[1.1fr_repeat(5,minmax(0,1fr))] items-center gap-2 sm:gap-4 py-4 sm:py-6 border-b border-white/5"
     >
       <div className="min-w-0">
         <div
@@ -1064,7 +1070,7 @@ function ChapterVersus() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[150vh] sm:h-[180vh]">
+    <section ref={ref} className="relative h-[120vh] sm:h-[150vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="III" side="right" color="#ef4444" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
@@ -1198,7 +1204,7 @@ function ChapterMechanic() {
   const totalOpacity = useTransform(scrollYProgress, [0.85, 0.95], [0, 1]);
 
   return (
-    <section ref={ref} className="relative h-[160vh] sm:h-[190vh]">
+    <section ref={ref} className="relative h-[125vh] sm:h-[155vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
         {/* Floating card silhouettes drifting in the background */}
@@ -1486,7 +1492,7 @@ function ChapterVoices() {
   });
 
   return (
-    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
+    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <div
           aria-hidden="true"
@@ -1640,7 +1646,7 @@ function ChapterRules() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
+    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="V" side="right" color="#10b981" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1767,7 +1773,7 @@ function ChapterBalance() {
   const maxDeviation = Math.max(...BALANCE_JOURNEY.map((m) => m.deviation));
 
   return (
-    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
+    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1878,7 +1884,7 @@ function ChapterPromise() {
   const promiseY = useTransform(scrollYProgress, [0.7, 0.92], [30, 0]);
 
   return (
-    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
+    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="XI" side="right" color="#10b981" />
         <div
