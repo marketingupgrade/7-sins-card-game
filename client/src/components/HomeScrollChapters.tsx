@@ -63,6 +63,189 @@ const SIN_PALETTE: Record<
 const SIN_ORDER: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 
 // ────────────────────────────────────────────────────────────────────────────
+// Decorative library — editorial flourishes used across chapters
+// ────────────────────────────────────────────────────────────────────────────
+
+/** Massive Roman numeral that bleeds off-screen behind a chapter, like a
+ *  fashion-mag editorial number. Sits at very low opacity so it reads as
+ *  texture, not content. */
+function ChapterNumeral({
+  numeral,
+  side = "right",
+  color = "#d4a854",
+}: {
+  numeral: string;
+  side?: "left" | "right";
+  color?: string;
+}) {
+  return (
+    <div
+      aria-hidden="true"
+      className={`absolute top-1/2 -translate-y-1/2 pointer-events-none select-none font-[Cinzel] leading-none`}
+      style={{
+        [side]: "-8vw",
+        fontSize: "min(48vh, 38vw)",
+        color,
+        opacity: 0.05,
+        letterSpacing: "0.05em",
+        textShadow: `0 0 60px ${color}33`,
+      } as React.CSSProperties}
+    >
+      {numeral}
+    </div>
+  );
+}
+
+/** A single shimmer-revealed character. Encapsulates the per-letter
+ *  hooks so `LetterReveal` doesn't call hooks inside a map. */
+function ShimmerLetter({
+  ch,
+  scrollYProgress,
+  fadeStart,
+  fadeEnd,
+  shimmerColor,
+}: {
+  ch: string;
+  scrollYProgress: MotionValue<number>;
+  fadeStart: number;
+  fadeEnd: number;
+  shimmerColor: string;
+}) {
+  const opacity = useTransform(scrollYProgress, [fadeStart, fadeEnd], [0, 1]);
+  const y = useTransform(scrollYProgress, [fadeStart, fadeEnd], [16, 0]);
+  const blur = useTransform(scrollYProgress, [fadeStart, fadeEnd], [4, 0]);
+  const filter = useTransform(blur, (b) => `blur(${b}px)`);
+  return (
+    <motion.span
+      aria-hidden="true"
+      style={{
+        opacity,
+        y,
+        filter,
+        display: "inline-block",
+        whiteSpace: ch === " " ? "pre" : "normal",
+        textShadow: `0 0 24px ${shimmerColor}`,
+      }}
+    >
+      {ch}
+    </motion.span>
+  );
+}
+
+/** Letter-by-letter reveal with a candlelight shimmer wash. Driven by a
+ *  scroll progress range, so it stays in sync with the rest of the chapter. */
+function LetterReveal({
+  text,
+  scrollYProgress,
+  start = 0.05,
+  end = 0.45,
+  className,
+  style,
+  shimmerColor = "rgba(212,168,84,0.85)",
+}: {
+  text: string;
+  scrollYProgress: MotionValue<number>;
+  start?: number;
+  end?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  shimmerColor?: string;
+}) {
+  const letters = Array.from(text);
+  return (
+    <span className={className} style={style} aria-label={text}>
+      {letters.map((ch, i) => {
+        const local = letters.length === 1 ? 0 : i / (letters.length - 1);
+        const fadeStart = start + (end - start) * local * 0.7;
+        const fadeEnd = fadeStart + (end - start) * 0.3;
+        return (
+          <ShimmerLetter
+            key={i}
+            ch={ch}
+            scrollYProgress={scrollYProgress}
+            fadeStart={fadeStart}
+            fadeEnd={fadeEnd}
+            shimmerColor={shimmerColor}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
+/** Decorative SVG cathedral-arch ornament — a thin gold filigree that sits
+ *  above a chapter title. Subtle, but registers as deliberate. */
+function CathedralArch({ color = "#d4a854", className = "" }: { color?: string; className?: string }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 240 60"
+      className={className}
+      style={{ display: "block", margin: "0 auto" }}
+    >
+      <defs>
+        <linearGradient id="archGrad" x1="0%" x2="100%" y1="0%" y2="0%">
+          <stop offset="0%" stopColor={color} stopOpacity="0" />
+          <stop offset="50%" stopColor={color} stopOpacity="0.85" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M 8 50 L 60 50 Q 120 -10 180 50 L 232 50"
+        fill="none"
+        stroke="url(#archGrad)"
+        strokeWidth="1"
+      />
+      <circle cx="120" cy="14" r="2" fill={color} opacity="0.85" />
+      <circle cx="120" cy="14" r="6" fill="none" stroke={color} strokeOpacity="0.4" strokeWidth="0.6" />
+      <line x1="40" y1="50" x2="200" y2="50" stroke={color} strokeOpacity="0.18" strokeWidth="0.5" />
+    </svg>
+  );
+}
+
+/** Slowly-rotating seven-pointed sigil for The Seven chapter background. */
+function SinSigil({ scrollYProgress, color = "#d4a854" }: { scrollYProgress: MotionValue<number>; color?: string }) {
+  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
+  const points = Array.from({ length: 7 }, (_, i) => {
+    const angle = (i / 7) * Math.PI * 2 - Math.PI / 2;
+    return { x: 50 + 45 * Math.cos(angle), y: 50 + 45 * Math.sin(angle) };
+  });
+  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+  // Septagram (skip-2) for a deliberate occult feel, matched to seven sins.
+  const star = Array.from({ length: 7 }, (_, i) => {
+    const idx = (i * 3) % 7;
+    return points[idx];
+  });
+  const starPath = star.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+
+  return (
+    <motion.svg
+      aria-hidden="true"
+      viewBox="0 0 100 100"
+      className="absolute pointer-events-none"
+      style={{
+        rotate,
+        width: "min(85vh, 80vw)",
+        height: "min(85vh, 80vw)",
+        top: "50%",
+        left: "50%",
+        x: "-50%",
+        y: "-50%",
+        opacity: 0.12,
+      }}
+    >
+      <circle cx="50" cy="50" r="48" fill="none" stroke={color} strokeWidth="0.3" />
+      <circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="0.2" />
+      <path d={path} fill="none" stroke={color} strokeWidth="0.4" />
+      <path d={starPath} fill="none" stroke={color} strokeWidth="0.6" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r="1.4" fill={color} />
+      ))}
+    </motion.svg>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Chapter 1 — Hook (sticky-pin, two-phase headline crossfade)
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -91,8 +274,10 @@ function ChapterHook() {
             background: "radial-gradient(circle at 50% 50%, rgba(212,168,84,0.08) 0%, transparent 60%)",
           }}
         />
+        <ChapterNumeral numeral="I" side="right" />
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-8" style={{ fontFamily: "var(--font-heading)" }}>
+          <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-4 opacity-70" />
+          <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-6" style={{ fontFamily: "var(--font-heading)" }}>
             01 · THE PITCH
           </p>
           <motion.h2
@@ -248,8 +433,10 @@ function ChapterProof() {
   return (
     <section ref={ref} className="relative" style={{ height: "220vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        <div className="max-w-6xl mx-auto px-6 w-full">
+        <ChapterNumeral numeral="II" side="left" />
+        <div className="relative max-w-6xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-14">
+            <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
             <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
               02 · THE RECEIPTS
             </p>
@@ -401,12 +588,14 @@ function ChapterSeven() {
     <section ref={ref} className="relative" style={{ height: `${heightVh}vh` }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <motion.div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: tintBg }} />
+        <SinSigil scrollYProgress={scrollYProgress} />
         <div className="absolute top-12 left-0 right-0 z-20 text-center">
+          <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-2 opacity-60" />
           <p
             className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-1"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            03 · PICK YOUR SIN
+            05 · PICK YOUR SIN
           </p>
           <p className="text-[10px] tracking-[0.3em] text-zinc-600 italic">scroll to flip through all seven</p>
         </div>
@@ -537,10 +726,12 @@ function ChapterPillars() {
   return (
     <section ref={ref} className="relative" style={{ height: "240vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        <div className="max-w-5xl mx-auto px-6 w-full">
+        <ChapterNumeral numeral="VI" side="right" color="#a855f7" />
+        <div className="relative max-w-5xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-12">
+            <CathedralArch color="#a855f7" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
             <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              04 · WHY IT WORKS
+              06 · WHY IT WORKS
             </p>
             <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100">
               Four reasons it&apos;s honest.
@@ -617,9 +808,11 @@ function ChapterCampaign() {
             </p>
           ))}
         </motion.div>
+        <ChapterNumeral numeral="VII" side="left" color="#8b1a1a" />
         <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
+          <CathedralArch color="#8b1a1a" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
           <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-            05 · THE CAMPAIGN
+            07 · THE CAMPAIGN
           </p>
           <motion.h2
             style={{ y: titleY, opacity: titleOpacity }}
@@ -688,6 +881,7 @@ function ChapterThreshold() {
             background: "radial-gradient(circle at 50% 100%, rgba(139,26,26,0.20) 0%, transparent 60%)",
           }}
         />
+        <ChapterNumeral numeral="IX" side="left" color="#8b1a1a" />
         <div className="relative z-10 max-w-2xl mx-auto px-6 text-center w-full">
           <motion.div style={{ scale: skullScale, opacity: skullOpacity }} className="inline-block mb-8">
             <Skull className="w-12 h-12 text-amber-400/60" />
@@ -696,7 +890,7 @@ function ChapterThreshold() {
             style={{ opacity: headlineOpacity, fontFamily: "var(--font-heading)" }}
             className="text-[10px] tracking-[0.6em] text-amber-400/70 mb-4"
           >
-            06 · NOW
+            09 · NOW
           </motion.div>
           <motion.h2
             style={{ y: headlineY, opacity: headlineOpacity }}
@@ -865,8 +1059,10 @@ function ChapterVersus() {
   return (
     <section ref={ref} className="relative" style={{ height: "220vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 w-full">
+        <ChapterNumeral numeral="III" side="right" color="#ef4444" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
+            <CathedralArch color="#ef4444" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
             <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
               03 · vs THEM
             </p>
@@ -997,8 +1193,33 @@ function ChapterMechanic() {
   return (
     <section ref={ref} className="relative" style={{ height: "240vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        <div className="max-w-4xl mx-auto px-6 w-full">
+        <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
+        {/* Floating card silhouettes drifting in the background */}
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            aria-hidden="true"
+            className="absolute pointer-events-none rounded-xl"
+            style={{
+              width: "120px",
+              aspectRatio: "3/4",
+              top: `${15 + i * 22}%`,
+              left: `${5 + i * 30}%`,
+              background:
+                "linear-gradient(160deg, rgba(30,26,22,0.6), rgba(20,18,16,0.4))",
+              border: "1px solid rgba(212,168,84,0.18)",
+              boxShadow: "inset 0 0 0 1px rgba(212,168,84,0.06)",
+              opacity: 0.35,
+              rotate: `${(i - 1) * 8}deg`,
+              filter: "blur(0.4px)",
+            }}
+            animate={{ y: [0, -12, 0] }}
+            transition={{ duration: 6 + i * 0.7, repeat: Infinity, ease: "easeInOut", delay: i * 0.5 }}
+          />
+        ))}
+        <div className="relative max-w-4xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
+            <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
             <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
               04 · THE MECHANIC
             </p>
@@ -1006,7 +1227,12 @@ function ChapterMechanic() {
               Most cards do one thing. Once.
             </h2>
             <h3 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-amber-300">
-              Ours compound.
+              <LetterReveal
+                text="Ours compound."
+                scrollYProgress={scrollYProgress}
+                start={0.10}
+                end={0.32}
+              />
             </h3>
           </motion.div>
 
@@ -1120,6 +1346,8 @@ interface NarratorQuote {
   text: string;
   attribution: string;
   accent: string;
+  /** Optional faction portrait used as a blurred silhouette behind the quote. */
+  sin?: SinType;
 }
 
 const NARRATOR_QUOTES: NarratorQuote[] = [
@@ -1132,31 +1360,37 @@ const NARRATOR_QUOTES: NarratorQuote[] = [
     text: "The Forgemaster lifts the hammer. He is not asking permission.",
     attribution: "Wrath · Act I — The Forge",
     accent: "#ef4444",
+    sin: "wrath",
   },
   {
     text: "Mother Slumber breathes once. The room exhales with her.",
     attribution: "Sloth · Act II — The Drowsing",
     accent: "#a855f7",
+    sin: "sloth",
   },
   {
     text: "Cassivus does not negotiate. He liquidates.",
     attribution: "Greed · Act III — The Plutarch",
     accent: "#eab308",
+    sin: "greed",
   },
   {
     text: "The Mirror smiles your smile, but better. It's been watching.",
     attribution: "Envy · Act I — The Mirror",
     accent: "#10b981",
+    sin: "envy",
   },
   {
     text: "Apex has not lost. Apex sees no reason to start now.",
     attribution: "Pride · Act III — The Apex",
     accent: "#f0f0f0",
+    sin: "pride",
   },
   {
     text: "The Maw does not consider you. Consideration is for things it hasn't eaten yet.",
     attribution: "Gluttony · Act III — The Maw",
     accent: "#b45309",
+    sin: "gluttony",
   },
 ];
 
@@ -1184,11 +1418,41 @@ function NarratorQuoteSlide({
       style={{ opacity, y }}
       className="absolute inset-0 flex items-center justify-center"
     >
-      <div className="max-w-2xl mx-auto px-6 text-center">
-        <Quote className="w-8 h-8 mx-auto mb-6" style={{ color: quote.accent, opacity: 0.5 }} />
+      {quote.sin && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 flex items-center justify-center"
+        >
+          <div
+            className="rounded-full overflow-hidden"
+            style={{
+              width: "min(72vh, 56vw)",
+              height: "min(72vh, 56vw)",
+              maxWidth: "640px",
+              maxHeight: "640px",
+              filter: "blur(18px)",
+              opacity: 0.18,
+              boxShadow: `0 0 120px ${quote.accent}55`,
+            }}
+          >
+            <img
+              src={FACTION_PORTRAITS[quote.sin]}
+              alt=""
+              className="w-full h-full object-cover"
+              loading="lazy"
+            />
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(135deg, ${quote.accent}55, transparent 75%)` }}
+            />
+          </div>
+        </div>
+      )}
+      <div className="relative max-w-2xl mx-auto px-6 text-center">
+        <Quote className="w-8 h-8 mx-auto mb-6" style={{ color: quote.accent, opacity: 0.7 }} />
         <p
           className="font-[Cinzel] text-2xl sm:text-4xl leading-[1.25] mb-6"
-          style={{ color: "#e8e0d0" }}
+          style={{ color: "#e8e0d0", textShadow: `0 0 30px ${quote.accent}33` }}
         >
           &ldquo;{quote.text}&rdquo;
         </p>
@@ -1225,7 +1489,9 @@ function ChapterVoices() {
               "radial-gradient(circle at 50% 50%, rgba(212,168,84,0.06) 0%, transparent 65%)",
           }}
         />
+        <ChapterNumeral numeral="VIII" side="right" />
         <div className="absolute top-12 left-0 right-0 z-20 text-center">
+          <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-2 opacity-70" />
           <p
             className="text-[10px] tracking-[0.6em] text-amber-400/60"
             style={{ fontFamily: "var(--font-heading)" }}
