@@ -36,7 +36,7 @@ const HOME_STEPS: TutorialStep[] = [
     page: "home",
     targetSelector: null,
     position: "center",
-    title: "Welcome to 7 Deadly Sins",
+    title: "Every sinner starts somewhere.",
     body: "A strategic card game where you pick a sin faction, spend Corruption energy, and play compound cards that escalate over time. 7 factions, 20 rounds, 333 HP. Last sinner standing wins — or face the Final Reckoning.",
     quip: "Don't worry, we'll hold your hand. For now.",
   },

@@ -118,6 +118,35 @@
   --font-display: 'Uncial Antiqua', cursive;
   --font-narrator: 'Uncial Antiqua', cursive;
 
+  /* ─── Typographic scale — golden ratio (φ ≈ 1.618) ───────────────────
+     Brand Book §07. Each step is 16px × φ^k. Use these tokens for any
+     hero/heading copy that should land on the brand's typographic
+     rhythm; Tailwind utility classes are still fine for utility text.   */
+  --text-body:       16.0px;  /* base */
+  --text-large-body: 20.3px;  /* 16 × φ^0.5 */
+  --text-h6:         25.9px;  /* 16 × φ      */
+  --text-h5:         32.9px;  /* 16 × φ^1.5  */
+  --text-h4:         41.9px;  /* 16 × φ^2    */
+  --text-h3:         53.2px;  /* 16 × φ^2.5  */
+  --text-h2:         67.8px;  /* 16 × φ^3    */
+  --text-h1:         86.2px;  /* 16 × φ^3.5  */
+  --text-display:   109.7px;  /* 16 × φ^4    */
+
+  /* ─── Spacing — Fibonacci sequence ──────────────────────────────────
+     Brand Book §07. Same sequence as the standard compound tick
+     pattern, so the visual rhythm of the UI matches the strategic
+     rhythm of gameplay.                                                  */
+  --space-1:  1px;
+  --space-2:  2px;
+  --space-3:  3px;
+  --space-5:  5px;
+  --space-8:  8px;
+  --space-13: 13px;
+  --space-21: 21px;
+  --space-34: 34px;
+  --space-55: 55px;
+  --space-89: 89px;
+
   /* ─── Standardized Page Backgrounds ─────────────────── */
   /* Use these instead of hardcoded hex values for consistency */
   --color-page-bg: oklch(0.07 0.01 30);        /* #0a0a0f equivalent — standard page bg */
