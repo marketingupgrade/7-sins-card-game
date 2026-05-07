@@ -231,6 +231,96 @@ export const BOSS_CARDS: CardDefinition[] = [
     effects: [{ type: "damage", baseValue: 34, duration: 2, targetMode: "single" }],
     description: "Apex has not lost. Apex will not start with you.",
   },
+
+  // ─── Lust Act 1 — The Salon ──────────────────────────────────
+  {
+    id: "boss_lust_1_silver_tongue",
+    name: "Silver Tongue",
+    sin: "lust",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "damage", baseValue: 13, duration: 3, targetMode: "single" },
+      { type: "heal_steal", baseValue: 9, duration: 3, targetMode: "single" },
+    ],
+    description: "Vaela compliments you, intricately, while she takes your blood.",
+  },
+
+  // ─── Lust Act 2 — The Snare ──────────────────────────────────
+  {
+    id: "boss_lust_2_snare",
+    name: "Snare",
+    sin: "lust",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 17, duration: 2, targetMode: "single" },
+      { type: "heal_steal", baseValue: 14, duration: 2, targetMode: "single" },
+    ],
+    description: "Lyssara is patient. Lyssara is gentle. Lyssara is feeding.",
+  },
+
+  // ─── Lust Act 3 — The Devourer ───────────────────────────────
+  {
+    id: "boss_lust_3_devour",
+    name: "Devour",
+    sin: "lust",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 22, duration: 2, targetMode: "single" },
+      { type: "heal_steal", baseValue: 18, duration: 2, targetMode: "single" },
+    ],
+    description: "The Devourer drops the metaphor.",
+  },
+
+  // ─── Gluttony Act 1 — The Feast ──────────────────────────────
+  {
+    id: "boss_gluttony_1_courses",
+    name: "Five Courses",
+    sin: "gluttony",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 13, duration: 3, targetMode: "single" },
+      { type: "energy_gain", baseValue: 1, duration: 3, targetMode: "self" },
+    ],
+    description: "Renat does not pause between courses.",
+  },
+
+  // ─── Gluttony Act 2 — The Banquet ────────────────────────────
+  {
+    id: "boss_gluttony_2_invitation",
+    name: "The Invitation",
+    sin: "gluttony",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "damage", baseValue: 18, duration: 2, targetMode: "single" },
+      { type: "discard_burn", baseValue: 2, duration: 1, targetMode: "single" },
+    ],
+    description: "The Host smiles. You're not a guest, exactly. You're a course.",
+  },
+
+  // ─── Gluttony Act 3 — The Maw ────────────────────────────────
+  {
+    id: "boss_gluttony_3_consumption",
+    name: "Consumption",
+    sin: "gluttony",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 26, duration: 2, targetMode: "single" },
+      { type: "heal_steal", baseValue: 12, duration: 2, targetMode: "single" },
+    ],
+    description: "The Maw does not consider you. Consideration is for things it hasn't eaten yet.",
+  },
 ];
 
 const BOSS_CARD_MAP: Record<string, CardDefinition> = Object.fromEntries(

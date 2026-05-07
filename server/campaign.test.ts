@@ -8,7 +8,14 @@
 import { describe, expect, it } from "vitest";
 
 import { getCardById } from "../shared/cardData";
-import { CAMPAIGN_MISSIONS, ALL_TWIST_CARD_IDS, getMissionById, getMissionsForSin, isMissionUnlocked } from "../shared/campaignData";
+import {
+  CAMPAIGN_MISSIONS,
+  ALL_TWIST_CARD_IDS,
+  getMissionById,
+  getMissionsForSin,
+  isMissionUnlocked,
+  type CampaignMission,
+} from "../shared/campaignData";
 import { BOSS_CARDS, getBossCardById } from "../shared/bossCards";
 import type { SinType } from "../shared/gameTypes";
 
@@ -106,10 +113,23 @@ describe("isMissionUnlocked", () => {
   });
 
   it("coming-soon missions are never unlocked, even if their predecessor is cleared", () => {
-    // lust_2 is still stubbed; if you ship Lust Act 2, swap to another stub.
-    const stubMission = getMissionById("lust_2")!;
-    expect(stubMission.comingSoon).toBe(true);
-    expect(isMissionUnlocked(stubMission, new Set(["lust_1"]))).toBe(false);
+    // Synthetic mission so this test survives once every act is live.
+    // Mirrors what `stub()` produces in shared/campaignData.ts.
+    const fake: CampaignMission = {
+      id: "fake_mission_2",
+      sin: "wrath",
+      act: 2,
+      title: "Stub",
+      hook: "",
+      intro: "",
+      outro: "",
+      defeatLine: "",
+      playerDeck: [],
+      boss: { name: "TBD", sin: "wrath", epithet: "", deck: [] },
+      unlockedBy: "wrath_1",
+      comingSoon: true,
+    };
+    expect(isMissionUnlocked(fake, new Set(["wrath_1"]))).toBe(false);
   });
 
   it("act 2 unlocks only after act 1 is in completedIds", () => {

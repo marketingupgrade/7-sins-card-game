@@ -506,6 +506,173 @@ const PRIDE_ACT_3: CampaignMission = {
   unlockedBy: "pride_2",
 };
 
+// ─── Lust: The Salon / The Snare / The Devourer ──────────────────
+
+const LUST_ACT_1: CampaignMission = {
+  id: "lust_1",
+  sin: "lust",
+  act: 1,
+  title: "The Salon",
+  hook: "Charm with a knife in it.",
+  intro:
+    "Madame Vaela runs the Salon, which is a place very specifically designed for people to think they're the smartest person in the room. " +
+    "You will think this. You will be wrong. " +
+    "Vaela's only fight is the one where you don't notice you're fighting until you've lost. " +
+    "Notice. Hit her first. Compliment her later, if you're still alive.",
+  outro:
+    "Vaela laughs. She enjoys this. She offers you a drink. " +
+    "Don't take it, but appreciate the gesture. The Salon stays open. " +
+    "You leave through a different door than you came in.",
+  defeatLine: "Vaela tilts her head, charmed. You'll always be welcome at the Salon. Possibly as decoration.",
+  playerDeck: playerStarterDeck("lust"),
+  boss: {
+    name: "Madame Vaela",
+    sin: "lust",
+    epithet: "Hostess of the Salon",
+    deck: bossDeck("lust", "boss_lust_1_silver_tongue"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const LUST_ACT_2: CampaignMission = {
+  id: "lust_2",
+  sin: "lust",
+  act: 2,
+  title: "The Snare",
+  hook: "Beautiful. Patient. Hungry.",
+  intro:
+    "Lyssara doesn't move toward you. She moves toward where you'll be when you've stopped paying attention. " +
+    "Everything in this room was designed to make you stop paying attention — the candles, the arrangement of the furniture, the way she's sitting. " +
+    "Don't relax. Don't take a breath. " +
+    "The breath is when she eats.",
+  outro:
+    "Lyssara doesn't break eye contact even as she's defeated. She's flattered. " +
+    "Few opponents she's had — and there have been a great many — have refused to relax. " +
+    "She'll think about you for years.",
+  defeatLine: "You don't notice the moment you lose. That's how she designed it. You'll notice afterwards, in increments, for a long time.",
+  playerDeck: playerStarterDeck("lust"),
+  boss: {
+    name: "Lyssara",
+    sin: "lust",
+    epithet: "She Who Waits",
+    deck: bossDeck("lust", "boss_lust_2_snare"),
+    hpBoost: 90,
+  },
+  unlockedBy: "lust_1",
+};
+
+const LUST_ACT_3: CampaignMission = {
+  id: "lust_3",
+  sin: "lust",
+  act: 3,
+  title: "The Devourer",
+  hook: "What lust looks like when it stops pretending.",
+  intro:
+    "There is no charm here. The Devourer was charming once — the charm was a sheath. " +
+    "The Devourer is what was inside the sheath. " +
+    "It does not flirt. It does not offer drinks. It approaches the way a wave approaches a coastline. " +
+    "Don't drown.",
+  outro:
+    "The Devourer holds, for a moment, exactly the shape of what it was before — beautiful, attentive, hungry. " +
+    "Then it falls back into nothing recognizable. " +
+    "You walk out without looking back. Looking back is how it eats.",
+  defeatLine: "The Devourer takes its time. The Devourer always takes its time. There's no hurry. There never is.",
+  playerDeck: playerStarterDeck("lust"),
+  boss: {
+    name: "The Devourer",
+    sin: "lust",
+    epithet: "Sheath, Discarded",
+    deck: bossDeck("lust", "boss_lust_3_devour"),
+    hpBoost: 175,
+  },
+  unlockedBy: "lust_2",
+};
+
+// ─── Gluttony: The Feast / The Banquet / The Maw ─────────────────
+
+const GLUTTONY_ACT_1: CampaignMission = {
+  id: "gluttony_1",
+  sin: "gluttony",
+  act: 1,
+  title: "The Feast",
+  hook: "An endless banquet. The plates are people.",
+  intro:
+    "Master Renat hosts the Feast, which is an event that has been going on, with no break, for forty years. " +
+    "The plates have always been people. The guests don't notice — they're enjoying themselves. " +
+    "Renat is the most enthusiastic guest. He's also the chef. He also did the marinade. " +
+    "Hit him before he picks up the next fork.",
+  outro:
+    "Renat sets down his fork, mid-course, looking faintly disappointed. " +
+    "The Feast continues, because the Feast always continues. " +
+    "But your seat is empty now, and that is, in this place, the only kind of victory.",
+  defeatLine: "You taste excellent, apparently.",
+  playerDeck: playerStarterDeck("gluttony"),
+  boss: {
+    name: "Master Renat",
+    sin: "gluttony",
+    epithet: "Chef and Guest",
+    deck: bossDeck("gluttony", "boss_gluttony_1_courses"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const GLUTTONY_ACT_2: CampaignMission = {
+  id: "gluttony_2",
+  sin: "gluttony",
+  act: 2,
+  title: "The Banquet",
+  hook: "A host who measures guests in courses.",
+  intro:
+    "The Host is more polite than Renat. The Host is also worse. " +
+    "The Host believes in pacing. The Host believes in presentation. " +
+    "The Host believes everyone gets a place setting and a course number, including, importantly, you. " +
+    "Don't accept the cutlery. Don't sit down.",
+  outro:
+    "The Host bows, the small dignified bow of a maitre d' whose night ended early. " +
+    "The other guests barely notice — they're between courses. " +
+    "The Host shows you out. You weren't, in the end, on the menu.",
+  defeatLine: "You were a fine course. Not memorable, but fine.",
+  playerDeck: playerStarterDeck("gluttony"),
+  boss: {
+    name: "The Host",
+    sin: "gluttony",
+    epithet: "Course Number Pending",
+    deck: bossDeck("gluttony", "boss_gluttony_2_invitation"),
+    hpBoost: 90,
+  },
+  unlockedBy: "gluttony_1",
+};
+
+const GLUTTONY_ACT_3: CampaignMission = {
+  id: "gluttony_3",
+  sin: "gluttony",
+  act: 3,
+  title: "The Maw",
+  hook: "It just keeps eating. There is no after.",
+  intro:
+    "The Maw is what gluttony becomes when there's nothing left to be polite about. " +
+    "There's no host. There's no banquet. There's no flatware. " +
+    "There's just a hole in the world that has decided to be open. " +
+    "It does not consider you. Consideration is for things it hasn't eaten yet. " +
+    "Hit it until it considers you. That'll be too late, but only a little.",
+  outro:
+    "The Maw closes. Briefly. " +
+    "You're not sure if it closed because you defeated it or because it ran out of room. You don't ask. " +
+    "The exit is clearly marked, for once.",
+  defeatLine: "The Maw does not gloat. The Maw eats. It has always done so. It will continue.",
+  playerDeck: playerStarterDeck("gluttony"),
+  boss: {
+    name: "The Maw",
+    sin: "gluttony",
+    epithet: "A Hole That Decided",
+    deck: bossDeck("gluttony", "boss_gluttony_3_consumption"),
+    hpBoost: 175,
+  },
+  unlockedBy: "gluttony_2",
+};
+
 // ─── Full mission list ───────────────────────────────────────────
 
 export const CAMPAIGN_MISSIONS: CampaignMission[] = [
@@ -529,13 +696,13 @@ export const CAMPAIGN_MISSIONS: CampaignMission[] = [
   PRIDE_ACT_2,
   PRIDE_ACT_3,
 
-  stub("lust_1", "lust", 1, "The Salon", "Charm with a knife in it."),
-  stub("lust_2", "lust", 2, "The Snare", "Beautiful. Patient. Hungry."),
-  stub("lust_3", "lust", 3, "The Devourer", "What lust looks like when it stops pretending."),
+  LUST_ACT_1,
+  LUST_ACT_2,
+  LUST_ACT_3,
 
-  stub("gluttony_1", "gluttony", 1, "The Feast", "An endless banquet. The plates are people."),
-  stub("gluttony_2", "gluttony", 2, "The Banquet", "A host who measures guests in courses."),
-  stub("gluttony_3", "gluttony", 3, "The Maw", "It just keeps eating. There is no after."),
+  GLUTTONY_ACT_1,
+  GLUTTONY_ACT_2,
+  GLUTTONY_ACT_3,
 ];
 
 const MISSIONS_BY_ID: Record<string, CampaignMission> = Object.fromEntries(
