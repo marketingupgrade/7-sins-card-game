@@ -24,6 +24,8 @@ import CompoundBalanceSheet from "@/components/CompoundBalanceSheet";
 import EffectBadge from "@/components/EffectBadge";
 import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
+import { getBossCardQuip } from "@shared/bossCards";
+import CampaignRoundOneOverlay from "@/components/CampaignRoundOneOverlay";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
 import { playCard, passTurn, lockInCards, getGameLog, consumeCard } from "@/lib/gameEngine";
@@ -255,9 +257,28 @@ export default function GameBoard() {
   }, []);
 
   // Resolution Reveal: Cache lockedPlays when they appear, show animation even after server clears them
+  // Track which boss-twist plays we've already announced this game so the
+  // narrator only fires the dramatic quip the first time the card resolves.
+  const announcedBossPlaysRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
     if (!gameState) return;
     const lp = gameState.lockedPlays;
+
+    // Campaign hook: when the boss seals their twist card, fire the
+    // pre-canned narrator line (one-shot per play key).
+    if (lp && lp.length > 0) {
+      for (const play of lp) {
+        if (!play.cardId) continue;
+        const quip = getBossCardQuip(play.cardId);
+        if (!quip) continue;
+        const key = `${play.playerId}-${play.cardId}-${gameState.currentRound}`;
+        if (announcedBossPlaysRef.current.has(key)) continue;
+        announcedBossPlaysRef.current.add(key);
+        addMessage(quip, "dramatic");
+      }
+    }
+
     // When locked plays appear (during resolution or round_end phase), cache them
     if (lp && lp.length > 0 && !isShowingResolution) {
       setCachedLockedPlays([...lp]);
@@ -1044,6 +1065,12 @@ export default function GameBoard() {
   return (
     <ScreenShake trigger={shakeTrigger} intensity={shakeIntensity}>
     <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
+      {/* Campaign Round-1 boss reveal — fires once per gameId */}
+      <CampaignRoundOneOverlay
+        gameId={gameId}
+        currentRound={gameState.currentRound}
+        status={gameState.status}
+      />
       {/* 3D Gothic Arena Background — with floor runes + arena decay */}
       <Suspense fallback={null}>
         <GameBoardBabylonScene

@@ -248,6 +248,22 @@ export default function CampaignFight() {
 
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden text-zinc-100">
+      {/* Sin-tinted radial gradient — different per mission so each scene
+          has its own atmosphere. Sits behind the embers and the panel. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0"
+        style={{
+          background: `radial-gradient(circle at 50% 35%, ${sinColor}22 0%, transparent 55%), radial-gradient(circle at 80% 90%, ${sinColor}10 0%, transparent 60%)`,
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-0 opacity-40 mix-blend-overlay"
+        style={{
+          background: `linear-gradient(180deg, transparent 0%, ${sinColor}08 100%)`,
+        }}
+      />
       <EmberField count={28} />
 
       <motion.button

@@ -331,3 +331,73 @@ const BOSS_CARD_MAP: Record<string, CardDefinition> = Object.fromEntries(
 export function getBossCardById(id: string): CardDefinition | undefined {
   return BOSS_CARD_MAP[id];
 }
+
+/**
+ * One-off narrator line fired when the boss plays this twist card. Kept in
+ * a sidecar map (rather than on `CardDefinition`) so the engine's card type
+ * stays narrative-agnostic.
+ *
+ * GameBoard scans new locked plays for these IDs and dispatches the line via
+ * the existing `useNarrator` queue.
+ */
+export const BOSS_CARD_NARRATOR_QUIPS: Record<string, string> = {
+  // Wrath
+  boss_wrath_1_hammerfall:
+    "The Forgemaster lifts the hammer. He is not asking permission.",
+  boss_wrath_2_bloodroar:
+    "Vex drinks the wound. The wound thanks him.",
+  boss_wrath_3_finalhour:
+    "Erebus calls the Final Hour. Faith burns easy.",
+
+  // Sloth
+  boss_sloth_1_ironpatience:
+    "Aldon does not move. Aldon does not need to.",
+  boss_sloth_2_drowse:
+    "Mother Slumber breathes. The room exhales with her.",
+  boss_sloth_3_aeon:
+    "The Eternal accumulates. You don't get to vote.",
+
+  // Greed
+  boss_greed_1_tithe:
+    "Maeven reckons the column. You are line item seven.",
+  boss_greed_2_ledger_strike:
+    "Octavia closes the book. The bill is now overdue.",
+  boss_greed_3_liquidation:
+    "Cassivus has decided you're a liquid asset.",
+
+  // Envy
+  boss_envy_1_glasswork:
+    "The Mirror does what you do, dressed slightly better.",
+  boss_envy_2_replica:
+    "The Twin learned that move. They also improved it.",
+  boss_envy_3_inheritance:
+    "The Hollow takes everything. Including the parts you forgot.",
+
+  // Pride
+  boss_pride_1_coronation:
+    "The Boy-King delivers the line he's been rehearsing.",
+  boss_pride_2_apotheosis:
+    "The Idol does not flinch. The Idol sets the standard.",
+  boss_pride_3_unbroken:
+    "Apex has not lost. Apex sees no reason to start now.",
+
+  // Lust
+  boss_lust_1_silver_tongue:
+    "Vaela compliments you, and the compliment leaves a mark.",
+  boss_lust_2_snare:
+    "Lyssara has been waiting. Lyssara is patient. Lyssara is fed.",
+  boss_lust_3_devour:
+    "The Devourer drops the metaphor. The metaphor breaks on impact.",
+
+  // Gluttony
+  boss_gluttony_1_courses:
+    "Renat does not pause. Renat never pauses.",
+  boss_gluttony_2_invitation:
+    "The Host smiles. You're course four. Don't disappoint.",
+  boss_gluttony_3_consumption:
+    "The Maw notices you, briefly. Then it doesn't.",
+};
+
+export function getBossCardQuip(cardId: string): string | undefined {
+  return BOSS_CARD_NARRATOR_QUIPS[cardId];
+}

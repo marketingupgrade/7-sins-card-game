@@ -24,6 +24,7 @@ import type { SinType } from "@shared/gameTypes";
 import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
+import CampaignContinueTile from "@/components/CampaignContinueTile";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
@@ -525,6 +526,9 @@ export default function Home() {
                       </motion.div>
                     </Link>
                   </div>
+
+                  {/* ─── Continue Campaign banner (appears only when there's something to resume) ─── */}
+                  <CampaignContinueTile />
 
                   {/* ─── Tertiary: How to Play + Campaign + Practice ─── */}
                   <div className="grid grid-cols-3 gap-2">

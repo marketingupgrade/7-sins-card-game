@@ -865,6 +865,49 @@ export function isMissionUnlocked(
   return completedIds.has(mission.unlockedBy);
 }
 
+/**
+ * Pick the mission to surface as a "Continue" CTA. Returns null when the
+ * player has no campaign history yet (the Home page just shows the regular
+ * "Campaign" tile in that case).
+ *
+ * Priority:
+ *  1. An attempted-but-not-yet-cleared mission (player hit a wall — give
+ *     them a one-click jump back to it).
+ *  2. The next unlocked + uncompleted mission after a cleared streak
+ *     (player wants to keep going).
+ *
+ * `attempts` carries the number of launches per mission ID and comes from
+ * `useCampaignProgress`. `completedIds` is the cleared-mission set from
+ * the same hook.
+ */
+export function getContinueMission(
+  attempts: ReadonlyMap<string, number> | Record<string, number>,
+  completedIds: ReadonlySet<string>
+): CampaignMission | null {
+  const attemptsMap =
+    attempts instanceof Map
+      ? attempts
+      : new Map(Object.entries(attempts));
+
+  // Case 1 — a mission has been attempted but not cleared.
+  for (const m of CAMPAIGN_MISSIONS) {
+    if (m.comingSoon) continue;
+    if (completedIds.has(m.id)) continue;
+    if ((attemptsMap.get(m.id) ?? 0) > 0) return m;
+  }
+
+  // Case 2 — at least one mission cleared. Suggest the next available act.
+  if (completedIds.size > 0) {
+    for (const m of CAMPAIGN_MISSIONS) {
+      if (m.comingSoon) continue;
+      if (completedIds.has(m.id)) continue;
+      if (isMissionUnlocked(m, completedIds)) return m;
+    }
+  }
+
+  return null;
+}
+
 /** Twist card IDs referenced by missions, for test integrity checks. */
 export const ALL_TWIST_CARD_IDS = new Set(BOSS_CARDS.map((c) => c.id));
 
