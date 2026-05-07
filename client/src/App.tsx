@@ -53,6 +53,8 @@ const ChronicleView = lazy(() => import("./pages/ChronicleView"));
 const PlayerProfile = lazy(() => import("./pages/PlayerProfile"));
 const HowToPlay = lazy(() => import("./pages/HowToPlay"));
 const PracticeMode = lazy(() => import("./pages/PracticeMode"));
+const Campaign = lazy(() => import("./pages/Campaign"));
+const CampaignFight = lazy(() => import("./pages/CampaignFight"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -108,6 +110,8 @@ function Router() {
         <Route path="/rules" component={GameRules} />
         <Route path="/how-to-play" component={HowToPlay} />
         <Route path="/practice" component={PracticeMode} />
+        <Route path="/campaign" component={Campaign} />
+        <Route path="/campaign/:missionId" component={CampaignFight} />
         <Route path="/deck-builder" component={DeckBuilder} />
         <Route path="/terms" component={Terms} />
         <Route path="/privacy" component={Privacy} />

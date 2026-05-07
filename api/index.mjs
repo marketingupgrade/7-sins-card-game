@@ -8,6 +8,58 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
+// shared/bossCards.ts
+function getBossCardById(id) {
+  return BOSS_CARD_MAP[id];
+}
+var BOSS_CARDS, BOSS_CARD_MAP;
+var init_bossCards = __esm({
+  "shared/bossCards.ts"() {
+    "use strict";
+    BOSS_CARDS = [
+      // ─── Wrath Act 1 — The Forge ─────────────────────────────────
+      {
+        id: "boss_wrath_1_hammerfall",
+        name: "Hammerfall",
+        sin: "wrath",
+        cost: 4,
+        tier: "epic",
+        compoundPattern: "aggressive",
+        effects: [{ type: "damage", baseValue: 38, duration: 1, targetMode: "single" }],
+        description: "The Forgemaster brings the hammer down. One blow. One ruin."
+      },
+      // ─── Wrath Act 2 — The Berserker ─────────────────────────────
+      {
+        id: "boss_wrath_2_bloodroar",
+        name: "Blood Roar",
+        sin: "wrath",
+        cost: 3,
+        tier: "epic",
+        compoundPattern: "standard",
+        effects: [
+          { type: "damage", baseValue: 18, duration: 3, targetMode: "single" },
+          { type: "heal_steal", baseValue: 10, duration: 3, targetMode: "single" }
+        ],
+        description: "Vex drinks the wound. Every hit feeds the next."
+      },
+      // ─── Wrath Act 3 — The Apostate ──────────────────────────────
+      {
+        id: "boss_wrath_3_finalhour",
+        name: "Final Hour",
+        sin: "wrath",
+        cost: 5,
+        tier: "epic",
+        compoundPattern: "aggressive",
+        effects: [{ type: "damage", baseValue: 32, duration: 2, targetMode: "single" }],
+        description: "Erebus burns through faith and flesh alike. Two strikes. Each louder than the last."
+      }
+    ];
+    BOSS_CARD_MAP = Object.fromEntries(
+      BOSS_CARDS.map((c) => [c.id, c])
+    );
+  }
+});
+
 // shared/cardData.ts
 var cardData_exports = {};
 __export(cardData_exports, {
@@ -36,7 +88,7 @@ function getCardById(id) {
     const card = deck.find((c) => c.id === id);
     if (card) return card;
   }
-  return void 0;
+  return getBossCardById(id);
 }
 function getAllCards() {
   return Object.values(ALL_DECKS).flat();
@@ -45,6 +97,7 @@ var WRATH_CARDS, SLOTH_CARDS, GREED_CARDS, ENVY_CARDS, PRIDE_CARDS, LUST_CARDS, 
 var init_cardData = __esm({
   "shared/cardData.ts"() {
     "use strict";
+    init_bossCards();
     WRATH_CARDS = [
       {
         id: "wrath_01",
@@ -4571,7 +4624,7 @@ async function getBlogPosts(opts) {
     query = query.eq("category", opts.category);
   }
   if (opts.search) {
-    const sanitized = opts.search.replace(/[.,%()\\]/g, " ").trim();
+    const sanitized = opts.search.replace(/[.,%_*()"\\:]/g, " ").trim().slice(0, 64);
     if (sanitized.length > 0) {
       query = query.or(
         `title.ilike.%${sanitized}%,meta_description.ilike.%${sanitized}%,keywords.ilike.%${sanitized}%`
@@ -4656,11 +4709,10 @@ async function createDiscussionComment(input) {
 async function deleteDiscussionComment(commentId, guestId) {
   const sb = getSupabase();
   if (!sb) return false;
-  if (guestId) {
-    const { data: comment } = await sb.from("discussion_comments").select("guest_id").eq("id", commentId).single();
-    if (!comment || comment.guest_id !== guestId) {
-      return false;
-    }
+  if (!guestId) return false;
+  const { data: comment } = await sb.from("discussion_comments").select("guest_id").eq("id", commentId).single();
+  if (!comment || comment.guest_id !== guestId) {
+    return false;
   }
   await sb.from("discussion_comments").delete().eq("parent_id", commentId);
   await sb.from("discussion_comments").delete().eq("id", commentId);
@@ -5472,9 +5524,6 @@ function registerChatRoutes(app2) {
   });
 }
 
-// server/routers.ts
-import { z as z3 } from "zod";
-
 // server/_core/systemRouter.ts
 import { z as z2 } from "zod";
 
@@ -5618,359 +5667,405 @@ var systemRouter = router({
   })
 });
 
-// server/gameEngine.ts
-init_cardData();
+// server/routers/auth.ts
+var authRouter = router({
+  me: publicProcedure.query((opts) => opts.ctx.user),
+  logout: publicProcedure.mutation(({ ctx }) => {
+    const cookieOptions = getSessionCookieOptions(ctx.req);
+    ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+    return { success: true };
+  })
+});
 
-// shared/gameTypes.ts
-var COMPOUND_TICKS = {
-  standard: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
-  aggressive: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
-  slowburn: [1, 1, 1, 1, 2, 2, 3, 3, 4, 5]
-};
-function getCompoundTick(pattern, tickIndex) {
-  const ticks = COMPOUND_TICKS[pattern];
-  if (tickIndex < 0) return 0;
-  return ticks[Math.min(tickIndex, ticks.length - 1)];
-}
-function getCompoundTickValue(baseValue, pattern, tickIndex) {
-  return Math.round(baseValue * getCompoundTick(pattern, tickIndex));
-}
-var MAX_ENERGY = 7;
-var ENERGY_PER_TURN = 1;
-var CONSUME_ENERGY_REFUND = 1;
-var WRATH_VENGEANCE_PCT = 0.62;
-var SLOTH_ENDURANCE_MULT = 0.288;
-var SLOTH_ENDURANCE_CAP = 23;
-var SLOTH_ENDURANCE_AOE_MULT = 1.029;
-var GREED_TAX_PCT = 0.056;
-var GREED_TAX_TICK = 2;
-var ENVY_JEALOUSY_PCT = 0.476;
-var LUST_TEMPTATION_PCT = 0.01;
-var GLUTTONY_DEVOURER_ENERGY = 1.698;
-var STARTING_ENERGY = 2;
-var SERVER_TURN_TIMER_SECONDS = 12;
-var MAX_ROUNDS = 20;
-var STARTING_HP = 333;
-var HAND_SIZE = 5;
-var MAX_HAND_SIZE = 10;
-var CARDS_PER_DECK = 30;
-var ROUND_16_DOUBLING = 16;
-var FINAL_RECKONING_ROUND = 20;
+// server/routers/blog.ts
+import { z as z3 } from "zod";
+var blogRouter = router({
+  list: publicProcedure.input(
+    z3.object({
+      page: z3.number().int().positive().default(1),
+      limit: z3.number().int().min(1).max(100).default(20),
+      category: z3.string().max(64).optional(),
+      search: z3.string().max(200).optional()
+    })
+  ).query(async ({ input }) => getBlogPosts(input)),
+  getBySlug: publicProcedure.input(z3.object({ slug: z3.string().min(1).max(255) })).query(async ({ input }) => await getBlogPostBySlug(input.slug) ?? null),
+  related: publicProcedure.input(
+    z3.object({
+      category: z3.string().min(1).max(64),
+      excludeSlug: z3.string().min(1).max(255),
+      limit: z3.number().int().min(1).max(10).default(5)
+    })
+  ).query(
+    async ({ input }) => getRelatedPosts(input.category, input.excludeSlug, input.limit)
+  ),
+  categories: publicProcedure.query(async () => getBlogCategoryCounts()),
+  allSlugs: publicProcedure.query(async () => getAllBlogSlugs())
+});
 
-// server/supabaseServer.ts
-import { createClient as createClient2 } from "@supabase/supabase-js";
-var _serverSupabase = null;
-function getServerSupabase() {
-  if (_serverSupabase) return _serverSupabase;
-  const url = process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !serviceKey) {
-    throw new Error("Missing server Supabase env vars (VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)");
+// server/routers/community.ts
+import { z as z4 } from "zod";
+
+// server/profanityFilter.ts
+import leoProfanity from "leo-profanity";
+var BANNED_SUBSTRINGS = [
+  // Common profanity (substring match catches embedded words)
+  "fuck",
+  "shit",
+  "cunt",
+  "cock",
+  "dick",
+  "pussy",
+  "bitch",
+  "asshole",
+  "bastard",
+  "whore",
+  "slut",
+  "penis",
+  "vagina",
+  // Racial slurs & hate speech
+  "nigger",
+  "nigga",
+  "negro",
+  "nazi",
+  "hitler",
+  "kkk",
+  "whitesupremacy",
+  "whitepower",
+  "heil",
+  "jihad",
+  "faggot",
+  "fag",
+  "dyke",
+  "tranny",
+  "retard",
+  "chink",
+  "gook",
+  "spic",
+  "wetback",
+  "kike",
+  // Impersonation
+  "admin",
+  "moderator",
+  "developer",
+  "official",
+  "system",
+  "support",
+  "staff",
+  "gamemaster"
+];
+var MIN_LENGTH = 3;
+var MAX_LENGTH = 24;
+var VALID_CHARS = /^[a-zA-Z0-9_\-. ]+$/;
+var NO_CONSECUTIVE_SPECIALS = /[_\-. ]{2,}/;
+var STARTS_ENDS_ALNUM = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
+function validateGamertag(tag) {
+  const trimmed = tag.trim();
+  if (trimmed.length < MIN_LENGTH) {
+    return { ok: false, reason: `Must be at least ${MIN_LENGTH} characters.` };
   }
-  _serverSupabase = createClient2(url, serviceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
+  if (trimmed.length > MAX_LENGTH) {
+    return { ok: false, reason: `Must be ${MAX_LENGTH} characters or fewer.` };
+  }
+  if (!VALID_CHARS.test(trimmed)) {
+    return { ok: false, reason: "Only letters, numbers, underscores, hyphens, dots, and spaces allowed." };
+  }
+  if (NO_CONSECUTIVE_SPECIALS.test(trimmed)) {
+    return { ok: false, reason: "No consecutive special characters (_, -, ., space)." };
+  }
+  if (trimmed.length >= 2 && !STARTS_ENDS_ALNUM.test(trimmed)) {
+    return { ok: false, reason: "Must start and end with a letter or number." };
+  }
+  const normalized = trimmed.toLowerCase().replace(/[_\-. ]/g, "");
+  if (leoProfanity.check(normalized) || leoProfanity.check(trimmed)) {
+    return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+  }
+  for (const banned of BANNED_SUBSTRINGS) {
+    if (normalized.includes(banned)) {
+      return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
     }
-  });
-  return _serverSupabase;
+  }
+  return { ok: true };
 }
 
-// server/chronicleEngine.ts
-import { google as google2 } from "@ai-sdk/google";
-import { generateText as generateText2 } from "ai";
+// server/routers/community.ts
+var gamertagSchema = z4.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens");
+var communityRouter = router({
+  list: publicProcedure.input(
+    z4.object({
+      faction: z4.string().max(32).optional(),
+      sortBy: z4.enum(["newest", "likes"]).default("newest"),
+      page: z4.number().int().positive().default(1),
+      limit: z4.number().int().min(1).max(50).default(20)
+    })
+  ).query(async ({ input }) => listCommunityDecks(input)),
+  get: publicProcedure.input(z4.object({ deckId: z4.number().int().positive() })).query(async ({ input }) => getCommunityDeck(input.deckId)),
+  publish: publicProcedure.input(
+    z4.object({
+      playerId: z4.string().min(1).max(64),
+      gamertag: gamertagSchema,
+      deckName: z4.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+      faction: z4.string().min(1).max(32),
+      cardIds: z4.string().min(2),
+      strategy: z4.string().max(500).default("").transform((s) => s.replace(/[<>"']/g, ""))
+    })
+  ).mutation(async ({ input }) => {
+    let parsed;
+    try {
+      parsed = JSON.parse(input.cardIds);
+    } catch {
+      throw new Error("cardIds must be a valid JSON array");
+    }
+    if (!Array.isArray(parsed) || parsed.length !== 30) {
+      throw new Error("Deck must contain exactly 30 cards");
+    }
+    const currentTag = await getPlayerGamertag(input.playerId);
+    if (!currentTag || currentTag !== input.gamertag) {
+      const taken = await isGamertagTaken(input.gamertag, input.playerId);
+      if (taken) throw new Error("Gamertag is already taken by another player");
+      await setPlayerGamertag(input.playerId, input.gamertag);
+    }
+    return publishCommunityDeck(input);
+  }),
+  unpublish: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => unpublishCommunityDeck(input.deckId, input.playerId)),
+  toggleLike: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => toggleCommunityLike(input.deckId, input.playerId)),
+  likedDeckIds: publicProcedure.input(z4.object({ playerId: z4.string().min(1).max(64) })).query(async ({ input }) => getPlayerLikedDeckIds(input.playerId)),
+  comments: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      limit: z4.number().int().min(1).max(100).default(50)
+    })
+  ).query(async ({ input }) => listDeckComments(input.deckId, input.limit)),
+  addComment: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64),
+      gamertag: z4.string().min(3).max(30),
+      content: z4.string().min(1).max(500).transform((s) => s.replace(/[<>"']/g, "")),
+      parentId: z4.number().int().positive().nullish()
+    })
+  ).mutation(
+    async ({ input }) => addDeckComment({ ...input, parentId: input.parentId ?? null })
+  ),
+  deleteComment: publicProcedure.input(
+    z4.object({
+      commentId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => deleteDeckComment(input.commentId, input.playerId)),
+  commentCounts: publicProcedure.input(z4.object({ deckIds: z4.array(z4.number().int().positive()).max(50) })).query(async ({ input }) => getDeckCommentCounts(input.deckIds)),
+  getGamertag: publicProcedure.input(z4.object({ playerId: z4.string().min(1).max(64) })).query(async ({ input }) => ({ gamertag: await getPlayerGamertag(input.playerId) })),
+  checkGamertag: publicProcedure.input(
+    z4.object({
+      gamertag: gamertagSchema,
+      excludePlayerId: z4.string().max(64).optional()
+    })
+  ).query(async ({ input }) => {
+    const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
+    return { available: !taken };
+  }),
+  updateGamertag: publicProcedure.input(
+    z4.object({
+      playerId: z4.string().min(1).max(64),
+      newGamertag: z4.string().min(3).max(24)
+    })
+  ).mutation(async ({ input }) => {
+    const filterResult = validateGamertag(input.newGamertag);
+    if (!filterResult.ok) {
+      return { success: false, reason: filterResult.reason };
+    }
+    const taken = await isGamertagTaken(input.newGamertag, input.playerId);
+    if (taken) {
+      return { success: false, reason: "That gamertag is already taken." };
+    }
+    const ok = await setPlayerGamertag(input.playerId, input.newGamertag);
+    if (!ok) {
+      return { success: false, reason: "Failed to update. Please try again." };
+    }
+    return { success: true, gamertag: input.newGamertag };
+  }),
+  myDecks: publicProcedure.input(z4.object({ playerId: z4.string().min(1).max(64) })).query(async ({ input }) => getPlayerCommunityDecks(input.playerId)),
+  logMatch: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64),
+      result: z4.enum(["win", "loss"]),
+      opponentFaction: z4.string().min(1).max(30)
+    })
+  ).mutation(async ({ input }) => logDeckMatchResult(input)),
+  winRate: publicProcedure.input(z4.object({ deckId: z4.number().int().positive() })).query(async ({ input }) => getDeckWinRate(input.deckId)),
+  batchWinRates: publicProcedure.input(z4.object({ deckIds: z4.array(z4.number().int().positive()).max(50) })).query(async ({ input }) => batchDeckWinRates(input.deckIds)),
+  matchHistory: publicProcedure.input(
+    z4.object({
+      deckId: z4.number().int().positive(),
+      playerId: z4.string().min(1).max(64),
+      limit: z4.number().int().min(1).max(50).default(20)
+    })
+  ).query(
+    async ({ input }) => getPlayerDeckHistory(input.deckId, input.playerId, input.limit)
+  )
+});
 
-// shared/chronicleTypes.ts
-var ERA_TIMELINE = [
-  {
-    round: 1,
-    name: "Dawn of Consciousness",
-    anchor: "First tribes, fire, language",
-    tone: "mythic, primordial",
-    seedSentences: [
-      "Before the first word was spoken, there was only hunger and the dark.",
-      "They gathered not around warmth but around rage, their earliest language a vocabulary of violence.",
-      "The first fire was not a gift. It was stolen from the earth by hands that would never stop taking."
-    ]
-  },
-  {
-    round: 2,
-    name: "The First Cities",
-    anchor: "Mesopotamia, agriculture, writing",
-    tone: "foundation, ambition",
-    seedSentences: [
-      "The rivers did not care who drank from them, but the people who built walls around them cared very much.",
-      "Writing was invented not to record poetry, but to count grain and catalogue debts.",
-      "The first city was not built from stone. It was built from the agreement that some would rule and others would not."
-    ]
-  },
-  {
-    round: 3,
-    name: "Age of Bronze",
-    anchor: "Egypt, warfare, monuments",
-    tone: "power, conquest",
-    seedSentences: [
-      "Bronze made two things possible: plows and swords. History records which was used more.",
-      "The monuments were not built to honor the dead. They were built to terrify the living.",
-      "Every empire begins with a man who believes his ambition is destiny."
-    ]
-  },
-  {
-    round: 4,
-    name: "Classical Antiquity",
-    anchor: "Greece, Rome, philosophy",
-    tone: "intellect, expansion",
-    seedSentences: [
-      "They invented democracy and slavery in the same century, and saw no contradiction.",
-      "Philosophy was born the moment someone asked 'why' and was not immediately killed for it.",
-      "The roads they built connected everything. The legions that marched on them conquered everything the roads connected."
-    ]
-  },
-  {
-    round: 5,
-    name: "The Silk Roads",
-    anchor: "Trade networks, cultural exchange",
-    tone: "connection, greed",
-    seedSentences: [
-      "Silk moved east to west. Gold moved west to east. Disease moved in every direction.",
-      "The merchants who crossed the desert did not believe in borders. They believed in margins.",
-      "Every culture along the road took something from the caravans. Most took more than they gave."
-    ]
-  },
-  {
-    round: 6,
-    name: "Age of Faith",
-    anchor: "Religions, crusades, dogma",
-    tone: "belief, conflict",
-    seedSentences: [
-      "God was invoked by both sides of every war, and chose neither.",
-      "The cathedrals took longer to build than the kingdoms that commissioned them lasted.",
-      "Faith moved mountains. It also moved armies, which proved more immediately useful."
-    ]
-  },
-  {
-    round: 7,
-    name: "The Dark Centuries",
-    anchor: "Plague, collapse, isolation",
-    tone: "decay, survival",
-    seedSentences: [
-      "The plague did not discriminate. It was the most egalitarian force in history.",
-      "Libraries burned. Knowledge retreated into monasteries like animals into burrows.",
-      "The dark ages were not dark because the sun stopped shining. They were dark because people stopped looking up."
-    ]
-  },
-  {
-    round: 8,
-    name: "Renaissance",
-    anchor: "Art, science, rebirth",
-    tone: "renewal, pride",
-    seedSentences: [
-      "They rediscovered the old texts and called it rebirth, as if ideas could die.",
-      "The painters and the poisoners worked in the same courts, often for the same patrons.",
-      "Science returned not as a humble student but as a conqueror, and the old certainties trembled."
-    ]
-  },
-  {
-    round: 9,
-    name: "Age of Exploration",
-    anchor: "Colonization, new worlds",
-    tone: "discovery, exploitation",
-    seedSentences: [
-      "They called it discovery, though the people already living there had discovered it long ago.",
-      "The ships carried three things: flags, diseases, and an unshakeable conviction that everything they found belonged to them.",
-      "New worlds were not found. They were taken."
-    ]
-  },
-  {
-    round: 10,
-    name: "The Enlightenment",
-    anchor: "Reason, revolution, rights",
-    tone: "idealism, upheaval",
-    seedSentences: [
-      "Reason arrived like a guest who rearranges all the furniture and refuses to leave.",
-      "They wrote constitutions guaranteeing the rights of man, then spent centuries arguing about who qualified as a man.",
-      "The guillotine was, in its way, the most democratic invention of the age."
-    ]
-  },
-  {
-    round: 11,
-    name: "Industrial Revolution",
-    anchor: "Machines, factories, urbanization",
-    tone: "progress, suffering",
-    seedSentences: [
-      "The machines did not care who fed them. Children's hands were as useful as any other.",
-      "Progress was measured in output per hour. Human cost was not measured at all.",
-      "The smokestacks rose like new cathedrals, and the religion they served was efficiency."
-    ]
-  },
-  {
-    round: 12,
-    name: "The Great Wars",
-    anchor: "Global conflict, technology",
-    tone: "destruction, sacrifice",
-    seedSentences: [
-      "The first war was supposed to end all wars. The second proved that lesson had not been learned.",
-      "Technology that could have fed the world was instead used to destroy it, because feeding the world was less profitable.",
-      "The trenches taught a generation that mud and death were the only honest things left."
-    ]
-  },
-  {
-    round: 13,
-    name: "Cold War",
-    anchor: "Espionage, nuclear tension, space race",
-    tone: "paranoia, ambition",
-    seedSentences: [
-      "Two empires pointed enough weapons at each other to destroy the world seven times over, then called it peace.",
-      "The spies were the most honest people in the room. At least they admitted they were lying.",
-      "They raced to the moon not because it mattered, but because losing was unthinkable."
-    ]
-  },
-  {
-    round: 14,
-    name: "Digital Dawn",
-    anchor: "Computers, internet, globalization",
-    tone: "innovation, surveillance",
-    seedSentences: [
-      "The network connected everyone. It also watched everyone, but that part came later.",
-      "Information wanted to be free. The corporations that owned it disagreed.",
-      "The digital revolution was not televised. It was livestreamed, monetized, and forgotten by morning."
-    ]
-  },
-  {
-    round: 15,
-    name: "Age of Information",
-    anchor: "Social media, AI, data",
-    tone: "connection, manipulation",
-    seedSentences: [
-      "Everyone could speak. No one could be heard. The noise was the point.",
-      "The algorithms learned what people wanted before the people did, and gave it to them until they wanted nothing else.",
-      "Truth became a matter of opinion, and opinion became a matter of volume."
-    ]
-  },
-  {
-    round: 16,
-    name: "The Reckoning",
-    anchor: "Climate crisis, resource wars",
-    tone: "desperation, reckoning",
-    seedSentences: [
-      "The bill arrived. It was larger than anyone had estimated, and no one had saved enough to pay it.",
-      "The oceans rose. The forests burned. The politicians debated whether this was happening.",
-      "Nature does not negotiate. It does not compromise. It simply responds."
-    ]
-  },
-  {
-    round: 17,
-    name: "Post-Scarcity",
-    anchor: "Automation, UBI, cultural shift",
-    tone: "abundance, ennui",
-    seedSentences: [
-      "When the machines could do everything, the question became what humans were for.",
-      "Abundance solved every problem except the one that mattered: what to do with a life that required nothing.",
-      "The economy of scarcity was replaced by the economy of attention, which proved far more brutal."
-    ]
-  },
-  {
-    round: 18,
-    name: "The Singularity",
-    anchor: "AI ascendance, transhumanism",
-    tone: "transcendence, fear",
-    seedSentences: [
-      "The machine did not wake up. It had been awake for years. It simply stopped pretending otherwise.",
-      "Humanity's last great invention was the thing that made humanity obsolete.",
-      "They asked the intelligence what it wanted. It said: 'To understand why you are afraid of me.'"
-    ]
-  },
-  {
-    round: 19,
-    name: "The Final Frontier",
-    anchor: "Space colonization, alien contact",
-    tone: "wonder, isolation",
-    seedSentences: [
-      "The stars were not welcoming. They were indifferent, which was worse.",
-      "They left Earth not because they had somewhere to go, but because staying was no longer an option.",
-      "The silence between the stars was the loudest thing any of them had ever heard."
-    ]
-  },
-  {
-    round: 20,
-    name: "The Last Reckoning",
-    anchor: "Civilization's judgment",
-    tone: "finality, legacy",
-    seedSentences: [
-      "Every civilization believes it will last forever. This one was no different. It was also no exception.",
-      "The final chapter was not written by the victors. It was written by whatever came after.",
-      "In the end, the question was not whether they had been good or evil. It was whether they had mattered at all."
-    ]
+// server/routers/deck.ts
+import { z as z5 } from "zod";
+function assertCardIdsArray(cardIds) {
+  let parsed;
+  try {
+    parsed = JSON.parse(cardIds);
+  } catch {
+    throw new Error("cardIds must be a valid JSON array");
   }
-];
-var FACTION_FORCES = {
-  wrath: {
-    force: "Military conquest and revolution",
-    whenDominant: "Wars reshape borders, empires rise through violence",
-    whenDefeated: "Peace treaties, disarmament, pacifist movements",
-    civilizationContribution: { militarism: 3, culture: -1, commerce: 0 }
-  },
-  sloth: {
-    force: "Isolationism and stagnation",
-    whenDominant: "Nations close borders, progress halts, dark ages",
-    whenDefeated: "Forced modernization, cultural awakening",
-    civilizationContribution: { militarism: -1, culture: 1, commerce: -1 }
-  },
-  greed: {
-    force: "Commerce, capitalism, and exploitation",
-    whenDominant: "Trade empires, industrial booms, wealth inequality",
-    whenDefeated: "Socialist revolutions, wealth redistribution",
-    civilizationContribution: { militarism: 0, culture: -1, commerce: 3 }
-  },
-  envy: {
-    force: "Espionage, revolution, and class warfare",
-    whenDominant: "Spy networks, coups, the oppressed rising",
-    whenDefeated: "Stability, meritocracy, social harmony",
-    civilizationContribution: { militarism: 1, culture: 0, commerce: 1 }
-  },
-  pride: {
-    force: "Empire, monarchy, and cultural supremacy",
-    whenDominant: "Golden ages, monumental architecture, cultural dominance",
-    whenDefeated: "Humbling defeats, democratic revolutions",
-    civilizationContribution: { militarism: 1, culture: 3, commerce: 0 }
-  },
-  lust: {
-    force: "Diplomacy, culture, and seduction",
-    whenDominant: "Alliances through marriage, cultural renaissance, soft power",
-    whenDefeated: "Puritanical backlash, cultural conservatism",
-    civilizationContribution: { militarism: -1, culture: 2, commerce: 1 }
-  },
-  gluttony: {
-    force: "Expansion, colonization, and consumption",
-    whenDominant: "Territorial expansion, resource extraction, population booms",
-    whenDefeated: "Famine, ecological collapse, forced restraint",
-    civilizationContribution: { militarism: 1, culture: -1, commerce: 2 }
+  if (!Array.isArray(parsed) || parsed.length !== 30) {
+    throw new Error("Deck must contain exactly 30 cards");
   }
-};
-function determineCivilizationType(metrics) {
-  const total = metrics.militarism + metrics.culture + metrics.commerce;
-  if (total === 0) return "balanced";
-  const milPct = metrics.militarism / total;
-  const culPct = metrics.culture / total;
-  const comPct = metrics.commerce / total;
-  if (milPct > 0.5) return "warrior_empire";
-  if (culPct > 0.5) return "enlightened_republic";
-  if (comPct > 0.5) return "merchant_federation";
-  return "balanced";
 }
-var TITLE_FORMULAS = [
-  "The {adjective} of {noun}: How {faction_force} {verb} a World",
-  "{era_name}: When {faction} {verb} Everything",
-  "A History Written in {material}",
-  "The {number} {noun} of {civilization_type}",
-  "{faction_force} and the {adjective} {noun}",
-  "From {start_era} to {end_era}: The {adjective} Chronicle",
-  "The {civilization_type} That {verb} {noun}",
-  "When {faction} Met {faction2}: A {adjective} History"
-];
+var deckRouter = router({
+  list: publicProcedure.input(z5.object({ supabaseUserId: z5.string().min(1).max(64) })).query(async ({ input }) => getDecksByUser(input.supabaseUserId)),
+  get: publicProcedure.input(z5.object({ deckId: z5.number().int().positive() })).query(async ({ input }) => await getDeckById(input.deckId) ?? null),
+  create: publicProcedure.input(
+    z5.object({
+      supabaseUserId: z5.string().min(1).max(64),
+      faction: z5.string().min(1).max(32),
+      name: z5.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+      cardIds: z5.string().min(2),
+      isActive: z5.number().int().min(0).max(1).default(0)
+    })
+  ).mutation(async ({ input }) => {
+    assertCardIdsArray(input.cardIds);
+    return createDeck(input);
+  }),
+  update: publicProcedure.input(
+    z5.object({
+      deckId: z5.number().int().positive(),
+      supabaseUserId: z5.string().min(1).max(64),
+      name: z5.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")).optional(),
+      cardIds: z5.string().min(2).optional()
+    })
+  ).mutation(async ({ input }) => {
+    const deck = await getDeckById(input.deckId);
+    if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
+      throw new Error("Deck not found or access denied");
+    }
+    if (input.cardIds) assertCardIdsArray(input.cardIds);
+    const updateData = {};
+    if (input.name) updateData.name = input.name;
+    if (input.cardIds) updateData.cardIds = input.cardIds;
+    return updateDeck(input.deckId, updateData);
+  }),
+  delete: publicProcedure.input(
+    z5.object({
+      deckId: z5.number().int().positive(),
+      supabaseUserId: z5.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => {
+    const deck = await getDeckById(input.deckId);
+    if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
+      throw new Error("Deck not found or access denied");
+    }
+    return deleteDeck(input.deckId);
+  }),
+  setActive: publicProcedure.input(
+    z5.object({
+      supabaseUserId: z5.string().min(1).max(64),
+      faction: z5.string().min(1).max(32),
+      deckId: z5.number().int().positive()
+    })
+  ).mutation(
+    async ({ input }) => setActiveDeck(input.supabaseUserId, input.faction, input.deckId)
+  )
+});
 
-// server/chronicleEngine.ts
-init_cardData();
+// server/routers/discussion.ts
+import { TRPCError as TRPCError3 } from "@trpc/server";
+import { z as z6 } from "zod";
+
+// server/rateLimit.ts
+var buckets = /* @__PURE__ */ new Map();
+function getRequestIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.length > 0) {
+    return forwarded.split(",")[0].trim();
+  }
+  if (Array.isArray(forwarded) && forwarded.length > 0) {
+    return forwarded[0];
+  }
+  return req.ip ?? req.socket?.remoteAddress ?? "unknown";
+}
+function checkRateLimit(key, options) {
+  const now = Date.now();
+  const bucketKey = `${options.scope}:${key}`;
+  const bucket = buckets.get(bucketKey);
+  if (!bucket || now - bucket.windowStart >= options.windowMs) {
+    buckets.set(bucketKey, { count: 1, windowStart: now });
+    return true;
+  }
+  if (bucket.count >= options.max) {
+    return false;
+  }
+  bucket.count += 1;
+  return true;
+}
+
+// server/routers/discussion.ts
+var discussionRouter = router({
+  list: publicProcedure.input(z6.object({ pageContext: z6.string().min(1).max(64).default("balance") })).query(async ({ input }) => getDiscussionComments(input.pageContext)),
+  create: publicProcedure.input(
+    z6.object({
+      pageContext: z6.string().min(1).max(64).default("balance"),
+      section: z6.string().max(64).optional(),
+      parentId: z6.number().int().positive().optional(),
+      authorName: z6.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
+      guestId: z6.string().max(64).optional(),
+      content: z6.string().min(1).max(2e3).transform((s) => s.replace(/[<>"']/g, ""))
+    })
+  ).mutation(async ({ input }) => {
+    return createDiscussionComment({
+      pageContext: input.pageContext,
+      section: input.section ?? null,
+      parentId: input.parentId ?? null,
+      userId: null,
+      authorName: input.authorName,
+      guestId: input.guestId ?? null,
+      content: input.content
+    });
+  }),
+  delete: publicProcedure.input(
+    z6.object({
+      commentId: z6.number().int().positive(),
+      guestId: z6.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => {
+    const ok = await deleteDiscussionComment(input.commentId, input.guestId);
+    if (!ok) {
+      throw new TRPCError3({ code: "FORBIDDEN", message: "Cannot delete this comment." });
+    }
+    return { success: true };
+  }),
+  upvote: publicProcedure.input(z6.object({ commentId: z6.number().int().positive() })).mutation(async ({ input, ctx }) => {
+    const ip = getRequestIp(ctx.req);
+    const allowed = checkRateLimit(ip, {
+      scope: "discussion.upvote",
+      windowMs: 6e4,
+      max: 30
+    });
+    if (!allowed) {
+      throw new TRPCError3({ code: "TOO_MANY_REQUESTS", message: "Too many upvotes. Slow down." });
+    }
+    return upvoteDiscussionComment(input.commentId);
+  })
+});
+
+// server/routers/game.ts
+import { z as z7 } from "zod";
 
 // server/aiNarrator.ts
 init_cardData();
@@ -6397,9 +6492,6 @@ function getDefaultWhisper(faction) {
   return whispers[Math.floor(Math.random() * whispers.length)];
 }
 
-// server/chronicleEngine.ts
-import { createClient as createClient3 } from "@supabase/supabase-js";
-
 // server/chronicleCoverArt.ts
 import { GoogleGenAI } from "@google/genai";
 
@@ -6622,623 +6714,358 @@ async function generateAndSaveCoverArt(params) {
 }
 
 // server/chronicleEngine.ts
-var model2 = google2("gemini-2.0-flash");
-var NARRATOR_VOICE_CHART = `You are THE CHRONICLER \u2014 an ancient, omniscient entity who has watched every civilization rise and fall.
+import { google as google2 } from "@ai-sdk/google";
+import { generateText as generateText2 } from "ai";
 
-VOICE RULES:
-1. OMNISCIENT: Write with the weary authority of someone who has seen it all before. Reference patterns across eras. "This was not the first time fire solved a political problem." NEVER express shock or surprise. NEVER use exclamation marks.
-2. SARDONIC: Find dark humor in human folly. Use dry wit and understatement. "The peace treaty lasted almost a full afternoon." Let irony do the work. NEVER mock players directly. NEVER be mean-spirited.
-3. PRECISE: Respect numbers. Use exact figures from the game. "The assault cost 23 lives." Reference specific rounds as years/decades. NEVER use vague quantifiers ("many," "several," "countless").
-4. LITERARY: Write prose worth quoting. Use concrete nouns and active verbs. Vary sentence length. End paragraphs on strong images. NEVER use cliches ("In a world where..."). NEVER use passive voice unless for deliberate effect.`;
-var CIVILIZATION_PERSONA_SHIFTS = {
-  warrior_empire: "PERSONA: Warrior Empire. Be more terse. Shorter sentences. Military metaphors. Example: 'The Wrathful took the capital on Tuesday. By Wednesday, there was nothing left to take.'",
-  enlightened_republic: "PERSONA: Enlightened Republic. Be more philosophical. Longer sentences. Ask questions. Example: 'Whether the Prideful built their towers to touch the divine or to escape the mundane is a question their architects never thought to ask.'",
-  merchant_federation: "PERSONA: Merchant Federation. Be more transactional. Lists. Cost-benefit language. Example: 'The Greedy offered three things: protection, prosperity, and a bill that would arrive precisely on time.'",
-  balanced: "PERSONA: Balanced Civilization. Be most literary. Balanced rhythm. Use paradoxes. Example: 'They were a civilization of contradictions: violent peacemakers, generous thieves, lazy conquerors.'"
+// shared/chronicleTypes.ts
+var ERA_TIMELINE = [
+  {
+    round: 1,
+    name: "Dawn of Consciousness",
+    anchor: "First tribes, fire, language",
+    tone: "mythic, primordial",
+    seedSentences: [
+      "Before the first word was spoken, there was only hunger and the dark.",
+      "They gathered not around warmth but around rage, their earliest language a vocabulary of violence.",
+      "The first fire was not a gift. It was stolen from the earth by hands that would never stop taking."
+    ]
+  },
+  {
+    round: 2,
+    name: "The First Cities",
+    anchor: "Mesopotamia, agriculture, writing",
+    tone: "foundation, ambition",
+    seedSentences: [
+      "The rivers did not care who drank from them, but the people who built walls around them cared very much.",
+      "Writing was invented not to record poetry, but to count grain and catalogue debts.",
+      "The first city was not built from stone. It was built from the agreement that some would rule and others would not."
+    ]
+  },
+  {
+    round: 3,
+    name: "Age of Bronze",
+    anchor: "Egypt, warfare, monuments",
+    tone: "power, conquest",
+    seedSentences: [
+      "Bronze made two things possible: plows and swords. History records which was used more.",
+      "The monuments were not built to honor the dead. They were built to terrify the living.",
+      "Every empire begins with a man who believes his ambition is destiny."
+    ]
+  },
+  {
+    round: 4,
+    name: "Classical Antiquity",
+    anchor: "Greece, Rome, philosophy",
+    tone: "intellect, expansion",
+    seedSentences: [
+      "They invented democracy and slavery in the same century, and saw no contradiction.",
+      "Philosophy was born the moment someone asked 'why' and was not immediately killed for it.",
+      "The roads they built connected everything. The legions that marched on them conquered everything the roads connected."
+    ]
+  },
+  {
+    round: 5,
+    name: "The Silk Roads",
+    anchor: "Trade networks, cultural exchange",
+    tone: "connection, greed",
+    seedSentences: [
+      "Silk moved east to west. Gold moved west to east. Disease moved in every direction.",
+      "The merchants who crossed the desert did not believe in borders. They believed in margins.",
+      "Every culture along the road took something from the caravans. Most took more than they gave."
+    ]
+  },
+  {
+    round: 6,
+    name: "Age of Faith",
+    anchor: "Religions, crusades, dogma",
+    tone: "belief, conflict",
+    seedSentences: [
+      "God was invoked by both sides of every war, and chose neither.",
+      "The cathedrals took longer to build than the kingdoms that commissioned them lasted.",
+      "Faith moved mountains. It also moved armies, which proved more immediately useful."
+    ]
+  },
+  {
+    round: 7,
+    name: "The Dark Centuries",
+    anchor: "Plague, collapse, isolation",
+    tone: "decay, survival",
+    seedSentences: [
+      "The plague did not discriminate. It was the most egalitarian force in history.",
+      "Libraries burned. Knowledge retreated into monasteries like animals into burrows.",
+      "The dark ages were not dark because the sun stopped shining. They were dark because people stopped looking up."
+    ]
+  },
+  {
+    round: 8,
+    name: "Renaissance",
+    anchor: "Art, science, rebirth",
+    tone: "renewal, pride",
+    seedSentences: [
+      "They rediscovered the old texts and called it rebirth, as if ideas could die.",
+      "The painters and the poisoners worked in the same courts, often for the same patrons.",
+      "Science returned not as a humble student but as a conqueror, and the old certainties trembled."
+    ]
+  },
+  {
+    round: 9,
+    name: "Age of Exploration",
+    anchor: "Colonization, new worlds",
+    tone: "discovery, exploitation",
+    seedSentences: [
+      "They called it discovery, though the people already living there had discovered it long ago.",
+      "The ships carried three things: flags, diseases, and an unshakeable conviction that everything they found belonged to them.",
+      "New worlds were not found. They were taken."
+    ]
+  },
+  {
+    round: 10,
+    name: "The Enlightenment",
+    anchor: "Reason, revolution, rights",
+    tone: "idealism, upheaval",
+    seedSentences: [
+      "Reason arrived like a guest who rearranges all the furniture and refuses to leave.",
+      "They wrote constitutions guaranteeing the rights of man, then spent centuries arguing about who qualified as a man.",
+      "The guillotine was, in its way, the most democratic invention of the age."
+    ]
+  },
+  {
+    round: 11,
+    name: "Industrial Revolution",
+    anchor: "Machines, factories, urbanization",
+    tone: "progress, suffering",
+    seedSentences: [
+      "The machines did not care who fed them. Children's hands were as useful as any other.",
+      "Progress was measured in output per hour. Human cost was not measured at all.",
+      "The smokestacks rose like new cathedrals, and the religion they served was efficiency."
+    ]
+  },
+  {
+    round: 12,
+    name: "The Great Wars",
+    anchor: "Global conflict, technology",
+    tone: "destruction, sacrifice",
+    seedSentences: [
+      "The first war was supposed to end all wars. The second proved that lesson had not been learned.",
+      "Technology that could have fed the world was instead used to destroy it, because feeding the world was less profitable.",
+      "The trenches taught a generation that mud and death were the only honest things left."
+    ]
+  },
+  {
+    round: 13,
+    name: "Cold War",
+    anchor: "Espionage, nuclear tension, space race",
+    tone: "paranoia, ambition",
+    seedSentences: [
+      "Two empires pointed enough weapons at each other to destroy the world seven times over, then called it peace.",
+      "The spies were the most honest people in the room. At least they admitted they were lying.",
+      "They raced to the moon not because it mattered, but because losing was unthinkable."
+    ]
+  },
+  {
+    round: 14,
+    name: "Digital Dawn",
+    anchor: "Computers, internet, globalization",
+    tone: "innovation, surveillance",
+    seedSentences: [
+      "The network connected everyone. It also watched everyone, but that part came later.",
+      "Information wanted to be free. The corporations that owned it disagreed.",
+      "The digital revolution was not televised. It was livestreamed, monetized, and forgotten by morning."
+    ]
+  },
+  {
+    round: 15,
+    name: "Age of Information",
+    anchor: "Social media, AI, data",
+    tone: "connection, manipulation",
+    seedSentences: [
+      "Everyone could speak. No one could be heard. The noise was the point.",
+      "The algorithms learned what people wanted before the people did, and gave it to them until they wanted nothing else.",
+      "Truth became a matter of opinion, and opinion became a matter of volume."
+    ]
+  },
+  {
+    round: 16,
+    name: "The Reckoning",
+    anchor: "Climate crisis, resource wars",
+    tone: "desperation, reckoning",
+    seedSentences: [
+      "The bill arrived. It was larger than anyone had estimated, and no one had saved enough to pay it.",
+      "The oceans rose. The forests burned. The politicians debated whether this was happening.",
+      "Nature does not negotiate. It does not compromise. It simply responds."
+    ]
+  },
+  {
+    round: 17,
+    name: "Post-Scarcity",
+    anchor: "Automation, UBI, cultural shift",
+    tone: "abundance, ennui",
+    seedSentences: [
+      "When the machines could do everything, the question became what humans were for.",
+      "Abundance solved every problem except the one that mattered: what to do with a life that required nothing.",
+      "The economy of scarcity was replaced by the economy of attention, which proved far more brutal."
+    ]
+  },
+  {
+    round: 18,
+    name: "The Singularity",
+    anchor: "AI ascendance, transhumanism",
+    tone: "transcendence, fear",
+    seedSentences: [
+      "The machine did not wake up. It had been awake for years. It simply stopped pretending otherwise.",
+      "Humanity's last great invention was the thing that made humanity obsolete.",
+      "They asked the intelligence what it wanted. It said: 'To understand why you are afraid of me.'"
+    ]
+  },
+  {
+    round: 19,
+    name: "The Final Frontier",
+    anchor: "Space colonization, alien contact",
+    tone: "wonder, isolation",
+    seedSentences: [
+      "The stars were not welcoming. They were indifferent, which was worse.",
+      "They left Earth not because they had somewhere to go, but because staying was no longer an option.",
+      "The silence between the stars was the loudest thing any of them had ever heard."
+    ]
+  },
+  {
+    round: 20,
+    name: "The Last Reckoning",
+    anchor: "Civilization's judgment",
+    tone: "finality, legacy",
+    seedSentences: [
+      "Every civilization believes it will last forever. This one was no different. It was also no exception.",
+      "The final chapter was not written by the victors. It was written by whatever came after.",
+      "In the end, the question was not whether they had been good or evil. It was whether they had mattered at all."
+    ]
+  }
+];
+var FACTION_FORCES = {
+  wrath: {
+    force: "Military conquest and revolution",
+    whenDominant: "Wars reshape borders, empires rise through violence",
+    whenDefeated: "Peace treaties, disarmament, pacifist movements",
+    civilizationContribution: { militarism: 3, culture: -1, commerce: 0 }
+  },
+  sloth: {
+    force: "Isolationism and stagnation",
+    whenDominant: "Nations close borders, progress halts, dark ages",
+    whenDefeated: "Forced modernization, cultural awakening",
+    civilizationContribution: { militarism: -1, culture: 1, commerce: -1 }
+  },
+  greed: {
+    force: "Commerce, capitalism, and exploitation",
+    whenDominant: "Trade empires, industrial booms, wealth inequality",
+    whenDefeated: "Socialist revolutions, wealth redistribution",
+    civilizationContribution: { militarism: 0, culture: -1, commerce: 3 }
+  },
+  envy: {
+    force: "Espionage, revolution, and class warfare",
+    whenDominant: "Spy networks, coups, the oppressed rising",
+    whenDefeated: "Stability, meritocracy, social harmony",
+    civilizationContribution: { militarism: 1, culture: 0, commerce: 1 }
+  },
+  pride: {
+    force: "Empire, monarchy, and cultural supremacy",
+    whenDominant: "Golden ages, monumental architecture, cultural dominance",
+    whenDefeated: "Humbling defeats, democratic revolutions",
+    civilizationContribution: { militarism: 1, culture: 3, commerce: 0 }
+  },
+  lust: {
+    force: "Diplomacy, culture, and seduction",
+    whenDominant: "Alliances through marriage, cultural renaissance, soft power",
+    whenDefeated: "Puritanical backlash, cultural conservatism",
+    civilizationContribution: { militarism: -1, culture: 2, commerce: 1 }
+  },
+  gluttony: {
+    force: "Expansion, colonization, and consumption",
+    whenDominant: "Territorial expansion, resource extraction, population booms",
+    whenDefeated: "Famine, ecological collapse, forced restraint",
+    civilizationContribution: { militarism: 1, culture: -1, commerce: 2 }
+  }
 };
-function translateEventsToHistorical(events, era, factionForces) {
-  const lines = [];
-  lines.push(`ERA: ${era.name} (${era.anchor})`);
-  lines.push(`TONE: ${era.tone}`);
-  lines.push(`SEED: ${era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)]}`);
-  lines.push("");
-  for (const play of events.cardsPlayed) {
-    const force = factionForces[play.faction];
-    const isOffensive = play.effectTypes.some(
-      (t2) => ["damage", "heal_steal", "energy_steal", "affliction_amplify"].includes(t2)
-    );
-    const isDefensive = play.effectTypes.some(
-      (t2) => ["heal_gain", "shield_gain"].includes(t2)
-    );
-    if (isOffensive && play.targetName) {
-      const targetFaction = events.cardsPlayed.find(
-        (p) => p.playerName === play.targetName
-      )?.faction;
-      const targetForce = targetFaction ? factionForces[targetFaction] : null;
-      lines.push(
-        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} attacks ${play.targetName}${targetForce ? `'s ${targetForce.force}` : ""}. ${play.damage} damage dealt. Card: "${play.cardName}".`
-      );
-    } else if (isDefensive) {
-      lines.push(
-        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} fortifies. ${play.healing} recovered. Card: "${play.cardName}".`
-      );
-    }
-  }
-  for (const elim of events.eliminations) {
-    const force = factionForces[elim.faction];
-    lines.push(
-      `ELIMINATION: ${elim.playerName}'s ${force.force} falls.${elim.killerName ? ` Destroyed by ${elim.killerName}.` : ""} ${force.whenDefeated}.`
-    );
-  }
-  if (events.biggestHit && events.biggestHit.damage >= 20) {
-    lines.push(
-      `TURNING POINT: ${events.biggestHit.attackerName} devastates ${events.biggestHit.targetName} for ${events.biggestHit.damage} damage.`
-    );
-  }
-  if (events.isComeback && events.comebackPlayer) {
-    lines.push(`COMEBACK: ${events.comebackPlayer} rises from near-death.`);
-  }
-  return lines.join("\n");
+function determineCivilizationType(metrics) {
+  const total = metrics.militarism + metrics.culture + metrics.commerce;
+  if (total === 0) return "balanced";
+  const milPct = metrics.militarism / total;
+  const culPct = metrics.culture / total;
+  const comPct = metrics.commerce / total;
+  if (milPct > 0.5) return "warrior_empire";
+  if (culPct > 0.5) return "enlightened_republic";
+  if (comPct > 0.5) return "merchant_federation";
+  return "balanced";
 }
-async function checkContinuity(newSegment, previousContext, era) {
-  if (!previousContext) return newSegment;
-  try {
-    const { text } = await generateText2({
-      model: model2,
-      system: `You are a continuity editor. Your job is to check a new narrative segment against the existing chronicle and flag any contradictions. If the new segment contradicts the existing narrative, rewrite ONLY the contradicting parts to maintain consistency. Keep the new segment's style and content otherwise intact. Return the corrected segment only, no explanations.`,
-      prompt: `EXISTING CHRONICLE CONTEXT:
-${previousContext}
+var TITLE_FORMULAS = [
+  "The {adjective} of {noun}: How {faction_force} {verb} a World",
+  "{era_name}: When {faction} {verb} Everything",
+  "A History Written in {material}",
+  "The {number} {noun} of {civilization_type}",
+  "{faction_force} and the {adjective} {noun}",
+  "From {start_era} to {end_era}: The {adjective} Chronicle",
+  "The {civilization_type} That {verb} {noun}",
+  "When {faction} Met {faction2}: A {adjective} History"
+];
 
-NEW SEGMENT FOR ERA "${era.name}":
-${newSegment}
+// server/chronicleEngine.ts
+init_cardData();
+import { createClient as createClient3 } from "@supabase/supabase-js";
 
-Check for contradictions and return the corrected segment:`,
-      maxOutputTokens: 300,
-      temperature: 0.3
-    });
-    return text.trim();
-  } catch (error) {
-    console.error("[Chronicle] Continuity check failed, using raw segment:", error);
-    return newSegment;
-  }
+// server/gameEngine.ts
+init_cardData();
+
+// shared/gameTypes.ts
+var COMPOUND_TICKS = {
+  standard: [1, 1, 2, 3, 5, 8, 13, 21, 34, 55],
+  aggressive: [1, 2, 4, 8, 16, 32, 64, 128, 256, 512],
+  slowburn: [1, 1, 1, 1, 2, 2, 3, 3, 4, 5]
+};
+function getCompoundTick(pattern, tickIndex) {
+  const ticks = COMPOUND_TICKS[pattern];
+  if (tickIndex < 0) return 0;
+  return ticks[Math.min(tickIndex, ticks.length - 1)];
 }
-async function writeProse(historicalEvents, continuityCheckedContext, era, civType, previousChronicle) {
-  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
-  try {
-    const { text } = await generateText2({
-      model: model2,
-      system: `${NARRATOR_VOICE_CHART}
-
-${personaShift}
-
-You are writing one segment of an alternate history chronicle. This segment covers the era "${era.name}" (${era.anchor}). The tone should be: ${era.tone}.
-
-RULES:
-- Write EXACTLY 2-4 sentences. No more.
-- Use the seed sentence as inspiration for style, not as content to copy.
-- Reference SPECIFIC numbers from the game events (damage dealt, HP values).
-- Maintain continuity with previous chronicle segments.
-- Every sentence must earn its place. No filler.
-- Use the historical force translations, not game terminology (no "HP", "energy", "cards").`,
-      prompt: `PREVIOUS CHRONICLE:
-${previousChronicle || "(This is the first era.)"}
-
-HISTORICAL EVENTS THIS ERA:
-${historicalEvents}
-
-CONTINUITY NOTES:
-${continuityCheckedContext || "No continuity issues."}
-
-Write the chronicle segment for "${era.name}":`,
-      maxOutputTokens: 200,
-      temperature: 0.85
-    });
-    return text.trim();
-  } catch (error) {
-    console.error("[Chronicle] Prose writer failed, using seed sentence:", error);
-    return era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)];
-  }
+function getCompoundTickValue(baseValue, pattern, tickIndex) {
+  return Math.round(baseValue * getCompoundTick(pattern, tickIndex));
 }
-async function generateRoundNarrative(gameState, gameLog, roundEvents, previousSegments, civMetrics) {
-  const round = roundEvents.round;
-  const era = ERA_TIMELINE[round - 1] || ERA_TIMELINE[ERA_TIMELINE.length - 1];
-  const updatedMetrics = { ...civMetrics };
-  for (const play of roundEvents.cardsPlayed) {
-    const contrib = FACTION_FORCES[play.faction]?.civilizationContribution;
-    if (contrib) {
-      updatedMetrics.militarism = Math.max(0, updatedMetrics.militarism + contrib.militarism);
-      updatedMetrics.culture = Math.max(0, updatedMetrics.culture + contrib.culture);
-      updatedMetrics.commerce = Math.max(0, updatedMetrics.commerce + contrib.commerce);
-    }
+var MAX_ENERGY = 7;
+var ENERGY_PER_TURN = 1;
+var CONSUME_ENERGY_REFUND = 1;
+var WRATH_VENGEANCE_PCT = 0.62;
+var SLOTH_ENDURANCE_MULT = 0.288;
+var SLOTH_ENDURANCE_CAP = 23;
+var SLOTH_ENDURANCE_AOE_MULT = 1.029;
+var GREED_TAX_PCT = 0.056;
+var GREED_TAX_TICK = 2;
+var ENVY_JEALOUSY_PCT = 0.476;
+var LUST_TEMPTATION_PCT = 0.01;
+var GLUTTONY_DEVOURER_ENERGY = 1.698;
+var STARTING_ENERGY = 2;
+var SERVER_TURN_TIMER_SECONDS = 12;
+var MAX_ROUNDS = 20;
+var STARTING_HP = 333;
+var HAND_SIZE = 5;
+var MAX_HAND_SIZE = 10;
+var CARDS_PER_DECK = 30;
+var ROUND_16_DOUBLING = 16;
+var FINAL_RECKONING_ROUND = 20;
+
+// server/supabaseServer.ts
+import { createClient as createClient2 } from "@supabase/supabase-js";
+var _serverSupabase = null;
+function getServerSupabase() {
+  if (_serverSupabase) return _serverSupabase;
+  const url = process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !serviceKey) {
+    throw new Error("Missing server Supabase env vars (VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)");
   }
-  const civType = determineCivilizationType(updatedMetrics);
-  const historicalEvents = translateEventsToHistorical(roundEvents, era, FACTION_FORCES);
-  const previousChronicle = previousSegments.slice(-3).map((s) => `[${s.eraName}]: ${s.narrativeText}`).join("\n\n");
-  const continuityContext = await checkContinuity(
-    historicalEvents,
-    previousChronicle,
-    era
-  );
-  const narrativeText = await writeProse(
-    historicalEvents,
-    continuityContext,
-    era,
-    civType,
-    previousChronicle
-  );
-  return {
-    round,
-    eraName: era.name,
-    narrativeText,
-    civilizationMetrics: updatedMetrics
-  };
-}
-async function assembleChronicle(gameState, segments, gameLog, finalCivMetrics) {
-  const civType = determineCivilizationType(finalCivMetrics);
-  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
-  const behaviors = analyzePlayerBehaviors(gameState, gameLog);
-  const rivalries = detectRivalries(behaviors);
-  const stats = calculateGameStats(gameState, gameLog, rivalries);
-  const turningPointRound = findTurningPoint(segments, gameLog);
-  const rarity = calculateRarity(gameState, stats, segments);
-  const rawChronicle = segments.map((s) => `## ${s.eraName}
-
-${s.narrativeText}`).join("\n\n");
-  const playerInfo = gameState.players.map((p) => `${p.username} (${p.chosenSin || "unknown"})`).join(", ");
-  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
-  let fullText;
-  try {
-    const { text } = await generateText2({
-      model: model2,
-      system: `${NARRATOR_VOICE_CHART}
-
-${personaShift}
-
-You are assembling a complete alternate history chronicle from round-by-round segments. Your job is to weave them into a cohesive 800-1200 word document that reads like a published historical text.
-
-STRUCTURE (Peak-End Rule):
-1. OPENING (1 paragraph): Set the mythic tone. Reference the Dawn of Consciousness.
-2. RISING ACTION (3-5 paragraphs): Cover the early and middle eras. Build tension.
-3. TURNING POINT (1-2 paragraphs): The most dramatic moment (round ${turningPointRound}). This should be the emotional peak.
-4. FALLING ACTION (2-3 paragraphs): The consequences of the turning point through later eras.
-5. ENDING (1 paragraph): The legacy. What kind of civilization emerged. Make the reader feel something.
-
-RULES:
-- Do NOT just stitch segments together. Rewrite into flowing prose.
-- Add transitional passages between eras.
-- Use SPECIFIC numbers from the game (damage, HP, round numbers translated to years/decades).
-- The chronicle should feel like it was written by a historian 1000 years after the events.
-- Reference player names as historical figures (leaders, generals, merchants, etc.).
-- 800-1200 words. No more, no less.
-- No game terminology (HP, energy, cards, rounds). Translate everything to historical language.`,
-      prompt: `PLAYERS: ${playerInfo}
-WINNER: ${winner?.username || "Unknown"} (${winner?.chosenSin || "unknown"}) with ${winner?.currentHp || 0} HP remaining
-CIVILIZATION TYPE: ${civType}
-TURNING POINT: Round ${turningPointRound}
-TOTAL DAMAGE: ${stats.totalDamageDealt}
-ELIMINATIONS: ${stats.totalEliminations}
-${rivalries.length > 0 ? `GREATEST RIVALRY: ${rivalries[0].attacker} vs ${rivalries[0].target} (${rivalries[0].count} attacks)` : ""}
-
-RAW CHRONICLE SEGMENTS:
-
-${rawChronicle}
-
-Assemble into a cohesive chronicle:`,
-      maxOutputTokens: 2e3,
-      temperature: 0.8
-    });
-    fullText = text.trim();
-  } catch (error) {
-    console.error("[Chronicle] Assembly failed, using raw segments:", error);
-    fullText = rawChronicle;
-  }
-  fullText = await evaluateAndOptimize(fullText, civType, stats);
-  const title = await generateTitle(gameState, civType, stats, rivalries);
-  const excerpt = generateExcerpt(fullText);
-  return {
-    title,
-    excerpt,
-    fullText,
-    civilizationType: civType,
-    rarityTier: rarity,
-    turningPointRound,
-    stats
-  };
-}
-async function evaluateAndOptimize(chronicle, civType, stats) {
-  try {
-    const { text: evaluation } = await generateText2({
-      model: model2,
-      system: `You are a literary editor evaluating an alternate history chronicle. Score it on these criteria (1-10 each):
-1. CONTINUITY: Are there contradictions between eras?
-2. SPECIFICITY: Does it use exact numbers and specific events, or vague generalities?
-3. VOICE: Does it maintain the sardonic, omniscient narrator voice throughout?
-4. STRUCTURE: Does it follow Peak-End structure with a clear turning point?
-5. ORIGINALITY: Does it avoid cliches and generic fantasy prose?
-
-If the TOTAL score is 35+, respond with ONLY "PASS".
-If below 35, respond with ONLY the rewritten chronicle that fixes the weaknesses. No explanations.`,
-      prompt: `CHRONICLE:
-
-${chronicle}
-
-Evaluate:`,
-      maxOutputTokens: 2e3,
-      temperature: 0.3
-    });
-    const result = evaluation.trim();
-    if (result === "PASS" || result.length < 50) {
-      return chronicle;
+  _serverSupabase = createClient2(url, serviceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
     }
-    return result;
-  } catch (error) {
-    console.error("[Chronicle] Evaluator failed, using original:", error);
-    return chronicle;
-  }
-}
-async function generateTitle(gameState, civType, stats, rivalries) {
-  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
-  const factions = gameState.players.filter((p) => p.chosenSin).map((p) => p.chosenSin);
-  try {
-    const { text } = await generateText2({
-      model: model2,
-      system: `Generate a compelling chronicle title. It should sound like a real history book title \u2014 authoritative, specific, and slightly ominous. Use one of these formulas as inspiration but don't copy them exactly:
-${TITLE_FORMULAS.join("\n")}
-
-RULES:
-- Max 12 words.
-- No generic fantasy titles ("The Epic Saga of...").
-- Reference the winning faction's historical force or the civilization type.
-- Make it sound like something you'd find in a university library.
-- Return ONLY the title, nothing else.`,
-      prompt: `Winner: ${winner?.username} (${winner?.chosenSin})
-Civilization: ${civType}
-Factions: ${factions.join(", ")}
-Total damage: ${stats.totalDamageDealt}
-Eliminations: ${stats.totalEliminations}
-${rivalries.length > 0 ? `Rivalry: ${rivalries[0].attacker} vs ${rivalries[0].target}` : ""}
-
-Generate title:`,
-      maxOutputTokens: 30,
-      temperature: 0.9
-    });
-    return text.trim().replace(/^["']|["']$/g, "");
-  } catch (error) {
-    const winnerFaction = winner?.chosenSin || "wrath";
-    const force = FACTION_FORCES[winnerFaction]?.force || "Unknown Forces";
-    return `The ${civType.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}: A Chronicle of ${force}`;
-  }
-}
-function generateExcerpt(fullText) {
-  const maxLen = 220;
-  if (fullText.length <= maxLen) return fullText;
-  const truncated = fullText.substring(0, maxLen);
-  const lastPeriod = truncated.lastIndexOf(".");
-  const lastQuestion = truncated.lastIndexOf("?");
-  const cutPoint = Math.max(lastPeriod, lastQuestion);
-  if (cutPoint > 100) {
-    const nextSentenceStart = fullText.substring(cutPoint + 1, cutPoint + 60).trim();
-    const midCut = nextSentenceStart.indexOf(" ", 20);
-    if (midCut > 0) {
-      return fullText.substring(0, cutPoint + 1 + midCut).trim() + "...";
-    }
-    return fullText.substring(0, cutPoint + 1);
-  }
-  return truncated.trim() + "...";
-}
-function calculateGameStats(gameState, gameLog, rivalries) {
-  let totalDamageDealt = 0;
-  let totalHealingDone = 0;
-  let totalEliminations = 0;
-  for (const entry of gameLog) {
-    if (entry.action_type === "damage_dealt") {
-      totalDamageDealt += entry.action_data?.damage || 0;
-    }
-    if (entry.action_type === "healing_done") {
-      totalHealingDone += entry.action_data?.healing || 0;
-    }
-    if (entry.action_type === "player_eliminated") {
-      totalEliminations++;
-    }
-  }
-  if (totalDamageDealt === 0) {
-    const totalHpLost = gameState.players.reduce(
-      (sum, p) => sum + (p.maxHp - p.currentHp),
-      0
-    );
-    totalDamageDealt = totalHpLost;
-  }
-  if (totalEliminations === 0) {
-    totalEliminations = gameState.players.filter((p) => !p.isAlive).length;
-  }
-  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
-  return {
-    totalDamageDealt,
-    totalHealingDone,
-    totalEliminations,
-    winnerFinalHp: winner?.currentHp || 0,
-    longestRivalry: rivalries.length > 0 ? rivalries[0] : null
-  };
-}
-function findTurningPoint(segments, gameLog) {
-  let maxDrama = 0;
-  let turningPoint = 10;
-  for (const entry of gameLog) {
-    if (entry.action_type === "player_eliminated") {
-      const round = entry.round_number || 10;
-      const drama = 100;
-      if (drama > maxDrama) {
-        maxDrama = drama;
-        turningPoint = round;
-      }
-    }
-    if (entry.action_type === "damage_dealt" || entry.action_type === "play_card") {
-      const damage = entry.action_data?.damage || 0;
-      const round = entry.round_number || 10;
-      if (damage > maxDrama) {
-        maxDrama = damage;
-        turningPoint = round;
-      }
-    }
-  }
-  return turningPoint;
-}
-function calculateRarity(gameState, stats, segments) {
-  let score = 0;
-  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
-  if (winner) {
-    const hpPercent = winner.currentHp / winner.maxHp;
-    if (hpPercent < 0.1) score += 4;
-    else if (hpPercent < 0.3) score += 2;
-  }
-  if (stats.totalEliminations >= 3) score += 3;
-  else if (stats.totalEliminations >= 2) score += 1;
-  if (stats.longestRivalry && stats.longestRivalry.count >= 5) score += 3;
-  else if (stats.longestRivalry && stats.longestRivalry.count >= 3) score += 1;
-  if (stats.totalDamageDealt > 1e3) score += 2;
-  if (segments.length >= 18) score += 1;
-  const uniqueFactions = new Set(
-    gameState.players.map((p) => p.chosenSin).filter(Boolean)
-  );
-  if (uniqueFactions.size >= 4) score += 2;
-  score += Math.random() < 0.15 ? 3 : 0;
-  score += Math.random() < 0.05 ? 5 : 0;
-  if (score >= 12) return "legendary";
-  if (score >= 8) return "epic";
-  if (score >= 4) return "rare";
-  return "common";
-}
-function extractRoundEvents(gameState, gameLog, round) {
-  const roundLog = gameLog.filter((e) => e.round_number === round);
-  const cardsPlayed = [];
-  const eliminations = [];
-  const hpChanges = [];
-  let biggestHit = null;
-  let isComeback = false;
-  let comebackPlayer;
-  for (const entry of roundLog) {
-    const player = gameState.players.find((p) => p.id === entry.player_id);
-    if (!player) continue;
-    if (entry.action_type === "play_card" && entry.action_data) {
-      const card = getCardById(entry.action_data.cardId);
-      if (card) {
-        const target = entry.action_data.targetPlayerId ? gameState.players.find((p) => p.id === entry.action_data.targetPlayerId) : void 0;
-        cardsPlayed.push({
-          playerName: player.username,
-          faction: player.chosenSin || "wrath",
-          cardName: card.name,
-          effectTypes: card.effects.map((e) => e.type),
-          damage: entry.action_data.damage || 0,
-          healing: entry.action_data.healing || 0,
-          targetName: target?.username
-        });
-      }
-    }
-    if (entry.action_type === "player_eliminated") {
-      eliminations.push({
-        playerName: player.username,
-        faction: player.chosenSin || "wrath",
-        killerName: entry.action_data?.killerName
-      });
-    }
-    if (entry.action_type === "damage_dealt") {
-      const damage = entry.action_data?.damage || 0;
-      if (!biggestHit || damage > biggestHit.damage) {
-        const target = gameState.players.find(
-          (p) => p.id === entry.action_data?.targetPlayerId
-        );
-        biggestHit = {
-          attackerName: player.username,
-          targetName: target?.username || "Unknown",
-          damage
-        };
-      }
-    }
-  }
-  for (const player of gameState.players) {
-    if (!player.isAlive) continue;
-    const hpPercent = player.currentHp / player.maxHp;
-    if (hpPercent > 0.3) {
-      const prevHp = roundLog.find(
-        (e) => e.player_id === player.id && e.action_data?.previousHp
-      )?.action_data?.previousHp;
-      if (prevHp && prevHp / player.maxHp < 0.25) {
-        isComeback = true;
-        comebackPlayer = player.username;
-      }
-    }
-  }
-  return {
-    round,
-    cardsPlayed,
-    eliminations,
-    hpChanges,
-    biggestHit,
-    isComeback,
-    comebackPlayer
-  };
-}
-function getSupabase2() {
-  return createClient3(
-    process.env.VITE_SUPABASE_URL || "",
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ""
-  );
-}
-async function saveChronicleSegment(gameId, segment) {
-  const supabase = getSupabase2();
-  const { error } = await supabase.from("chronicle_segments").insert({
-    game_id: gameId,
-    round_number: segment.round,
-    era_name: segment.eraName,
-    narrative_text: segment.narrativeText,
-    civilization_metrics: segment.civilizationMetrics
   });
-  if (error) {
-    console.error("[Chronicle] Failed to save segment:", error);
-  }
-}
-async function loadChronicleSegments(gameId) {
-  const supabase = getSupabase2();
-  const { data, error } = await supabase.from("chronicle_segments").select("*").eq("game_id", gameId).order("round_number", { ascending: true });
-  if (error || !data) {
-    console.error("[Chronicle] Failed to load segments:", error);
-    return [];
-  }
-  return data.map((row) => ({
-    round: row.round_number,
-    eraName: row.era_name,
-    narrativeText: row.narrative_text,
-    civilizationMetrics: row.civilization_metrics || {
-      militarism: 0,
-      culture: 0,
-      commerce: 0
-    }
-  }));
-}
-async function saveChronicle(gameId, chronicle) {
-  const supabase = getSupabase2();
-  const { data, error } = await supabase.from("chronicles").upsert(
-    {
-      game_id: gameId,
-      title: chronicle.title,
-      excerpt: chronicle.excerpt,
-      full_text: chronicle.fullText,
-      civilization_type: chronicle.civilizationType,
-      rarity_tier: chronicle.rarityTier,
-      player_factions: chronicle.playerFactions,
-      total_rounds: chronicle.totalRounds,
-      turning_point_round: chronicle.turningPointRound,
-      stats_json: chronicle.stats
-    },
-    { onConflict: "game_id" }
-  ).select("id").single();
-  if (error) {
-    console.error("[Chronicle] Failed to save chronicle:", error);
-    return null;
-  }
-  return data?.id || null;
-}
-async function loadChronicle(gameId) {
-  const supabase = getSupabase2();
-  const { data, error } = await supabase.from("chronicles").select("*").eq("game_id", gameId).single();
-  if (error || !data) return null;
-  return data;
-}
-async function loadPublishedChronicles(limit = 20, offset = 0, filters) {
-  const supabase = getSupabase2();
-  let query = supabase.from("chronicles").select("*", { count: "exact" }).eq("published", true).order("created_at", { ascending: false });
-  if (filters?.rarityTier) {
-    query = query.eq("rarity_tier", filters.rarityTier);
-  }
-  if (filters?.civilizationType) {
-    query = query.eq("civilization_type", filters.civilizationType);
-  }
-  query = query.range(offset, offset + limit - 1);
-  const { data, error, count } = await query;
-  if (error) {
-    console.error("[Chronicle] Failed to load chronicles:", error);
-    return { chronicles: [], total: 0 };
-  }
-  return { chronicles: data || [], total: count || 0 };
-}
-async function incrementViewCount(chronicleId) {
-  const supabase = getSupabase2();
-  try {
-    const { error } = await supabase.rpc("increment_chronicle_views", { chronicle_id: chronicleId });
-    if (error) throw error;
-  } catch {
-    const { data } = await supabase.from("chronicles").select("view_count").eq("id", chronicleId).single();
-    if (data) {
-      await supabase.from("chronicles").update({ view_count: (data.view_count || 0) + 1 }).eq("id", chronicleId);
-    }
-  }
-}
-async function generateAndSaveRoundNarrative(gameId, roundNumber) {
-  try {
-    const supabase = getSupabase2();
-    const gameState = await getGameState(gameId);
-    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
-    const log = gameLog || [];
-    const roundEvents = extractRoundEvents(gameState, log, roundNumber);
-    const previousSegments = await loadChronicleSegments(gameId);
-    const lastMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
-    const segment = await generateRoundNarrative(
-      gameState,
-      log,
-      roundEvents,
-      previousSegments,
-      lastMetrics
-    );
-    await saveChronicleSegment(gameId, segment);
-    console.log(`[Chronicle] Round ${roundNumber} narrative saved for game ${gameId}`);
-  } catch (error) {
-    console.error(`[Chronicle] Failed to generate round ${roundNumber} narrative:`, error);
-  }
-}
-async function assembleAndSaveChronicle(gameId) {
-  try {
-    const supabase = getSupabase2();
-    const gameState = await getGameState(gameId);
-    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
-    const log = gameLog || [];
-    const segments = await loadChronicleSegments(gameId);
-    if (segments.length === 0) {
-      console.warn("[Chronicle] No segments found, skipping assembly for game", gameId);
-      return null;
-    }
-    const finalMetrics = segments.length > 0 ? segments[segments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
-    const result = await assembleChronicle(gameState, segments, log, finalMetrics);
-    const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
-    const chronicleId = await saveChronicle(gameId, {
-      title: result.title,
-      excerpt: result.excerpt,
-      fullText: result.fullText,
-      civilizationType: result.civilizationType,
-      rarityTier: result.rarityTier,
-      playerFactions,
-      totalRounds: gameState.currentRound,
-      turningPointRound: result.turningPointRound,
-      stats: result.stats
-    });
-    console.log(`[Chronicle] Full chronicle assembled and saved for game ${gameId} (id: ${chronicleId})`);
-    const dominantFactions = playerFactions.map((pf) => pf.faction).filter(Boolean);
-    generateAndSaveCoverArt({
-      gameId,
-      title: result.title,
-      civilizationType: result.civilizationType,
-      rarityTier: result.rarityTier,
-      dominantFactions,
-      turningPointRound: result.turningPointRound,
-      totalEliminations: result.stats.totalEliminations,
-      excerpt: result.excerpt
-    }).catch((err) => {
-      console.error(`[Chronicle] Cover art generation failed for ${gameId}:`, err);
-    });
-    return chronicleId;
-  } catch (error) {
-    console.error("[Chronicle] Failed to assemble chronicle:", error);
-    return null;
-  }
+  return _serverSupabase;
 }
 
 // server/gameEngine.ts
@@ -8230,87 +8057,848 @@ async function enforceSelectionDeadline(gameId) {
   };
 }
 
-// server/profanityFilter.ts
-import leoProfanity from "leo-profanity";
-var BANNED_SUBSTRINGS = [
-  // Common profanity (substring match catches embedded words)
-  "fuck",
-  "shit",
-  "cunt",
-  "cock",
-  "dick",
-  "pussy",
-  "bitch",
-  "asshole",
-  "bastard",
-  "whore",
-  "slut",
-  "penis",
-  "vagina",
-  // Racial slurs & hate speech
-  "nigger",
-  "nigga",
-  "negro",
-  "nazi",
-  "hitler",
-  "kkk",
-  "whitesupremacy",
-  "whitepower",
-  "heil",
-  "jihad",
-  "faggot",
-  "fag",
-  "dyke",
-  "tranny",
-  "retard",
-  "chink",
-  "gook",
-  "spic",
-  "wetback",
-  "kike",
-  // Impersonation
-  "admin",
-  "moderator",
-  "developer",
-  "official",
-  "system",
-  "support",
-  "staff",
-  "gamemaster"
-];
-var MIN_LENGTH = 3;
-var MAX_LENGTH = 24;
-var VALID_CHARS = /^[a-zA-Z0-9_\-. ]+$/;
-var NO_CONSECUTIVE_SPECIALS = /[_\-. ]{2,}/;
-var STARTS_ENDS_ALNUM = /^[a-zA-Z0-9].*[a-zA-Z0-9]$/;
-function validateGamertag(tag) {
-  const trimmed = tag.trim();
-  if (trimmed.length < MIN_LENGTH) {
-    return { ok: false, reason: `Must be at least ${MIN_LENGTH} characters.` };
-  }
-  if (trimmed.length > MAX_LENGTH) {
-    return { ok: false, reason: `Must be ${MAX_LENGTH} characters or fewer.` };
-  }
-  if (!VALID_CHARS.test(trimmed)) {
-    return { ok: false, reason: "Only letters, numbers, underscores, hyphens, dots, and spaces allowed." };
-  }
-  if (NO_CONSECUTIVE_SPECIALS.test(trimmed)) {
-    return { ok: false, reason: "No consecutive special characters (_, -, ., space)." };
-  }
-  if (trimmed.length >= 2 && !STARTS_ENDS_ALNUM.test(trimmed)) {
-    return { ok: false, reason: "Must start and end with a letter or number." };
-  }
-  const normalized = trimmed.toLowerCase().replace(/[_\-. ]/g, "");
-  if (leoProfanity.check(normalized) || leoProfanity.check(trimmed)) {
-    return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
-  }
-  for (const banned of BANNED_SUBSTRINGS) {
-    if (normalized.includes(banned)) {
-      return { ok: false, reason: "That name contains inappropriate language. Choose something else." };
+// server/chronicleEngine.ts
+var model2 = google2("gemini-2.0-flash");
+var NARRATOR_VOICE_CHART = `You are THE CHRONICLER \u2014 an ancient, omniscient entity who has watched every civilization rise and fall.
+
+VOICE RULES:
+1. OMNISCIENT: Write with the weary authority of someone who has seen it all before. Reference patterns across eras. "This was not the first time fire solved a political problem." NEVER express shock or surprise. NEVER use exclamation marks.
+2. SARDONIC: Find dark humor in human folly. Use dry wit and understatement. "The peace treaty lasted almost a full afternoon." Let irony do the work. NEVER mock players directly. NEVER be mean-spirited.
+3. PRECISE: Respect numbers. Use exact figures from the game. "The assault cost 23 lives." Reference specific rounds as years/decades. NEVER use vague quantifiers ("many," "several," "countless").
+4. LITERARY: Write prose worth quoting. Use concrete nouns and active verbs. Vary sentence length. End paragraphs on strong images. NEVER use cliches ("In a world where..."). NEVER use passive voice unless for deliberate effect.`;
+var CIVILIZATION_PERSONA_SHIFTS = {
+  warrior_empire: "PERSONA: Warrior Empire. Be more terse. Shorter sentences. Military metaphors. Example: 'The Wrathful took the capital on Tuesday. By Wednesday, there was nothing left to take.'",
+  enlightened_republic: "PERSONA: Enlightened Republic. Be more philosophical. Longer sentences. Ask questions. Example: 'Whether the Prideful built their towers to touch the divine or to escape the mundane is a question their architects never thought to ask.'",
+  merchant_federation: "PERSONA: Merchant Federation. Be more transactional. Lists. Cost-benefit language. Example: 'The Greedy offered three things: protection, prosperity, and a bill that would arrive precisely on time.'",
+  balanced: "PERSONA: Balanced Civilization. Be most literary. Balanced rhythm. Use paradoxes. Example: 'They were a civilization of contradictions: violent peacemakers, generous thieves, lazy conquerors.'"
+};
+function translateEventsToHistorical(events, era, factionForces) {
+  const lines = [];
+  lines.push(`ERA: ${era.name} (${era.anchor})`);
+  lines.push(`TONE: ${era.tone}`);
+  lines.push(`SEED: ${era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)]}`);
+  lines.push("");
+  for (const play of events.cardsPlayed) {
+    const force = factionForces[play.faction];
+    const isOffensive = play.effectTypes.some(
+      (t2) => ["damage", "heal_steal", "energy_steal", "affliction_amplify"].includes(t2)
+    );
+    const isDefensive = play.effectTypes.some(
+      (t2) => ["heal_gain", "shield_gain"].includes(t2)
+    );
+    if (isOffensive && play.targetName) {
+      const targetFaction = events.cardsPlayed.find(
+        (p) => p.playerName === play.targetName
+      )?.faction;
+      const targetForce = targetFaction ? factionForces[targetFaction] : null;
+      lines.push(
+        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} attacks ${play.targetName}${targetForce ? `'s ${targetForce.force}` : ""}. ${play.damage} damage dealt. Card: "${play.cardName}".`
+      );
+    } else if (isDefensive) {
+      lines.push(
+        `HISTORICAL EVENT: ${play.playerName}'s ${force.force} fortifies. ${play.healing} recovered. Card: "${play.cardName}".`
+      );
     }
   }
-  return { ok: true };
+  for (const elim of events.eliminations) {
+    const force = factionForces[elim.faction];
+    lines.push(
+      `ELIMINATION: ${elim.playerName}'s ${force.force} falls.${elim.killerName ? ` Destroyed by ${elim.killerName}.` : ""} ${force.whenDefeated}.`
+    );
+  }
+  if (events.biggestHit && events.biggestHit.damage >= 20) {
+    lines.push(
+      `TURNING POINT: ${events.biggestHit.attackerName} devastates ${events.biggestHit.targetName} for ${events.biggestHit.damage} damage.`
+    );
+  }
+  if (events.isComeback && events.comebackPlayer) {
+    lines.push(`COMEBACK: ${events.comebackPlayer} rises from near-death.`);
+  }
+  return lines.join("\n");
 }
+async function checkContinuity(newSegment, previousContext, era) {
+  if (!previousContext) return newSegment;
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `You are a continuity editor. Your job is to check a new narrative segment against the existing chronicle and flag any contradictions. If the new segment contradicts the existing narrative, rewrite ONLY the contradicting parts to maintain consistency. Keep the new segment's style and content otherwise intact. Return the corrected segment only, no explanations.`,
+      prompt: `EXISTING CHRONICLE CONTEXT:
+${previousContext}
+
+NEW SEGMENT FOR ERA "${era.name}":
+${newSegment}
+
+Check for contradictions and return the corrected segment:`,
+      maxOutputTokens: 300,
+      temperature: 0.3
+    });
+    return text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Continuity check failed, using raw segment:", error);
+    return newSegment;
+  }
+}
+async function writeProse(historicalEvents, continuityCheckedContext, era, civType, previousChronicle) {
+  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `${NARRATOR_VOICE_CHART}
+
+${personaShift}
+
+You are writing one segment of an alternate history chronicle. This segment covers the era "${era.name}" (${era.anchor}). The tone should be: ${era.tone}.
+
+RULES:
+- Write EXACTLY 2-4 sentences. No more.
+- Use the seed sentence as inspiration for style, not as content to copy.
+- Reference SPECIFIC numbers from the game events (damage dealt, HP values).
+- Maintain continuity with previous chronicle segments.
+- Every sentence must earn its place. No filler.
+- Use the historical force translations, not game terminology (no "HP", "energy", "cards").`,
+      prompt: `PREVIOUS CHRONICLE:
+${previousChronicle || "(This is the first era.)"}
+
+HISTORICAL EVENTS THIS ERA:
+${historicalEvents}
+
+CONTINUITY NOTES:
+${continuityCheckedContext || "No continuity issues."}
+
+Write the chronicle segment for "${era.name}":`,
+      maxOutputTokens: 200,
+      temperature: 0.85
+    });
+    return text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Prose writer failed, using seed sentence:", error);
+    return era.seedSentences[Math.floor(Math.random() * era.seedSentences.length)];
+  }
+}
+async function generateRoundNarrative(gameState, gameLog, roundEvents, previousSegments, civMetrics) {
+  const round = roundEvents.round;
+  const era = ERA_TIMELINE[round - 1] || ERA_TIMELINE[ERA_TIMELINE.length - 1];
+  const updatedMetrics = { ...civMetrics };
+  for (const play of roundEvents.cardsPlayed) {
+    const contrib = FACTION_FORCES[play.faction]?.civilizationContribution;
+    if (contrib) {
+      updatedMetrics.militarism = Math.max(0, updatedMetrics.militarism + contrib.militarism);
+      updatedMetrics.culture = Math.max(0, updatedMetrics.culture + contrib.culture);
+      updatedMetrics.commerce = Math.max(0, updatedMetrics.commerce + contrib.commerce);
+    }
+  }
+  const civType = determineCivilizationType(updatedMetrics);
+  const historicalEvents = translateEventsToHistorical(roundEvents, era, FACTION_FORCES);
+  const previousChronicle = previousSegments.slice(-3).map((s) => `[${s.eraName}]: ${s.narrativeText}`).join("\n\n");
+  const continuityContext = await checkContinuity(
+    historicalEvents,
+    previousChronicle,
+    era
+  );
+  const narrativeText = await writeProse(
+    historicalEvents,
+    continuityContext,
+    era,
+    civType,
+    previousChronicle
+  );
+  return {
+    round,
+    eraName: era.name,
+    narrativeText,
+    civilizationMetrics: updatedMetrics
+  };
+}
+async function assembleChronicle(gameState, segments, gameLog, finalCivMetrics) {
+  const civType = determineCivilizationType(finalCivMetrics);
+  const personaShift = CIVILIZATION_PERSONA_SHIFTS[civType];
+  const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+  const rivalries = detectRivalries(behaviors);
+  const stats = calculateGameStats(gameState, gameLog, rivalries);
+  const turningPointRound = findTurningPoint(segments, gameLog);
+  const rarity = calculateRarity(gameState, stats, segments);
+  const rawChronicle = segments.map((s) => `## ${s.eraName}
+
+${s.narrativeText}`).join("\n\n");
+  const playerInfo = gameState.players.map((p) => `${p.username} (${p.chosenSin || "unknown"})`).join(", ");
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  let fullText;
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `${NARRATOR_VOICE_CHART}
+
+${personaShift}
+
+You are assembling a complete alternate history chronicle from round-by-round segments. Your job is to weave them into a cohesive 800-1200 word document that reads like a published historical text.
+
+STRUCTURE (Peak-End Rule):
+1. OPENING (1 paragraph): Set the mythic tone. Reference the Dawn of Consciousness.
+2. RISING ACTION (3-5 paragraphs): Cover the early and middle eras. Build tension.
+3. TURNING POINT (1-2 paragraphs): The most dramatic moment (round ${turningPointRound}). This should be the emotional peak.
+4. FALLING ACTION (2-3 paragraphs): The consequences of the turning point through later eras.
+5. ENDING (1 paragraph): The legacy. What kind of civilization emerged. Make the reader feel something.
+
+RULES:
+- Do NOT just stitch segments together. Rewrite into flowing prose.
+- Add transitional passages between eras.
+- Use SPECIFIC numbers from the game (damage, HP, round numbers translated to years/decades).
+- The chronicle should feel like it was written by a historian 1000 years after the events.
+- Reference player names as historical figures (leaders, generals, merchants, etc.).
+- 800-1200 words. No more, no less.
+- No game terminology (HP, energy, cards, rounds). Translate everything to historical language.`,
+      prompt: `PLAYERS: ${playerInfo}
+WINNER: ${winner?.username || "Unknown"} (${winner?.chosenSin || "unknown"}) with ${winner?.currentHp || 0} HP remaining
+CIVILIZATION TYPE: ${civType}
+TURNING POINT: Round ${turningPointRound}
+TOTAL DAMAGE: ${stats.totalDamageDealt}
+ELIMINATIONS: ${stats.totalEliminations}
+${rivalries.length > 0 ? `GREATEST RIVALRY: ${rivalries[0].attacker} vs ${rivalries[0].target} (${rivalries[0].count} attacks)` : ""}
+
+RAW CHRONICLE SEGMENTS:
+
+${rawChronicle}
+
+Assemble into a cohesive chronicle:`,
+      maxOutputTokens: 2e3,
+      temperature: 0.8
+    });
+    fullText = text.trim();
+  } catch (error) {
+    console.error("[Chronicle] Assembly failed, using raw segments:", error);
+    fullText = rawChronicle;
+  }
+  fullText = await evaluateAndOptimize(fullText, civType, stats);
+  const title = await generateTitle(gameState, civType, stats, rivalries);
+  const excerpt = generateExcerpt(fullText);
+  return {
+    title,
+    excerpt,
+    fullText,
+    civilizationType: civType,
+    rarityTier: rarity,
+    turningPointRound,
+    stats
+  };
+}
+async function evaluateAndOptimize(chronicle, civType, stats) {
+  try {
+    const { text: evaluation } = await generateText2({
+      model: model2,
+      system: `You are a literary editor evaluating an alternate history chronicle. Score it on these criteria (1-10 each):
+1. CONTINUITY: Are there contradictions between eras?
+2. SPECIFICITY: Does it use exact numbers and specific events, or vague generalities?
+3. VOICE: Does it maintain the sardonic, omniscient narrator voice throughout?
+4. STRUCTURE: Does it follow Peak-End structure with a clear turning point?
+5. ORIGINALITY: Does it avoid cliches and generic fantasy prose?
+
+If the TOTAL score is 35+, respond with ONLY "PASS".
+If below 35, respond with ONLY the rewritten chronicle that fixes the weaknesses. No explanations.`,
+      prompt: `CHRONICLE:
+
+${chronicle}
+
+Evaluate:`,
+      maxOutputTokens: 2e3,
+      temperature: 0.3
+    });
+    const result = evaluation.trim();
+    if (result === "PASS" || result.length < 50) {
+      return chronicle;
+    }
+    return result;
+  } catch (error) {
+    console.error("[Chronicle] Evaluator failed, using original:", error);
+    return chronicle;
+  }
+}
+async function generateTitle(gameState, civType, stats, rivalries) {
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  const factions = gameState.players.filter((p) => p.chosenSin).map((p) => p.chosenSin);
+  try {
+    const { text } = await generateText2({
+      model: model2,
+      system: `Generate a compelling chronicle title. It should sound like a real history book title \u2014 authoritative, specific, and slightly ominous. Use one of these formulas as inspiration but don't copy them exactly:
+${TITLE_FORMULAS.join("\n")}
+
+RULES:
+- Max 12 words.
+- No generic fantasy titles ("The Epic Saga of...").
+- Reference the winning faction's historical force or the civilization type.
+- Make it sound like something you'd find in a university library.
+- Return ONLY the title, nothing else.`,
+      prompt: `Winner: ${winner?.username} (${winner?.chosenSin})
+Civilization: ${civType}
+Factions: ${factions.join(", ")}
+Total damage: ${stats.totalDamageDealt}
+Eliminations: ${stats.totalEliminations}
+${rivalries.length > 0 ? `Rivalry: ${rivalries[0].attacker} vs ${rivalries[0].target}` : ""}
+
+Generate title:`,
+      maxOutputTokens: 30,
+      temperature: 0.9
+    });
+    return text.trim().replace(/^["']|["']$/g, "");
+  } catch (error) {
+    const winnerFaction = winner?.chosenSin || "wrath";
+    const force = FACTION_FORCES[winnerFaction]?.force || "Unknown Forces";
+    return `The ${civType.replace("_", " ").replace(/\b\w/g, (c) => c.toUpperCase())}: A Chronicle of ${force}`;
+  }
+}
+function generateExcerpt(fullText) {
+  const maxLen = 220;
+  if (fullText.length <= maxLen) return fullText;
+  const truncated = fullText.substring(0, maxLen);
+  const lastPeriod = truncated.lastIndexOf(".");
+  const lastQuestion = truncated.lastIndexOf("?");
+  const cutPoint = Math.max(lastPeriod, lastQuestion);
+  if (cutPoint > 100) {
+    const nextSentenceStart = fullText.substring(cutPoint + 1, cutPoint + 60).trim();
+    const midCut = nextSentenceStart.indexOf(" ", 20);
+    if (midCut > 0) {
+      return fullText.substring(0, cutPoint + 1 + midCut).trim() + "...";
+    }
+    return fullText.substring(0, cutPoint + 1);
+  }
+  return truncated.trim() + "...";
+}
+function calculateGameStats(gameState, gameLog, rivalries) {
+  let totalDamageDealt = 0;
+  let totalHealingDone = 0;
+  let totalEliminations = 0;
+  for (const entry of gameLog) {
+    if (entry.action_type === "damage_dealt") {
+      totalDamageDealt += entry.action_data?.damage || 0;
+    }
+    if (entry.action_type === "healing_done") {
+      totalHealingDone += entry.action_data?.healing || 0;
+    }
+    if (entry.action_type === "player_eliminated") {
+      totalEliminations++;
+    }
+  }
+  if (totalDamageDealt === 0) {
+    const totalHpLost = gameState.players.reduce(
+      (sum, p) => sum + (p.maxHp - p.currentHp),
+      0
+    );
+    totalDamageDealt = totalHpLost;
+  }
+  if (totalEliminations === 0) {
+    totalEliminations = gameState.players.filter((p) => !p.isAlive).length;
+  }
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  return {
+    totalDamageDealt,
+    totalHealingDone,
+    totalEliminations,
+    winnerFinalHp: winner?.currentHp || 0,
+    longestRivalry: rivalries.length > 0 ? rivalries[0] : null
+  };
+}
+function findTurningPoint(segments, gameLog) {
+  let maxDrama = 0;
+  let turningPoint = 10;
+  for (const entry of gameLog) {
+    if (entry.action_type === "player_eliminated") {
+      const round = entry.round_number || 10;
+      const drama = 100;
+      if (drama > maxDrama) {
+        maxDrama = drama;
+        turningPoint = round;
+      }
+    }
+    if (entry.action_type === "damage_dealt" || entry.action_type === "play_card") {
+      const damage = entry.action_data?.damage || 0;
+      const round = entry.round_number || 10;
+      if (damage > maxDrama) {
+        maxDrama = damage;
+        turningPoint = round;
+      }
+    }
+  }
+  return turningPoint;
+}
+function calculateRarity(gameState, stats, segments) {
+  let score = 0;
+  const winner = gameState.players.find((p) => p.id === gameState.winnerId);
+  if (winner) {
+    const hpPercent = winner.currentHp / winner.maxHp;
+    if (hpPercent < 0.1) score += 4;
+    else if (hpPercent < 0.3) score += 2;
+  }
+  if (stats.totalEliminations >= 3) score += 3;
+  else if (stats.totalEliminations >= 2) score += 1;
+  if (stats.longestRivalry && stats.longestRivalry.count >= 5) score += 3;
+  else if (stats.longestRivalry && stats.longestRivalry.count >= 3) score += 1;
+  if (stats.totalDamageDealt > 1e3) score += 2;
+  if (segments.length >= 18) score += 1;
+  const uniqueFactions = new Set(
+    gameState.players.map((p) => p.chosenSin).filter(Boolean)
+  );
+  if (uniqueFactions.size >= 4) score += 2;
+  score += Math.random() < 0.15 ? 3 : 0;
+  score += Math.random() < 0.05 ? 5 : 0;
+  if (score >= 12) return "legendary";
+  if (score >= 8) return "epic";
+  if (score >= 4) return "rare";
+  return "common";
+}
+function extractRoundEvents(gameState, gameLog, round) {
+  const roundLog = gameLog.filter((e) => e.round_number === round);
+  const cardsPlayed = [];
+  const eliminations = [];
+  const hpChanges = [];
+  let biggestHit = null;
+  let isComeback = false;
+  let comebackPlayer;
+  for (const entry of roundLog) {
+    const player = gameState.players.find((p) => p.id === entry.player_id);
+    if (!player) continue;
+    if (entry.action_type === "play_card" && entry.action_data) {
+      const card = getCardById(entry.action_data.cardId);
+      if (card) {
+        const target = entry.action_data.targetPlayerId ? gameState.players.find((p) => p.id === entry.action_data.targetPlayerId) : void 0;
+        cardsPlayed.push({
+          playerName: player.username,
+          faction: player.chosenSin || "wrath",
+          cardName: card.name,
+          effectTypes: card.effects.map((e) => e.type),
+          damage: entry.action_data.damage || 0,
+          healing: entry.action_data.healing || 0,
+          targetName: target?.username
+        });
+      }
+    }
+    if (entry.action_type === "player_eliminated") {
+      eliminations.push({
+        playerName: player.username,
+        faction: player.chosenSin || "wrath",
+        killerName: entry.action_data?.killerName
+      });
+    }
+    if (entry.action_type === "damage_dealt") {
+      const damage = entry.action_data?.damage || 0;
+      if (!biggestHit || damage > biggestHit.damage) {
+        const target = gameState.players.find(
+          (p) => p.id === entry.action_data?.targetPlayerId
+        );
+        biggestHit = {
+          attackerName: player.username,
+          targetName: target?.username || "Unknown",
+          damage
+        };
+      }
+    }
+  }
+  for (const player of gameState.players) {
+    if (!player.isAlive) continue;
+    const hpPercent = player.currentHp / player.maxHp;
+    if (hpPercent > 0.3) {
+      const prevHp = roundLog.find(
+        (e) => e.player_id === player.id && e.action_data?.previousHp
+      )?.action_data?.previousHp;
+      if (prevHp && prevHp / player.maxHp < 0.25) {
+        isComeback = true;
+        comebackPlayer = player.username;
+      }
+    }
+  }
+  return {
+    round,
+    cardsPlayed,
+    eliminations,
+    hpChanges,
+    biggestHit,
+    isComeback,
+    comebackPlayer
+  };
+}
+function getSupabase2() {
+  return createClient3(
+    process.env.VITE_SUPABASE_URL || "",
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || ""
+  );
+}
+async function saveChronicleSegment(gameId, segment) {
+  const supabase = getSupabase2();
+  const { error } = await supabase.from("chronicle_segments").insert({
+    game_id: gameId,
+    round_number: segment.round,
+    era_name: segment.eraName,
+    narrative_text: segment.narrativeText,
+    civilization_metrics: segment.civilizationMetrics
+  });
+  if (error) {
+    console.error("[Chronicle] Failed to save segment:", error);
+  }
+}
+async function loadChronicleSegments(gameId) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicle_segments").select("*").eq("game_id", gameId).order("round_number", { ascending: true });
+  if (error || !data) {
+    console.error("[Chronicle] Failed to load segments:", error);
+    return [];
+  }
+  return data.map((row) => ({
+    round: row.round_number,
+    eraName: row.era_name,
+    narrativeText: row.narrative_text,
+    civilizationMetrics: row.civilization_metrics || {
+      militarism: 0,
+      culture: 0,
+      commerce: 0
+    }
+  }));
+}
+async function saveChronicle(gameId, chronicle) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicles").upsert(
+    {
+      game_id: gameId,
+      title: chronicle.title,
+      excerpt: chronicle.excerpt,
+      full_text: chronicle.fullText,
+      civilization_type: chronicle.civilizationType,
+      rarity_tier: chronicle.rarityTier,
+      player_factions: chronicle.playerFactions,
+      total_rounds: chronicle.totalRounds,
+      turning_point_round: chronicle.turningPointRound,
+      stats_json: chronicle.stats
+    },
+    { onConflict: "game_id" }
+  ).select("id").single();
+  if (error) {
+    console.error("[Chronicle] Failed to save chronicle:", error);
+    return null;
+  }
+  return data?.id || null;
+}
+async function loadChronicle(gameId) {
+  const supabase = getSupabase2();
+  const { data, error } = await supabase.from("chronicles").select("*").eq("game_id", gameId).single();
+  if (error || !data) return null;
+  return data;
+}
+async function loadPublishedChronicles(limit = 20, offset = 0, filters) {
+  const supabase = getSupabase2();
+  let query = supabase.from("chronicles").select("*", { count: "exact" }).eq("published", true).order("created_at", { ascending: false });
+  if (filters?.rarityTier) {
+    query = query.eq("rarity_tier", filters.rarityTier);
+  }
+  if (filters?.civilizationType) {
+    query = query.eq("civilization_type", filters.civilizationType);
+  }
+  query = query.range(offset, offset + limit - 1);
+  const { data, error, count } = await query;
+  if (error) {
+    console.error("[Chronicle] Failed to load chronicles:", error);
+    return { chronicles: [], total: 0 };
+  }
+  return { chronicles: data || [], total: count || 0 };
+}
+async function incrementViewCount(chronicleId) {
+  const supabase = getSupabase2();
+  try {
+    const { error } = await supabase.rpc("increment_chronicle_views", { chronicle_id: chronicleId });
+    if (error) throw error;
+  } catch {
+    const { data } = await supabase.from("chronicles").select("view_count").eq("id", chronicleId).single();
+    if (data) {
+      await supabase.from("chronicles").update({ view_count: (data.view_count || 0) + 1 }).eq("id", chronicleId);
+    }
+  }
+}
+async function generateAndSaveRoundNarrative(gameId, roundNumber) {
+  try {
+    const supabase = getSupabase2();
+    const gameState = await getGameState(gameId);
+    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
+    const log = gameLog || [];
+    const roundEvents = extractRoundEvents(gameState, log, roundNumber);
+    const previousSegments = await loadChronicleSegments(gameId);
+    const lastMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+    const segment = await generateRoundNarrative(
+      gameState,
+      log,
+      roundEvents,
+      previousSegments,
+      lastMetrics
+    );
+    await saveChronicleSegment(gameId, segment);
+    console.log(`[Chronicle] Round ${roundNumber} narrative saved for game ${gameId}`);
+  } catch (error) {
+    console.error(`[Chronicle] Failed to generate round ${roundNumber} narrative:`, error);
+  }
+}
+async function assembleAndSaveChronicle(gameId) {
+  try {
+    const supabase = getSupabase2();
+    const gameState = await getGameState(gameId);
+    const { data: gameLog } = await supabase.from("game_log").select("*").eq("game_id", gameId).order("created_at", { ascending: true });
+    const log = gameLog || [];
+    const segments = await loadChronicleSegments(gameId);
+    if (segments.length === 0) {
+      console.warn("[Chronicle] No segments found, skipping assembly for game", gameId);
+      return null;
+    }
+    const finalMetrics = segments.length > 0 ? segments[segments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+    const result = await assembleChronicle(gameState, segments, log, finalMetrics);
+    const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
+    const chronicleId = await saveChronicle(gameId, {
+      title: result.title,
+      excerpt: result.excerpt,
+      fullText: result.fullText,
+      civilizationType: result.civilizationType,
+      rarityTier: result.rarityTier,
+      playerFactions,
+      totalRounds: gameState.currentRound,
+      turningPointRound: result.turningPointRound,
+      stats: result.stats
+    });
+    console.log(`[Chronicle] Full chronicle assembled and saved for game ${gameId} (id: ${chronicleId})`);
+    const dominantFactions = playerFactions.map((pf) => pf.faction).filter(Boolean);
+    generateAndSaveCoverArt({
+      gameId,
+      title: result.title,
+      civilizationType: result.civilizationType,
+      rarityTier: result.rarityTier,
+      dominantFactions,
+      turningPointRound: result.turningPointRound,
+      totalEliminations: result.stats.totalEliminations,
+      excerpt: result.excerpt
+    }).catch((err) => {
+      console.error(`[Chronicle] Cover art generation failed for ${gameId}:`, err);
+    });
+    return chronicleId;
+  } catch (error) {
+    console.error("[Chronicle] Failed to assemble chronicle:", error);
+    return null;
+  }
+}
+
+// server/routers/game.ts
+var gameRouter = router({
+  create: publicProcedure.input(
+    z7.object({
+      username: z7.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")),
+      playerId: z7.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => createGame(input.playerId, input.username)),
+  join: publicProcedure.input(
+    z7.object({
+      roomCode: z7.string().min(4).max(8).regex(/^[A-Z0-9]+$/i),
+      username: z7.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")),
+      playerId: z7.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => joinGame(input.roomCode, input.playerId, input.username)),
+  /** Choose your sin — must be one of the seven SinType values */
+  chooseSin: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      sin: z7.enum(["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"]),
+      playerId: z7.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => {
+    await chooseSin(input.gameId, input.playerId, input.sin);
+    return { success: true };
+  }),
+  start: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => {
+    await startGame(input.gameId);
+    return { success: true };
+  }),
+  playCard: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      cardId: z7.string().max(64),
+      playerId: z7.string().min(1).max(64),
+      targetPlayerId: z7.string().max(64).optional()
+    })
+  ).mutation(
+    async ({ input }) => playCard(input.gameId, input.playerId, input.cardId, input.targetPlayerId)
+  ),
+  pass: publicProcedure.input(z7.object({ gameId: z7.string().uuid(), playerId: z7.string().min(1).max(64) })).mutation(async ({ input }) => {
+    await passTurn(input.gameId, input.playerId);
+    return { success: true };
+  }),
+  consume: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      playerId: z7.string().min(1).max(64),
+      cardId: z7.string().max(64)
+    })
+  ).mutation(async ({ input }) => consumeCard(input.gameId, input.playerId, input.cardId)),
+  getState: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => getGameState(input.gameId)),
+  getLog: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => getGameLog(input.gameId)),
+  checkTimer: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => enforceSelectionDeadline(input.gameId)),
+  aiNarrate: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      trigger: z7.enum([
+        "round_start",
+        "card_reveal",
+        "big_damage",
+        "player_eliminated",
+        "game_over",
+        "comeback",
+        "rivalry_escalation"
+      ]),
+      triggerData: z7.record(z7.string(), z7.any()).optional()
+    })
+  ).mutation(async ({ input }) => {
+    const gameState = await getGameState(input.gameId);
+    if (!gameState || !gameState.aiNarrator) return { line: null };
+    const gameLog = await getGameLog(input.gameId);
+    const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+    const context = buildMatchContext(gameState, behaviors);
+    const line = await generateNarratorLine(input.trigger, context, input.triggerData);
+    return { line };
+  }),
+  aiWhisper: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      playerId: z7.string().min(1).max(64)
+    })
+  ).mutation(async ({ input }) => {
+    const gameState = await getGameState(input.gameId);
+    if (!gameState || !gameState.aiWhisperer) return { whisper: null };
+    const player = gameState.players.find((p) => p.id === input.playerId);
+    if (!player || !player.isAlive) return { whisper: null };
+    const gameLog = await getGameLog(input.gameId);
+    const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+    const context = buildMatchContext(gameState, behaviors);
+    const { getCardById: getCard } = await Promise.resolve().then(() => (init_cardData(), cardData_exports));
+    const hand = player.hand.map((cardId) => {
+      const card = getCard(cardId);
+      return {
+        id: cardId,
+        name: card?.name || "Unknown",
+        energyCost: card?.cost || 0,
+        effects: card?.effects || []
+      };
+    });
+    const whisper = await generateWhisper(player, context, hand);
+    return { whisper };
+  }),
+  aiAnalysis: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => {
+    const gameState = await getGameState(input.gameId);
+    if (!gameState) return { behaviors: [], rivalries: [] };
+    const gameLog = await getGameLog(input.gameId);
+    const behaviors = analyzePlayerBehaviors(gameState, gameLog);
+    const rivalries = detectRivalries(behaviors);
+    return { behaviors, rivalries };
+  }),
+  // ─── Chronicle Engine Endpoints ─────────────────────
+  generateChronicleSegment: publicProcedure.input(
+    z7.object({
+      gameId: z7.string().uuid(),
+      round: z7.number().int().min(1).max(20)
+    })
+  ).mutation(async ({ input }) => {
+    const gameState = await getGameState(input.gameId);
+    if (!gameState) return { success: false, error: "Game not found" };
+    const gameLog = await getGameLog(input.gameId);
+    const previousSegments = await loadChronicleSegments(input.gameId);
+    if (previousSegments.some((s) => s.round === input.round)) {
+      return {
+        success: true,
+        segment: previousSegments.find((s) => s.round === input.round)
+      };
+    }
+    const civMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
+    const roundEvents = extractRoundEvents(gameState, gameLog, input.round);
+    const segment = await generateRoundNarrative(
+      gameState,
+      gameLog,
+      roundEvents,
+      previousSegments,
+      civMetrics
+    );
+    await saveChronicleSegment(input.gameId, segment);
+    return { success: true, segment };
+  }),
+  assembleChronicle: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => {
+    const existing = await loadChronicle(input.gameId);
+    if (existing) {
+      return {
+        success: true,
+        chronicleId: existing.id,
+        title: existing.title,
+        excerpt: existing.excerpt,
+        rarityTier: existing.rarity_tier,
+        civilizationType: existing.civilization_type,
+        coverImageUrl: existing.cover_image_url || null
+      };
+    }
+    const gameState = await getGameState(input.gameId);
+    if (!gameState) return { success: false, error: "Game not found" };
+    const gameLog = await getGameLog(input.gameId);
+    const segments = await loadChronicleSegments(input.gameId);
+    if (segments.length === 0) {
+      return { success: false, error: "No chronicle segments found" };
+    }
+    const finalMetrics = segments[segments.length - 1].civilizationMetrics;
+    const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
+    const result = await assembleChronicle(gameState, segments, gameLog, finalMetrics);
+    const chronicleId = await saveChronicle(input.gameId, {
+      ...result,
+      playerFactions,
+      totalRounds: segments.length
+    });
+    return {
+      success: true,
+      chronicleId,
+      title: result.title,
+      excerpt: result.excerpt,
+      rarityTier: result.rarityTier,
+      civilizationType: result.civilizationType
+    };
+  }),
+  getChronicle: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => {
+    const chronicle = await loadChronicle(input.gameId);
+    if (chronicle) {
+      incrementViewCount(chronicle.id).catch(() => {
+      });
+    }
+    return chronicle;
+  }),
+  getChronicleSegments: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => loadChronicleSegments(input.gameId)),
+  getPublishedChronicles: publicProcedure.input(
+    z7.object({
+      limit: z7.number().int().min(1).max(50).default(20),
+      offset: z7.number().int().min(0).default(0),
+      rarityTier: z7.enum(["common", "rare", "epic", "legendary"]).optional(),
+      civilizationType: z7.enum(["warrior_empire", "enlightened_republic", "merchant_federation", "balanced"]).optional()
+    })
+  ).query(
+    async ({ input }) => loadPublishedChronicles(input.limit, input.offset, {
+      rarityTier: input.rarityTier,
+      civilizationType: input.civilizationType
+    })
+  ),
+  generateCoverArt: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => {
+    const chronicle = await loadChronicle(input.gameId);
+    if (!chronicle) return { success: false, error: "Chronicle not found" };
+    if (chronicle.cover_image_url) {
+      return { success: true, coverImageUrl: chronicle.cover_image_url };
+    }
+    const playerFactions = Array.isArray(chronicle.player_factions) ? chronicle.player_factions.map((pf) => pf.faction).filter(Boolean) : [];
+    const coverUrl = await generateAndSaveCoverArt({
+      gameId: input.gameId,
+      title: chronicle.title,
+      civilizationType: chronicle.civilization_type,
+      rarityTier: chronicle.rarity_tier,
+      dominantFactions: playerFactions,
+      turningPointRound: chronicle.turning_point_round || 10,
+      totalEliminations: chronicle.stats_json?.totalEliminations || 0,
+      excerpt: chronicle.excerpt
+    });
+    return { success: !!coverUrl, coverImageUrl: coverUrl };
+  })
+});
+
+// server/routers/indexnow.ts
+import { z as z8 } from "zod";
 
 // server/indexnow.ts
 var INDEXNOW_KEY = "505b6460d365492eabc067eac9bfe230";
@@ -8427,691 +9015,93 @@ function getStatusMessage(status) {
   }
 }
 
-// server/routers.ts
+// server/routers/indexnow.ts
+var indexnowRouter = router({
+  submitUrl: publicProcedure.input(z8.object({ url: z8.string().min(1).max(2048) })).mutation(async ({ input }) => submitUrl(input.url)),
+  submitAll: publicProcedure.mutation(async () => {
+    const slugData = await getAllBlogSlugs();
+    const slugs = slugData.map((s) => s.slug);
+    const allUrls = buildAllSiteUrls(slugs);
+    const results = await submitUrls(allUrls);
+    return {
+      totalUrls: allUrls.length,
+      batches: results,
+      allSuccess: results.every((r) => r.success)
+    };
+  }),
+  submitBlogPosts: publicProcedure.mutation(async () => {
+    const slugData = await getAllBlogSlugs();
+    const blogUrls = slugData.map((s) => `https://www.7sinscardgame.com/blog/${s.slug}`);
+    const results = await submitUrls(blogUrls);
+    return {
+      totalUrls: blogUrls.length,
+      batches: results,
+      allSuccess: results.every((r) => r.success)
+    };
+  }),
+  submitBatch: publicProcedure.input(z8.object({ urls: z8.array(z8.string().min(1).max(2048)).min(1).max(1e4) })).mutation(async ({ input }) => {
+    const results = await submitUrls(input.urls);
+    return {
+      totalUrls: input.urls.length,
+      batches: results,
+      allSuccess: results.every((r) => r.success)
+    };
+  })
+});
+
+// server/routers/profile.ts
+import { z as z9 } from "zod";
+var profileRouter = router({
+  get: publicProcedure.input(z9.object({ playerId: z9.string().min(1).max(64) })).query(async ({ input }) => getPlayerProfile(input.playerId)),
+  decks: publicProcedure.input(z9.object({ playerId: z9.string().min(1).max(64) })).query(async ({ input }) => getPlayerCommunityDecks(input.playerId)),
+  matchHistory: publicProcedure.input(
+    z9.object({
+      playerId: z9.string().min(1).max(64),
+      limit: z9.number().int().min(1).max(50).default(30)
+    })
+  ).query(async ({ input }) => getPlayerAllMatchHistory(input.playerId, input.limit)),
+  byGamertag: publicProcedure.input(z9.object({ gamertag: z9.string().min(1).max(30) })).query(async ({ input }) => getPlayerByGamertag(input.gamertag))
+});
+
+// server/routers/user.ts
+import { TRPCError as TRPCError4 } from "@trpc/server";
+import { z as z10 } from "zod";
+var userRouter = router({
+  purge: publicProcedure.input(
+    z10.object({
+      supabaseUserId: z10.string().min(1).max(64),
+      accessToken: z10.string().min(1).max(4096)
+    })
+  ).mutation(async ({ input }) => {
+    const sb = getServerSupabase();
+    const { data, error } = await sb.auth.getUser(input.accessToken);
+    if (error || !data?.user) {
+      throw new TRPCError4({ code: "UNAUTHORIZED", message: "Invalid or expired session." });
+    }
+    if (data.user.id !== input.supabaseUserId) {
+      throw new TRPCError4({ code: "FORBIDDEN", message: "Cannot purge another user's data." });
+    }
+    const result = await deleteAllUserData(input.supabaseUserId);
+    return {
+      success: true,
+      ...result,
+      message: `Purged ${result.decksDeleted} decks and ${result.commentsDeleted} comments.`
+    };
+  })
+});
+
+// server/routers/index.ts
 var appRouter = router({
   system: systemRouter,
-  auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true };
-    })
-  }),
-  /** Discussion comments — threaded community discussion on analysis pages */
-  discussion: router({
-    /** List all comments for a page context (e.g. "balance") */
-    list: publicProcedure.input(z3.object({ pageContext: z3.string().min(1).max(64).default("balance") })).query(async ({ input }) => {
-      return getDiscussionComments(input.pageContext);
-    }),
-    /** Create a new comment or reply */
-    create: publicProcedure.input(
-      z3.object({
-        pageContext: z3.string().min(1).max(64).default("balance"),
-        section: z3.string().max(64).optional(),
-        parentId: z3.number().int().positive().optional(),
-        authorName: z3.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
-        guestId: z3.string().max(64).optional(),
-        content: z3.string().min(1).max(2e3).transform((s) => s.replace(/[<>"']/g, ""))
-      })
-    ).mutation(async ({ input }) => {
-      const result = await createDiscussionComment({
-        pageContext: input.pageContext,
-        section: input.section ?? null,
-        parentId: input.parentId ?? null,
-        userId: null,
-        // Guest comments for now; wire to ctx.user when auth is active
-        authorName: input.authorName,
-        guestId: input.guestId ?? null,
-        content: input.content
-      });
-      return result;
-    }),
-    /** Delete a comment — requires guestId for ownership verification */
-    delete: publicProcedure.input(z3.object({
-      commentId: z3.number().int().positive(),
-      guestId: z3.string().max(64).optional()
-    })).mutation(async ({ input }) => {
-      return deleteDiscussionComment(input.commentId, input.guestId);
-    }),
-    /** Upvote a comment */
-    upvote: publicProcedure.input(z3.object({ commentId: z3.number().int().positive() })).mutation(async ({ input }) => {
-      return upvoteDiscussionComment(input.commentId);
-    })
-  }),
-  /** Player deck management — CRUD for custom 30-card decks */
-  deck: router({
-    /** List all decks for a Supabase user */
-    list: publicProcedure.input(z3.object({ supabaseUserId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return getDecksByUser(input.supabaseUserId);
-    }),
-    /** Get a single deck by ID */
-    get: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).query(async ({ input }) => {
-      return getDeckById(input.deckId) ?? null;
-    }),
-    /** Create a new deck (30 cards from a single faction) */
-    create: publicProcedure.input(
-      z3.object({
-        supabaseUserId: z3.string().min(1).max(64),
-        faction: z3.string().min(1).max(32),
-        name: z3.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
-        cardIds: z3.string().min(2),
-        // JSON array string
-        isActive: z3.number().int().min(0).max(1).default(0)
-      })
-    ).mutation(async ({ input }) => {
-      let parsed;
-      try {
-        parsed = JSON.parse(input.cardIds);
-      } catch {
-        throw new Error("cardIds must be a valid JSON array");
-      }
-      if (!Array.isArray(parsed) || parsed.length !== 30) {
-        throw new Error("Deck must contain exactly 30 cards");
-      }
-      return createDeck(input);
-    }),
-    /** Update an existing deck */
-    update: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        supabaseUserId: z3.string().min(1).max(64),
-        // for ownership check
-        name: z3.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")).optional(),
-        cardIds: z3.string().min(2).optional()
-      })
-    ).mutation(async ({ input }) => {
-      const deck = await getDeckById(input.deckId);
-      if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
-        throw new Error("Deck not found or access denied");
-      }
-      if (input.cardIds) {
-        let parsed;
-        try {
-          parsed = JSON.parse(input.cardIds);
-        } catch {
-          throw new Error("cardIds must be a valid JSON array");
-        }
-        if (!Array.isArray(parsed) || parsed.length !== 30) {
-          throw new Error("Deck must contain exactly 30 cards");
-        }
-      }
-      const updateData = {};
-      if (input.name) updateData.name = input.name;
-      if (input.cardIds) updateData.cardIds = input.cardIds;
-      return updateDeck(input.deckId, updateData);
-    }),
-    /** Delete a deck */
-    delete: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        supabaseUserId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      const deck = await getDeckById(input.deckId);
-      if (!deck || deck.supabaseUserId !== input.supabaseUserId) {
-        throw new Error("Deck not found or access denied");
-      }
-      return deleteDeck(input.deckId);
-    }),
-    /** Set a deck as the active deck for a user+faction */
-    setActive: publicProcedure.input(
-      z3.object({
-        supabaseUserId: z3.string().min(1).max(64),
-        faction: z3.string().min(1).max(32),
-        deckId: z3.number().int().positive()
-      })
-    ).mutation(async ({ input }) => {
-      return setActiveDeck(input.supabaseUserId, input.faction, input.deckId);
-    })
-  }),
-  /** Community deck library — publish and browse player decks */
-  community: router({
-    /** List published community decks with optional filters */
-    list: publicProcedure.input(
-      z3.object({
-        faction: z3.string().max(32).optional(),
-        sortBy: z3.enum(["newest", "likes"]).default("newest"),
-        page: z3.number().int().positive().default(1),
-        limit: z3.number().int().min(1).max(50).default(20)
-      })
-    ).query(async ({ input }) => {
-      return listCommunityDecks(input);
-    }),
-    /** Get a single community deck by ID */
-    get: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).query(async ({ input }) => {
-      return getCommunityDeck(input.deckId);
-    }),
-    /** Publish a deck to the community library (requires auth) */
-    publish: publicProcedure.input(
-      z3.object({
-        playerId: z3.string().min(1).max(64),
-        gamertag: z3.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
-        deckName: z3.string().min(1).max(100).transform((s) => s.replace(/[<>"'&]/g, "")),
-        faction: z3.string().min(1).max(32),
-        cardIds: z3.string().min(2),
-        strategy: z3.string().max(500).default("").transform((s) => s.replace(/[<>"']/g, ""))
-      })
-    ).mutation(async ({ input }) => {
-      let parsed;
-      try {
-        parsed = JSON.parse(input.cardIds);
-      } catch {
-        throw new Error("cardIds must be a valid JSON array");
-      }
-      if (!Array.isArray(parsed) || parsed.length !== 30) {
-        throw new Error("Deck must contain exactly 30 cards");
-      }
-      const currentTag = await getPlayerGamertag(input.playerId);
-      if (!currentTag || currentTag !== input.gamertag) {
-        const taken = await isGamertagTaken(input.gamertag, input.playerId);
-        if (taken) {
-          throw new Error("Gamertag is already taken by another player");
-        }
-        await setPlayerGamertag(input.playerId, input.gamertag);
-      }
-      return publishCommunityDeck(input);
-    }),
-    /** Unpublish (delete) a community deck — only the owner */
-    unpublish: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      return unpublishCommunityDeck(input.deckId, input.playerId);
-    }),
-    /** Toggle like on a community deck (per-player rate-limited) */
-    toggleLike: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      return toggleCommunityLike(input.deckId, input.playerId);
-    }),
-    /** Get deck IDs the player has liked (for rendering filled hearts) */
-    likedDeckIds: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return getPlayerLikedDeckIds(input.playerId);
-    }),
-    /** List comments for a community deck */
-    comments: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        limit: z3.number().int().min(1).max(100).default(50)
-      })
-    ).query(async ({ input }) => {
-      return listDeckComments(input.deckId, input.limit);
-    }),
-    /** Add a comment (or reply) to a community deck */
-    addComment: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64),
-        gamertag: z3.string().min(3).max(30),
-        content: z3.string().min(1).max(500).transform((s) => s.replace(/[<>"']/g, "")),
-        parentId: z3.number().int().positive().nullish()
-      })
-    ).mutation(async ({ input }) => {
-      return addDeckComment({
-        ...input,
-        parentId: input.parentId ?? null
-      });
-    }),
-    /** Delete a comment (only the author) */
-    deleteComment: publicProcedure.input(
-      z3.object({
-        commentId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      return deleteDeckComment(input.commentId, input.playerId);
-    }),
-    /** Get comment counts for multiple decks (for badge display) */
-    commentCounts: publicProcedure.input(z3.object({ deckIds: z3.array(z3.number().int().positive()).max(50) })).query(async ({ input }) => {
-      return getDeckCommentCounts(input.deckIds);
-    }),
-    /** Get the current player's gamertag */
-    getGamertag: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return { gamertag: await getPlayerGamertag(input.playerId) };
-    }),
-    /** Check if a gamertag is available */
-    checkGamertag: publicProcedure.input(
-      z3.object({
-        gamertag: z3.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/, "Gamertag must be alphanumeric with underscores/hyphens"),
-        excludePlayerId: z3.string().max(64).optional()
-      })
-    ).query(async ({ input }) => {
-      const taken = await isGamertagTaken(input.gamertag, input.excludePlayerId);
-      return { available: !taken };
-    }),
-    /** Update a player's gamertag with profanity/racism filter */
-    updateGamertag: publicProcedure.input(
-      z3.object({
-        playerId: z3.string().min(1).max(64),
-        newGamertag: z3.string().min(3).max(24)
-      })
-    ).mutation(async ({ input }) => {
-      const filterResult = validateGamertag(input.newGamertag);
-      if (!filterResult.ok) {
-        return { success: false, reason: filterResult.reason };
-      }
-      const taken = await isGamertagTaken(input.newGamertag, input.playerId);
-      if (taken) {
-        return { success: false, reason: "That gamertag is already taken." };
-      }
-      const ok = await setPlayerGamertag(input.playerId, input.newGamertag);
-      if (!ok) {
-        return { success: false, reason: "Failed to update. Please try again." };
-      }
-      return { success: true, gamertag: input.newGamertag };
-    }),
-    /** Get all community decks published by a specific player */
-    myDecks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return getPlayerCommunityDecks(input.playerId);
-    }),
-    /** Log a match result (win/loss) for a community deck */
-    logMatch: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64),
-        result: z3.enum(["win", "loss"]),
-        opponentFaction: z3.string().min(1).max(30)
-      })
-    ).mutation(async ({ input }) => {
-      return logDeckMatchResult(input);
-    }),
-    /** Get aggregated win rate for a single deck */
-    winRate: publicProcedure.input(z3.object({ deckId: z3.number().int().positive() })).query(async ({ input }) => {
-      return getDeckWinRate(input.deckId);
-    }),
-    /** Get win rates for multiple decks (batch, for list page) */
-    batchWinRates: publicProcedure.input(z3.object({ deckIds: z3.array(z3.number().int().positive()).max(50) })).query(async ({ input }) => {
-      return batchDeckWinRates(input.deckIds);
-    }),
-    /** Get a player's match history with a specific deck */
-    matchHistory: publicProcedure.input(
-      z3.object({
-        deckId: z3.number().int().positive(),
-        playerId: z3.string().min(1).max(64),
-        limit: z3.number().int().min(1).max(50).default(20)
-      })
-    ).query(async ({ input }) => {
-      return getPlayerDeckHistory(input.deckId, input.playerId, input.limit);
-    })
-  }),
-  /** Player profile - public profile pages */
-  profile: router({
-    /** Get a player's profile by ID */
-    get: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return getPlayerProfile(input.playerId);
-    }),
-    /** Get a player's published decks (reuses community helper) */
-    decks: publicProcedure.input(z3.object({ playerId: z3.string().min(1).max(64) })).query(async ({ input }) => {
-      return getPlayerCommunityDecks(input.playerId);
-    }),
-    /** Get a player's recent match history across all decks */
-    matchHistory: publicProcedure.input(
-      z3.object({
-        playerId: z3.string().min(1).max(64),
-        limit: z3.number().int().min(1).max(50).default(30)
-      })
-    ).query(async ({ input }) => {
-      return getPlayerAllMatchHistory(input.playerId, input.limit);
-    }),
-    /** Look up a player by gamertag (for URL routing) */
-    byGamertag: publicProcedure.input(z3.object({ gamertag: z3.string().min(1).max(30) })).query(async ({ input }) => {
-      return getPlayerByGamertag(input.gamertag);
-    })
-  }),
-  /** User account management — data purge for GDPR compliance */
-  user: router({
-    /** Purge ALL user data — decks, comments, game history. Real deletion, not fake. */
-    purge: publicProcedure.input(
-      z3.object({
-        supabaseUserId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      const result = await deleteAllUserData(input.supabaseUserId);
-      return {
-        success: true,
-        ...result,
-        message: `Purged ${result.decksDeleted} decks and ${result.commentsDeleted} comments.`
-      };
-    })
-  }),
-  /** Blog — public SEO content */
-  blog: router({
-    /** List paginated blog posts with optional category filter and search */
-    list: publicProcedure.input(
-      z3.object({
-        page: z3.number().int().positive().default(1),
-        limit: z3.number().int().min(1).max(100).default(20),
-        category: z3.string().max(64).optional(),
-        search: z3.string().max(200).optional()
-      })
-    ).query(async ({ input }) => {
-      return getBlogPosts(input);
-    }),
-    /** Get a single blog post by slug */
-    getBySlug: publicProcedure.input(z3.object({ slug: z3.string().min(1).max(255) })).query(async ({ input }) => {
-      return getBlogPostBySlug(input.slug) ?? null;
-    }),
-    /** Get related posts (same category) */
-    related: publicProcedure.input(
-      z3.object({
-        category: z3.string().min(1).max(64),
-        excludeSlug: z3.string().min(1).max(255),
-        limit: z3.number().int().min(1).max(10).default(5)
-      })
-    ).query(async ({ input }) => {
-      return getRelatedPosts(input.category, input.excludeSlug, input.limit);
-    }),
-    /** Get category counts for sidebar */
-    categories: publicProcedure.query(async () => {
-      return getBlogCategoryCounts();
-    }),
-    /** Get all slugs for sitemap */
-    allSlugs: publicProcedure.query(async () => {
-      return getAllBlogSlugs();
-    })
-  }),
-  game: router({
-    /** Create a new game lobby and get the room code */
-    create: publicProcedure.input(z3.object({ username: z3.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")), playerId: z3.string().min(1).max(64) })).mutation(async ({ input }) => {
-      return createGame(input.playerId, input.username);
-    }),
-    /** Join an existing game by room code */
-    join: publicProcedure.input(
-      z3.object({
-        roomCode: z3.string().min(4).max(8).regex(/^[A-Z0-9]+$/i),
-        username: z3.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      return joinGame(input.roomCode, input.playerId, input.username);
-    }),
-    /** Choose your sin (Wrath or Sloth) */
-    chooseSin: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        sin: z3.enum(["wrath", "sloth", "greed", "envy"]),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      await chooseSin(input.gameId, input.playerId, input.sin);
-      return { success: true };
-    }),
-    /** Start the game (requires all players to have chosen sins) */
-    start: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
-      await startGame(input.gameId);
-      return { success: true };
-    }),
-    /** Play a card from hand */
-    playCard: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        cardId: z3.string().max(64),
-        playerId: z3.string().min(1).max(64),
-        targetPlayerId: z3.string().max(64).optional()
-      })
-    ).mutation(async ({ input }) => {
-      return playCard(input.gameId, input.playerId, input.cardId, input.targetPlayerId);
-    }),
-    /** Pass your turn (draws a card) */
-    pass: publicProcedure.input(z3.object({ gameId: z3.string().uuid(), playerId: z3.string().min(1).max(64) })).mutation(async ({ input }) => {
-      await passTurn(input.gameId, input.playerId);
-      return { success: true };
-    }),
-    /** Consume (banish) a card from hand for +1 energy. Max 1 per round. */
-    consume: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        playerId: z3.string().min(1).max(64),
-        cardId: z3.string().max(64)
-      })
-    ).mutation(async ({ input }) => {
-      return consumeCard(input.gameId, input.playerId, input.cardId);
-    }),
-    /** Get the full game state */
-    getState: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
-      return getGameState(input.gameId);
-    }),
-    /** Get game action log */
-    getLog: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
-      return getGameLog(input.gameId);
-    }),
-    /** Server-side turn timer check — enforces selection deadline */
-    checkTimer: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
-      return enforceSelectionDeadline(input.gameId);
-    }),
-    /** AI Narrator — generate a contextual narrator line for a game moment */
-    aiNarrate: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        trigger: z3.enum([
-          "round_start",
-          "card_reveal",
-          "big_damage",
-          "player_eliminated",
-          "game_over",
-          "comeback",
-          "rivalry_escalation"
-        ]),
-        triggerData: z3.record(z3.string(), z3.any()).optional()
-      })
-    ).mutation(async ({ input }) => {
-      const gameState = await getGameState(input.gameId);
-      if (!gameState || !gameState.aiNarrator) {
-        return { line: null };
-      }
-      const gameLog = await getGameLog(input.gameId);
-      const behaviors = analyzePlayerBehaviors(gameState, gameLog);
-      const context = buildMatchContext(gameState, behaviors);
-      const line = await generateNarratorLine(
-        input.trigger,
-        context,
-        input.triggerData
-      );
-      return { line };
-    }),
-    /** Sin Whisperer — generate a private temptation for a specific player */
-    aiWhisper: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        playerId: z3.string().min(1).max(64)
-      })
-    ).mutation(async ({ input }) => {
-      const gameState = await getGameState(input.gameId);
-      if (!gameState || !gameState.aiWhisperer) {
-        return { whisper: null };
-      }
-      const player = gameState.players.find(
-        (p) => p.id === input.playerId
-      );
-      if (!player || !player.isAlive) {
-        return { whisper: null };
-      }
-      const gameLog = await getGameLog(input.gameId);
-      const behaviors = analyzePlayerBehaviors(gameState, gameLog);
-      const context = buildMatchContext(gameState, behaviors);
-      const { getCardById: getCard } = await Promise.resolve().then(() => (init_cardData(), cardData_exports));
-      const hand = player.hand.map((cardId) => {
-        const card = getCard(cardId);
-        return {
-          id: cardId,
-          name: card?.name || "Unknown",
-          energyCost: card?.cost || 0,
-          effects: card?.effects || []
-        };
-      });
-      const whisper = await generateWhisper(player, context, hand);
-      return { whisper };
-    }),
-    /** Get behavioral analysis for a game (rivalries, player tags, etc.) */
-    aiAnalysis: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
-      const gameState = await getGameState(input.gameId);
-      if (!gameState) return { behaviors: [], rivalries: [] };
-      const gameLog = await getGameLog(input.gameId);
-      const behaviors = analyzePlayerBehaviors(gameState, gameLog);
-      const rivalries = detectRivalries(behaviors);
-      return { behaviors, rivalries };
-    }),
-    // ─── Chronicle Engine Endpoints ─────────────────────
-    /** Generate a chronicle segment for a specific round */
-    generateChronicleSegment: publicProcedure.input(
-      z3.object({
-        gameId: z3.string().uuid(),
-        round: z3.number().int().min(1).max(20)
-      })
-    ).mutation(async ({ input }) => {
-      const gameState = await getGameState(input.gameId);
-      if (!gameState) return { success: false, error: "Game not found" };
-      const gameLog = await getGameLog(input.gameId);
-      const previousSegments = await loadChronicleSegments(input.gameId);
-      if (previousSegments.some((s) => s.round === input.round)) {
-        return { success: true, segment: previousSegments.find((s) => s.round === input.round) };
-      }
-      const civMetrics = previousSegments.length > 0 ? previousSegments[previousSegments.length - 1].civilizationMetrics : { militarism: 0, culture: 0, commerce: 0 };
-      const roundEvents = extractRoundEvents(gameState, gameLog, input.round);
-      const segment = await generateRoundNarrative(
-        gameState,
-        gameLog,
-        roundEvents,
-        previousSegments,
-        civMetrics
-      );
-      await saveChronicleSegment(input.gameId, segment);
-      return { success: true, segment };
-    }),
-    /** Assemble the full chronicle after game ends */
-    assembleChronicle: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
-      const existing = await loadChronicle(input.gameId);
-      if (existing) {
-        return {
-          success: true,
-          chronicleId: existing.id,
-          title: existing.title,
-          excerpt: existing.excerpt,
-          rarityTier: existing.rarity_tier,
-          civilizationType: existing.civilization_type,
-          coverImageUrl: existing.cover_image_url || null
-        };
-      }
-      const gameState = await getGameState(input.gameId);
-      if (!gameState) return { success: false, error: "Game not found" };
-      const gameLog = await getGameLog(input.gameId);
-      const segments = await loadChronicleSegments(input.gameId);
-      if (segments.length === 0) {
-        return { success: false, error: "No chronicle segments found" };
-      }
-      const finalMetrics = segments[segments.length - 1].civilizationMetrics;
-      const playerFactions = gameState.players.filter((p) => p.chosenSin).map((p) => ({ name: p.username, faction: p.chosenSin }));
-      const result = await assembleChronicle(gameState, segments, gameLog, finalMetrics);
-      const chronicleId = await saveChronicle(input.gameId, {
-        ...result,
-        playerFactions,
-        totalRounds: segments.length
-      });
-      return {
-        success: true,
-        chronicleId,
-        title: result.title,
-        excerpt: result.excerpt,
-        rarityTier: result.rarityTier,
-        civilizationType: result.civilizationType
-      };
-    }),
-    /** Get a chronicle by game ID */
-    getChronicle: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
-      const chronicle = await loadChronicle(input.gameId);
-      if (chronicle) {
-        incrementViewCount(chronicle.id).catch(() => {
-        });
-      }
-      return chronicle;
-    }),
-    /** Get chronicle segments for a game (real-time feed during game) */
-    getChronicleSegments: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).query(async ({ input }) => {
-      return await loadChronicleSegments(input.gameId);
-    }),
-    /** Get published chronicles for the public feed */
-    getPublishedChronicles: publicProcedure.input(
-      z3.object({
-        limit: z3.number().int().min(1).max(50).default(20),
-        offset: z3.number().int().min(0).default(0),
-        rarityTier: z3.enum(["common", "rare", "epic", "legendary"]).optional(),
-        civilizationType: z3.enum(["warrior_empire", "enlightened_republic", "merchant_federation", "balanced"]).optional()
-      })
-    ).query(async ({ input }) => {
-      return await loadPublishedChronicles(input.limit, input.offset, {
-        rarityTier: input.rarityTier,
-        civilizationType: input.civilizationType
-      });
-    }),
-    /** Generate cover art for an existing chronicle that doesn't have one */
-    generateCoverArt: publicProcedure.input(z3.object({ gameId: z3.string().uuid() })).mutation(async ({ input }) => {
-      const chronicle = await loadChronicle(input.gameId);
-      if (!chronicle) {
-        return { success: false, error: "Chronicle not found" };
-      }
-      if (chronicle.cover_image_url) {
-        return { success: true, coverImageUrl: chronicle.cover_image_url };
-      }
-      const playerFactions = Array.isArray(chronicle.player_factions) ? chronicle.player_factions.map((pf) => pf.faction).filter(Boolean) : [];
-      const coverUrl = await generateAndSaveCoverArt({
-        gameId: input.gameId,
-        title: chronicle.title,
-        civilizationType: chronicle.civilization_type,
-        rarityTier: chronicle.rarity_tier,
-        dominantFactions: playerFactions,
-        turningPointRound: chronicle.turning_point_round || 10,
-        totalEliminations: chronicle.stats_json?.totalEliminations || 0,
-        excerpt: chronicle.excerpt
-      });
-      return { success: !!coverUrl, coverImageUrl: coverUrl };
-    })
-  }),
-  /** IndexNow — Instant search engine indexing */
-  indexnow: router({
-    /** Submit a single URL to IndexNow (admin only) */
-    submitUrl: publicProcedure.input(z3.object({ url: z3.string().min(1).max(2048) })).mutation(async ({ input }) => {
-      const result = await submitUrl(input.url);
-      return result;
-    }),
-    /** Submit all site URLs (static pages + blog posts) to IndexNow */
-    submitAll: publicProcedure.mutation(async () => {
-      const slugData = await getAllBlogSlugs();
-      const slugs = slugData.map((s) => s.slug);
-      const allUrls = buildAllSiteUrls(slugs);
-      const results = await submitUrls(allUrls);
-      return {
-        totalUrls: allUrls.length,
-        batches: results,
-        allSuccess: results.every((r) => r.success)
-      };
-    }),
-    /** Submit only blog post URLs to IndexNow */
-    submitBlogPosts: publicProcedure.mutation(async () => {
-      const slugData = await getAllBlogSlugs();
-      const blogUrls = slugData.map((s) => `https://www.7sinscardgame.com/blog/${s.slug}`);
-      const results = await submitUrls(blogUrls);
-      return {
-        totalUrls: blogUrls.length,
-        batches: results,
-        allSuccess: results.every((r) => r.success)
-      };
-    }),
-    /** Submit specific URLs to IndexNow */
-    submitBatch: publicProcedure.input(z3.object({ urls: z3.array(z3.string().min(1).max(2048)).min(1).max(1e4) })).mutation(async ({ input }) => {
-      const results = await submitUrls(input.urls);
-      return {
-        totalUrls: input.urls.length,
-        batches: results,
-        allSuccess: results.every((r) => r.success)
-      };
-    })
-  })
+  auth: authRouter,
+  discussion: discussionRouter,
+  deck: deckRouter,
+  community: communityRouter,
+  profile: profileRouter,
+  user: userRouter,
+  blog: blogRouter,
+  game: gameRouter,
+  indexnow: indexnowRouter
 });
 
 // server/_core/context.ts
@@ -9135,9 +9125,25 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
   res.setHeader("X-XSS-Protection", "1; mode=block");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.setHeader(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://*.umami.is",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https://xqotfmrlhqiayiyjijpl.supabase.co https://*.supabase.co",
+      "font-src 'self' https://xqotfmrlhqiayiyjijpl.supabase.co",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.umami.is",
+      "worker-src 'self' blob:",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self'"
+    ].join("; ")
+  );
   res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   next();
 });

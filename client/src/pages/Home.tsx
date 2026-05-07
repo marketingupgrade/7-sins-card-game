@@ -526,25 +526,36 @@ export default function Home() {
                     </Link>
                   </div>
 
-                  {/* ─── Tertiary: How to Play + Practice ─── */}
-                  <div className="grid grid-cols-2 gap-2">
+                  {/* ─── Tertiary: How to Play + Campaign + Practice ─── */}
+                  <div className="grid grid-cols-3 gap-2">
                     <Link href="/how-to-play">
                       <motion.div
                         data-tutorial="how-to-play"
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full rounded-xl py-2 px-4 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full rounded-xl py-2 px-3 text-xs border border-white/8 text-white/40 hover:bg-white/5 hover:border-white/15 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         style={{ fontFamily: "var(--font-heading)" }}
                       >
                         <GraduationCap className="w-3.5 h-3.5" />
                         HOW TO PLAY
                       </motion.div>
                     </Link>
+                    <Link href="/campaign">
+                      <motion.div
+                        whileHover={{ scale: 1.02, y: -1 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full rounded-xl py-2 px-3 text-xs border border-amber-400/25 text-amber-200/70 hover:bg-amber-400/10 hover:border-amber-400/40 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        style={{ fontFamily: "var(--font-heading)" }}
+                      >
+                        <Swords className="w-3.5 h-3.5" />
+                        CAMPAIGN
+                      </motion.div>
+                    </Link>
                     <Link href="/practice">
                       <motion.div
                         whileHover={{ scale: 1.02, y: -1 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full rounded-xl py-2 px-4 text-xs border border-amber-500/15 text-amber-300/50 hover:bg-amber-500/5 hover:border-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        className="w-full rounded-xl py-2 px-3 text-xs border border-amber-500/15 text-amber-300/50 hover:bg-amber-500/5 hover:border-amber-500/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
                         style={{ fontFamily: "var(--font-heading)" }}
                       >
                         <Bot className="w-3.5 h-3.5" />
@@ -673,6 +684,7 @@ export default function Home() {
                 { label: "Chronicles", href: "/chronicles" },
                 { label: "Patch Notes", href: "/changelog" },
                 { label: "Practice Mode", href: "/practice" },
+                { label: "Campaign", href: "/campaign" },
                 { label: "FAQ", href: "/faq" },
                 { label: "Terms", href: "/terms" },
                 { label: "Privacy", href: "/privacy" },

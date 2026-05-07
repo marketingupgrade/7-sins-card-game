@@ -469,6 +469,65 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
   const sinColor = SIN_COLORS[mySin] || "#ef4444";
   const sinGlow = SIN_GLOW[mySin] || SIN_GLOW.wrath;
 
+  // ─── Campaign mission handoff ─────────────────────────────────
+  // If the player came in via /campaign/:missionId, the active-mission
+  // record in localStorage tells us which mission this game maps to so
+  // we can mark it complete on win and route them back to the campaign
+  // selector instead of the generic Home button.
+  const [campaignContext, setCampaignContext] = useState<{
+    missionId: string;
+    title: string;
+    outro: string;
+    defeatLine: string;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { getActiveCampaignMission, clearActiveCampaignMission } =
+          await import("@/hooks/useCampaignProgress");
+        const { getMissionById } = await import("@shared/campaignData");
+        const active = getActiveCampaignMission();
+        if (!active || active.gameId !== gameId) return;
+        const mission = getMissionById(active.missionId);
+        if (!mission || cancelled) return;
+
+        // Record the result. We mark complete on player win — if they lost
+        // the attempt counter from CampaignFight already incremented at start.
+        if (isPlayerWinner) {
+          const STORAGE_KEY = "7sins_campaign_progress";
+          try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            const map = raw ? JSON.parse(raw) : {};
+            const existing = map[mission.id] ?? { completed: false, attempts: 1 };
+            map[mission.id] = {
+              completed: true,
+              attempts: existing.attempts || 1,
+              completedAt: existing.completedAt ?? new Date().toISOString(),
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+          } catch {
+            // ignore storage failures
+          }
+        }
+        setCampaignContext({
+          missionId: mission.id,
+          title: mission.title,
+          outro: mission.outro,
+          defeatLine: mission.defeatLine,
+        });
+        // Clear the active marker so a non-campaign rematch doesn't re-trigger.
+        clearActiveCampaignMission();
+      } catch (err) {
+        console.error("[GameOverScreen] campaign handoff failed:", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [gameId, isPlayerWinner]);
+
   // Win streak
   const [winStreak, setWinStreak] = useState(0);
 
@@ -960,6 +1019,27 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
               <ChronicleSection gameId={gameId} sinColor={sinColor} showContent={showContent} />
             )}
 
+            {/* ── CAMPAIGN OUTRO (if this game came from a mission) ── */}
+            {campaignContext && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: showContent ? 4.4 : 2.2 }}
+                className="mb-6 mx-auto max-w-2xl rounded-xl border border-white/10 bg-black/40 backdrop-blur-md p-5 text-left"
+                style={{ boxShadow: `0 0 0 1px ${sinColor}33` }}
+              >
+                <p
+                  className="text-[10px] tracking-[0.3em] mb-2"
+                  style={{ fontFamily: 'var(--font-heading)', color: sinColor }}
+                >
+                  {isPlayerWinner ? 'CAMPAIGN — CLEARED' : 'CAMPAIGN — DEFEATED'} · {campaignContext.title}
+                </p>
+                <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">
+                  {isPlayerWinner ? campaignContext.outro : campaignContext.defeatLine}
+                </p>
+              </motion.div>
+            )}
+
             {/* ── ACTION BUTTONS ── */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -967,7 +1047,34 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
               transition={{ delay: showContent ? 4.8 : 2.5 }}
               className="flex flex-wrap gap-3 justify-center mt-4 mb-8"
             >
-              {onRematch && (
+              {campaignContext && (
+                <button
+                  onClick={() => setLocation(`/campaign/${campaignContext.missionId}`)}
+                  className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 flex items-center gap-2"
+                  style={{
+                    background: `linear-gradient(135deg, ${sinColor}, ${sinColor}cc)`,
+                    color: sinColor === '#f0f0f0' ? '#000' : '#fff',
+                    boxShadow: `0 4px 20px ${sinColor}40`,
+                  }}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  {isPlayerWinner ? 'Replay Mission' : 'Try Again'}
+                </button>
+              )}
+              {campaignContext && (
+                <button
+                  onClick={() => setLocation('/campaign')}
+                  className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#000',
+                    boxShadow: '0 4px 20px rgba(245,158,11,0.3)',
+                  }}
+                >
+                  Return to Campaign
+                </button>
+              )}
+              {!campaignContext && onRematch && (
                 <button
                   onClick={onRematch}
                   className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 flex items-center gap-2"
@@ -981,17 +1088,19 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                   Rematch
                 </button>
               )}
-              <button
-                onClick={() => setLocation("/")}
-                className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105"
-                style={{
-                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                  color: '#000',
-                  boxShadow: '0 4px 20px rgba(245,158,11,0.3)',
-                }}
-              >
-                New Game
-              </button>
+              {!campaignContext && (
+                <button
+                  onClick={() => setLocation("/")}
+                  className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105"
+                  style={{
+                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                    color: '#000',
+                    boxShadow: '0 4px 20px rgba(245,158,11,0.3)',
+                  }}
+                >
+                  New Game
+                </button>
+              )}
               <button
                 onClick={() => setLocation("/")}
                 className="px-8 py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider transition-all hover:scale-105 border"

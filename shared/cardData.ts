@@ -30,6 +30,7 @@
  *   greed_tax_tick: 2
  */
 import type { CardDefinition, SinType, CompoundPattern, EffectType, TargetMode, CardTier } from "./gameTypes";
+import { getBossCardById } from "./bossCards";
 // ═══════════════════════════════════════════════════════════════
 // WRATH — 60 cards
 // ═══════════════════════════════════════════════════════════════
@@ -2662,13 +2663,14 @@ export function getDeckForSin(sin: SinType): string[] {
   return deck.map((c) => c.id);
 }
 
-/** Get a card definition by ID */
+/** Get a card definition by ID. Falls back to boss-only cards (Campaign mode). */
 export function getCardById(id: string): CardDefinition | undefined {
   for (const deck of Object.values(ALL_DECKS)) {
     const card = deck.find((c) => c.id === id);
     if (card) return card;
   }
-  return undefined;
+  // Campaign-only twist cards live outside the faction decks.
+  return getBossCardById(id);
 }
 
 /** Get all cards across all factions */
