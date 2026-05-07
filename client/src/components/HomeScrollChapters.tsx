@@ -9,26 +9,26 @@
  * Heights are responsive — mobile gets a tighter version of every chapter
  * via Tailwind `h-[Avh] sm:h-[Bvh]`. The ranges below are mobile / desktop.
  *
- *   01 Pitch       — 110 / 140 vh
- *   02 Receipts    — 120 / 150 vh
- *   03 vs Them     — 120 / 150 vh
- *   04 The Mechanic— 125 / 155 vh
- *   05 Rules       — 130 / 160 vh
- *   06 Pick a Sin  — 7 × 50 = 350 vh
- *   07 Why Honest  — 125 / 155 vh
- *   08 Balance     — 130 / 160 vh
- *   09 Campaign    — 110 / 140 vh
- *   10 Voices      — 120 / 150 vh
- *   11 Promise     — 130 / 160 vh
- *   12 Threshold   — 100 / 110 vh
+ *   01 Pitch       — 120 / 140 vh  (extra room for the 2-phase crossfade)
+ *   02 Receipts    — 105 / 115 vh
+ *   03 vs Them     — 105 / 115 vh
+ *   04 The Mechanic— 105 / 115 vh
+ *   05 Rules       — 105 / 115 vh
+ *   06 Pick a Sin  — 7 × 35 = 245 vh
+ *   07 Why Honest  — 105 / 115 vh
+ *   08 Balance     — 105 / 115 vh
+ *   09 Campaign    — 105 / 115 vh
+ *   10 Promise     — 105 / 115 vh
+ *   11 Threshold   — 100 / 110 vh
  *
- * Mobile total ~17.6 viewport heights; desktop ~20.0 (was ~37 in
- * the original, ~22.6 / ~26.8 last revision). Sticky-stage content
- * also bumped denser so it fills the viewport instead of leaving
- * the 40–50% black space the user flagged on real phones:
- *   · Versus rows  py-3 → py-4 sm:py-6, cells 28px → 32/40px
- *   · Pillar tiles p-6  → p-7 sm:p-9
- *   · Stat tiles   p-5/6 → p-6 sm:p-8, numerals 4/5xl → 5/6xl
+ * Mobile total ~12.6 viewport heights; desktop ~13.6 (was ~37
+ * originally, ~17.6 / ~20.0 last revision). Each non-crossfade
+ * chapter is now barely longer than the viewport — its scroll-
+ * driven reveals fire in 5–15vh of additional scroll, then the
+ * stage holds for a beat before the user moves on. Voices chapter
+ * removed (was mood, not selling info). Sticky-stage content
+ * stays bumped (Versus rows, Pillar tiles, Stat tiles) so the
+ * viewport fills.
  */
 
 import {
@@ -266,8 +266,10 @@ function ChapterHook() {
   const subOp       = useTransform(scrollYProgress, [0.62, 0.80], [0, 1]);
   const arrowOp     = useTransform(scrollYProgress, [0.85, 0.96, 1.0], [0, 0.5, 0]);
 
+  // Hook gets a bit more height than other content chapters because the
+  // two-phase headline crossfade needs scroll runway to read.
   return (
-    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
+    <section ref={ref} className="relative h-[120vh] sm:h-[140vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -441,7 +443,7 @@ function ChapterProof() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.4, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[120vh] sm:h-[150vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="II" side="left" />
         <div className="relative max-w-6xl mx-auto px-6 w-full">
@@ -595,7 +597,7 @@ function ChapterSeven() {
   // ~0.65 viewports per sin (was 1.0). Cuts ~245vh out of the page without
   // hurting the crossfade. Mobile inherits — at 0.65 × 7 sins = 4.55 viewports
   // it's tight but still legible.
-  const heightVh = SIN_ORDER.length * 50;
+  const heightVh = SIN_ORDER.length * 35;
 
   return (
     <section ref={ref} className="relative" style={{ height: `${heightVh}vh` }}>
@@ -737,7 +739,7 @@ function ChapterPillars() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
 
   return (
-    <section ref={ref} className="relative h-[125vh] sm:h-[155vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
@@ -796,7 +798,7 @@ function ChapterCampaign() {
   const ctaScale     = useTransform(scrollYProgress, [0.55, 0.85], [0.92, 1]);
 
   return (
-    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -1070,7 +1072,7 @@ function ChapterVersus() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[120vh] sm:h-[150vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="III" side="right" color="#ef4444" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
@@ -1204,7 +1206,7 @@ function ChapterMechanic() {
   const totalOpacity = useTransform(scrollYProgress, [0.85, 0.95], [0, 1]);
 
   return (
-    <section ref={ref} className="relative h-[125vh] sm:h-[155vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
         {/* Floating card silhouettes drifting in the background */}
@@ -1492,7 +1494,7 @@ function ChapterVoices() {
   });
 
   return (
-    <section ref={ref} className="relative h-[110vh] sm:h-[140vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <div
           aria-hidden="true"
@@ -1646,7 +1648,7 @@ function ChapterRules() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="V" side="right" color="#10b981" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1773,7 +1775,7 @@ function ChapterBalance() {
   const maxDeviation = Math.max(...BALANCE_JOURNEY.map((m) => m.deviation));
 
   return (
-    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1884,7 +1886,7 @@ function ChapterPromise() {
   const promiseY = useTransform(scrollYProgress, [0.7, 0.92], [30, 0]);
 
   return (
-    <section ref={ref} className="relative h-[130vh] sm:h-[160vh]">
+    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="XI" side="right" color="#10b981" />
         <div
@@ -1969,7 +1971,8 @@ export default function HomeScrollChapters() {
       <ChapterPillars />
       <ChapterBalance />
       <ChapterCampaign />
-      <ChapterVoices />
+      {/* ChapterVoices was a 7-quote sticky crossfade — dropped to keep the
+          page tight; mood beat, not selling info. */}
       <ChapterPromise />
       <ChapterThreshold />
     </div>
