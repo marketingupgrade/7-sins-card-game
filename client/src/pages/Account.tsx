@@ -349,7 +349,7 @@ export default function Account() {
     noindex: true,
   });
 
-  const { user, displayName, avatarUrl, signOut, isLoading } = useSupabaseAuth();
+  const { user, session, displayName, avatarUrl, signOut, isLoading } = useSupabaseAuth();
   const [, navigate] = useLocation();
   const [savedDecks, setSavedDecks] = useState<SavedDeck[]>([]);
   const [showPurgeDialog, setShowPurgeDialog] = useState(false);
@@ -404,13 +404,18 @@ export default function Account() {
 
   // Purge ALL data
   const handlePurge = useCallback(async () => {
-    if (!user) return;
+    if (!user || !session?.access_token) return;
     setIsPurging(true);
     setPurgeResult(null);
 
     try {
-      // 1. Delete server-side data (decks, comments) via tRPC
-      const result = await trpcMutate("user.purge", { supabaseUserId: user.id });
+      // 1. Delete server-side data (decks, comments) via tRPC.
+      // The access token proves to the server that we're actually this user — without it
+      // anyone who knows a Supabase user UUID could wipe another player's data.
+      const result = await trpcMutate("user.purge", {
+        supabaseUserId: user.id,
+        accessToken: session.access_token,
+      });
 
       // 2. Delete Supabase player record and game history
       const sb = getClientSupabase();
@@ -443,7 +448,7 @@ export default function Account() {
       setIsPurging(false);
       setShowPurgeDialog(false);
     }
-  }, [user, signOut, navigate]);
+  }, [user, session, signOut, navigate]);
 
   // Loading state
   if (isLoading) {

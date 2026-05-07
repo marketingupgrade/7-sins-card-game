@@ -14,15 +14,9 @@
    - Anyone can delete anyone's discussion comments
    - **Fix**: Add guestId/userId ownership check to deleteDiscussionComment
 
-3. **Discussion upvote has NO rate limiting** (routers.ts:134, db-supabase.ts:315)
-   - `discussion.upvote` just increments a counter — can be spammed infinitely
-   - No per-user tracking, no cooldown
-   - **Fix**: Add upvote tracking table or at minimum IP-based throttle
+3. ~~**Discussion upvote has NO rate limiting**~~ — **Fixed.** `discussion.upvote` is now wrapped in an IP-based sliding-window limiter (`server/rateLimit.ts`, 30 upvotes / minute / IP). Per-instance only — see CODEBASE.md §11 limitation 4.
 
-4. **User purge endpoint has NO auth verification** (routers.ts:508-521)
-   - `user.purge` accepts any `supabaseUserId` and deletes ALL their data
-   - An attacker who guesses/knows a UUID can wipe another player's data
-   - **Fix**: Verify the requesting user matches the target user
+4. ~~**User purge endpoint has NO auth verification**~~ — **Fixed.** `user.purge` now requires the caller's Supabase access token; the server verifies via `supabase.auth.getUser()` and rejects mismatches with `FORBIDDEN`/`UNAUTHORIZED`. Covered by `server/user.purge.test.ts`.
 
 5. **Blog content rendered via dangerouslySetInnerHTML without sanitization** (BlogPost.tsx:374)
    - Blog content from Supabase is rendered as raw HTML with no DOMPurify

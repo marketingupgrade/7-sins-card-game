@@ -6,18 +6,18 @@
 
 ## 1. Project Overview
 
-A real-time multiplayer card game where 2-4 players each choose a "sin faction" (Wrath, Sloth, Greed, Envy) and battle using faction-specific card decks. The game features a dark neon cyberpunk aesthetic, procedural audio, cinematic animations, and a sarcastic AI narrator.
+A real-time multiplayer card game where 2-4 players each choose one of the seven deadly sins (Wrath, Sloth, Greed, Envy, Pride, Lust, Gluttony) and battle using faction-specific card decks. The game features a gothic cathedral aesthetic, procedural audio, cinematic animations, and a sarcastic AI narrator.
 
 | Attribute | Value |
 |---|---|
 | Stack | React 19 + Tailwind 4 + Express 4 + tRPC 11 |
-| Database | Supabase (external Postgres) |
-| Auth | Manus OAuth (session cookie) |
+| Database | Supabase (external Postgres) — game state, decks, blog, discussion |
+| Auth | Supabase Auth (Discord/Google OAuth, email, phone OTP). The Manus OAuth scaffolding still ships with the template but is unused on Vercel. |
 | Real-time | Supabase Realtime (Postgres Changes) |
 | Audio | Web Audio API (procedural, no asset files) |
 | Animations | Framer Motion + CSS keyframes |
-| Testing | Vitest (150+ tests) |
-| Deployment | Manus hosting platform |
+| Testing | Vitest (~1000 tests across ~40 suites; see §7) |
+| Deployment | Vercel (serverless functions in `api/`, static in `client/`) |
 
 ---
 
@@ -117,12 +117,15 @@ The server-side `server/gameEngine.ts` contains the authoritative game logic (ca
 
 ### 3.1 Sin Factions
 
+All seven deadly sins are playable. Greed, Envy, and the later sins are gated behind play-count requirements (see §3.5). Faction passives and card lists live in `shared/gameTypes.ts` and `shared/cardData.ts`; treat that source of truth as authoritative — the table below summarises the four "starter" factions but additional sins (Pride, Lust, Gluttony) ship cards and passives in the same files.
+
 | Faction | Playstyle | Passive Ability |
 |---|---|---|
 | **Wrath** | Aggressive damage, self-harm | **Overcharge**: Burn 2 HP for +1 energy |
 | **Sloth** | Defensive shields, heals | **Lethargy**: Unspent energy carries over (max +2) |
 | **Greed** | Resource theft, energy drain | **Avarice**: Cards costing 3+ grant +1 bonus energy next turn |
 | **Envy** | Copy effects, punish leaders | **Covet**: Gain +1 energy if any opponent has more HP |
+| **Pride / Lust / Gluttony** | See `cardData.ts` | See `gameTypes.ts` |
 
 ### 3.2 Card System
 
@@ -201,18 +204,41 @@ All 15 multimedia features are implemented as standalone React components that c
 
 ## 7. Testing
 
-Tests live in `server/*.test.ts` and use Vitest. Current test suites:
+Tests live in `server/*.test.ts` and use Vitest. The full suite is ~1000 tests across ~40 files; the core gameplay and security suites are listed below. Some suites (`supabase.test.ts`, `gemini-key.test.ts`, `community.test.ts`, `deck.test.ts`, `rss-featured.test.ts`) require live Supabase / Gemini credentials and are skipped or fail outside the deployment environment.
 
 | File | Tests | Coverage |
 |---|---|---|
-| `game.test.ts` | 57 | Game creation, joining, sin selection, card play, turn flow |
-| `gameLogic.test.ts` | 39 | Damage calculation, compounding, catch-up, energy passives |
-| `factionUnlocks.test.ts` | 28 | Unlock threshold, progress tracking, faction availability |
-| `tutorial.test.ts` | 21 | Tutorial step progression, completion tracking |
-| `supabase.test.ts` | 4 | Supabase connectivity validation |
+| `edge-middleware.test.ts` | 85 | Edge middleware redirects, headers, bot detection |
+| `ux-audit.test.ts` | 50 | UX/UI heuristics across pages |
+| `chronicleCoverArt.test.ts` | 47 | AI cover art prompt + storage flow |
+| `v63-features.test.ts` | 42 | v6.3 feature regression |
+| `round-freeze-fix.test.ts` | 41 | Turn freeze edge cases |
+| `game.test.ts` | 39 | Game creation, joining, sin selection, card play, turn flow |
+| `gameLogic.test.ts` | 36 | Damage calculation, compounding, catch-up, energy passives |
+| `brand-voice.test.ts` | 34 | Narrator tone consistency |
+| `turnTimer.test.ts` | 34 | Turn timer enforcement |
+| `seo.test.ts` / `prerender.test.ts` | 33 each | Sitemap, OG tags, prerender output |
+| `indexnow.test.ts` | 32 | IndexNow URL submission |
+| `onboarding.test.ts` / `v511.test.ts` | 30 each | Onboarding + v5.11 features |
+| `chronicle.test.ts` / `factionUnlocks.test.ts` | 28 each | Chronicle assembly; faction unlock progression |
+| `deckCodes.test.ts` / `v66-features.test.ts` | 27 each | Deck code import/export; v6.6 features |
+| `profanityFilter.test.ts` | 25 | Gamertag/comment profanity blocklist |
+| `multimedia.test.ts` / `reckoning.test.ts` | 23 each | A/V triggers; Reckoning round mechanics |
+| `mobile-fix.test.ts` / `resolutionReveal.test.ts` | 22 each | Mobile layout; reveal cinematics |
+| `tutorial.test.ts` | 21 | Tutorial step progression |
+| `afflictionTable.test.ts` / `simultaneous.test.ts` | 20 each | Affliction table; simultaneous resolution |
+| `cardHoverTargetMode.test.ts` / `targetAvatarBadge.test.ts` | 19 each | Card hover/target UX |
+| `deckStrategies.test.ts` | 16 | Deck strategy validation |
+| `aiNarrator.test.ts` / `balance-menu.test.ts` | 15 each | Narrator generation; balance menu UI |
+| `deckSynergy.test.ts` | 14 | Deck synergy scoring |
+| `urlDeckSharing.test.ts` | 10 | URL-encoded deck import |
+| `discussion.test.ts` | 9 | Discussion router + schema |
+| `targetModeUtils.test.ts` | 9 | Target-mode helpers |
+| `rateLimit.test.ts` | 6 | Sliding-window rate limiter (`server/rateLimit.ts`) |
+| `user.purge.test.ts` | 6 | GDPR purge — auth-token verification |
 | `auth.logout.test.ts` | 1 | Auth logout flow |
 
-Run all tests: `npx vitest run`
+Run all tests: `pnpm test` (or `npx vitest run`).
 
 ---
 
@@ -300,6 +326,7 @@ Key environment variables are injected by the Manus platform. The Supabase crede
 ## 11. Known Limitations
 
 1. **Game state is client-authoritative** — The client writes directly to Supabase. A malicious client could cheat. For a production game, move card resolution to server-side RPC functions.
-2. **No persistent player profiles** — Win/loss stats are in localStorage, not tied to authenticated accounts. A database-backed profile system would enable cross-device progress.
-3. **Template TS errors** — `Markdown.tsx` and `ComponentShowcase.tsx` have pre-existing type errors from the template. These do not affect game functionality.
-4. **Bot turns are client-driven** — Bot logic runs in the host player's browser. If the host disconnects, bots stop playing.
+2. **No persistent player profiles for unauthenticated users** — Guest stats live in localStorage. Logged-in users have their identity persisted via the `players` table (linked to their Supabase auth UUID); cross-device progress works after sign-in.
+3. **Bot turns are client-driven** — Bot logic runs in the host player's browser. If the host disconnects, bots stop playing.
+4. **In-memory rate limiting** — `server/rateLimit.ts` is per-instance. On Vercel's multi-lambda runtime an attacker can scale across cold instances; move to Upstash/Redis if cross-instance limits are needed.
+5. **Stale audit/research markdown** — Several root-level `*.md` notes (`audit-findings.md`, `octalysis-audit.md`, `e2e-playtest-notes.md`, etc.) are historical research dumps and may not match the current code. Always cross-check against source.

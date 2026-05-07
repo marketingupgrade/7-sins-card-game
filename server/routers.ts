@@ -88,6 +88,9 @@ import {
 } from "./chronicleEngine";
 import { generateAndSaveCoverArt } from "./chronicleCoverArt";
 import { submitUrl, submitUrls, buildAllSiteUrls } from "./indexnow";
+import { TRPCError } from "@trpc/server";
+import { getServerSupabase } from "./supabaseServer";
+import { checkRateLimit, getRequestIp } from "./rateLimit";
 
 export const appRouter = router({
   system: systemRouter,
@@ -156,7 +159,19 @@ export const appRouter = router({
     /** Upvote a comment */
     upvote: publicProcedure
       .input(z.object({ commentId: z.number().int().positive() }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
+        const ip = getRequestIp(ctx.req);
+        const allowed = checkRateLimit(ip, {
+          scope: "discussion.upvote",
+          windowMs: 60_000,
+          max: 30,
+        });
+        if (!allowed) {
+          throw new TRPCError({
+            code: "TOO_MANY_REQUESTS",
+            message: "Too many upvotes. Slow down.",
+          });
+        }
         return upvoteDiscussionComment(input.commentId);
       }),
   }),
@@ -559,14 +574,36 @@ export const appRouter = router({
 
   /** User account management — data purge for GDPR compliance */
   user: router({
-    /** Purge ALL user data — decks, comments, game history. Real deletion, not fake. */
+    /**
+     * Purge ALL user data — decks, comments, game history. Real deletion, not fake.
+     *
+     * Requires the caller's Supabase access token. The token is verified server-side
+     * and must belong to the same user whose data is being purged. Without this
+     * check, anyone who guesses a Supabase user UUID could wipe another player's data.
+     */
     purge: publicProcedure
       .input(
         z.object({
           supabaseUserId: z.string().min(1).max(64),
+          accessToken: z.string().min(1).max(4096),
         })
       )
       .mutation(async ({ input }) => {
+        const sb = getServerSupabase();
+        const { data, error } = await sb.auth.getUser(input.accessToken);
+        if (error || !data?.user) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "Invalid or expired session.",
+          });
+        }
+        if (data.user.id !== input.supabaseUserId) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Cannot purge another user's data.",
+          });
+        }
+
         const result = await deleteAllUserData(input.supabaseUserId);
         return {
           success: true,
