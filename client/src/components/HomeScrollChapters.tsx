@@ -11,22 +11,29 @@
  *   02 Receipts    — 220vh; six stat counters animate up. Real
  *                    numbers from BalanceAnalysis.
  *   03 vs Them     — 220vh; head-to-head matrix vs Hearthstone, MTG
- *                    Arena, Marvel Snap, Slay the Spire, LoR. Each
- *                    row builds in as you scroll past.
+ *                    Arena, Marvel Snap, Slay the Spire, LoR.
  *   04 The Mechanic— 240vh; sticky compound-tick demo. A single card
  *                    is shown ticking through Fibonacci damage 1-1-2-
- *                    3-5 across rounds, driven entirely by scroll.
- *   05 Pick a Sin  — 800vh; sticky cross-fade through seven factions.
+ *                    3-5 across rounds.
+ *   05 Rules       — 260vh; rules-as-storytelling — four steps of how
+ *                    a round actually plays (lock-in, reveal, compound
+ *                    ticks, win condition).
+ *   06 Pick a Sin  — 800vh; sticky cross-fade through seven factions.
  *                    Copy is "pick this if you are X" pitches.
- *   06 Why Honest  — 240vh; sticky 2x2 of benefit-led product pillars.
- *   07 Campaign    — 200vh; sticky parallax title + boss-quote crawl
+ *   07 Why Honest  — 240vh; sticky 2x2 of benefit-led product pillars.
+ *   08 Balance     — 260vh; the iterative-rebalancing journey from
+ *                    v1 (12.5%) → v5.12 (1.01% PERFECT). Animated
+ *                    horizontal bars with version, deviation, grade.
+ *   09 Campaign    — 200vh; sticky parallax title + boss-quote crawl
  *                    + CTA fade.
- *   08 Voices      — 200vh; sticky "what the narrator says" — quotes
- *                    pulled from real campaign acts and live game
- *                    narrator lines. Social-proof, sin-flavour.
- *   09 Threshold   — 150vh; final close — "Free. Browser. Now."
+ *   10 Voices      — 200vh; sticky narrator-quote crossfade with
+ *                    sin-matched portrait silhouettes.
+ *   11 Promise     — 260vh; the forever-free manifesto — six ✗
+ *                    "we will never charge you for this" lines, then
+ *                    a "for the sake of gaming" close.
+ *   12 Threshold   — 150vh; final close — "Free. Browser. Now."
  *
- * Total ~25 viewport heights of choreographed scroll.
+ * Total ~37 viewport heights of choreographed scroll.
  */
 
 import {
@@ -726,12 +733,12 @@ function ChapterPillars() {
   return (
     <section ref={ref} className="relative" style={{ height: "240vh" }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
-        <ChapterNumeral numeral="VI" side="right" color="#a855f7" />
+        <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-12">
             <CathedralArch color="#a855f7" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
             <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
-              06 · WHY IT WORKS
+              07 · WHY IT WORKS
             </p>
             <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100">
               Four reasons it&apos;s honest.
@@ -808,11 +815,11 @@ function ChapterCampaign() {
             </p>
           ))}
         </motion.div>
-        <ChapterNumeral numeral="VII" side="left" color="#8b1a1a" />
+        <ChapterNumeral numeral="IX" side="left" color="#8b1a1a" />
         <div className="relative z-10 max-w-3xl mx-auto px-6 text-center">
           <CathedralArch color="#8b1a1a" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
           <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-4" style={{ fontFamily: "var(--font-heading)" }}>
-            07 · THE CAMPAIGN
+            09 · THE CAMPAIGN
           </p>
           <motion.h2
             style={{ y: titleY, opacity: titleOpacity }}
@@ -881,7 +888,7 @@ function ChapterThreshold() {
             background: "radial-gradient(circle at 50% 100%, rgba(139,26,26,0.20) 0%, transparent 60%)",
           }}
         />
-        <ChapterNumeral numeral="IX" side="left" color="#8b1a1a" />
+        <ChapterNumeral numeral="XII" side="left" color="#8b1a1a" />
         <div className="relative z-10 max-w-2xl mx-auto px-6 text-center w-full">
           <motion.div style={{ scale: skullScale, opacity: skullOpacity }} className="inline-block mb-8">
             <Skull className="w-12 h-12 text-amber-400/60" />
@@ -890,7 +897,7 @@ function ChapterThreshold() {
             style={{ opacity: headlineOpacity, fontFamily: "var(--font-heading)" }}
             className="text-[10px] tracking-[0.6em] text-amber-400/70 mb-4"
           >
-            09 · NOW
+            12 · NOW
           </motion.div>
           <motion.h2
             style={{ y: headlineY, opacity: headlineOpacity }}
@@ -1489,14 +1496,14 @@ function ChapterVoices() {
               "radial-gradient(circle at 50% 50%, rgba(212,168,84,0.06) 0%, transparent 65%)",
           }}
         />
-        <ChapterNumeral numeral="VIII" side="right" />
+        <ChapterNumeral numeral="X" side="right" />
         <div className="absolute top-12 left-0 right-0 z-20 text-center">
           <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-2 opacity-70" />
           <p
             className="text-[10px] tracking-[0.6em] text-amber-400/60"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            08 · VOICES
+            10 · VOICES
           </p>
           <p className="text-[10px] tracking-[0.3em] text-zinc-600 italic">
             the narrator is judging the whole way
@@ -1531,6 +1538,416 @@ function ChapterVoices() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────
+// Chapter — Rules (storytelling walkthrough of how a round plays)
+// ────────────────────────────────────────────────────────────────────────────
+
+interface RuleStep {
+  ord: string;
+  title: string;
+  body: string;
+  flavour: string;
+  accent: string;
+}
+
+const RULE_STEPS: RuleStep[] = [
+  {
+    ord: "I",
+    title: "Everyone locks in.",
+    body:
+      "Up to four players choose cards from their hand. Hidden, simultaneously. Then a ten-second countdown starts the moment anyone commits — no waiting on the slowest sinner. No bluffing turn order. Just the cards you wanted to play and the cards you didn't.",
+    flavour: "Simultaneous lock-in",
+    accent: "#a855f7",
+  },
+  {
+    ord: "II",
+    title: "Cards reveal at once.",
+    body:
+      "All hands open. The arena reads them in priority order — skip-queue cards first, then lowest HP plays first, then within a player the cheapest card. No hidden information. No turn-order baiting. The reckoning was always going to happen.",
+    flavour: "Resolution priority",
+    accent: "#ef4444",
+  },
+  {
+    ord: "III",
+    title: "Effects compound across rounds.",
+    body:
+      "A card played in round one isn't done in round one. Damage, shields, heal-steal, energy drain — all of it ticks across two-to-five rounds in Fibonacci, aggressive, or slow-burn patterns. The board you're looking at is already three turns old.",
+    flavour: "Compound ticks",
+    accent: "#d4a854",
+  },
+  {
+    ord: "IV",
+    title: "Twenty rounds. Or no rounds.",
+    body:
+      "The game ends when one sinner is left standing. Or, if everyone clings on, at round twenty the Final Reckoning settles it on remaining HP. Patience is a weapon. So is impatience. Both win games.",
+    flavour: "Win condition",
+    accent: "#10b981",
+  },
+];
+
+function RuleCard({
+  step,
+  index,
+  total,
+  scrollYProgress,
+}: {
+  step: RuleStep;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = index / total;
+  const arrived = (index + 0.55) / total;
+  const opacity = useTransform(scrollYProgress, [start, arrived], [0, 1]);
+  const x = useTransform(scrollYProgress, [start, arrived], [-32, 0]);
+  return (
+    <motion.div
+      style={{ opacity, x }}
+      className="relative grid grid-cols-[3.5rem_1fr] sm:grid-cols-[5rem_1fr] gap-4 sm:gap-6 items-start"
+    >
+      <div
+        className="font-[Cinzel] text-3xl sm:text-5xl text-right select-none tabular-nums leading-none"
+        style={{ color: step.accent, textShadow: `0 0 24px ${step.accent}55` }}
+      >
+        {step.ord}
+      </div>
+      <div className="border-l pl-4 sm:pl-6 py-1" style={{ borderColor: `${step.accent}44` }}>
+        <div
+          className="text-[10px] tracking-[0.3em] mb-2"
+          style={{ fontFamily: "var(--font-heading)", color: step.accent, opacity: 0.85 }}
+        >
+          {step.flavour.toUpperCase()}
+        </div>
+        <h3
+          className="font-[Cinzel] text-xl sm:text-2xl text-zinc-100 mb-2 leading-tight"
+        >
+          {step.title}
+        </h3>
+        <p
+          className="text-sm sm:text-base text-zinc-300/85 leading-relaxed"
+          style={{ fontFamily: "var(--font-body)" }}
+        >
+          {step.body}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function ChapterRules() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+        <ChapterNumeral numeral="V" side="right" color="#10b981" />
+        <div className="relative max-w-3xl mx-auto px-6 w-full">
+          <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
+            <CathedralArch color="#10b981" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
+            <p
+              className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              05 · HOW A ROUND PLAYS
+            </p>
+            <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100 mb-3">
+              Four steps. One rite.
+            </h2>
+            <p
+              className="text-sm sm:text-base italic text-zinc-400 max-w-md mx-auto"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              No tutorial gates, no monetisation timers. Just the rules of the cathedral.
+            </p>
+          </motion.div>
+          <div className="flex flex-col gap-7 sm:gap-8">
+            {RULE_STEPS.map((step, i) => (
+              <RuleCard
+                key={step.ord}
+                step={step}
+                index={i}
+                total={RULE_STEPS.length}
+                scrollYProgress={scrollYProgress}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Chapter — Balance Journey (the iterative rebalancing story)
+// ────────────────────────────────────────────────────────────────────────────
+
+interface BalanceMilestone {
+  version: string;
+  deviation: number;  // percentage
+  grade: "POOR" | "FAIR" | "GOOD" | "PERFECT";
+  story: string;
+}
+
+const BALANCE_JOURNEY: BalanceMilestone[] = [
+  { version: "v1",    deviation: 12.5, grade: "POOR",    story: "Four-faction prototype. Wrath was a tax on the room." },
+  { version: "v2",    deviation: 15.8, grade: "POOR",    story: "Expanded to seven sins. The new ones broke harder than the old ones held." },
+  { version: "v3",    deviation: 9.2,  grade: "FAIR",    story: "Redesigned every faction passive. The math finally remembered the seven." },
+  { version: "v4",    deviation: 6.2,  grade: "GOOD",    story: "Proportional card value scaling. Cheap cards stopped being free wins." },
+  { version: "v5.11", deviation: 1.41, grade: "GOOD",    story: "Combined optimizer — passives + card values, gradient descent, 470K games." },
+  { version: "v5.12", deviation: 1.01, grade: "PERFECT", story: "Two million Monte Carlo runs. Fifty-nine cards retuned. PERFECT grade." },
+];
+
+function MilestoneRow({
+  milestone,
+  index,
+  total,
+  scrollYProgress,
+  maxDeviation,
+}: {
+  milestone: BalanceMilestone;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+  maxDeviation: number;
+}) {
+  const start = index / total;
+  const arrived = (index + 0.55) / total;
+  const opacity = useTransform(scrollYProgress, [start, arrived], [0, 1]);
+  const x = useTransform(scrollYProgress, [start, arrived], [-24, 0]);
+  const widthScale = useTransform(scrollYProgress, [start, arrived], [0, 1]);
+  const targetPct = (milestone.deviation / maxDeviation) * 100;
+
+  const gradeColor = {
+    POOR: "#ef4444",
+    FAIR: "#fbbf24",
+    GOOD: "#10b981",
+    PERFECT: "#d4a854",
+  }[milestone.grade];
+
+  return (
+    <motion.div style={{ opacity, x }} className="grid grid-cols-[3.5rem_1fr_auto] gap-3 sm:gap-4 items-center">
+      <div
+        className="font-[Cinzel] text-sm sm:text-base text-amber-300/70 text-right tabular-nums"
+        style={{ fontFamily: "var(--font-heading)" }}
+      >
+        {milestone.version}
+      </div>
+      <div className="relative h-7 rounded bg-white/5 overflow-hidden">
+        <motion.div
+          className="absolute inset-y-0 left-0 origin-left rounded"
+          style={{
+            scaleX: widthScale,
+            width: `${targetPct}%`,
+            background: `linear-gradient(90deg, ${gradeColor}, ${gradeColor}aa)`,
+            boxShadow: `0 0 16px ${gradeColor}55`,
+          }}
+        />
+        <div className="absolute inset-0 flex items-center px-3 text-[10px] tracking-wider text-zinc-200">
+          <span className="font-[Cinzel] tabular-nums" style={{ color: gradeColor }}>
+            {milestone.deviation.toFixed(2)}%
+          </span>
+          <span className="ml-2 text-[9px] tracking-[0.3em] text-zinc-400/80">
+            {milestone.grade}
+          </span>
+        </div>
+      </div>
+      <div className="hidden sm:block text-[10px] italic text-zinc-500 max-w-[18rem] truncate" title={milestone.story}>
+        {milestone.story}
+      </div>
+    </motion.div>
+  );
+}
+
+function ChapterBalance() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.9, 1], [0, 1, 1, 0.5]);
+  const maxDeviation = Math.max(...BALANCE_JOURNEY.map((m) => m.deviation));
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+        <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
+        <div className="relative max-w-3xl mx-auto px-6 w-full">
+          <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
+            <CathedralArch color="#fbbf24" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
+            <p
+              className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              08 · THE BALANCE
+            </p>
+            <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100 mb-3">
+              From 15.8% to 1.01%.
+            </h2>
+            <p
+              className="text-sm sm:text-base italic text-zinc-400 max-w-lg mx-auto"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Six iterations. Two million simulated games. Fifty-nine cards
+              retuned. The arena is honest because we made it.
+            </p>
+          </motion.div>
+          <div className="flex flex-col gap-3 mb-8">
+            {BALANCE_JOURNEY.map((m, i) => (
+              <MilestoneRow
+                key={m.version}
+                milestone={m}
+                index={i}
+                total={BALANCE_JOURNEY.length}
+                scrollYProgress={scrollYProgress}
+                maxDeviation={maxDeviation}
+              />
+            ))}
+          </div>
+          <motion.p
+            style={{ opacity: titleOpacity, fontFamily: "var(--font-body)" }}
+            className="text-center text-xs italic text-zinc-500 max-w-xl mx-auto"
+          >
+            All numbers verifiable on{" "}
+            <Link href="/balance" className="underline hover:text-zinc-300">
+              /balance
+            </Link>
+            . The 1.5% threshold is the bar a card game has to clear to be
+            called fair. We&apos;re a third of the way under it.
+          </motion.p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Chapter — The Promise (forever-free manifesto)
+// ────────────────────────────────────────────────────────────────────────────
+
+const PROMISE_NEGATIVES = [
+  "No microtransactions.",
+  "No paid card packs.",
+  "No paid faction unlocks.",
+  "No power-affecting cosmetics.",
+  "No subscription tier.",
+  "No ads.",
+];
+
+function PromiseLine({
+  text,
+  index,
+  total,
+  scrollYProgress,
+}: {
+  text: string;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = index / total;
+  const arrived = (index + 0.5) / total;
+  const opacity = useTransform(scrollYProgress, [start, arrived], [0, 1]);
+  const x = useTransform(scrollYProgress, [start, arrived], [-20, 0]);
+  return (
+    <motion.div
+      style={{ opacity, x }}
+      className="flex items-center gap-3 sm:gap-4"
+    >
+      <div
+        className="flex items-center justify-center w-7 h-7 rounded-md flex-shrink-0"
+        style={{
+          background: "rgba(239,68,68,0.10)",
+          border: "1px solid rgba(239,68,68,0.30)",
+        }}
+      >
+        <XMark className="w-4 h-4" style={{ color: "#ef4444" }} />
+      </div>
+      <div
+        className="font-[Cinzel] text-lg sm:text-2xl text-zinc-200 tracking-wide"
+      >
+        {text}
+      </div>
+    </motion.div>
+  );
+}
+
+function ChapterPromise() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.92, 1], [0, 1, 1, 0.5]);
+  const promiseOpacity = useTransform(scrollYProgress, [0.7, 0.92], [0, 1]);
+  const promiseY = useTransform(scrollYProgress, [0.7, 0.92], [30, 0]);
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+        <ChapterNumeral numeral="XI" side="right" color="#10b981" />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 30%, rgba(16,185,129,0.10) 0%, transparent 60%), radial-gradient(circle at 50% 90%, rgba(212,168,84,0.08) 0%, transparent 60%)",
+          }}
+        />
+        <div className="relative max-w-2xl mx-auto px-6 w-full text-center">
+          <motion.div style={{ opacity: titleOpacity }} className="mb-10">
+            <CathedralArch color="#10b981" className="w-48 sm:w-56 h-12 mx-auto mb-3 opacity-70" />
+            <p
+              className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              11 · THE PROMISE
+            </p>
+            <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100 leading-[1.1] mb-3">
+              Free.
+              <br />
+              <span style={{ color: "#10b981" }}>Forever.</span>
+            </h2>
+            <p
+              className="text-sm sm:text-base italic text-zinc-400 max-w-lg mx-auto"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              The cathedral has one rule the rest of the industry doesn&apos;t.
+              We tell you what we will never charge you for.
+            </p>
+          </motion.div>
+
+          <div className="flex flex-col gap-3 sm:gap-4 mb-12 text-left max-w-md mx-auto">
+            {PROMISE_NEGATIVES.map((line, i) => (
+              <PromiseLine
+                key={line}
+                text={line}
+                index={i}
+                total={PROMISE_NEGATIVES.length}
+                scrollYProgress={scrollYProgress}
+              />
+            ))}
+          </div>
+
+          <motion.div style={{ opacity: promiseOpacity, y: promiseY }}>
+            <div className="h-px w-24 mx-auto mb-6 bg-amber-400/30" />
+            <p
+              className="font-[Cinzel] text-xl sm:text-3xl text-amber-300 leading-[1.3] mb-3"
+              style={{ textShadow: "0 0 24px rgba(212,168,84,0.4)" }}
+            >
+              For the sake of gaming.
+            </p>
+            <p
+              className="text-sm sm:text-base italic text-zinc-400 max-w-md mx-auto leading-relaxed"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              We pay the servers. You play the cards. That&apos;s the deal.
+              For as long as we can keep the lights on, the doors stay open
+              and the price stays the same. Zero.
+            </p>
+          </motion.div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Composed export
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -1541,10 +1958,13 @@ export default function HomeScrollChapters() {
       <ChapterProof />
       <ChapterVersus />
       <ChapterMechanic />
+      <ChapterRules />
       <ChapterSeven />
       <ChapterPillars />
+      <ChapterBalance />
       <ChapterCampaign />
       <ChapterVoices />
+      <ChapterPromise />
       <ChapterThreshold />
     </div>
   );
