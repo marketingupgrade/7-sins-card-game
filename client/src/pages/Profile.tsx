@@ -20,14 +20,15 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 
 const ALL_SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 
+// Brand Book faction palette (see /brandbook).
 const SIN_HEX: Record<SinType, string> = {
-  wrath: "#e8200e",
-  sloth: "#9055e8",
-  greed: "#e8b80e",
-  envy: "#15c840",
+  wrath: "#ef4444",
+  sloth: "#a855f7",
+  greed: "#eab308",
+  envy: "#10b981",
   pride: "#f0f0f0",
-  lust: "#ee48a0",
-  gluttony: "#c07020",
+  lust: "#ec4899",
+  gluttony: "#b45309",
 };
 
 const SIN_LABEL: Record<SinType, string> = {

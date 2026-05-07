@@ -661,9 +661,9 @@ const CHANGELOG: PatchNote[] = [
     version: "5.2.0",
     date: "March 2026",
     title: "The Overlords' Codex",
-    summary: "AAA Premium Brandbook, navigation overhaul, SEO sitemap, and the Lore archives open their gates.",
+    summary: "Brand Book, navigation overhaul, SEO sitemap, and the Lore archives open their gates.",
     changes: [
-      { category: "feature", text: "Added /brandbook page: 35-page AAA Premium Brandbook with 13 interactive sections, color swatches, faction profiles, Octalysis behavioral framework, and golden ratio mathematics" },
+      { category: "feature", text: "Added /brandbook page: 35-page Brand Book with 13 interactive sections, color swatches, faction profiles, Octalysis behavioral framework, and golden ratio mathematics" },
       { category: "feature", text: "Blog renamed to 'Lore' in navigation (URL slug /blog preserved for SEO)" },
       { category: "feature", text: "Navigation reordered: Home first, then alphabetical. Brandbook subtitle: 'How the overlords wished this game to be molded'" },
       { category: "feature", text: "Static sitemap.xml with 57 blog posts + 12 static pages for Google Search Console" },

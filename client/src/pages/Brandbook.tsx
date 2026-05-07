@@ -1,5 +1,5 @@
 /**
- * Brandbook Page — AAA Premium Brandbook for 7 Deadly Sins Card Game
+ * Brandbook Page — Brand Book / Visual Identity Guide for 7 Deadly Sins Card Game
  *
  * A comprehensive, interactive brand guide showcasing:
  * - Brand Essence & X Statement
@@ -504,7 +504,7 @@ export default function Brandbook() {
             className="w-20 h-20 md:w-24 md:h-24 mx-auto mb-6 opacity-80"
           />
           <p className="font-[Cinzel] text-[#d4a854]/60 text-xs tracking-[0.5em] uppercase mb-6">
-            AAA Premium Brandbook
+            Brand Book
           </p>
           <h1 className="font-[Cinzel] text-5xl md:text-7xl lg:text-8xl text-[#e8e0d0] tracking-wider leading-tight mb-4">
             7 DEADLY
@@ -1191,7 +1191,7 @@ export default function Brandbook() {
         {/* ── Footer ───────────────────────────────────────────── */}  <div className="mt-32 pt-8 border-t border-[#332a22]">
           <div className="text-center">
             <p className="font-[Cinzel] text-[#d4a854]/40 text-xs tracking-[0.3em] uppercase">
-              7 Deadly Sins Card Game — AAA Premium Brandbook v2.0
+              7 Deadly Sins Card Game — Brand Book v2.0
             </p>
             <p className="font-['Cormorant_Garamond'] text-[#8b7355]/40 text-sm mt-2 italic">
               "Every sinner starts somewhere."

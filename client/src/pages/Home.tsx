@@ -1,5 +1,5 @@
 /**
- * Home Page — AAA Premium Game Landing
+ * Home Page — Cathedral landing
  *
  * Full-bleed rotating sin hero showcase with:
  * - Babylon.js reactive 3D background (particles, volumetric light, ritual rings)

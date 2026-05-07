@@ -30,10 +30,10 @@ const SIN_COLORS: Record<SinType, string> = {
   wrath: "#ef4444",
   sloth: "#a855f7",
   greed: "#eab308",
-  envy: "#22c55e",
-  pride: "#e2e2e2",
+  envy: "#10b981",
+  pride: "#f0f0f0",
   lust: "#ec4899",
-  gluttony: "#f97316",
+  gluttony: "#b45309",
 };
 
 const SIN_BG: Record<SinType, string> = {

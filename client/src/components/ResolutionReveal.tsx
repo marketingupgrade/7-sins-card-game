@@ -28,12 +28,12 @@ const FACTION_THEMES: Record<string, {
   projectileGradient: string;
 }> = {
   wrath:    { color: "#ef4444", glow: "rgba(239,68,68,0.6)",   particleEmoji: "🔥", projectileGradient: "linear-gradient(90deg, #ef4444, #f97316, #fbbf24)" },
-  sloth:    { color: "#8b5cf6", glow: "rgba(139,92,246,0.6)",  particleEmoji: "💀", projectileGradient: "linear-gradient(90deg, #8b5cf6, #6d28d9, #4c1d95)" },
+  sloth:    { color: "#a855f7", glow: "rgba(168,85,247,0.6)",  particleEmoji: "💀", projectileGradient: "linear-gradient(90deg, #a855f7, #7c3aed, #5b21b6)" },
   greed:    { color: "#eab308", glow: "rgba(234,179,8,0.6)",   particleEmoji: "✨", projectileGradient: "linear-gradient(90deg, #eab308, #f59e0b, #fbbf24)" },
-  envy:     { color: "#22c55e", glow: "rgba(34,197,94,0.6)",   particleEmoji: "🐍", projectileGradient: "linear-gradient(90deg, #22c55e, #16a34a, #15803d)" },
-  pride:    { color: "#d946ef", glow: "rgba(217,70,239,0.6)",  particleEmoji: "👑", projectileGradient: "linear-gradient(90deg, #d946ef, #a855f7, #7c3aed)" },
+  envy:     { color: "#10b981", glow: "rgba(16,185,129,0.6)",  particleEmoji: "🐍", projectileGradient: "linear-gradient(90deg, #10b981, #059669, #047857)" },
+  pride:    { color: "#f0f0f0", glow: "rgba(240,240,240,0.55)",particleEmoji: "👑", projectileGradient: "linear-gradient(90deg, #f0f0f0, #d4d4d8, #a1a1aa)" },
   lust:     { color: "#ec4899", glow: "rgba(236,72,153,0.6)",  particleEmoji: "💋", projectileGradient: "linear-gradient(90deg, #ec4899, #f43f5e, #e11d48)" },
-  gluttony: { color: "#f97316", glow: "rgba(249,115,22,0.6)",  particleEmoji: "🦷", projectileGradient: "linear-gradient(90deg, #f97316, #ea580c, #c2410c)" },
+  gluttony: { color: "#b45309", glow: "rgba(180,83,9,0.6)",    particleEmoji: "🦷", projectileGradient: "linear-gradient(90deg, #b45309, #92400e, #78350f)" },
 };
 
 /* ─── Effect Visual Config ─────────────────────────────────── */

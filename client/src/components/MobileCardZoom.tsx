@@ -1,7 +1,7 @@
 /**
  * MobileCardZoom — Full-screen card detail overlay for mobile
  *
- * Follows the AAA Premium Brandbook:
+ * Follows the Brand Book:
  * - Gothic cathedral aesthetic (dark stone bg, candlelight accents)
  * - Narrator voice in Uncial Antiqua for flavor text
  * - Contrarian copy: "BANISH TO THE VOID" not "consume"
@@ -72,7 +72,7 @@ const SIN_COLORS: Record<string, string> = {
   wrath: "#ef4444",
   sloth: "#a855f7",
   greed: "#eab308",
-  envy: "#22c55e",
+  envy: "#10b981",
   pride: "#f0f0f0",
   lust: "#ec4899",
   gluttony: "#b45309",
