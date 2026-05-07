@@ -6,34 +6,23 @@
  * page than a magazine article — and it has to keep selling for the
  * whole scroll, not just open with a hook.
  *
- *   01 Pitch       — 200vh; "Most card games ask what kind of hero
- *                    you are. We assume you aren't." Tagline pops.
- *   02 Receipts    — 220vh; six stat counters animate up. Real
- *                    numbers from BalanceAnalysis.
- *   03 vs Them     — 220vh; head-to-head matrix vs Hearthstone, MTG
- *                    Arena, Marvel Snap, Slay the Spire, LoR.
- *   04 The Mechanic— 240vh; sticky compound-tick demo. A single card
- *                    is shown ticking through Fibonacci damage 1-1-2-
- *                    3-5 across rounds.
- *   05 Rules       — 260vh; rules-as-storytelling — four steps of how
- *                    a round actually plays (lock-in, reveal, compound
- *                    ticks, win condition).
- *   06 Pick a Sin  — 800vh; sticky cross-fade through seven factions.
- *                    Copy is "pick this if you are X" pitches.
- *   07 Why Honest  — 240vh; sticky 2x2 of benefit-led product pillars.
- *   08 Balance     — 260vh; the iterative-rebalancing journey from
- *                    v1 (12.5%) → v5.12 (1.01% PERFECT). Animated
- *                    horizontal bars with version, deviation, grade.
- *   09 Campaign    — 200vh; sticky parallax title + boss-quote crawl
- *                    + CTA fade.
- *   10 Voices      — 200vh; sticky narrator-quote crossfade with
- *                    sin-matched portrait silhouettes.
- *   11 Promise     — 260vh; the forever-free manifesto — six ✗
- *                    "we will never charge you for this" lines, then
- *                    a "for the sake of gaming" close.
- *   12 Threshold   — 150vh; final close — "Free. Browser. Now."
+ * Heights are responsive — mobile gets a tighter version of every chapter
+ * via Tailwind `h-[Avh] sm:h-[Bvh]`. The ranges below are mobile / desktop.
  *
- * Total ~37 viewport heights of choreographed scroll.
+ *   01 Pitch       — 140 / 170 vh
+ *   02 Receipts    — 150 / 180 vh
+ *   03 vs Them     — 150 / 180 vh
+ *   04 The Mechanic— 160 / 190 vh
+ *   05 Rules       — 170 / 200 vh
+ *   06 Pick a Sin  — 7 × 65 = 455 vh (was 700)
+ *   07 Why Honest  — 160 / 190 vh
+ *   08 Balance     — 170 / 200 vh
+ *   09 Campaign    — 140 / 170 vh
+ *   10 Voices      — 150 / 180 vh
+ *   11 Promise     — 170 / 200 vh
+ *   12 Threshold   — 110 / 130 vh
+ *
+ * Mobile total ~22.6 viewport heights; desktop ~26.8 (was ~37).
  */
 
 import {
@@ -272,7 +261,7 @@ function ChapterHook() {
   const arrowOp     = useTransform(scrollYProgress, [0.85, 0.96, 1.0], [0, 0.5, 0]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "200vh" }}>
+    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -282,32 +271,40 @@ function ChapterHook() {
           }}
         />
         <ChapterNumeral numeral="I" side="right" />
-        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
+        <div className="relative z-10 max-w-4xl mx-auto px-6 text-center w-full">
           <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-4 opacity-70" />
           <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-6" style={{ fontFamily: "var(--font-heading)" }}>
             01 · THE PITCH
           </p>
-          <motion.h2
-            style={{ opacity: phase1Op, y: phase1Y }}
-            className="font-[Cinzel] text-4xl sm:text-6xl md:text-7xl tracking-wide text-amber-300 leading-[1.05]"
-          >
-            Most card games ask
-            <br />
-            what kind of hero you are.
-          </motion.h2>
-          <motion.h3
-            style={{ opacity: phase2Op, y: phase2Y }}
-            className="absolute inset-x-0 top-[8rem] sm:top-[9.5rem] font-[Cinzel] text-4xl sm:text-6xl md:text-7xl tracking-wide text-zinc-100 leading-[1.05]"
-          >
-            We assume
-            <br />
-            <span className="italic" style={{ color: "#8b1a1a" }}>
-              you aren&apos;t.
-            </span>
-          </motion.h3>
+          {/* Fixed-height title slot — h2 and h3 stack and cross-fade in place
+              instead of using absolute + mt-72, which was overflowing mobile. */}
+          <div className="relative h-[10rem] sm:h-[13rem] md:h-[15rem] mb-8 flex items-center justify-center">
+            <motion.h2
+              style={{ opacity: phase1Op, y: phase1Y }}
+              className="absolute inset-0 flex items-center justify-center font-[Cinzel] text-3xl sm:text-5xl md:text-6xl tracking-wide text-amber-300 leading-[1.1]"
+            >
+              <span>
+                Most card games ask
+                <br />
+                what kind of hero you are.
+              </span>
+            </motion.h2>
+            <motion.h3
+              style={{ opacity: phase2Op, y: phase2Y }}
+              className="absolute inset-0 flex items-center justify-center font-[Cinzel] text-3xl sm:text-5xl md:text-6xl tracking-wide text-zinc-100 leading-[1.1]"
+            >
+              <span>
+                We assume
+                <br />
+                <span className="italic" style={{ color: "#8b1a1a" }}>
+                  you aren&apos;t.
+                </span>
+              </span>
+            </motion.h3>
+          </div>
           <motion.p
             style={{ opacity: subOp, fontFamily: "var(--font-body)" }}
-            className="mt-72 sm:mt-96 text-base sm:text-lg italic text-zinc-300/85 leading-relaxed max-w-xl mx-auto"
+            className="text-base sm:text-lg italic text-zinc-300/85 leading-relaxed max-w-xl mx-auto"
           >
             A free, browser-based dark-fantasy card game. Seven sins.
             Compound mechanics. No paywalls. No download. The narrator is
@@ -438,7 +435,7 @@ function ChapterProof() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.4, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "220vh" }}>
+    <section ref={ref} className="relative h-[150vh] sm:h-[180vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="II" side="left" />
         <div className="relative max-w-6xl mx-auto px-6 w-full">
@@ -589,7 +586,10 @@ function ChapterSeven() {
     return `0${idx + 1} / 0${SIN_ORDER.length}`;
   });
 
-  const heightVh = SIN_ORDER.length * 100;
+  // ~0.65 viewports per sin (was 1.0). Cuts ~245vh out of the page without
+  // hurting the crossfade. Mobile inherits — at 0.65 × 7 sins = 4.55 viewports
+  // it's tight but still legible.
+  const heightVh = SIN_ORDER.length * 65;
 
   return (
     <section ref={ref} className="relative" style={{ height: `${heightVh}vh` }}>
@@ -731,7 +731,7 @@ function ChapterPillars() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "240vh" }}>
+    <section ref={ref} className="relative h-[160vh] sm:h-[190vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
@@ -790,7 +790,7 @@ function ChapterCampaign() {
   const ctaScale     = useTransform(scrollYProgress, [0.55, 0.85], [0.92, 1]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "200vh" }}>
+    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
         <div
           aria-hidden="true"
@@ -879,7 +879,7 @@ function ChapterThreshold() {
   const ctaOpacity     = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "150vh" }}>
+    <section ref={ref} className="relative h-[110vh] sm:h-[130vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <div
           aria-hidden="true"
@@ -1064,7 +1064,7 @@ function ChapterVersus() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "220vh" }}>
+    <section ref={ref} className="relative h-[150vh] sm:h-[180vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="III" side="right" color="#ef4444" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
@@ -1198,7 +1198,7 @@ function ChapterMechanic() {
   const totalOpacity = useTransform(scrollYProgress, [0.85, 0.95], [0, 1]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "240vh" }}>
+    <section ref={ref} className="relative h-[160vh] sm:h-[190vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
         {/* Floating card silhouettes drifting in the background */}
@@ -1486,7 +1486,7 @@ function ChapterVoices() {
   });
 
   return (
-    <section ref={ref} className="relative" style={{ height: "200vh" }}>
+    <section ref={ref} className="relative h-[140vh] sm:h-[170vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <div
           aria-hidden="true"
@@ -1640,7 +1640,7 @@ function ChapterRules() {
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="V" side="right" color="#10b981" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1767,7 +1767,7 @@ function ChapterBalance() {
   const maxDeviation = Math.max(...BALANCE_JOURNEY.map((m) => m.deviation));
 
   return (
-    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
@@ -1878,7 +1878,7 @@ function ChapterPromise() {
   const promiseY = useTransform(scrollYProgress, [0.7, 0.92], [30, 0]);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "260vh" }}>
+    <section ref={ref} className="relative h-[170vh] sm:h-[200vh]">
       <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
         <ChapterNumeral numeral="XI" side="right" color="#10b981" />
         <div
