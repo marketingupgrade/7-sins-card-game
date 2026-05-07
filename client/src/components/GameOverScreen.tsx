@@ -14,6 +14,7 @@ import { useLocation } from "wouter";
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { RotateCcw, BookOpen, Loader2, Download } from "lucide-react";
 import PostGameAnalysis from "./PostGameAnalysis";
+import TypewriterText from "./TypewriterText";
 import { trpc } from "@/lib/trpc";
 import { ICON_URLS } from "@/lib/assetUrls";
 import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
@@ -450,6 +451,50 @@ function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; s
         )}
       </div>
     </motion.div>
+  );
+}
+
+// ─── Campaign outro typewriter + audio stinger ───────────────────────────────
+function CampaignOutroTypewriter({
+  text,
+  isVictory,
+}: {
+  text: string;
+  isVictory: boolean;
+}) {
+  // Fire the matching cathedral stinger once on mount. Best-effort: if audio
+  // is blocked (no user gesture yet) or the import fails, we silently fall
+  // back to the typewriter alone.
+  useEffect(() => {
+    let cancelled = false;
+    import("@/lib/cathedralSounds")
+      .then((m) => {
+        if (cancelled) return;
+        try {
+          if (isVictory) {
+            m.playChoirPad();
+            window.setTimeout(() => {
+              try { m.playResolutionChime(); } catch {}
+            }, 450);
+          } else {
+            m.playEliminationToll();
+          }
+        } catch {
+          // ignore
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isVictory]);
+
+  return (
+    <TypewriterText
+      text={text}
+      speed={isVictory ? 24 : 30}
+      tickEvery={0}
+    />
   );
 }
 
@@ -1035,7 +1080,10 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
                   {isPlayerWinner ? 'CAMPAIGN — CLEARED' : 'CAMPAIGN — DEFEATED'} · {campaignContext.title}
                 </p>
                 <p className="text-sm leading-relaxed text-zinc-200 whitespace-pre-line">
-                  {isPlayerWinner ? campaignContext.outro : campaignContext.defeatLine}
+                  <CampaignOutroTypewriter
+                    text={isPlayerWinner ? campaignContext.outro : campaignContext.defeatLine}
+                    isVictory={isPlayerWinner}
+                  />
                 </p>
               </motion.div>
             )}
