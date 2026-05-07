@@ -28,8 +28,12 @@ export interface CampaignBoss {
   epithet: string;
   /** 30-card deck. Must contain exactly one boss twist card ID. */
   deck: string[];
-  /** Optional flavor name for the bot personality (defaults to a random one). */
-  personality?: string;
+  /**
+   * Bonus HP added on top of `STARTING_HP` after the engine initialises the
+   * game. Use sparingly — acts 1 should usually be 0 (let the player learn
+   * the matchup), acts 2/3 lean on this to pace the difficulty curve.
+   */
+  hpBoost?: number;
 }
 
 export interface CampaignMission {
@@ -119,7 +123,8 @@ const WRATH_ACT_1: CampaignMission = {
     sin: "wrath",
     epithet: "Hammer of the Pit",
     deck: bossDeck("wrath", "boss_wrath_1_hammerfall"),
-    personality: "The Forgemaster",
+    // Act 1 — let the player feel the matchup at standard HP
+    hpBoost: 0,
   },
   unlockedBy: null,
 };
@@ -144,7 +149,7 @@ const WRATH_ACT_2: CampaignMission = {
     sin: "wrath",
     epithet: "He Who Drinks the Wound",
     deck: bossDeck("wrath", "boss_wrath_2_bloodroar"),
-    personality: "Skullcrusher Vex",
+    hpBoost: 80,
   },
   unlockedBy: "wrath_1",
 };
@@ -169,9 +174,90 @@ const WRATH_ACT_3: CampaignMission = {
     sin: "wrath",
     epithet: "The Apostate",
     deck: bossDeck("wrath", "boss_wrath_3_finalhour"),
-    personality: "Erebus",
+    hpBoost: 160,
   },
   unlockedBy: "wrath_2",
+};
+
+// ─── Sloth: The Cell / The Drowsing / The Eternal ────────────────
+
+const SLOTH_ACT_1: CampaignMission = {
+  id: "sloth_1",
+  sin: "sloth",
+  act: 1,
+  title: "The Cell",
+  hook: "An anchorite who hasn't moved in a decade. Reaching them is the fight.",
+  intro:
+    "They lock the doors before you arrive. Then they lock them again behind you. " +
+    "The Anchorite Aldon doesn't have to fight you — he just has to wait. " +
+    "He's been waiting longer than you've been alive. Hit him often, hit him fast. " +
+    "If he settles in, you don't make it out.",
+  outro:
+    "Aldon doesn't react when you finish him. He just blinks, slowly. " +
+    "You can't tell if he's seen you. The chains slacken, a little. The door stays where it is.",
+  defeatLine: "Aldon doesn't smile. He resettles. He has time.",
+  playerDeck: playerStarterDeck("sloth"),
+  boss: {
+    name: "The Anchorite Aldon",
+    sin: "sloth",
+    epithet: "Bound to the Cell",
+    deck: bossDeck("sloth", "boss_sloth_1_ironpatience"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const SLOTH_ACT_2: CampaignMission = {
+  id: "sloth_2",
+  sin: "sloth",
+  act: 2,
+  title: "The Drowsing",
+  hook: "A garden where every plant breathes you in.",
+  intro:
+    "Mother Slumber doesn't have a face, exactly. She has a posture. " +
+    "She is sitting in the centre of a garden that drinks people quietly, and she will be very gracious about you joining the soil. " +
+    "The flowers don't care who wins. They care who loses slower. " +
+    "Don't slow down.",
+  outro:
+    "Mother Slumber bows once, the way trees bow before a storm. " +
+    "The garden goes back to breathing without you in it. " +
+    "You won't sleep tonight. You'll be too proud.",
+  defeatLine: "You don't remember sitting down. You don't remember closing your eyes.",
+  playerDeck: playerStarterDeck("sloth"),
+  boss: {
+    name: "Mother Slumber",
+    sin: "sloth",
+    epithet: "She Who Breathes the Room Out",
+    deck: bossDeck("sloth", "boss_sloth_2_drowse"),
+    hpBoost: 90,
+  },
+  unlockedBy: "sloth_1",
+};
+
+const SLOTH_ACT_3: CampaignMission = {
+  id: "sloth_3",
+  sin: "sloth",
+  act: 3,
+  title: "The Eternal",
+  hook: "Something that has been here longer than the arena has.",
+  intro:
+    "They don't tell you what The Eternal is, because nobody knows. " +
+    "The arena was built around it — the arena is, in some sense, an apology. " +
+    "It does not strike. It accumulates. By round four it will own the board. By round six it will own you. " +
+    "Don't let it reach round six.",
+  outro:
+    "The Eternal does not die so much as elsewhere. Something distant inside it stops, and somewhere else, something starts. " +
+    "You leave before whatever-that-is finds you. Wrath was a tantrum. Sloth was a verdict.",
+  defeatLine: "The Eternal keeps eating. It has all the time. You did not.",
+  playerDeck: playerStarterDeck("sloth"),
+  boss: {
+    name: "Older Than the Bell",
+    sin: "sloth",
+    epithet: "The Eternal",
+    deck: bossDeck("sloth", "boss_sloth_3_aeon"),
+    hpBoost: 175,
+  },
+  unlockedBy: "sloth_2",
 };
 
 // ─── Full mission list ───────────────────────────────────────────
@@ -181,9 +267,9 @@ export const CAMPAIGN_MISSIONS: CampaignMission[] = [
   WRATH_ACT_2,
   WRATH_ACT_3,
 
-  stub("sloth_1", "sloth", 1, "The Cell", "An anchorite who hasn't moved in a decade. Reaching them is the fight."),
-  stub("sloth_2", "sloth", 2, "The Drowsing", "A garden where every plant breathes you in."),
-  stub("sloth_3", "sloth", 3, "The Eternal", "Something that has been here longer than the arena has."),
+  SLOTH_ACT_1,
+  SLOTH_ACT_2,
+  SLOTH_ACT_3,
 
   stub("greed_1", "greed", 1, "The Counting House", "A clerk with a quill that draws blood as ink."),
   stub("greed_2", "greed", 2, "The Vault", "A door behind a door behind a price."),

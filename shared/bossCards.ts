@@ -57,6 +57,51 @@ export const BOSS_CARDS: CardDefinition[] = [
     effects: [{ type: "damage", baseValue: 32, duration: 2, targetMode: "single" }],
     description: "Erebus burns through faith and flesh alike. Two strikes. Each louder than the last.",
   },
+
+  // ─── Sloth Act 1 — The Cell ──────────────────────────────────
+  {
+    id: "boss_sloth_1_ironpatience",
+    name: "Iron Patience",
+    sin: "sloth",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "slowburn",
+    effects: [
+      { type: "shield_gain", baseValue: 28, duration: 3, targetMode: "self" },
+      { type: "heal_block", baseValue: 12, duration: 2, targetMode: "single" },
+    ],
+    description: "The Anchorite has not moved in ten years. He is not about to start now.",
+  },
+
+  // ─── Sloth Act 2 — The Drowsing ──────────────────────────────
+  {
+    id: "boss_sloth_2_drowse",
+    name: "Drowse",
+    sin: "sloth",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "energy_block", baseValue: 2, duration: 3, targetMode: "single" },
+      { type: "heal_gain", baseValue: 14, duration: 3, targetMode: "self" },
+    ],
+    description: "Mother Slumber breathes once. The room exhales with her.",
+  },
+
+  // ─── Sloth Act 3 — The Eternal ───────────────────────────────
+  {
+    id: "boss_sloth_3_aeon",
+    name: "Aeon's Indifference",
+    sin: "sloth",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "slowburn",
+    effects: [
+      { type: "shield_gain", baseValue: 36, duration: 4, targetMode: "self" },
+      { type: "damage", baseValue: 9, duration: 4, targetMode: "single" },
+    ],
+    description: "The Eternal has watched empires rise. Yours is small, brief, and predictable.",
+  },
 ];
 
 const BOSS_CARD_MAP: Record<string, CardDefinition> = Object.fromEntries(

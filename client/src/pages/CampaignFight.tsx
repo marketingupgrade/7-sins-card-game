@@ -129,8 +129,20 @@ export default function CampaignFight() {
       setActiveCampaignMission(m.id, gameId);
       markAttempt(m.id);
 
-      // 6. Off to the arena.
+      // 6. Start the game. `startGame` resets every player's HP to
+      //    STARTING_HP, so any boss HP boost has to land *after* it.
       await startGame(gameId);
+
+      if (m.boss.hpBoost && m.boss.hpBoost > 0) {
+        const { STARTING_HP } = await import("../../../shared/gameTypes");
+        const boostedHp = STARTING_HP + m.boss.hpBoost;
+        await sb
+          .from("game_players")
+          .update({ current_hp: boostedHp, max_hp: boostedHp })
+          .eq("game_id", gameId)
+          .eq("player_id", botId);
+      }
+
       setLocation(`/game/${gameId}`);
     } catch (err) {
       console.error("[CampaignFight] Failed to launch:", err);
@@ -225,6 +237,14 @@ export default function CampaignFight() {
                 <p className="text-[11px] text-zinc-500 italic">
                   {mission.boss.epithet}
                 </p>
+                {mission.boss.hpBoost && mission.boss.hpBoost > 0 && (
+                  <p
+                    className="mt-2 inline-block px-2 py-0.5 rounded-full text-[9px] tracking-[0.2em] border border-red-400/30 bg-red-400/10 text-red-300"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    +{mission.boss.hpBoost} HP
+                  </p>
+                )}
               </div>
             </div>
 
