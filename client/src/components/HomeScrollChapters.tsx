@@ -14,21 +14,22 @@
  *   03 vs Them     — 105 / 115 vh
  *   04 The Mechanic— 105 / 115 vh
  *   05 Rules       — 105 / 115 vh
- *   06 Pick a Sin  — 7 × 35 = 245 vh
+ *   06 Pick a Sin  — 7 × 45 + 60 = 375 vh (45vh per sin + 60vh hang tail
+ *                    so the completed septagram + seventh portrait hold
+ *                    on screen before the chapter exits)
  *   07 Why Honest  — 105 / 115 vh
  *   08 Balance     — 105 / 115 vh
  *   09 Campaign    — 105 / 115 vh
  *   10 Promise     — 105 / 115 vh
  *   11 Threshold   — 100 / 110 vh
  *
- * Mobile total ~12.6 viewport heights; desktop ~13.6 (was ~37
- * originally, ~17.6 / ~20.0 last revision). Each non-crossfade
- * chapter is now barely longer than the viewport — its scroll-
- * driven reveals fire in 5–15vh of additional scroll, then the
- * stage holds for a beat before the user moves on. Voices chapter
- * removed (was mood, not selling info). Sticky-stage content
- * stays bumped (Versus rows, Pillar tiles, Stat tiles) so the
- * viewport fills.
+ * Mobile total ~14.0 viewport heights; desktop ~15.0 (was ~37
+ * originally). Each non-crossfade chapter is barely longer than
+ * the viewport — its scroll-driven reveals fire quickly, then
+ * holds for a beat. Voices chapter dropped (mood, not selling
+ * info). Pick-a-Sin gets a hang tail so the completed septagram
+ * (each of its seven points lit in sin colour) and the seventh
+ * faction portrait hold on screen together before scrolling on.
  */
 
 import {
@@ -205,20 +206,80 @@ function CathedralArch({ color = "#d4a854", className = "" }: { color?: string; 
   );
 }
 
-/** Slowly-rotating seven-pointed sigil for The Seven chapter background. */
-function SinSigil({ scrollYProgress, color = "#d4a854" }: { scrollYProgress: MotionValue<number>; color?: string }) {
-  const rotate = useTransform(scrollYProgress, [0, 1], [0, 360]);
+/** A single point on the septagram. Lights up when scroll passes its sin's
+ *  slot, then stays lit (no fade-out) — the wheel "completes" sin by sin. */
+function SigilPoint({
+  x,
+  y,
+  scrollYProgress,
+  start,
+  peak,
+  color,
+}: {
+  x: number;
+  y: number;
+  scrollYProgress: MotionValue<number>;
+  start: number;
+  peak: number;
+  color: string;
+}) {
+  // Once lit, stays lit — `[start, peak] → [0, 1]` with no fade-out.
+  const fill = useTransform(scrollYProgress, [start, peak], [0, 1]);
+  const radius = useTransform(scrollYProgress, [start, peak], [1.2, 2.4]);
+  const glowOp = useTransform(scrollYProgress, [start, peak], [0, 0.55]);
+  return (
+    <g>
+      <motion.circle cx={x} cy={y} r={4} fill={color} style={{ opacity: glowOp }} />
+      <motion.circle cx={x} cy={y} r={radius} style={{ fill, color }} fill={color} />
+    </g>
+  );
+}
+
+/** Slowly-rotating septagram. As scroll progresses through the Pick-a-Sin
+ *  chapter, each of the seven points lights in its sin's brand-book colour
+ *  — turning the sigil into a progress indicator that "completes" by the
+ *  time the player has seen all seven factions.
+ *
+ *  After the last sin's slot ends there's a hang tail (extra scroll) where
+ *  the completed sigil holds on screen, satisfying the user's ask of
+ *  "hang on the wheel until it showed all sins".
+ */
+function SinSigil({
+  scrollYProgress,
+  totalSlots,
+  hangFraction = 0.13,
+  baseColor = "#d4a854",
+}: {
+  scrollYProgress: MotionValue<number>;
+  /** Number of sins (slot count). The hang tail lives outside these slots. */
+  totalSlots: number;
+  /** Fraction of total scroll spent on the hang tail (after the last sin). */
+  hangFraction?: number;
+  baseColor?: string;
+}) {
+  // Slot progress excludes the hang tail so the lights complete before hang.
+  const slotsRange = 1 - hangFraction;
   const points = Array.from({ length: 7 }, (_, i) => {
     const angle = (i / 7) * Math.PI * 2 - Math.PI / 2;
     return { x: 50 + 45 * Math.cos(angle), y: 50 + 45 * Math.sin(angle) };
   });
-  const path = points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
-  // Septagram (skip-2) for a deliberate occult feel, matched to seven sins.
+  const ringPath =
+    points.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+  // Septagram (skip-3) — connects every third point.
   const star = Array.from({ length: 7 }, (_, i) => {
     const idx = (i * 3) % 7;
     return points[idx];
   });
-  const starPath = star.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+  const starPath =
+    star.map((p, i) => `${i === 0 ? "M" : "L"} ${p.x} ${p.y}`).join(" ") + " Z";
+
+  // Sin-coloured points in canonical SIN_ORDER position.
+  const pointColors = SIN_ORDER.map((sin) => SIN_PALETTE[sin].color);
+
+  // Rotation slows during the hang so the wheel settles into a final pose.
+  const rotate = useTransform(scrollYProgress, [0, slotsRange, 1], [0, 320, 340]);
+  const sigilOpacity = useTransform(scrollYProgress, [slotsRange, 1], [0.12, 0.22]);
+  const ringPulse = useTransform(scrollYProgress, [slotsRange - 0.05, slotsRange, 1], [0.3, 0.85, 0.85]);
 
   return (
     <motion.svg
@@ -233,16 +294,36 @@ function SinSigil({ scrollYProgress, color = "#d4a854" }: { scrollYProgress: Mot
         left: "50%",
         x: "-50%",
         y: "-50%",
-        opacity: 0.12,
+        opacity: sigilOpacity,
       }}
     >
-      <circle cx="50" cy="50" r="48" fill="none" stroke={color} strokeWidth="0.3" />
-      <circle cx="50" cy="50" r="42" fill="none" stroke={color} strokeWidth="0.2" />
-      <path d={path} fill="none" stroke={color} strokeWidth="0.4" />
-      <path d={starPath} fill="none" stroke={color} strokeWidth="0.6" />
-      {points.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="1.4" fill={color} />
-      ))}
+      <circle cx="50" cy="50" r="48" fill="none" stroke={baseColor} strokeWidth="0.3" />
+      <motion.circle
+        cx="50"
+        cy="50"
+        r="42"
+        fill="none"
+        stroke={baseColor}
+        strokeWidth="0.4"
+        style={{ opacity: ringPulse }}
+      />
+      <path d={ringPath} fill="none" stroke={baseColor} strokeWidth="0.4" />
+      <path d={starPath} fill="none" stroke={baseColor} strokeWidth="0.6" />
+      {points.map((p, i) => {
+        const slotStart = (i / totalSlots) * slotsRange;
+        const slotPeak = ((i + 0.4) / totalSlots) * slotsRange;
+        return (
+          <SigilPoint
+            key={i}
+            x={p.x}
+            y={p.y}
+            scrollYProgress={scrollYProgress}
+            start={slotStart}
+            peak={slotPeak}
+            color={pointColors[i] ?? baseColor}
+          />
+        );
+      })}
     </motion.svg>
   );
 }
@@ -488,33 +569,44 @@ function FactionStage({
   sin,
   index,
   total,
+  slotsRange,
   scrollYProgress,
 }: {
   sin: SinType;
   index: number;
   total: number;
+  /** Fraction of total chapter scroll dedicated to faction slots (the rest
+   *  is the hang tail). */
+  slotsRange: number;
   scrollYProgress: MotionValue<number>;
 }) {
   const data = SIN_PALETTE[sin];
-  const start   = index / total;
-  const peak    = (index + 0.4) / total;
-  const fadeOut = (index + 0.85) / total;
-  const end     = (index + 1) / total;
+  const start   = (index / total) * slotsRange;
+  const peak    = ((index + 0.4) / total) * slotsRange;
+  const fadeOut = ((index + 0.85) / total) * slotsRange;
+  const end     = ((index + 1) / total) * slotsRange;
+  const isLast  = index === total - 1;
 
+  // Last sin holds at full opacity through the hang tail so the completed
+  // wheel and the seventh portrait sit on screen together.
   const opacity = useTransform(
     scrollYProgress,
     [Math.max(0, start - 0.02), peak, fadeOut, end],
-    [0, 1, 1, 0]
+    isLast ? [0, 1, 1, 1] : [0, 1, 1, 0]
   );
   const portraitScale = useTransform(
     scrollYProgress,
     [Math.max(0, start - 0.02), peak, end],
-    [0.85, 1, 1.08]
+    [0.85, 1, isLast ? 1 : 1.08]
   );
   const textX = useTransform(
     scrollYProgress,
     [Math.max(0, start - 0.02), peak, end],
-    index % 2 === 0 ? [40, 0, -40] : [-40, 0, 40]
+    isLast
+      ? [40, 0, 0]
+      : index % 2 === 0
+        ? [40, 0, -40]
+        : [-40, 0, 40]
   );
 
   const portraitOnRight = index % 2 === 1;
@@ -581,8 +673,18 @@ function ChapterSeven() {
     offset: ["start start", "end end"],
   });
 
+  // 45vh per sin × 7 = 315vh of slots, plus 60vh hang tail = 375vh total.
+  // The hang tail is where the user has finished revealing all seven and
+  // the completed septagram sits on screen with the seventh portrait
+  // (Gluttony) for one viewport-and-a-bit before scrolling on.
+  const slotVhPerSin = 45;
+  const hangVh = 60;
+  const heightVh = SIN_ORDER.length * slotVhPerSin + hangVh;
+  const slotsRange = (SIN_ORDER.length * slotVhPerSin) / heightVh; // ≈ 0.84
+
   const tintHue = useTransform(scrollYProgress, (p) => {
-    const idx = Math.min(SIN_ORDER.length - 1, Math.max(0, Math.floor(p * SIN_ORDER.length)));
+    const local = Math.min(1, p / slotsRange);
+    const idx = Math.min(SIN_ORDER.length - 1, Math.max(0, Math.floor(local * SIN_ORDER.length)));
     return SIN_PALETTE[SIN_ORDER[idx]].color;
   });
   const tintBg = useTransform(
@@ -590,20 +692,20 @@ function ChapterSeven() {
     (c) => `radial-gradient(circle at 50% 35%, ${c}22 0%, transparent 60%)`
   );
   const counter = useTransform(scrollYProgress, (p) => {
-    const idx = Math.min(SIN_ORDER.length - 1, Math.max(0, Math.floor(p * SIN_ORDER.length)));
+    const local = Math.min(1, p / slotsRange);
+    const idx = Math.min(SIN_ORDER.length - 1, Math.max(0, Math.floor(local * SIN_ORDER.length)));
     return `0${idx + 1} / 0${SIN_ORDER.length}`;
   });
-
-  // ~0.65 viewports per sin (was 1.0). Cuts ~245vh out of the page without
-  // hurting the crossfade. Mobile inherits — at 0.65 × 7 sins = 4.55 viewports
-  // it's tight but still legible.
-  const heightVh = SIN_ORDER.length * 35;
 
   return (
     <section ref={ref} className="relative" style={{ height: `${heightVh}vh` }}>
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <motion.div aria-hidden="true" className="absolute inset-0 pointer-events-none" style={{ background: tintBg }} />
-        <SinSigil scrollYProgress={scrollYProgress} />
+        <SinSigil
+          scrollYProgress={scrollYProgress}
+          totalSlots={SIN_ORDER.length}
+          hangFraction={1 - slotsRange}
+        />
         <div className="absolute top-12 left-0 right-0 z-20 text-center">
           <CathedralArch className="w-48 sm:w-56 h-12 mx-auto mb-2 opacity-60" />
           <p
@@ -612,7 +714,9 @@ function ChapterSeven() {
           >
             05 · PICK YOUR SIN
           </p>
-          <p className="text-[10px] tracking-[0.3em] text-zinc-600 italic">scroll to flip through all seven</p>
+          <p className="text-[10px] tracking-[0.3em] text-zinc-600 italic">
+            scroll to complete the wheel
+          </p>
         </div>
         <div className="relative w-full h-full">
           {SIN_ORDER.map((sin, idx) => (
@@ -621,6 +725,7 @@ function ChapterSeven() {
               sin={sin}
               index={idx}
               total={SIN_ORDER.length}
+              slotsRange={slotsRange}
               scrollYProgress={scrollYProgress}
             />
           ))}
