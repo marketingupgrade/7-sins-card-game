@@ -138,7 +138,7 @@ export default function Chronicles() {
   }, [chronicles]);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-zinc-100">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-zinc-100">
       {/* Header */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 via-transparent to-transparent" />

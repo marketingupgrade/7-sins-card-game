@@ -146,7 +146,7 @@ export default function ChronicleView() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Scroll className="w-10 h-10 text-amber-500/60 animate-pulse" />
           <p className="text-amber-200/60 text-sm font-[Cinzel] tracking-wider animate-pulse">
@@ -159,7 +159,7 @@ export default function ChronicleView() {
 
   if (!chronicle) {
     return (
-      <div className="min-h-screen bg-[#0A0A0F] flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--color-page-bg)] flex items-center justify-center">
         <div className="text-center">
           <Scroll className="w-12 h-12 text-zinc-700 mx-auto mb-4" />
           <p className="text-zinc-400 font-['Cormorant_Garamond'] text-xl italic mb-4">
@@ -191,7 +191,7 @@ export default function ChronicleView() {
   const restOfFirst = firstParagraph.slice(1);
 
   return (
-    <div className="min-h-screen bg-[#0A0A0F] text-zinc-100">
+    <div className="min-h-screen bg-[var(--color-page-bg)] text-zinc-100">
       {/* ─── LAYER 0: THE COVER ART HERO ─── */}
       {hasCoverArt && (
         <div className="relative w-full h-[50vh] min-h-[320px] max-h-[500px] overflow-hidden">

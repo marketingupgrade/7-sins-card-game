@@ -30,24 +30,16 @@
 
 ## 2. BRANDBOOK AUDIT
 
-### Background Color Inconsistency (HIGH)
-The Brandbook defines `#141210` ("Cathedral Stone") as the primary background, but pages use 5 different background colors:
-- `bg-[#050508]` — Home, BalanceAnalysis, Terms, Privacy, Cookies, Changelog
-- `bg-[#0a0a0f]` — Collection, MatchupMatrix, GameRules
-- `bg-[#0a0810]` — Profile, Account
-- `bg-[#0a0a0a]` — Blog, BlogPost
-- `bg-zinc-950` — CommunityDecks, PlayerProfile (≈ `#09090b`)
-- `bg-arena` — GameBoard, Lobby, NotFound
-- `bg-[#141210]` — Brandbook itself
+### Background Color Inconsistency (HIGH) — **Fixed**
+The Brandbook still shows `#141210` ("Cathedral Stone") in its swatch, but pages now route through two CSS variables defined in `client/src/index.css`:
 
-**Impact**: Subtle but noticeable color shifts when navigating between pages.
-**Fix**: Standardize to a single CSS variable for page backgrounds.
+- `--color-page-bg` (`#0a0a0f`) — standard page bg, used by Blog, BlogPost, Account, Collection, MatchupMatrix, GameRules, Chronicles, ChronicleView, etc.
+- `--color-page-bg-deep` (`#050508`) — hero/landing bg, used by Home, Cookies, Privacy, Terms, Changelog, BalanceAnalysis.
 
-### Font Usage Inconsistency (MEDIUM)
-- Most pages use `font-[Cinzel]` for headings — correct per brandbook
-- CommunityDecks and PlayerProfile use `font-['Cinzel']` (with quotes) — works but inconsistent syntax
-- Some pages use `style={{ fontFamily: "var(--font-heading)" }}` inline
-- Brandbook specifies: Cinzel (headings), Cormorant Garamond (body), Uncial Antiqua (decorative)
+A grep for raw `bg-[#0…]` page wrappers returns only the Brandbook swatch boxes (intentional). To change the background palette site-wide, edit the two CSS variables.
+
+### Font Usage Inconsistency (MEDIUM) — **Resolved**
+Pages now use `font-[Cinzel]` (no quotes) consistently — the previous `font-['Cinzel']` quoted form has been removed. Some files still use `style={{ fontFamily: "var(--font-heading)" }}` inline, which is intentional for elements that render before Tailwind classes are applied.
 
 ### Accent Color Consistency (LOW)
 - Brandbook defines "Candlelight" `#d4a854` as the accent
@@ -100,16 +92,11 @@ The Brandbook defines `#141210` ("Cathedral Stone") as the primary background, b
 ## 4. CODE REVIEW
 
 ### Dead Code
-1. **server/db.ts** (414 lines) — The original Drizzle ORM database layer is still present but only imported by:
-   - `server/_core/index.ts` for sitemap generation (getAllBlogSlugs, getRecentBlogPosts)
-   - `server/discussion.test.ts` for testing
-   - All actual app logic uses `db-supabase.ts`
-   - **Recommendation**: Migrate the 2 remaining imports to db-supabase.ts and remove db.ts
+1. ~~**server/db.ts** (414 lines)~~ — **Removed.** The file was previously renamed to `server/db.deprecated.ts` and all imports already live on `db-supabase.ts`; the deprecated file is now deleted.
 
-2. **drizzle/schema.ts** — Drizzle schema file still exists but is unused since all DB ops go through Supabase
-   - Keep for reference but mark as deprecated
+2. **drizzle/schema.ts** — Still kept for `discussion.test.ts` schema-shape assertions and Drizzle types referenced by `_core/context.ts`. Keep for now; revisit if the Drizzle types are no longer consumed.
 
-3. **getDeckCommentCount** (singular) in db-supabase.ts:804 — exists alongside `getDeckCommentCounts` (plural) but is never imported anywhere
+3. ~~**getDeckCommentCount** (singular)~~ — Already removed (see Changelog v6.x). Only `getDeckCommentCounts` (batched) remains.
 
 ### Architecture Issues
 1. **db-supabase.ts is 950+ lines** — should be split into domain modules:
@@ -133,19 +120,28 @@ The Brandbook defines `#141210` ("Cathedral Stone") as the primary background, b
 ## 5. RECOMMENDED SAFE REFACTORS (won't break anything)
 
 ### Priority 1 — Security Fixes
-- [ ] Sanitize blog search input (strip PostgREST operators)
-- [ ] Add DOMPurify to BlogPost.tsx
-- [ ] Add ownership check to discussion.delete
-- [ ] Add Content-Security-Policy header
+- [x] Sanitize blog search input (strip PostgREST operators)
+- [x] Add DOMPurify to BlogPost.tsx
+- [x] Add ownership check to discussion.delete
+- [x] Add Content-Security-Policy header (Express + Vercel serverless entry)
+- [x] Add auth verification to user.purge
+- [x] Rate-limit discussion.upvote
 
 ### Priority 2 — Brand Consistency
-- [ ] Standardize page backgrounds to a single CSS variable
-- [ ] Normalize font-[Cinzel] syntax across all pages
+- [x] Standardize page backgrounds to a single CSS variable
+- [x] Normalize font-[Cinzel] syntax across all pages
 
 ### Priority 3 — Performance
-- [ ] Remove unused getDeckCommentCount (singular) function
-- [ ] Optimize batchDeckWinRates to use single Supabase query
+- [x] Remove unused getDeckCommentCount (singular) function
+- [x] Optimize batchDeckWinRates to use single Supabase query
 
 ### Priority 4 — Code Quality
-- [ ] Remove dead db.ts (migrate 2 remaining imports to db-supabase.ts)
+- [x] Remove dead db.ts (was renamed to db.deprecated.ts, now deleted)
 - [ ] Clean up duplicate todo.md entries
+
+### Still Open (Larger Refactors)
+- [ ] Split `db-supabase.ts` (~970 LOC) into domain modules (blog, discussion, deck, community, profile)
+- [ ] Split `routers.ts` (~700 LOC) into sub-routers per domain
+- [ ] Split `CommunityDecks.tsx` (1500+ LOC) by extracting modals and DeckCard
+- [ ] Tighten generated Supabase types instead of the `any` row mappers
+- [ ] Move per-instance rate limit to Upstash/Redis if multi-lambda abuse becomes real
