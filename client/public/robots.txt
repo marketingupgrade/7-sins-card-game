@@ -1,6 +1,6 @@
 # =====================================================================
 # robots.txt for 7sinscardgame.com
-# Last Updated: Mar 25, 2026
+# Last Updated: May 7, 2026
 #
 # Strategy: Maximum AI visibility (SEO + AEO + GEO)
 # All reputable crawlers are allowed full access to maximize
@@ -18,14 +18,28 @@ Allow: /
 
 # Disallow crawling of private/dynamic areas that should not be indexed.
 # Game sessions and lobbies are ephemeral and player-specific.
+# robots.txt path matching is prefix-based; we intentionally list each
+# path twice (with and without trailing slash) so both `/login` and
+# `/login/foo` resolve. Wildcards aren't honoured by all crawlers.
+Disallow: /api
 Disallow: /api/
+Disallow: /lobby
 Disallow: /lobby/
+Disallow: /game
 Disallow: /game/
+Disallow: /auth
 Disallow: /auth/
+Disallow: /login
 Disallow: /login/
+Disallow: /account
 Disallow: /account/
+Disallow: /profile
 Disallow: /profile/
+Disallow: /reset-password
 Disallow: /reset-password/
+Disallow: /campaign/   # only individual mission pages — /campaign root stays indexed
+Disallow: /chronicle/
+Disallow: /player/
 Disallow: /preview/
 Disallow: /draft/
 Disallow: /internal/
@@ -295,14 +309,15 @@ Disallow: /
 # INDEXING DIRECTIVES
 # =====================================================================
 
-# Location of the XML sitemap for search engines
+# Location of the XML sitemap for search engines.
 Sitemap: https://www.7sinscardgame.com/sitemap.xml
 
-# LLM guidance files for AI assistants and training crawlers
-# llms.txt: Concise site overview optimized for LLM context windows
-# llms-full.txt: Comprehensive context with game mechanics, faction data, and FAQs
-LLMs-txt: https://www.7sinscardgame.com/llms.txt
-LLMs-full-txt: https://www.7sinscardgame.com/llms-full.txt
+# LLM guidance files are auto-discovered by AI crawlers at the standard
+# /llms.txt and /llms-full.txt paths. Listing them as `LLMs-txt:` /
+# `LLMs-full-txt:` directives is non-standard and is ignored by every
+# major crawler, so we just leave the files at their conventional URLs.
+# - https://www.7sinscardgame.com/llms.txt       (concise context)
+# - https://www.7sinscardgame.com/llms-full.txt  (full context)
 
 # =====================================================================
 # NOTES

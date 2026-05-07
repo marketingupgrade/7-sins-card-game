@@ -9675,6 +9675,7 @@ app.get("/sitemap.xml", async (_req, res) => {
     const staticPages = [
       { loc: "/", priority: "1.0", changefreq: "weekly" },
       { loc: "/blog", priority: "0.9", changefreq: "daily" },
+      { loc: "/campaign", priority: "0.9", changefreq: "weekly" },
       { loc: "/how-to-play", priority: "0.8", changefreq: "monthly" },
       { loc: "/rules", priority: "0.8", changefreq: "monthly" },
       { loc: "/faq", priority: "0.7", changefreq: "monthly" },
@@ -9691,6 +9692,7 @@ app.get("/sitemap.xml", async (_req, res) => {
       { loc: "/cookies", priority: "0.3", changefreq: "yearly" },
       { loc: "/brandbook", priority: "0.3", changefreq: "yearly" }
     ];
+    const today = (/* @__PURE__ */ new Date()).toISOString().split("T")[0];
     let xml = `<?xml version="1.0" encoding="UTF-8"?>
 `;
     xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
@@ -9699,6 +9701,8 @@ app.get("/sitemap.xml", async (_req, res) => {
       xml += `  <url>
 `;
       xml += `    <loc>${baseUrl}${page.loc}</loc>
+`;
+      xml += `    <lastmod>${today}</lastmod>
 `;
       xml += `    <changefreq>${page.changefreq}</changefreq>
 `;

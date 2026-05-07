@@ -3,27 +3,30 @@
  *
  * Each chapter is a sticky-pinned stage whose contents transform
  * continuously with scroll. Pacing is closer to a long-form landing
- * page than a magazine article: a hook that names the contrarian
- * promise, a proof wall of count-up stats, the seven factions framed
- * as pick-this-if pitches, the four product pillars, a campaign
- * teaser, and a final threshold CTA.
+ * page than a magazine article — and it has to keep selling for the
+ * whole scroll, not just open with a hook.
  *
- *   1. Hook        — 200vh; "Most card games ask what kind of hero
+ *   01 Pitch       — 200vh; "Most card games ask what kind of hero
  *                    you are. We assume you aren't." Tagline pops.
- *   2. Proof       — 220vh; six stat counters animate up as you
- *                    scroll past each one. Real numbers from
- *                    BalanceAnalysis (424 cards, 2M sims, 1.01%
- *                    deviation, 21 boss fights, 0 paywalls).
- *   3. The Seven   — 800vh; sticky stage cross-fades through all
- *                    seven sins. Copy reframed as "pick this if you
- *                    are X" instead of poetic descriptors.
- *   4. Pillars     — 240vh; sticky 2x2 grid; each pillar reveals in
- *                    its own scroll quartile. Titles are benefit-led.
- *   5. Campaign    — 200vh; sticky parallax title + boss-quote crawl
+ *   02 Receipts    — 220vh; six stat counters animate up. Real
+ *                    numbers from BalanceAnalysis.
+ *   03 vs Them     — 220vh; head-to-head matrix vs Hearthstone, MTG
+ *                    Arena, Marvel Snap, Slay the Spire, LoR. Each
+ *                    row builds in as you scroll past.
+ *   04 The Mechanic— 240vh; sticky compound-tick demo. A single card
+ *                    is shown ticking through Fibonacci damage 1-1-2-
+ *                    3-5 across rounds, driven entirely by scroll.
+ *   05 Pick a Sin  — 800vh; sticky cross-fade through seven factions.
+ *                    Copy is "pick this if you are X" pitches.
+ *   06 Why Honest  — 240vh; sticky 2x2 of benefit-led product pillars.
+ *   07 Campaign    — 200vh; sticky parallax title + boss-quote crawl
  *                    + CTA fade.
- *   6. Threshold   — 150vh; final close — "Free. Browser. Now."
+ *   08 Voices      — 200vh; sticky "what the narrator says" — quotes
+ *                    pulled from real campaign acts and live game
+ *                    narrator lines. Social-proof, sin-flavour.
+ *   09 Threshold   — 150vh; final close — "Free. Browser. Now."
  *
- * Total ~18 viewport heights of choreographed scroll.
+ * Total ~25 viewport heights of choreographed scroll.
  */
 
 import {
@@ -33,7 +36,7 @@ import {
   useTransform,
   type MotionValue,
 } from "framer-motion";
-import { ArrowDown, Crown, Eye, Hourglass, Skull, Sparkles, Swords, Wallet, Flame } from "lucide-react";
+import { ArrowDown, Check, Crown, Eye, Flame, Hourglass, Quote, Skull, Sparkles, Swords, Wallet, X as XMark } from "lucide-react";
 import { Link } from "wouter";
 import { useRef } from "react";
 import type { LucideIcon } from "lucide-react";
@@ -759,6 +762,509 @@ function ChapterThreshold() {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
+// Chapter — Versus (head-to-head matrix)
+// ────────────────────────────────────────────────────────────────────────────
+
+interface VersusRow {
+  game: string;
+  meta: string;
+  paid: boolean;     // pay-to-win or paid unlock
+  download: boolean; // requires install
+  dark: boolean;     // dark/gothic tone
+  compound: boolean; // has compound-escalation mechanic
+  campaign: boolean; // has solo campaign
+}
+
+const VERSUS_ROWS: VersusRow[] = [
+  { game: "7 Deadly Sins", meta: "this game",                  paid: false, download: false, dark: true,  compound: true,  campaign: true  },
+  { game: "Hearthstone",   meta: "Blizzard, since 2014",       paid: true,  download: true,  dark: false, compound: false, campaign: true  },
+  { game: "MTG Arena",     meta: "Wizards of the Coast, 2019", paid: true,  download: true,  dark: false, compound: false, campaign: false },
+  { game: "Marvel Snap",   meta: "Second Dinner, 2022",        paid: true,  download: true,  dark: false, compound: false, campaign: false },
+  { game: "Slay the Spire",meta: "Mega Crit, 2017",            paid: true,  download: true,  dark: true,  compound: false, campaign: true  },
+  { game: "Legends of Runeterra", meta: "Riot, 2020",          paid: false, download: true,  dark: false, compound: false, campaign: true  },
+];
+
+const VERSUS_COLS: { key: keyof Omit<VersusRow, "game" | "meta">; label: string }[] = [
+  { key: "paid",     label: "FREE / NO PAYWALL" },
+  { key: "download", label: "RUNS IN BROWSER" },
+  { key: "dark",     label: "DARK FANTASY TONE" },
+  { key: "compound", label: "COMPOUND MECHANICS" },
+  { key: "campaign", label: "SOLO CAMPAIGN" },
+];
+
+function VersusCell({ row, col }: { row: VersusRow; col: keyof Omit<VersusRow, "game" | "meta"> }) {
+  // For `paid` and `download`, "yes" is bad. Invert.
+  const value = row[col];
+  const positive = col === "paid" || col === "download" ? !value : value;
+  return (
+    <div
+      className="flex items-center justify-center w-7 h-7 rounded-md"
+      style={{
+        background: positive ? "rgba(16,185,129,0.12)" : "rgba(239,68,68,0.10)",
+        border: `1px solid ${positive ? "rgba(16,185,129,0.35)" : "rgba(239,68,68,0.25)"}`,
+      }}
+    >
+      {positive ? (
+        <Check className="w-3.5 h-3.5" style={{ color: "#10b981" }} />
+      ) : (
+        <XMark className="w-3.5 h-3.5" style={{ color: "#ef4444" }} />
+      )}
+    </div>
+  );
+}
+
+function VersusRowReveal({
+  row,
+  index,
+  total,
+  scrollYProgress,
+}: {
+  row: VersusRow;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = index / total;
+  const arrived = (index + 0.6) / total;
+  const opacity = useTransform(scrollYProgress, [start, arrived], [0.05, 1]);
+  const x = useTransform(scrollYProgress, [start, arrived], [-30, 0]);
+  const isUs = index === 0;
+  return (
+    <motion.div
+      style={{ opacity, x }}
+      className="grid grid-cols-[1.1fr_repeat(5,minmax(0,1fr))] items-center gap-2 sm:gap-4 py-3 border-b border-white/5"
+    >
+      <div className="min-w-0">
+        <div
+          className="font-[Cinzel] text-sm sm:text-base truncate"
+          style={{ color: isUs ? "#d4a854" : "rgba(231,221,200,0.85)" }}
+        >
+          {row.game}
+        </div>
+        <div className="text-[10px] tracking-wider text-zinc-500/70 truncate">
+          {row.meta}
+        </div>
+      </div>
+      {VERSUS_COLS.map((col) => (
+        <div key={col.key} className="flex justify-center">
+          <VersusCell row={row} col={col.key} />
+        </div>
+      ))}
+    </motion.div>
+  );
+}
+
+function ChapterVersus() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "220vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 w-full">
+          <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
+            <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              03 · vs THEM
+            </p>
+            <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100">
+              We don&apos;t play on the same field.
+            </h2>
+            <p
+              className="mt-3 text-sm sm:text-base italic text-zinc-400 max-w-xl mx-auto"
+              style={{ fontFamily: "var(--font-body)" }}
+            >
+              Five household names, one contrarian. Pick the row that doesn&apos;t demand your wallet.
+            </p>
+          </motion.div>
+
+          {/* Header row */}
+          <div className="grid grid-cols-[1.1fr_repeat(5,minmax(0,1fr))] items-end gap-2 sm:gap-4 pb-2 border-b border-white/10">
+            <div />
+            {VERSUS_COLS.map((col) => (
+              <div
+                key={col.key}
+                className="text-[8px] sm:text-[9px] tracking-[0.18em] text-zinc-500 text-center leading-tight"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                {col.label}
+              </div>
+            ))}
+          </div>
+
+          {VERSUS_ROWS.map((row, i) => (
+            <VersusRowReveal
+              key={row.game}
+              row={row}
+              index={i}
+              total={VERSUS_ROWS.length}
+              scrollYProgress={scrollYProgress}
+            />
+          ))}
+
+          <motion.p
+            style={{ opacity: titleOpacity, fontFamily: "var(--font-body)" }}
+            className="mt-6 text-center text-xs italic text-zinc-500 max-w-xl mx-auto"
+          >
+            Honest comparison. We linked the deep-dives — see the
+            {" "}
+            <Link href="/blog/best-browser-card-games-in-2026-complete-ranking" className="underline hover:text-zinc-300">
+              full ranking
+            </Link>
+            {" "}or any of the per-competitor head-to-heads under
+            {" "}
+            <Link href="/blog" className="underline hover:text-zinc-300">/blog</Link>.
+          </motion.p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Chapter — The Mechanic (sticky compound-tick demo)
+// ────────────────────────────────────────────────────────────────────────────
+//
+// The single most important strategic mechanic is the compound tick: a
+// damage card played in round 1 ticks 1, 1, 2, 3, 5… across rounds 1–5
+// (Fibonacci). This chapter sells it visually — as you scroll, a single
+// card "ticks" through five progressively heavier hits.
+
+const COMPOUND_TICKS = [1, 1, 2, 3, 5] as const;
+const COMPOUND_TOTAL = COMPOUND_TICKS.reduce((a, b) => a + b, 0); // 12
+
+function CompoundTickRow({
+  index,
+  total,
+  damage,
+  scrollYProgress,
+}: {
+  index: number;
+  total: number;
+  damage: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  // Each tick "fires" within its slot (scroll quartile-ish).
+  const start = 0.15 + index / total * 0.7;
+  const peak  = start + 0.10;
+  const opacity = useTransform(scrollYProgress, [start, peak], [0, 1]);
+  const x       = useTransform(scrollYProgress, [start, peak], [-24, 0]);
+  // Bar width: damage / max(damage) of the sequence.
+  const max = Math.max(...COMPOUND_TICKS);
+  const widthPct = (damage / max) * 100;
+  return (
+    <motion.div style={{ opacity, x }} className="grid grid-cols-[3rem_1fr_3rem] items-center gap-3 sm:gap-4">
+      <div
+        className="text-[10px] tracking-[0.3em] text-zinc-500 text-right"
+        style={{ fontFamily: "var(--font-heading)" }}
+      >
+        R{index + 1}
+      </div>
+      <div className="relative h-7 rounded bg-white/5 overflow-hidden">
+        <motion.div
+          className="absolute inset-y-0 left-0 rounded"
+          style={{
+            width: `${widthPct}%`,
+            background: "linear-gradient(90deg, rgba(239,68,68,0.85), rgba(212,168,84,0.85))",
+            boxShadow: "0 0 24px rgba(239,68,68,0.35)",
+          }}
+        />
+      </div>
+      <div
+        className="font-[Cinzel] text-lg text-amber-300 text-left tabular-nums"
+        style={{ textShadow: "0 0 12px rgba(212,168,84,0.5)" }}
+      >
+        −{damage}
+      </div>
+    </motion.div>
+  );
+}
+
+function ChapterMechanic() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+  const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.92, 1], [0, 1, 1, 0.5]);
+  const cardScale = useTransform(scrollYProgress, [0, 0.2], [0.92, 1]);
+  const cardOpacity = useTransform(scrollYProgress, [0, 0.2], [0, 1]);
+  const totalOpacity = useTransform(scrollYProgress, [0.85, 0.95], [0, 1]);
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "240vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+        <div className="max-w-4xl mx-auto px-6 w-full">
+          <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
+            <p className="text-[10px] tracking-[0.6em] text-amber-400/60 mb-3" style={{ fontFamily: "var(--font-heading)" }}>
+              04 · THE MECHANIC
+            </p>
+            <h2 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-zinc-100 mb-3">
+              Most cards do one thing. Once.
+            </h2>
+            <h3 className="font-[Cinzel] text-3xl sm:text-5xl tracking-wide text-amber-300">
+              Ours compound.
+            </h3>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-[18rem_1fr] gap-8 items-center">
+            {/* Mock card */}
+            <motion.div
+              style={{ scale: cardScale, opacity: cardOpacity }}
+              className="relative mx-auto w-56 sm:w-64 aspect-[3/4] rounded-xl overflow-hidden"
+              aria-hidden="true"
+            >
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(160deg, rgba(30,26,22,0.95) 0%, rgba(20,18,16,0.92) 100%)",
+                  border: "1px solid rgba(212,168,84,0.4)",
+                  boxShadow:
+                    "inset 0 0 0 1px rgba(212,168,84,0.15), 0 30px 80px rgba(239,68,68,0.18)",
+                }}
+              />
+              <div className="relative h-full p-5 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className="text-[9px] tracking-[0.3em] text-amber-400/80"
+                    style={{ fontFamily: "var(--font-heading)" }}
+                  >
+                    WRATH
+                  </span>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-amber-300 font-[Cinzel] text-sm"
+                    style={{ background: "rgba(212,168,84,0.18)", border: "1px solid rgba(212,168,84,0.45)" }}
+                  >
+                    1
+                  </div>
+                </div>
+                <div className="flex-1 flex items-center justify-center">
+                  <Flame className="w-16 h-16 text-red-500/70" />
+                </div>
+                <h4
+                  className="font-[Cinzel] text-lg text-amber-300 leading-tight mb-1"
+                  style={{ textShadow: "0 0 16px rgba(212,168,84,0.4)" }}
+                >
+                  Slow Burn
+                </h4>
+                <p
+                  className="text-[11px] italic text-zinc-300 leading-snug"
+                  style={{ fontFamily: "var(--font-body)" }}
+                >
+                  Compound damage over 5 rounds. Fibonacci pattern.
+                </p>
+                <div
+                  className="mt-2 text-[9px] tracking-[0.25em] text-zinc-500"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  TIER · COMMON
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Round-by-round bars */}
+            <div className="flex flex-col gap-3">
+              {COMPOUND_TICKS.map((dmg, i) => (
+                <CompoundTickRow
+                  key={i}
+                  index={i}
+                  total={COMPOUND_TICKS.length}
+                  damage={dmg}
+                  scrollYProgress={scrollYProgress}
+                />
+              ))}
+              <motion.div
+                style={{ opacity: totalOpacity }}
+                className="mt-3 pt-4 border-t border-white/10 flex items-center justify-between"
+              >
+                <div
+                  className="text-[10px] tracking-[0.3em] text-zinc-400"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  TOTAL · ONE PLAY
+                </div>
+                <div
+                  className="font-[Cinzel] text-3xl"
+                  style={{ color: "#d4a854", textShadow: "0 0 24px rgba(212,168,84,0.45)" }}
+                >
+                  −{COMPOUND_TOTAL}
+                </div>
+              </motion.div>
+            </div>
+          </div>
+
+          <motion.p
+            style={{ opacity: titleOpacity, fontFamily: "var(--font-body)" }}
+            className="mt-10 text-center text-xs sm:text-sm italic text-zinc-500 max-w-2xl mx-auto leading-relaxed"
+          >
+            One cheap card in round one. Five rounds of escalating damage. The
+            same Fibonacci pattern that governs the spacing of this page
+            governs the rhythm of the fight. Patience compounds. So does
+            impatience.
+          </motion.p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Chapter — Voices (sticky narrator-quote crossfade)
+// ────────────────────────────────────────────────────────────────────────────
+
+interface NarratorQuote {
+  text: string;
+  attribution: string;
+  accent: string;
+}
+
+const NARRATOR_QUOTES: NarratorQuote[] = [
+  {
+    text: "Welcome to the arena, where your poor life choices become entertainment.",
+    attribution: "The narrator · game start",
+    accent: "#d4a854",
+  },
+  {
+    text: "The Forgemaster lifts the hammer. He is not asking permission.",
+    attribution: "Wrath · Act I — The Forge",
+    accent: "#ef4444",
+  },
+  {
+    text: "Mother Slumber breathes once. The room exhales with her.",
+    attribution: "Sloth · Act II — The Drowsing",
+    accent: "#a855f7",
+  },
+  {
+    text: "Cassivus does not negotiate. He liquidates.",
+    attribution: "Greed · Act III — The Plutarch",
+    accent: "#eab308",
+  },
+  {
+    text: "The Mirror smiles your smile, but better. It's been watching.",
+    attribution: "Envy · Act I — The Mirror",
+    accent: "#10b981",
+  },
+  {
+    text: "Apex has not lost. Apex sees no reason to start now.",
+    attribution: "Pride · Act III — The Apex",
+    accent: "#f0f0f0",
+  },
+  {
+    text: "The Maw does not consider you. Consideration is for things it hasn't eaten yet.",
+    attribution: "Gluttony · Act III — The Maw",
+    accent: "#b45309",
+  },
+];
+
+function NarratorQuoteSlide({
+  quote,
+  index,
+  total,
+  scrollYProgress,
+}: {
+  quote: NarratorQuote;
+  index: number;
+  total: number;
+  scrollYProgress: MotionValue<number>;
+}) {
+  const start = index / total;
+  const peak  = (index + 0.4) / total;
+  const fade  = (index + 0.85) / total;
+  const end   = (index + 1) / total;
+
+  const opacity = useTransform(scrollYProgress, [Math.max(0, start - 0.02), peak, fade, end], [0, 1, 1, 0]);
+  const y       = useTransform(scrollYProgress, [Math.max(0, start - 0.02), peak], [40, 0]);
+
+  return (
+    <motion.div
+      style={{ opacity, y }}
+      className="absolute inset-0 flex items-center justify-center"
+    >
+      <div className="max-w-2xl mx-auto px-6 text-center">
+        <Quote className="w-8 h-8 mx-auto mb-6" style={{ color: quote.accent, opacity: 0.5 }} />
+        <p
+          className="font-[Cinzel] text-2xl sm:text-4xl leading-[1.25] mb-6"
+          style={{ color: "#e8e0d0" }}
+        >
+          &ldquo;{quote.text}&rdquo;
+        </p>
+        <p
+          className="text-[10px] tracking-[0.4em]"
+          style={{ fontFamily: "var(--font-heading)", color: quote.accent }}
+        >
+          {quote.attribution.toUpperCase()}
+        </p>
+      </div>
+    </motion.div>
+  );
+}
+
+function ChapterVoices() {
+  const ref = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+  const counter = useTransform(scrollYProgress, (p) => {
+    const idx = Math.min(NARRATOR_QUOTES.length - 1, Math.max(0, Math.floor(p * NARRATOR_QUOTES.length)));
+    return `0${idx + 1} / 0${NARRATOR_QUOTES.length}`;
+  });
+
+  return (
+    <section ref={ref} className="relative" style={{ height: "200vh" }}>
+      <div className="sticky top-0 h-screen w-full overflow-hidden">
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 50% 50%, rgba(212,168,84,0.06) 0%, transparent 65%)",
+          }}
+        />
+        <div className="absolute top-12 left-0 right-0 z-20 text-center">
+          <p
+            className="text-[10px] tracking-[0.6em] text-amber-400/60"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            08 · VOICES
+          </p>
+          <p className="text-[10px] tracking-[0.3em] text-zinc-600 italic">
+            the narrator is judging the whole way
+          </p>
+        </div>
+        <div className="relative w-full h-full">
+          {NARRATOR_QUOTES.map((q, i) => (
+            <NarratorQuoteSlide
+              key={i}
+              quote={q}
+              index={i}
+              total={NARRATOR_QUOTES.length}
+              scrollYProgress={scrollYProgress}
+            />
+          ))}
+        </div>
+        <motion.div
+          className="absolute bottom-10 left-0 right-0 z-20 text-center text-[10px] tracking-[0.4em] text-zinc-500"
+          style={{ fontFamily: "var(--font-heading)" }}
+        >
+          <motion.span>{counter}</motion.span>
+        </motion.div>
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-white/5">
+          <motion.div
+            className="h-full bg-amber-400/50"
+            style={{ scaleX: scrollYProgress, transformOrigin: "0% 50%" }}
+          />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Composed export
 // ────────────────────────────────────────────────────────────────────────────
 
@@ -767,9 +1273,12 @@ export default function HomeScrollChapters() {
     <div className="relative z-10">
       <ChapterHook />
       <ChapterProof />
+      <ChapterVersus />
+      <ChapterMechanic />
       <ChapterSeven />
       <ChapterPillars />
       <ChapterCampaign />
+      <ChapterVoices />
       <ChapterThreshold />
     </div>
   );
