@@ -25,6 +25,7 @@ import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
 import CampaignContinueTile from "@/components/CampaignContinueTile";
+import HomeScrollChapters from "@/components/HomeScrollChapters";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
@@ -294,6 +295,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-hidden">
+      {/* Anchor for the scrollytelling "Enter the Arena" smooth-scroll back to top */}
+      <span id="hero" aria-hidden="true" />
       {/* ═══ Lightweight Atmospheric Background ═══ */}
       <EmberField count={24} />
 
@@ -664,6 +667,9 @@ export default function Home() {
 
 
       </div>
+
+      {/* ═══ Scrollytelling chapters ═══ */}
+      <HomeScrollChapters />
 
       {/* ═══ Footer ═══ */}
       <ScrollReveal direction="up" delay={100} distance={20}>
