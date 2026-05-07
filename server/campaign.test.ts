@@ -11,10 +11,13 @@ import { getCardById } from "../shared/cardData";
 import {
   CAMPAIGN_MISSIONS,
   ALL_TWIST_CARD_IDS,
+  buildArchetypeDeck,
   getMissionById,
+  getMissionDifficulty,
   getMissionsForSin,
   isMissionUnlocked,
   type CampaignMission,
+  type DeckArchetype,
 } from "../shared/campaignData";
 import { BOSS_CARDS, getBossCardById } from "../shared/bossCards";
 import type { SinType } from "../shared/gameTypes";
@@ -103,6 +106,67 @@ describe("boss cards — getCardById fallthrough", () => {
   it("getBossCardById returns undefined for non-boss IDs", () => {
     expect(getBossCardById("wrath_01")).toBeUndefined();
     expect(getBossCardById("not_a_card")).toBeUndefined();
+  });
+});
+
+describe("deck archetypes", () => {
+  const archetypes: DeckArchetype[] = ["starter", "balanced", "aggressive", "control", "elite"];
+
+  it("every archetype × every sin produces exactly 30 unique card IDs", () => {
+    for (const sin of ALL_SINS) {
+      for (const archetype of archetypes) {
+        const deck = buildArchetypeDeck(sin, archetype);
+        expect(deck, `${sin}/${archetype} has wrong size`).toHaveLength(30);
+        expect(
+          new Set(deck).size,
+          `${sin}/${archetype} contains duplicate IDs`
+        ).toBe(30);
+        for (const cardId of deck) {
+          expect(getCardById(cardId), `${sin}/${archetype} references unknown ${cardId}`).toBeDefined();
+        }
+      }
+    }
+  });
+
+  it("starter archetype contains no epic-tier cards (tutorial-friendly)", () => {
+    for (const sin of ALL_SINS) {
+      const deck = buildArchetypeDeck(sin, "starter");
+      for (const cardId of deck) {
+        const card = getCardById(cardId)!;
+        expect(card.tier, `${sin} starter contains epic ${cardId}`).not.toBe("epic");
+      }
+    }
+  });
+
+  it("elite archetype contains all 12 epics from the faction pool", () => {
+    for (const sin of ALL_SINS) {
+      const deck = new Set(buildArchetypeDeck(sin, "elite"));
+      // Each faction has exactly 12 epics; an elite deck must include all of them.
+      // (We don't import ALL_DECKS in tests; instead verify by counting epic IDs in deck.)
+      const epicCount = [...deck].filter((id) => getCardById(id)!.tier === "epic").length;
+      expect(epicCount, `${sin} elite missing epics`).toBe(12);
+    }
+  });
+});
+
+describe("getMissionDifficulty", () => {
+  it("Act 1 missions are 2-star (Apprentice)", () => {
+    for (const m of CAMPAIGN_MISSIONS.filter((m) => m.act === 1)) {
+      expect(getMissionDifficulty(m).stars).toBe(2);
+    }
+  });
+
+  it("Act 3 missions are 5-star (Apex)", () => {
+    for (const m of CAMPAIGN_MISSIONS.filter((m) => m.act === 3)) {
+      expect(getMissionDifficulty(m).stars).toBe(5);
+    }
+  });
+
+  it("Act 2 missions with hpBoost ≥ 100 escalate to 4-star (Reckoning)", () => {
+    for (const m of CAMPAIGN_MISSIONS.filter((m) => m.act === 2)) {
+      const expected = (m.boss.hpBoost ?? 0) >= 100 ? 4 : 3;
+      expect(getMissionDifficulty(m).stars, `${m.id}`).toBe(expected);
+    }
   });
 });
 

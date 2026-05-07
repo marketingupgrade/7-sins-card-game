@@ -27,6 +27,7 @@ import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import {
   getMissionById,
+  getMissionDifficulty,
   isMissionUnlocked,
   type CampaignMission,
 } from "@shared/campaignData";
@@ -182,20 +183,46 @@ export default function CampaignFight() {
           style={{ boxShadow: `0 0 0 1px ${sinColor}22, 0 30px 80px ${sinColor}15` }}
         >
           <div className="px-6 sm:px-10 pt-8 pb-6 border-b border-white/5">
-            <div className="flex items-center gap-2 mb-2">
-              <span
-                className="text-[10px] tracking-[0.4em] text-zinc-500"
-                style={{ fontFamily: "var(--font-heading)" }}
-              >
-                ACT {numeral}
-              </span>
-              <span className="text-zinc-700">·</span>
-              <span
-                className="text-[10px] tracking-[0.4em]"
-                style={{ fontFamily: "var(--font-heading)", color: sinColor }}
-              >
-                {SIN_LABELS[mission.sin].toUpperCase()}
-              </span>
+            <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[10px] tracking-[0.4em] text-zinc-500"
+                  style={{ fontFamily: "var(--font-heading)" }}
+                >
+                  ACT {numeral}
+                </span>
+                <span className="text-zinc-700">·</span>
+                <span
+                  className="text-[10px] tracking-[0.4em]"
+                  style={{ fontFamily: "var(--font-heading)", color: sinColor }}
+                >
+                  {SIN_LABELS[mission.sin].toUpperCase()}
+                </span>
+              </div>
+              {(() => {
+                const diff = getMissionDifficulty(mission);
+                return (
+                  <div
+                    className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border"
+                    style={{
+                      borderColor: `${diff.accent}55`,
+                      background: `${diff.accent}10`,
+                    }}
+                    title={`Difficulty: ${diff.label} (${diff.stars}/5)`}
+                  >
+                    <span aria-hidden="true" style={{ color: diff.accent }} className="text-[11px] tracking-tighter">
+                      {"★".repeat(diff.stars)}
+                      <span className="opacity-30">{"★".repeat(5 - diff.stars)}</span>
+                    </span>
+                    <span
+                      className="text-[10px] tracking-[0.25em]"
+                      style={{ fontFamily: "var(--font-heading)", color: diff.accent }}
+                    >
+                      {diff.label.toUpperCase()}
+                    </span>
+                  </div>
+                );
+              })()}
             </div>
             <h1
               className="font-[Cinzel] text-3xl sm:text-4xl text-amber-400 tracking-wide"

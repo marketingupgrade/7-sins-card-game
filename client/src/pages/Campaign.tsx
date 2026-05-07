@@ -23,6 +23,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import {
   CAMPAIGN_MISSIONS,
+  getMissionDifficulty,
   getMissionsForSin,
   isMissionUnlocked,
   type CampaignMission,
@@ -250,9 +251,10 @@ function MissionTile({
       >
         {mission.title}
       </h3>
-      <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2">
+      <p className="text-[11px] text-zinc-400 leading-snug line-clamp-2 mb-2">
         {mission.hook}
       </p>
+      <DifficultyChip mission={mission} />
       {interactable && (
         <div className="mt-2 flex items-center gap-1 text-[10px] text-zinc-500 group-hover:text-zinc-200 transition-colors">
           <Swords className="w-3 h-3" />
@@ -262,6 +264,31 @@ function MissionTile({
         </div>
       )}
     </button>
+  );
+}
+
+function DifficultyChip({ mission }: { mission: CampaignMission }) {
+  const { stars, label, accent } = getMissionDifficulty(mission);
+  return (
+    <div
+      className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border"
+      style={{
+        borderColor: `${accent}40`,
+        background: `${accent}10`,
+      }}
+      title={`${label} — ${stars}/5`}
+    >
+      <span aria-hidden="true" className="text-[8px] tracking-tighter" style={{ color: accent }}>
+        {"★".repeat(stars)}
+        <span className="opacity-30">{"★".repeat(5 - stars)}</span>
+      </span>
+      <span
+        className="text-[9px] tracking-[0.15em]"
+        style={{ fontFamily: "var(--font-heading)", color: accent }}
+      >
+        {label.toUpperCase()}
+      </span>
+    </div>
   );
 }
 
