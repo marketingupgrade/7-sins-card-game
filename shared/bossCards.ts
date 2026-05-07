@@ -147,6 +147,90 @@ export const BOSS_CARDS: CardDefinition[] = [
     ],
     description: "Cassivus does not negotiate. He liquidates.",
   },
+
+  // ─── Envy Act 1 — The Mirror ─────────────────────────────────
+  {
+    id: "boss_envy_1_glasswork",
+    name: "Glass Work",
+    sin: "envy",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "shield_steal", baseValue: 12, duration: 3, targetMode: "single" },
+      { type: "heal_steal", baseValue: 8, duration: 3, targetMode: "single" },
+    ],
+    description: "The Mirror takes what you wore in. Smile through it.",
+  },
+
+  // ─── Envy Act 2 — The Twin ───────────────────────────────────
+  {
+    id: "boss_envy_2_replica",
+    name: "Replica",
+    sin: "envy",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 18, duration: 2, targetMode: "single" },
+      { type: "shield_steal", baseValue: 12, duration: 2, targetMode: "single" },
+    ],
+    description: "The Twin learned this from you. They learned it better.",
+  },
+
+  // ─── Envy Act 3 — The Hollow ─────────────────────────────────
+  {
+    id: "boss_envy_3_inheritance",
+    name: "Inheritance",
+    sin: "envy",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "standard",
+    effects: [
+      { type: "shield_steal", baseValue: 18, duration: 3, targetMode: "single" },
+      { type: "heal_steal", baseValue: 12, duration: 3, targetMode: "single" },
+    ],
+    description: "The Hollow takes everything you have, including the parts you didn't know you had.",
+  },
+
+  // ─── Pride Act 1 — The Throne ────────────────────────────────
+  {
+    id: "boss_pride_1_coronation",
+    name: "Coronation",
+    sin: "pride",
+    cost: 3,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [{ type: "damage", baseValue: 24, duration: 1, targetMode: "single" }],
+    description: "The Boy-King has one good speech. This is the part where it lands.",
+  },
+
+  // ─── Pride Act 2 — The Idol ──────────────────────────────────
+  {
+    id: "boss_pride_2_apotheosis",
+    name: "Apotheosis",
+    sin: "pride",
+    cost: 4,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [
+      { type: "damage", baseValue: 26, duration: 2, targetMode: "single" },
+      { type: "shield_gain", baseValue: 14, duration: 2, targetMode: "self" },
+    ],
+    description: "The Idol does not flinch. The Idol sets the standard.",
+  },
+
+  // ─── Pride Act 3 — The Apex ──────────────────────────────────
+  {
+    id: "boss_pride_3_unbroken",
+    name: "Unbroken",
+    sin: "pride",
+    cost: 5,
+    tier: "epic",
+    compoundPattern: "aggressive",
+    effects: [{ type: "damage", baseValue: 34, duration: 2, targetMode: "single" }],
+    description: "Apex has not lost. Apex will not start with you.",
+  },
 ];
 
 const BOSS_CARD_MAP: Record<string, CardDefinition> = Object.fromEntries(

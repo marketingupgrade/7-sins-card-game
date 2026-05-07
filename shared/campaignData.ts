@@ -341,6 +341,171 @@ const GREED_ACT_3: CampaignMission = {
   unlockedBy: "greed_2",
 };
 
+// ─── Envy: The Mirror / The Twin / The Hollow ────────────────────
+
+const ENVY_ACT_1: CampaignMission = {
+  id: "envy_1",
+  sin: "envy",
+  act: 1,
+  title: "The Mirror",
+  hook: "Someone wearing your face. Smiling like they earned it.",
+  intro:
+    "You walk in. You're already in the room. " +
+    "Your reflection — but wrong, because it's looking at you and you aren't looking at it. " +
+    "The Mirror has been practicing your moves. It's been practicing your face. It probably knows how you breathe by now. " +
+    "Beat the version of you that doesn't have to live with you.",
+  outro:
+    "The Mirror cracks, decorously. The face inside it slides off. " +
+    "Whatever was behind goes back to whatever it was before you arrived. " +
+    "You feel slightly less like an original.",
+  defeatLine: "The Mirror smiles your smile, but better. It's been watching.",
+  playerDeck: playerStarterDeck("envy"),
+  boss: {
+    name: "The Mirror",
+    sin: "envy",
+    epithet: "Wearing Your Face",
+    deck: bossDeck("envy", "boss_envy_1_glasswork"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const ENVY_ACT_2: CampaignMission = {
+  id: "envy_2",
+  sin: "envy",
+  act: 2,
+  title: "The Twin",
+  hook: "Whatever you build, they build better, smaller, faster.",
+  intro:
+    "There's a story about a twin who was born late. They grew up watching the older twin — what they ate, who they kissed, what they were good at. " +
+    "The older twin never noticed. The older twin is now in front of you. " +
+    "You are not the older twin in this story. " +
+    "Build first. Build fast. Don't show your hand.",
+  outro:
+    "The Twin doesn't look defeated. They look thoughtful. " +
+    "They've taken notes. You'll see them again, with whatever they learned today.",
+  defeatLine: "The Twin doesn't celebrate. They've already moved on to the next thing they want.",
+  playerDeck: playerStarterDeck("envy"),
+  boss: {
+    name: "The Twin",
+    sin: "envy",
+    epithet: "Born Late, Catching Up",
+    deck: bossDeck("envy", "boss_envy_2_replica"),
+    hpBoost: 90,
+  },
+  unlockedBy: "envy_1",
+};
+
+const ENVY_ACT_3: CampaignMission = {
+  id: "envy_3",
+  sin: "envy",
+  act: 3,
+  title: "The Hollow",
+  hook: "An empty crown looking for a head.",
+  intro:
+    "The Hollow is what envy becomes when it eats everything in its line of sight, including itself. " +
+    "There's a crown. There's nothing under it. The crown wants a head — has been wanting a head for a very long time. " +
+    "The trick is not to want the crown. " +
+    "The trick is to be more annoying than the crown is patient.",
+  outro:
+    "The Hollow inhales for the first time in a century. You feel it pull at your edges. " +
+    "Then it stops. The crown clatters. " +
+    "It has chosen, slowly, to want nothing for a moment. Lucky you.",
+  defeatLine: "The Hollow finds something to want, briefly. You. Then loses interest, because there is so little to take.",
+  playerDeck: playerStarterDeck("envy"),
+  boss: {
+    name: "The Hollow",
+    sin: "envy",
+    epithet: "An Empty Crown",
+    deck: bossDeck("envy", "boss_envy_3_inheritance"),
+    hpBoost: 175,
+  },
+  unlockedBy: "envy_2",
+};
+
+// ─── Pride: The Throne / The Idol / The Apex ─────────────────────
+
+const PRIDE_ACT_1: CampaignMission = {
+  id: "pride_1",
+  sin: "pride",
+  act: 1,
+  title: "The Throne",
+  hook: "A boy-king with one good speech and zero humility.",
+  intro:
+    "The Boy-King Velys is fifteen, has a kingdom to inherit, and absolutely nothing to lose. " +
+    "He's been told he's special since the day he was born. He has, frankly, evidence. " +
+    "He'll ask if you've heard of him. " +
+    "Don't answer. Hit him before the speech lands.",
+  outro:
+    "Velys looks at you, genuinely surprised, and laughs. He likes you. He'll remember this. " +
+    "That might be a problem later. For today, you're alive and he's impressed.",
+  defeatLine: "Velys doesn't even look down at you. He's already onto the next sentence.",
+  playerDeck: playerStarterDeck("pride"),
+  boss: {
+    name: "Boy-King Velys",
+    sin: "pride",
+    epithet: "One Good Speech",
+    deck: bossDeck("pride", "boss_pride_1_coronation"),
+    hpBoost: 0,
+  },
+  unlockedBy: null,
+};
+
+const PRIDE_ACT_2: CampaignMission = {
+  id: "pride_2",
+  sin: "pride",
+  act: 2,
+  title: "The Idol",
+  hook: "Built of statues, all of itself.",
+  intro:
+    "The Idol of Selene is, technically, a religion. There are temples. There is iconography. " +
+    "In front of you is a statue that has decided it's done waiting for worshippers. " +
+    "It walks slow, hits enormous, and considers itself a building rather than an opponent. " +
+    "Don't pray. Don't kneel. Hit the statue until it remembers it was carved by hands.",
+  outro:
+    "The Idol cracks at the base. It's been waiting to crack for a long time. " +
+    "Whatever it represented goes back to representing nothing. " +
+    "The temples will call it heresy. They aren't wrong.",
+  defeatLine: "The Idol does not move to acknowledge you. It is already what it was.",
+  playerDeck: playerStarterDeck("pride"),
+  boss: {
+    name: "The Idol of Selene",
+    sin: "pride",
+    epithet: "Carved By Hands It Forgot",
+    deck: bossDeck("pride", "boss_pride_2_apotheosis"),
+    hpBoost: 90,
+  },
+  unlockedBy: "pride_1",
+};
+
+const PRIDE_ACT_3: CampaignMission = {
+  id: "pride_3",
+  sin: "pride",
+  act: 3,
+  title: "The Apex",
+  hook: "It refuses to acknowledge defeat. The fight ends when you do.",
+  intro:
+    "Apex has not lost. Apex has decided this is a structural property of reality, not a fact about Apex's skill. " +
+    "Apex will continue to not lose by simply not stopping. " +
+    "By round six, Apex will be, in some real sense, the room. By round seven, you will be furniture. " +
+    "Make this hurt before then.",
+  outro:
+    "Apex stops. Not falls — stops. There is no precedent for it. " +
+    "Apex looks at you the way you would look at someone who broke physics. " +
+    "Then Apex inclines its head, very slightly, and walks out. " +
+    "Pride is not what you take. It's what you decline to keep.",
+  defeatLine: "Apex did not lose. The fight simply ended in the only way it could.",
+  playerDeck: playerStarterDeck("pride"),
+  boss: {
+    name: "Apex",
+    sin: "pride",
+    epithet: "Has Never",
+    deck: bossDeck("pride", "boss_pride_3_unbroken"),
+    hpBoost: 175,
+  },
+  unlockedBy: "pride_2",
+};
+
 // ─── Full mission list ───────────────────────────────────────────
 
 export const CAMPAIGN_MISSIONS: CampaignMission[] = [
@@ -356,13 +521,13 @@ export const CAMPAIGN_MISSIONS: CampaignMission[] = [
   GREED_ACT_2,
   GREED_ACT_3,
 
-  stub("envy_1", "envy", 1, "The Mirror", "Someone wearing your face. Smiling like they earned it."),
-  stub("envy_2", "envy", 2, "The Twin", "Whatever you build, they build better, smaller, faster."),
-  stub("envy_3", "envy", 3, "The Hollow", "An empty crown looking for a head."),
+  ENVY_ACT_1,
+  ENVY_ACT_2,
+  ENVY_ACT_3,
 
-  stub("pride_1", "pride", 1, "The Throne", "A boy-king with one good speech and zero humility."),
-  stub("pride_2", "pride", 2, "The Idol", "Built of statues, all of itself."),
-  stub("pride_3", "pride", 3, "The Apex", "It refuses to acknowledge defeat. The fight ends when you do."),
+  PRIDE_ACT_1,
+  PRIDE_ACT_2,
+  PRIDE_ACT_3,
 
   stub("lust_1", "lust", 1, "The Salon", "Charm with a knife in it."),
   stub("lust_2", "lust", 2, "The Snare", "Beautiful. Patient. Hungry."),
