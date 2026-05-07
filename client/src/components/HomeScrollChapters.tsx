@@ -6,30 +6,30 @@
  * page than a magazine article — and it has to keep selling for the
  * whole scroll, not just open with a hook.
  *
- * Heights are responsive — mobile gets a tighter version of every chapter
- * via Tailwind `h-[Avh] sm:h-[Bvh]`. The ranges below are mobile / desktop.
+ * Layout: Hook + Pick-a-Sin are still sticky-pinned to the viewport for
+ * their crossfade animations. Every other chapter is a natural-flow
+ * min-h-screen section with content centered, no sticky pinning — so
+ * the user spends ~one viewport per chapter and there's no 5–15vh of
+ * scroll runway with a half-empty stage. Reveals fire as the section
+ * enters viewport (useScroll offset `["start end", "end start"]`).
  *
- *   01 Pitch       — 120 / 140 vh  (extra room for the 2-phase crossfade)
- *   02 Receipts    — 105 / 115 vh
- *   03 vs Them     — 105 / 115 vh
- *   04 The Mechanic— 105 / 115 vh
- *   05 Rules       — 105 / 115 vh
- *   06 Pick a Sin  — 7 × 45 + 60 = 375 vh (45vh per sin + 60vh hang tail
- *                    so the completed septagram + seventh portrait hold
- *                    on screen before the chapter exits)
- *   07 Why Honest  — 105 / 115 vh
- *   08 Balance     — 105 / 115 vh
- *   09 Campaign    — 105 / 115 vh
- *   10 Promise     — 105 / 115 vh
- *   11 Threshold   — 100 / 110 vh
+ *   01 Pitch       — 120 / 140 vh, sticky two-phase headline crossfade
+ *   02 Receipts    — flow, min-h-screen, py-16 sm:py-20
+ *   03 vs Them     — flow
+ *   04 The Mechanic— flow
+ *   05 Rules       — flow
+ *   06 Pick a Sin  — 7 × 45 + 60 = 375 vh, sticky septagram-completion
+ *                    + 60vh hang tail
+ *   07 Why Honest  — flow
+ *   08 Balance     — flow
+ *   09 Campaign    — flow
+ *   10 Promise     — flow
+ *   11 Threshold   — flow
  *
- * Mobile total ~14.0 viewport heights; desktop ~15.0 (was ~37
- * originally). Each non-crossfade chapter is barely longer than
- * the viewport — its scroll-driven reveals fire quickly, then
- * holds for a beat. Voices chapter dropped (mood, not selling
- * info). Pick-a-Sin gets a hang tail so the completed septagram
- * (each of its seven points lit in sin colour) and the seventh
- * faction portrait hold on screen together before scrolling on.
+ * Static chapters add up to ~9 viewport heights (one each); plus Hook
+ * (1.4) and Pick-a-Sin (3.75) = ~14 vh total. Same total as the last
+ * revision, but no chapter is half-empty — the section is exactly the
+ * size of its content + breathing padding, so content fills the view.
  */
 
 import {
@@ -519,13 +519,13 @@ function ChapterProof() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0.4, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="II" side="left" />
         <div className="relative max-w-6xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-14">
@@ -839,13 +839,13 @@ function ChapterPillars() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="VII" side="right" color="#a855f7" />
         <div className="relative max-w-5xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10 sm:mb-12">
@@ -892,7 +892,7 @@ function ChapterCampaign() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const reduce = useReducedMotion();
 
@@ -903,8 +903,8 @@ function ChapterCampaign() {
   const ctaScale     = useTransform(scrollYProgress, [0.55, 0.85], [0.92, 1]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center justify-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center justify-center min-h-screen py-16 sm:py-20">
         <div
           aria-hidden="true"
           className="absolute inset-0 pointer-events-none"
@@ -992,8 +992,8 @@ function ChapterThreshold() {
   const ctaOpacity     = useTransform(scrollYProgress, [0.4, 0.8], [0, 1]);
 
   return (
-    <section ref={ref} className="relative h-[100vh] sm:h-[110vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -1172,13 +1172,13 @@ function ChapterVersus() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="III" side="right" color="#ef4444" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-8 sm:mb-10">
@@ -1303,7 +1303,7 @@ function ChapterMechanic() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.92, 1], [0, 1, 1, 0.5]);
   const cardScale = useTransform(scrollYProgress, [0, 0.2], [0.92, 1]);
@@ -1311,8 +1311,8 @@ function ChapterMechanic() {
   const totalOpacity = useTransform(scrollYProgress, [0.85, 0.95], [0, 1]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="IV" side="left" color="#d4a854" />
         {/* Floating card silhouettes drifting in the background */}
         {[0, 1, 2].map((i) => (
@@ -1591,7 +1591,7 @@ function ChapterVoices() {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end end"],
+    offset: ["start end", "end start"],
   });
   const counter = useTransform(scrollYProgress, (p) => {
     const idx = Math.min(NARRATOR_QUOTES.length - 1, Math.max(0, Math.floor(p * NARRATOR_QUOTES.length)));
@@ -1599,7 +1599,7 @@ function ChapterVoices() {
   });
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
+    <section ref={ref} className="relative">
       <div className="sticky top-0 h-screen w-full overflow-hidden">
         <div
           aria-hidden="true"
@@ -1749,12 +1749,12 @@ function RuleCard({
 
 function ChapterRules() {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.5]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="V" side="right" color="#10b981" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
@@ -1875,13 +1875,13 @@ function MilestoneRow({
 
 function ChapterBalance() {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.9, 1], [0, 1, 1, 0.5]);
   const maxDeviation = Math.max(...BALANCE_JOURNEY.map((m) => m.deviation));
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="VIII" side="left" color="#fbbf24" />
         <div className="relative max-w-3xl mx-auto px-6 w-full">
           <motion.div style={{ opacity: titleOpacity }} className="text-center mb-10">
@@ -1985,14 +1985,14 @@ function PromiseLine({
 
 function ChapterPromise() {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const titleOpacity = useTransform(scrollYProgress, [0, 0.15, 0.92, 1], [0, 1, 1, 0.5]);
   const promiseOpacity = useTransform(scrollYProgress, [0.7, 0.92], [0, 1]);
   const promiseY = useTransform(scrollYProgress, [0.7, 0.92], [30, 0]);
 
   return (
-    <section ref={ref} className="relative h-[105vh] sm:h-[115vh]">
-      <div className="sticky top-0 h-screen w-full overflow-hidden flex items-center">
+    <section ref={ref} className="relative">
+      <div className="relative w-full overflow-hidden flex items-center min-h-screen py-16 sm:py-20">
         <ChapterNumeral numeral="XI" side="right" color="#10b981" />
         <div
           aria-hidden="true"
