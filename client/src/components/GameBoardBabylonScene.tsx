@@ -97,7 +97,12 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         adaptToDeviceRatio: true,
       });
       engineRef.current = engine;
-      if (isMobile) engine.setHardwareScalingLevel(2.5);
+      // Cap the render resolution. On a 2× DPR display the engine would
+      // otherwise render 4× the pixels of the logical viewport — heavy
+      // on the GPU for very little visible gain on a stylised scene. The
+      // floor here ensures non-Retina screens still render at 1:1.
+      const dprCap = isMobile ? 2.5 : Math.max(1, (window.devicePixelRatio || 1) / 1.5);
+      engine.setHardwareScalingLevel(dprCap);
 
       scene = new BABYLON.Scene(engine);
       sceneRef.current = scene;
@@ -243,7 +248,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         brazierLights.push({ light, flame, flameMat, sin, baseIntensity: 0.3, phase: i * 1.5 });
 
         // Ember particles from each brazier
-        const embers = new BABYLON.ParticleSystem(`embers${i}`, isMobile ? 15 : 30, scene);
+        const embers = new BABYLON.ParticleSystem(`embers${i}`, isMobile ? 10 : 18, scene);
         embers.createPointEmitter(
           new BABYLON.Vector3(-0.2, 0, -0.2),
           new BABYLON.Vector3(0.2, 0, 0.2)
@@ -256,7 +261,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         embers.maxSize = 0.04;
         embers.minLifeTime = 1.5;
         embers.maxLifeTime = 3.5;
-        embers.emitRate = isMobile ? 6 : 12;
+        embers.emitRate = isMobile ? 4 : 7;
         embers.gravity = new BABYLON.Vector3(0, 0.5, 0);
         embers.minEmitPower = 0.1;
         embers.maxEmitPower = 0.3;
@@ -285,7 +290,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       glow.addIncludedOnlyMesh(innerRing);
 
       // --- AMBIENT DUST ---
-      const dust = new BABYLON.ParticleSystem("dust", isMobile ? 40 : 100, scene);
+      const dust = new BABYLON.ParticleSystem("dust", isMobile ? 25 : 50, scene);
       dust.createPointEmitter(
         new BABYLON.Vector3(-5, 1, -5),
         new BABYLON.Vector3(5, 7, 5)
@@ -297,7 +302,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       dust.maxSize = 0.03;
       dust.minLifeTime = 4;
       dust.maxLifeTime = 10;
-      dust.emitRate = isMobile ? 10 : 25;
+      dust.emitRate = isMobile ? 6 : 14;
       dust.gravity = new BABYLON.Vector3(0, -0.005, 0);
       dust.minEmitPower = 0.01;
       dust.maxEmitPower = 0.03;
@@ -307,13 +312,21 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       // --- ANIMATION LOOP ---
       let time = 0;
       let targetR = 0.5, targetG = 0.3, targetB = 0.15;
+      let frameTick = 0;
 
       scene.registerBeforeRender(() => {
         time += engine.getDeltaTime() * 0.001;
+        frameTick++;
+        // Slow-moving trig (flickers, ring rotations, light lerps) only
+        // needs to update every 2nd frame — the eye doesn't notice the
+        // difference and the math + light-uniform uploads halve in cost.
+        const slowFrame = frameTick % 2 === 0;
 
         // Subtle camera breathing
         camera.alpha = -Math.PI / 2 + Math.sin(time * 0.08) * 0.015;
         camera.beta = Math.PI / 3.2 + Math.sin(time * 0.12) * 0.01;
+
+        if (!slowFrame) return;
 
         // Flickering brazier lights
         brazierLights.forEach(({ light, flame, flameMat, sin, baseIntensity, phase }) => {
@@ -360,9 +373,29 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
         innerRing.rotation.z = -time * 0.05 * speedMult;
       });
 
+      // Freeze the static decor (pillars, floor, ritual rings) — their
+      // world matrices never change after setup, so Babylon doesn't need
+      // to re-evaluate them every frame. Big win for the active-mesh loop.
+      scene.freezeActiveMeshes();
+
       engine.runRenderLoop(() => scene.render());
       const onResize = () => engine.resize();
       window.addEventListener("resize", onResize);
+
+      // Pause the render loop when the tab is hidden. The 3D scene was
+      // burning CPU/GPU in the background otherwise.
+      const onVisibility = () => {
+        if (!engine) return;
+        if (document.hidden) {
+          engine.stopRenderLoop();
+        } else {
+          engine.runRenderLoop(() => scene.render());
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      // Stash on engine so cleanup can find it.
+      (engine as any).__onVisibility = onVisibility;
+      (engine as any).__onResize = onResize;
     })();
 
     return () => {
@@ -370,6 +403,10 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       sceneRef.current = null;
       if (engine) {
         engine.stopRenderLoop();
+        const vis = (engine as any).__onVisibility;
+        const res = (engine as any).__onResize;
+        if (vis) document.removeEventListener("visibilitychange", vis);
+        if (res) window.removeEventListener("resize", res);
         engine.dispose();
       }
       engineRef.current = null;
