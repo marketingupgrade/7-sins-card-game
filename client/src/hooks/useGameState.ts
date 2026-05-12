@@ -113,6 +113,20 @@ export function useGameState(gameId: string | null) {
 
     const supabase = getClientSupabase();
 
+    // Debounce the refetch — during card resolution Supabase fires bursts
+    // of postgres_changes across `games`, `game_players`, and
+    // `active_effects` all within a few ms. Without the debounce we'd
+    // re-fetch the entire game state 5–10 times in a row, each triggering
+    // a full re-render and stalling the UI thread.
+    let refetchTimer: ReturnType<typeof setTimeout> | null = null;
+    const queueRefetch = () => {
+      if (refetchTimer) return;
+      refetchTimer = setTimeout(() => {
+        refetchTimer = null;
+        fetchState();
+      }, 60);
+    };
+
     const channel = supabase
       .channel(`game-${gameId}`)
       .on(
@@ -123,9 +137,7 @@ export function useGameState(gameId: string | null) {
           table: "games",
           filter: `id=eq.${gameId}`,
         },
-        () => {
-          fetchState();
-        }
+        queueRefetch
       )
       .on(
         "postgres_changes",
@@ -135,9 +147,7 @@ export function useGameState(gameId: string | null) {
           table: "game_players",
           filter: `game_id=eq.${gameId}`,
         },
-        () => {
-          fetchState();
-        }
+        queueRefetch
       )
       .on(
         "postgres_changes",
@@ -147,15 +157,14 @@ export function useGameState(gameId: string | null) {
           table: "active_effects",
           filter: `game_id=eq.${gameId}`,
         },
-        () => {
-          fetchState();
-        }
+        queueRefetch
       )
       .subscribe();
 
     channelRef.current = channel;
 
     return () => {
+      if (refetchTimer) clearTimeout(refetchTimer);
       supabase.removeChannel(channel);
     };
   }, [gameId, fetchState]);
