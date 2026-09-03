@@ -2,12 +2,22 @@
  * StatsReveal — scroll-scrubbed word reveal.
  *
  * Ported from the v4 landing kit ("scroll-text-reveal-01"). Each word sits
- * in an overflow mask at yPercent 115 and scrubs up to 0 (power3.out,
- * duration 1, stagger 0.35, scrub 0.8) across a 160vh runway with a 1.5
- * trailing hold. Motion is verbatim from the kit; only the stack changed
- * — Next's `"use client"` is dropped (Vite SPA), and type/colour are
- * retuned to the Brand Book (Cinzel display, Candlelight accent on
- * Cathedral Stone).
+ * in an overflow mask and rises from yPercent 115 to 0 on scrub, staggered
+ * so the sentence assembles left-to-right across a 160vh runway.
+ *
+ * IMPLEMENTATION NOTE — the kit drives this with GSAP ScrollTrigger. This
+ * port uses framer-motion's useScroll/useTransform instead, which is
+ * already a dependency here. That is a deliberate trade: it avoids adding
+ * gsap (and the pnpm-lock churn that comes with it) for a single effect
+ * that framer-motion expresses just as well. The visual result is the
+ * same staggered mask-rise; only the easing curve differs slightly
+ * (framer's default spring-free interpolation vs GSAP's power3.out).
+ *
+ * The kit's DOM-walking word splitter is also dropped — the sentence is a
+ * fixed literal, so the words are declared directly. That keeps
+ * punctuation attached to its word (a floating "." reads badly) and lets
+ * each word own its hooks in a child component rather than calling hooks
+ * in a loop.
  *
  * HONESTY NOTE — the kit's §5 rule applies here and was checked:
  * every figure below is published on /balance and reproducible from the
@@ -20,106 +30,88 @@
  *   · free                — no payment surface exists in the codebase
  */
 
-import { useEffect, useRef } from "react";
-import { gsap } from "./lib/gsap";
+import { useRef } from "react";
+import {
+  motion,
+  useReducedMotion,
+  useScroll,
+  useTransform,
+  type MotionValue,
+} from "framer-motion";
 
 const ACCENT = "#d4a854"; // Brand Book — Candlelight
 
-/** The sentence, split into plain / accent fragments. */
-const STATS: { text: string; accent?: boolean }[] = [
-  { text: "Seven sins. " },
-  { text: "424 cards", accent: true },
-  { text: ". " },
-  { text: "21 boss fights", accent: true },
-  { text: ". We ran " },
-  { text: "2 million games", accent: true },
-  { text: " to balance it, and landed at " },
-  { text: "1.01% deviation", accent: true },
-  { text: ". It costs " },
-  { text: "nothing", accent: true },
-  { text: ", forever." },
+interface Word {
+  t: string;
+  a?: boolean; // accent
+}
+
+/** The sentence, word by word. Punctuation stays attached to its word. */
+const WORDS: Word[] = [
+  { t: "Seven" }, { t: "sins." },
+  { t: "424", a: true }, { t: "cards.", a: true },
+  { t: "21", a: true }, { t: "boss", a: true }, { t: "fights.", a: true },
+  { t: "We" }, { t: "ran" },
+  { t: "2", a: true }, { t: "million", a: true }, { t: "games", a: true },
+  { t: "to" }, { t: "balance" }, { t: "it," }, { t: "and" }, { t: "landed" }, { t: "at" },
+  { t: "1.01%", a: true }, { t: "deviation.", a: true },
+  { t: "It" }, { t: "costs" },
+  { t: "nothing,", a: true },
+  { t: "forever." },
 ];
 
+/**
+ * One masked word. Owns its own hooks so the parent isn't calling
+ * useTransform inside a map.
+ */
+function MaskedWord({
+  word,
+  start,
+  end,
+  scrollYProgress,
+  instant,
+}: {
+  word: Word;
+  start: number;
+  end: number;
+  scrollYProgress: MotionValue<number>;
+  instant: boolean;
+}) {
+  const y = useTransform(scrollYProgress, [start, end], ["115%", "0%"]);
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        overflow: "hidden",
+        verticalAlign: "top",
+        paddingBottom: "0.14em",
+      }}
+    >
+      <motion.span
+        style={{
+          display: "inline-block",
+          willChange: "transform",
+          y: instant ? "0%" : y,
+          color: word.a ? ACCENT : undefined,
+        }}
+      >
+        {word.t}
+      </motion.span>
+    </span>
+  );
+}
+
 export default function StatsReveal() {
-  const rootRef = useRef<HTMLElement>(null);
   const runwayRef = useRef<HTMLDivElement>(null);
-  const h2Ref = useRef<HTMLHeadingElement>(null);
+  const reduce = useReducedMotion();
 
-  useEffect(() => {
-    const root = rootRef.current;
-    const runway = runwayRef.current;
-    const h2 = h2Ref.current;
-    if (!root || !runway || !h2) return;
-
-    // Split into word/mask pairs, recursing into inline elements so the
-    // accent <em> fragments keep their colour through the split.
-    const inners: HTMLSpanElement[] = [];
-    const wrapWords = (el: Node) => {
-      Array.from(el.childNodes).forEach((node) => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
-          wrapWords(node);
-          return;
-        }
-        if (node.nodeType !== Node.TEXT_NODE) return;
-        const textNode = node as Text;
-        const frag = document.createDocumentFragment();
-        (textNode.textContent ?? "").split(/(\s+)/).forEach((piece) => {
-          if (!piece) return;
-          if (/^\s+$/.test(piece)) {
-            frag.appendChild(document.createTextNode(" "));
-            return;
-          }
-          const wordSpan = document.createElement("span");
-          wordSpan.style.cssText =
-            "display:inline-block;overflow:hidden;vertical-align:top;padding-bottom:0.14em";
-          const innerSpan = document.createElement("span");
-          innerSpan.style.cssText = "display:inline-block;will-change:transform";
-          innerSpan.textContent = piece;
-          wordSpan.appendChild(innerSpan);
-          frag.appendChild(wordSpan);
-          inners.push(innerSpan);
-        });
-        el.replaceChild(frag, textNode);
-      });
-    };
-    wrapWords(h2);
-    if (!inners.length) return;
-
-    // Reduced motion: land on the final state, skip the scrub entirely.
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (reduce) {
-      gsap.set(inners, { yPercent: 0 });
-      return;
-    }
-
-    const ctx = gsap.context(() => {
-      gsap.set(inners, { yPercent: 115 });
-
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: runway,
-          start: "top top",
-          end: "bottom bottom",
-          scrub: 0.8,
-        },
-      });
-
-      tl.to(inners, {
-        yPercent: 0,
-        ease: "power3.out",
-        duration: 1,
-        stagger: 0.35,
-      });
-      // Trailing hold so the finished sentence sits for a beat.
-      tl.to({}, { duration: 1.5 });
-    }, root);
-
-    return () => ctx.revert();
-  }, []);
+  const { scrollYProgress } = useScroll({
+    target: runwayRef,
+    offset: ["start start", "end end"],
+  });
 
   return (
     <section
-      ref={rootRef}
       style={{
         background: "#0a0908",
         color: "#e8e0d0",
@@ -132,7 +124,6 @@ export default function StatsReveal() {
           style={{ height: "100vh", padding: "0 6vw" }}
         >
           <h2
-            ref={h2Ref}
             className="m-0"
             style={{
               fontFamily: "var(--font-heading)",
@@ -142,16 +133,26 @@ export default function StatsReveal() {
               lineHeight: 1.12,
               letterSpacing: "-0.01em",
             }}
+            aria-label={WORDS.map((w) => w.t).join(" ")}
           >
-            {STATS.map((part, i) =>
-              part.accent ? (
-                <em key={i} style={{ fontStyle: "normal", color: ACCENT }}>
-                  {part.text}
-                </em>
-              ) : (
-                <span key={i}>{part.text}</span>
-              ),
-            )}
+            {WORDS.map((word, i) => {
+              // Stagger: the last word begins its rise at 0.65 progress and
+              // every word takes 0.35 to land, so the sentence finishes
+              // exactly as the runway ends.
+              const local = WORDS.length === 1 ? 0 : i / (WORDS.length - 1);
+              const start = local * 0.65;
+              return (
+                <span key={i} aria-hidden="true">
+                  <MaskedWord
+                    word={word}
+                    start={start}
+                    end={start + 0.35}
+                    scrollYProgress={scrollYProgress}
+                    instant={!!reduce}
+                  />{" "}
+                </span>
+              );
+            })}
           </h2>
         </div>
       </div>
