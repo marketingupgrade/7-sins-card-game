@@ -13,7 +13,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "wouter";
-import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn, Swords } from "lucide-react";
+import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn, Swords, Github } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
@@ -709,6 +709,18 @@ export default function Home() {
                   {link.label}
                 </Link>
               ))}
+              {/* External — a plain anchor, not wouter's <Link>, which would
+                  try to client-side route to an off-site URL. */}
+              <a
+                href="https://github.com/marketingupgrade/7-sins-card-game"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.15em] uppercase text-white/50 hover:text-white/80 transition-colors"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                <Github className="w-3 h-3" />
+                Source
+              </a>
             </div>
 
             {/* Logo divider */}
