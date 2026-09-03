@@ -25,11 +25,11 @@ import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
 import CampaignContinueTile from "@/components/CampaignContinueTile";
-// Code-split. The scroll chapters pull in GSAP (~25KB gz) plus eleven
-// sections' worth of client JS — none of it needed to paint the hero, all
-// of it below the fold. Keeping it lazy is the v4 kit's §4 performance
-// rule and it keeps the hero as the LCP element. Do not "tidy" this into
-// a static import.
+// Code-split. The scroll chapters are eleven sections' worth of client JS
+// (~14KB gz) — none of it needed to paint the hero, all of it below the
+// fold. Keeping it lazy is the v4 kit's §4 performance rule and it keeps
+// the hero as the LCP element: it cut the Home chunk from 72.0 to 9.7KB
+// gzipped. Do not "tidy" this into a static import.
 const HomeScrollChapters = lazy(() => import("@/components/HomeScrollChapters"));
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
