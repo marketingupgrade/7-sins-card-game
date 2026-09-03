@@ -44,6 +44,11 @@ import { Link } from "wouter";
 import { useRef } from "react";
 import type { LucideIcon } from "lucide-react";
 
+// v4 landing-kit sections, ported to this stack (Vite/wouter, Brand Book
+// palette + Cinzel display). See client/src/components/v4/.
+import StatsReveal from "@/components/v4/StatsReveal";
+import SchematicExplainer from "@/components/v4/SchematicExplainer";
+
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import type { SinType } from "@shared/gameTypes";
@@ -2068,10 +2073,14 @@ export default function HomeScrollChapters() {
   return (
     <div className="relative z-10">
       <ChapterHook />
-      <ChapterProof />
+      {/* v4 kit — scrubbed word reveal. Replaces the old stat-tile grid;
+          same numbers, far more weight. */}
+      <StatsReveal />
       <ChapterVersus />
       <ChapterMechanic />
-      <ChapterRules />
+      {/* v4 kit — sticky two-column schematic. Replaces the old stepped
+          rule cards with a crossfading technical drawing. */}
+      <SchematicExplainer />
       <ChapterSeven />
       <ChapterPillars />
       <ChapterBalance />

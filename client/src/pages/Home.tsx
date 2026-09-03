@@ -8,7 +8,7 @@
  * - Game action panel (create / join)
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,7 +25,12 @@ import EmberField from "@/components/EmberField";
 import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
 import CampaignContinueTile from "@/components/CampaignContinueTile";
-import HomeScrollChapters from "@/components/HomeScrollChapters";
+// Code-split. The scroll chapters pull in GSAP (~25KB gz) plus eleven
+// sections' worth of client JS — none of it needed to paint the hero, all
+// of it below the fold. Keeping it lazy is the v4 kit's §4 performance
+// rule and it keeps the hero as the LCP element. Do not "tidy" this into
+// a static import.
+const HomeScrollChapters = lazy(() => import("@/components/HomeScrollChapters"));
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
@@ -669,7 +674,11 @@ export default function Home() {
       </div>
 
       {/* ═══ Scrollytelling chapters ═══ */}
-      <HomeScrollChapters />
+      {/* Reserve a viewport of height while the chunk lands so the page
+          doesn't jump under a user who's already scrolling. */}
+      <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
+        <HomeScrollChapters />
+      </Suspense>
 
       {/* ═══ Footer ═══ */}
       <ScrollReveal direction="up" delay={100} distance={20}>
