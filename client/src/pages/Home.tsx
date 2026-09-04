@@ -298,8 +298,15 @@ export default function Home() {
     />
   )), [heroIndex]);
 
+  // overflow-x-CLIP below, not -hidden. Per CSS spec, when one axis is not
+  // `visible` the other computes from `visible` to `auto` — so
+  // `overflow-x: hidden` silently makes `overflow-y: auto` and turns the root
+  // div into a scroll container. Every `position: sticky` section inside it
+  // then sticks to THAT box instead of the viewport, and none of them pin.
+  // `clip` clips the same horizontal bleed without creating a scroll
+  // container, so sticky keeps working. Do not change this back.
   return (
-    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-x-hidden">
+    <div className="min-h-screen bg-[var(--color-page-bg-deep)] relative overflow-x-clip">
       {/* Anchor for the scrollytelling "Enter the Arena" smooth-scroll back to top */}
       <span id="hero" aria-hidden="true" />
       {/* ═══ Lightweight Atmospheric Background ═══ */}

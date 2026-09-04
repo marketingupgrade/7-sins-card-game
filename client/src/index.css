@@ -1015,12 +1015,14 @@ textarea:focus-visible {
   border-radius: inherit;
 }
 
-/* ─── Smooth Scroll ──────────────────────────────────────────────── */
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
-  }
-}
+/* ─── Smooth Scroll — deliberately NOT set ───────────────────────────
+   `html { scroll-behavior: smooth }` used to live here. It has to stay
+   gone: native smooth scroll animates scrollTop asynchronously, so every
+   scroll-linked value on the homepage (framer-motion useScroll driving
+   the sticky chapters) lags and stutters behind the real scroll position.
+   The one place we still want eased scrolling is the Threshold CTA, and
+   that calls window.scrollTo({ behavior: "smooth" }) in JS, which works
+   on its own without this global rule. Do not reintroduce it. */
 
 /* ─── Matchup Matrix Cell Hover ──────────────────────────────────── */
 .matchup-cell {
