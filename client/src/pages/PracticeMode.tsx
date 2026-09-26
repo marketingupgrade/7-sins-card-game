@@ -29,6 +29,8 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 const lazyGameEngine = () => import("@/lib/gameEngine");
 const lazyBotEngine = () => import("@/lib/botEngine");
 
+const PRACTICE_TURN_SECONDS = 120;
+
 const PRACTICE_SINS: { sin: SinType; label: string; desc: string; difficulty: string }[] = [
   { sin: "wrath", label: "Wrath", desc: "The blunt instrument. Deal damage, reflect it back.", difficulty: "Easy" },
   { sin: "sloth", label: "Sloth", desc: "The immovable object. Shields and stubborn endurance.", difficulty: "Easy" },
@@ -58,7 +60,7 @@ const PRACTICE_STEPS: PracticeStep[] = [
     id: "welcome",
     title: "The Training Grounds",
     narratorQuote: "Every sinner starts somewhere. Usually at the bottom.",
-    content: "This is a guided 1v1 match against a bot. The narrator will walk you through the fundamentals. Take your time — there's no turn timer in the training grounds.",
+    content: "This is a guided 1v1 match against a bot. The narrator will walk you through the fundamentals. Take your time — you get two minutes a turn here, and the clock only starts once the bot has sealed its sins.",
     icon: GraduationCap,
   },
   {
@@ -72,7 +74,7 @@ const PRACTICE_STEPS: PracticeStep[] = [
     id: "cards",
     title: "Committing Your Sins",
     narratorQuote: "Select your weapon. Point it at someone who deserves it. Or doesn't.",
-    content: "Select a card from your hand, then click an opponent to direct your sin at them. You can commit multiple sins per turn if you have the corruption. When you're done, LOCK IN to seal your fate.",
+    content: "Select a card from your hand. In a duel it aims at your only opponent automatically; with more sinners at the table you click the one you want to hurt. You can commit multiple sins per turn if you have the corruption. When you're done, press SEAL FATE.",
     icon: Swords,
   },
   {
@@ -174,8 +176,17 @@ export default function PracticeMode() {
       const { botId } = await addBot(gameId);
       await botChooseSin(gameId, botId);
 
-      // 4. Set a generous timer for practice (30s)
-      await setTurnTimer(gameId, 30);
+      // 4. Practice clock. The bot seals instantly, which starts the
+      //    countdown the moment the round opens — 30s isn't enough to read
+      //    the narrator's notes AND pick a card, and new players were being
+      //    auto-abstained mid-lesson. (0 can't mean "off": the engine
+      //    would set the deadline to now.) Fall back to the lobby's
+      //    longest option if the column refuses a non-standard value.
+      try {
+        await setTurnTimer(gameId, PRACTICE_TURN_SECONDS);
+      } catch {
+        await setTurnTimer(gameId, 30);
+      }
 
       // 5. Start the game
       await startGame(gameId);
@@ -213,7 +224,10 @@ export default function PracticeMode() {
         BACK
       </motion.button>
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
+      {/* Top-anchored, not vertically centred: picking a sin reveals the
+          passive panel, and in a centred column that growth shoved the whole
+          grid upward under the cursor. */}
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-start px-4 pt-20 md:pt-24 pb-12">
         <AnimatePresence mode="wait">
           {/* ── PHASE 1: Sin Selection ── */}
           {phase === "select_sin" && (
@@ -243,7 +257,7 @@ export default function PracticeMode() {
                   Choose Your Sin
                 </h1>
                 <p
-                  className="text-sm italic text-amber-200/25 mb-2"
+                  className="text-sm italic text-amber-200/50 mb-2"
                   style={{ fontFamily: "var(--font-narrator)" }}
                 >
                   "Seven deadly sins. Seven ways to lose everything. But first, you must learn."
@@ -254,7 +268,9 @@ export default function PracticeMode() {
               </div>
 
               {/* Sin Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+              {/* Flex-wrap rather than grid so the odd last row (7 sins over
+                  2/3/4 columns) sits centred instead of leaving a hole. */}
+              <div className="flex flex-wrap justify-center gap-3 mb-6">
                 {PRACTICE_SINS.map((item) => {
                   const isSelected = selectedSin === item.sin;
                   const color = SIN_COLORS[item.sin];
@@ -264,7 +280,7 @@ export default function PracticeMode() {
                       whileHover={{ scale: 1.03, y: -2 }}
                       whileTap={{ scale: 0.97 }}
                       onClick={() => handleSinSelect(item.sin)}
-                      className="relative rounded-xl overflow-hidden border transition-all text-left"
+                      className="relative rounded-xl overflow-hidden border transition-all text-left w-[calc(50%-0.375rem)] sm:w-[calc(33.333%-0.5rem)] lg:w-[calc(25%-0.5625rem)]"
                       style={{
                         borderColor: isSelected ? `${color}60` : "rgba(255,255,255,0.08)",
                         background: isSelected
@@ -306,7 +322,7 @@ export default function PracticeMode() {
                             {item.label.toUpperCase()}
                           </span>
                         </div>
-                        <p className="text-[10px] text-white/35 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
+                        <p className="text-[11px] text-white/55 leading-relaxed" style={{ fontFamily: "var(--font-body)" }}>
                           {item.desc}
                         </p>
                       </div>

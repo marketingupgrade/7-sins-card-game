@@ -28,7 +28,9 @@ describe("Mobile touch blocking fix", () => {
       expect(src).toContain("pointer-events-none");
       // Verify it's on the fixed container, not just anywhere
       const fixedLine = src.split("\n").find(
-        (l) => l.includes("fixed") && l.includes("bottom-24") && l.includes("z-[100]")
+        // Match on the fixed overlay layer, not its position classes — the
+        // panel moves per breakpoint to stay clear of the action row.
+        (l) => l.includes('className="fixed') && l.includes("z-[100]")
       );
       expect(fixedLine).toBeDefined();
       expect(fixedLine).toContain("pointer-events-none");

@@ -14,6 +14,8 @@ import { getGameState } from "../lib/gameEngine";
 
 // How long to wait in round_end before self-healing (ms)
 const STUCK_ROUND_END_TIMEOUT = 15000;
+// Poll cadence used only while the realtime channel is down
+const POLL_INTERVAL_MS = 2000;
 
 export function useGameState(gameId: string | null) {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -127,6 +129,22 @@ export function useGameState(gameId: string | null) {
       }, 60);
     };
 
+    // Fallback polling — only runs while the realtime channel is not live.
+    let realtimeLive = false;
+    let disposed = false;
+    let pollTimer: ReturnType<typeof setInterval> | null = null;
+    function startPolling() {
+      // removeChannel() on unmount reports CLOSED — don't restart then.
+      if (pollTimer || disposed) return;
+      pollTimer = setInterval(() => {
+        if (document.visibilityState === "visible") fetchState();
+      }, POLL_INTERVAL_MS);
+    }
+    function stopPolling() {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = null;
+    }
+
     const channel = supabase
       .channel(`game-${gameId}`)
       .on(
@@ -159,12 +177,42 @@ export function useGameState(gameId: string | null) {
         },
         queueRefetch
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "SUBSCRIBED") {
+          // Events fired while we were (re)connecting are lost, not queued —
+          // catch up once the socket is live, then stop polling.
+          realtimeLive = true;
+          stopPolling();
+          queueRefetch();
+        } else {
+          // CHANNEL_ERROR / TIMED_OUT / CLOSED: websockets blocked by a proxy,
+          // a flaky mobile connection, or a backgrounded tab. Without this the
+          // board freezes on "waiting for others" forever.
+          realtimeLive = false;
+          startPolling();
+        }
+      });
+
+    // Until the first SUBSCRIBED arrives we don't know the socket works.
+    const connectGrace = setTimeout(() => {
+      if (!realtimeLive) startPolling();
+    }, POLL_INTERVAL_MS * 2);
+
+    // Returning to the tab (phone unlocked, app switched back) — the socket
+    // may have silently missed updates while suspended.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") queueRefetch();
+    };
+    document.addEventListener("visibilitychange", onVisible);
 
     channelRef.current = channel;
 
     return () => {
+      disposed = true;
       if (refetchTimer) clearTimeout(refetchTimer);
+      clearTimeout(connectGrace);
+      stopPolling();
+      document.removeEventListener("visibilitychange", onVisible);
       supabase.removeChannel(channel);
     };
   }, [gameId, fetchState]);

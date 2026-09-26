@@ -555,6 +555,18 @@ export default function GameBoard() {
     [myCardsUnsorted, cardSortMode, myPlayer?.currentEnergy, myPlayer?.currentHp, myPlayer?.maxHp, gameState?.currentRound]
   );
 
+  // A card that leaves the hand (sealed, discarded, burned) unmounts under
+  // the cursor, so its mouseleave never fires and the big hover preview
+  // would hang on screen for the rest of the round. Drop it here instead.
+  // Same once the player seals: the preview is a planning aid, and it would
+  // otherwise sit over the board during resolution.
+  useEffect(() => {
+    if (hoverPreviewCard && (hasLockedIn || !myCards.some(c => c.id === hoverPreviewCard))) {
+      if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+      setHoverPreviewCard(null);
+    }
+  }, [myCards, hoverPreviewCard, hasLockedIn]);
+
   const opponents = useMemo(() => {
     if (!gameState) return { north: null, east: null, west: null };
     const others = gameState.players.filter((p) => p.id !== playerId);
@@ -717,6 +729,10 @@ export default function GameBoard() {
     return myCards.some((c) => c.cost <= energyRemaining);
   }, [myCards, energyRemaining]);
 
+  const isPracticeGame = useMemo(() => {
+    try { return !!gameId && localStorage.getItem("7sins_practice_game") === gameId; } catch { return false; }
+  }, [gameId]);
+
   const toggleCardSelection = useCallback((cardId: string) => {
     setSelectedCards(prev => {
       const existing = prev.find(s => s.cardId === cardId);
@@ -729,11 +745,20 @@ export default function GameBoard() {
       if (!card) return prev;
       const currentCost = prev.reduce((sum, s) => sum + (CARD_MAP[s.cardId]?.cost ?? 0), 0);
       if (currentCost + card.cost > (myPlayer?.currentEnergy ?? 0)) return prev;
+      // 1v1 (practice, campaign, or a table down to two): there is only one
+      // possible victim, so asking the player to "mark the damned" is a
+      // pointless extra click that new players miss — and an untargeted
+      // sin is wasted. Pre-assign the sole living opponent.
+      const needsTarget = card.effects.some(e => e.targetMode === "single" || e.targetMode === "duo");
+      const living = gameState?.players.filter(p => p.id !== playerId && p.isAlive) ?? [];
+      if (needsTarget && living.length === 1) {
+        return [...prev, { cardId, targetPlayerId: living[0].id }];
+      }
       return [...prev, { cardId }];
     });
     // Also set selectedCard for target selection UI
     setSelectedCard(cardId);
-  }, [myPlayer?.currentEnergy]);
+  }, [myPlayer?.currentEnergy, gameState?.players, playerId]);
 
   const handleLockIn = useCallback(async () => {
     if (!gameId || !playerId) return;
@@ -777,6 +802,9 @@ export default function GameBoard() {
     } catch (err: any) {
       console.error("[LockIn]", err);
       addMessage("Even sin has rules, mortal. Try again.", "info");
+      // Usually means our view is stale (the round moved on without us) —
+      // resync so the board shows the real phase instead of a dead button.
+      refetch();
     } finally {
       setIsLockingIn(false);
     }
@@ -820,6 +848,7 @@ export default function GameBoard() {
     } catch (err: any) {
       console.error("[PassLockIn]", err);
       addMessage("Pass failed. Try again.", "info");
+      refetch();
     } finally {
       setIsLockingIn(false);
     }
@@ -1198,8 +1227,10 @@ export default function GameBoard() {
         />
       )}
 
-      {/* First-Game Coaching Tips */}
-      {myPlayer && gameState && (
+      {/* First-Game Coaching Tips — not in practice: PracticeAnnotations is
+          already teaching there, and running both stacked two overlapping
+          panels saying the same thing ("select a card, click your opponent"). */}
+      {myPlayer && gameState && !isPracticeGame && (
         <GameCoach
           round={gameState.currentRound}
           playerHp={myPlayer.currentHp}
@@ -1219,7 +1250,7 @@ export default function GameBoard() {
           <div className="flex items-center gap-1.5 md:gap-2">
             <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" aria-hidden="true" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
             <span className="text-sm md:text-xl font-black text-candle tracking-wider" style={{ fontFamily: "var(--font-heading)" }}>
-              <span className="hidden md:inline">Rite </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of</span><span className="md:hidden">/</span>{MAX_ROUNDS}
+              <span className="hidden md:inline">Rite </span><span className="md:hidden">R</span>{gameState.currentRound}<span className="hidden md:inline"> of </span><span className="md:hidden">/</span>{MAX_ROUNDS}
             </span>
           </div>
         </div>

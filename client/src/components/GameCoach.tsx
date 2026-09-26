@@ -48,7 +48,7 @@ const ALL_TIPS: CoachTip[] = [
     color: "oklch(0.65 0.25 25)",
     title: "Choose Your Victim",
     narratorFlavor: "The weak make easy prey. The strong make worthy enemies.",
-    body: "Click an opponent's portrait to direct your sin at them. Choose wisely — or don't. The cathedral judges either way.",
+    body: "Click an opponent's portrait to direct your sin at them (in a duel it aims itself). Choose wisely — or don't. The cathedral judges either way.",
     autoDismissMs: 8000,
   },
   {
@@ -283,11 +283,14 @@ export default function GameCoach({
     <AnimatePresence>
       {!dismissed && (
         <motion.div
-          initial={{ opacity: 0, y: 20, x: "-50%" }}
-          animate={{ opacity: 1, y: 0, x: "-50%" }}
-          exit={{ opacity: 0, y: 20, x: "-50%" }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.3, ease: "easeOut" }}
-          className="fixed bottom-24 sm:bottom-28 left-1/2 z-[100] w-[calc(100%-2rem)] max-w-sm pointer-events-none"
+          // Keep clear of the action row: bottom-centre sat on top of the Seal
+          // Fate button and the player's HP panel. Phones: over the dimmed
+          // battle overview. Desktop: the empty right margin.
+          className="fixed top-44 md:top-auto md:bottom-28 left-1/2 -translate-x-1/2 lg:bottom-auto lg:top-28 lg:left-auto lg:right-6 lg:translate-x-0 z-[100] w-[calc(100%-2rem)] max-w-sm pointer-events-none"
         >
           <div
             className="rounded-xl p-3.5 sm:p-4 backdrop-blur-xl border shadow-lg pointer-events-auto"

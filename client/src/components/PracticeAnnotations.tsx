@@ -88,7 +88,7 @@ export default function PracticeAnnotations({
         return {
           id: "r1_select",
           narratorFlavor: "Every sinner starts somewhere. Usually at the bottom.",
-          message: "Select a card from your hand, then click your opponent to direct your sin at them. Cards with lower corruption cost are easier to play early.",
+          message: "Select a card from your hand — with one opponent, it aims at them automatically. Cards with lower corruption cost are easier to play early.",
           icon: Swords,
           position: "bottom",
           color: sinColor,
@@ -98,7 +98,7 @@ export default function PracticeAnnotations({
         return {
           id: "r1_lockin",
           narratorFlavor: "Ambition. How refreshingly predictable.",
-          message: `You can select more cards if you have corruption to spare, or press LOCK IN to commit your sins. You have ${myPlayer.currentEnergy} corruption remaining.`,
+          message: `You can select more cards if you have corruption to spare, or press SEAL FATE to commit your sins. You have ${myPlayer.currentEnergy} corruption remaining.`,
           icon: Zap,
           position: "bottom",
           color: sinColor,
@@ -187,8 +187,11 @@ export default function PracticeAnnotations({
   const Icon = annotation.icon;
 
   const positionClasses = {
-    top: "top-20 left-1/2 -translate-x-1/2",
-    bottom: "bottom-52 md:bottom-56 left-1/2 -translate-x-1/2",
+    // Never over the action row: on desktop both anchor in the empty right
+    // margin; on phones "bottom" rides up over the dimmed battle overview,
+    // because bottom-anchored it covered Seal Fate / Abstain exactly.
+    top: "top-20 left-1/2 -translate-x-1/2 lg:top-28 lg:left-auto lg:right-6 lg:translate-x-0",
+    bottom: "top-44 md:top-auto md:bottom-56 left-1/2 -translate-x-1/2 lg:bottom-auto lg:top-28 lg:left-auto lg:right-6 lg:translate-x-0",
     center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
   };
 
