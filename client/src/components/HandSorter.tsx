@@ -96,11 +96,7 @@ export default function HandSorter({
         <span className="tracking-wider">{currentOption.label.toUpperCase()}</span>
         {/* New badge for first-time users */}
         {!hasUsed && (
-          <motion.span
-            animate={{ scale: [1, 1.2, 1] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
-            className="w-1.5 h-1.5 rounded-full bg-amber-400"
-          />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 pulse-scale-120" />
         )}
       </motion.button>
 

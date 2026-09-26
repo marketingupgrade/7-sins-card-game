@@ -16,6 +16,17 @@
 import { memo } from "react";
 import type { SinType } from "@shared/gameTypes";
 
+/**
+ * Deterministic stand-in for Math.random() in render. These overlays are
+ * pure CSS loops; a random duration/delay recomputed on every render hands
+ * the element a new `animation` string, which restarts it mid-flight (the
+ * flames/coins visibly jump). Same index + salt → same value, every render.
+ */
+function rnd(i: number, salt: number): number {
+  const x = Math.sin(i * 12.9898 + salt * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
 interface AnimatedCardArtProps {
   sin: SinType;
   isSignature: boolean; // only animate signature (highest cost) cards
@@ -31,12 +42,12 @@ function WrathFlames() {
           className="absolute bottom-0"
           style={{
             left: `${10 + i * 10}%`,
-            width: 12 + Math.random() * 8,
-            height: 30 + Math.random() * 30,
+            width: 12 + rnd(i, 1) * 8,
+            height: 30 + rnd(i, 2) * 30,
             background: `linear-gradient(to top, rgba(239,68,68,0.6), rgba(249,115,22,0.3), transparent)`,
             borderRadius: "50% 50% 0 0",
-            animation: `flame-rise ${1.5 + Math.random()}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 1.5}s`,
+            animation: `flame-rise ${1.5 + rnd(i, 3)}s ease-in-out infinite`,
+            animationDelay: `${rnd(i, 4) * 1.5}s`,
           }}
         />
       ))}
@@ -61,7 +72,7 @@ function SlothMist() {
             top: `${20 + i * 15}%`,
             left: "-20%",
             width: "140%",
-            height: 20 + Math.random() * 15,
+            height: 20 + rnd(i, 5) * 15,
             background: `radial-gradient(ellipse, rgba(168,85,247,0.25), transparent)`,
             animation: `mist-drift ${6 + i * 2}s linear infinite`,
             animationDelay: `${i * 1.5}s`,
@@ -88,14 +99,14 @@ function GreedSparkles() {
           key={i}
           className="absolute rounded-full"
           style={{
-            left: `${Math.random() * 90}%`,
+            left: `${rnd(i, 6) * 90}%`,
             top: "-10%",
-            width: 3 + Math.random() * 4,
-            height: 3 + Math.random() * 4,
+            width: 3 + rnd(i, 7) * 4,
+            height: 3 + rnd(i, 8) * 4,
             backgroundColor: i % 3 === 0 ? "#fbbf24" : i % 3 === 1 ? "#f59e0b" : "#eab308",
             boxShadow: `0 0 4px ${i % 3 === 0 ? "#fbbf24" : "#f59e0b"}`,
-            animation: `coin-fall ${2 + Math.random() * 3}s linear infinite`,
-            animationDelay: `${Math.random() * 3}s`,
+            animation: `coin-fall ${2 + rnd(i, 9) * 3}s linear infinite`,
+            animationDelay: `${rnd(i, 10) * 3}s`,
           }}
         />
       ))}
@@ -163,11 +174,11 @@ function PrideCrown() {
           className="absolute top-[12%] left-1/2"
           style={{
             width: 1.5,
-            height: 25 + Math.random() * 15,
+            height: 25 + rnd(i, 11) * 15,
             background: "linear-gradient(to bottom, rgba(251,191,36,0.5), transparent)",
             transformOrigin: "bottom center",
             transform: `translateX(-50%) rotate(${i * 45}deg)`,
-            animation: `ray-pulse ${2 + Math.random()}s ease-in-out infinite`,
+            animation: `ray-pulse ${2 + rnd(i, 12)}s ease-in-out infinite`,
             animationDelay: `${i * 0.2}s`,
           }}
         />
@@ -194,14 +205,14 @@ function LustPetals() {
           key={i}
           className="absolute"
           style={{
-            left: `${Math.random() * 80 + 10}%`,
+            left: `${rnd(i, 13) * 80 + 10}%`,
             top: "-10%",
-            width: 6 + Math.random() * 4,
-            height: 8 + Math.random() * 4,
+            width: 6 + rnd(i, 14) * 4,
+            height: 8 + rnd(i, 15) * 4,
             backgroundColor: i % 2 === 0 ? "rgba(236,72,153,0.5)" : "rgba(244,114,182,0.4)",
             borderRadius: "50% 0 50% 0",
-            animation: `petal-fall ${4 + Math.random() * 3}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 4}s`,
+            animation: `petal-fall ${4 + rnd(i, 16) * 3}s ease-in-out infinite`,
+            animationDelay: `${rnd(i, 17) * 4}s`,
           }}
         />
       ))}
@@ -227,11 +238,11 @@ function GluttonyOoze() {
           className="absolute bottom-0 rounded-full"
           style={{
             left: `${10 + i * 15}%`,
-            width: 10 + Math.random() * 8,
-            height: 10 + Math.random() * 8,
+            width: 10 + rnd(i, 18) * 8,
+            height: 10 + rnd(i, 19) * 8,
             backgroundColor: "rgba(180,83,9,0.35)",
-            animation: `bubble-rise ${2 + Math.random() * 2}s ease-in-out infinite`,
-            animationDelay: `${Math.random() * 2}s`,
+            animation: `bubble-rise ${2 + rnd(i, 20) * 2}s ease-in-out infinite`,
+            animationDelay: `${rnd(i, 21) * 2}s`,
           }}
         />
       ))}

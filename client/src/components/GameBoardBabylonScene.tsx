@@ -101,7 +101,10 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       // otherwise render 4× the pixels of the logical viewport — heavy
       // on the GPU for very little visible gain on a stylised scene. The
       // floor here ensures non-Retina screens still render at 1:1.
-      const dprCap = isMobile ? 2.5 : Math.max(1, (window.devicePixelRatio || 1) / 1.5);
+      // Desktop floor is 1.25, not 1: it's a fogged, glow-blurred backdrop
+      // behind the UI, and 0.64× the pixels is invisible there but not in
+      // the GPU/compositor bill.
+      const dprCap = isMobile ? 2.5 : Math.max(1.25, (window.devicePixelRatio || 1) / 1.5);
       engine.setHardwareScalingLevel(dprCap);
 
       scene = new BABYLON.Scene(engine);
@@ -312,21 +315,16 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       // --- ANIMATION LOOP ---
       let time = 0;
       let targetR = 0.5, targetG = 0.3, targetB = 0.15;
-      let frameTick = 0;
 
       scene.registerBeforeRender(() => {
         time += engine.getDeltaTime() * 0.001;
-        frameTick++;
-        // Slow-moving trig (flickers, ring rotations, light lerps) only
-        // needs to update every 2nd frame — the eye doesn't notice the
-        // difference and the math + light-uniform uploads halve in cost.
-        const slowFrame = frameTick % 2 === 0;
+        // (Frames are already capped at ~30fps by the loop below, so every
+        // rendered frame updates the slow trig — no extra skipping here.)
 
         // Subtle camera breathing
         camera.alpha = -Math.PI / 2 + Math.sin(time * 0.08) * 0.015;
         camera.beta = Math.PI / 3.2 + Math.sin(time * 0.12) * 0.01;
 
-        if (!slowFrame) return;
 
         // Flickering brazier lights
         brazierLights.forEach(({ light, flame, flameMat, sin, baseIntensity, phase }) => {
@@ -378,21 +376,53 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       // to re-evaluate them every frame. Big win for the active-mesh loop.
       scene.freezeActiveMeshes();
 
-      engine.runRenderLoop(() => scene.render());
-      const onResize = () => engine.resize();
+      // Ambient backdrop: slow fog, embers, flicker. ~30fps is visually
+      // identical and halves both GPU work and the full-viewport composite
+      // (a frame we don't draw doesn't dirty the canvas).
+      //
+      // We drive frames ourselves rather than skipping inside
+      // engine.runRenderLoop: Babylon measures deltaTime per loop
+      // iteration (in beginFrame), so skipped iterations would make every
+      // particle and flicker play at half speed. Here beginFrame only runs
+      // on frames we draw, so the delta is the real ~33ms.
+      //
+      // Reduced-motion users get a still frame: draw for ~1.5s so particles
+      // and glow settle, then stop. (Wall time, not a frame count — on a
+      // slow device 90 frames took 20+ seconds of motion.)
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const settleUntil = performance.now() + 1500;
+      let rafId = 0;
+      let loopTick = 0;
+      const drawFrame = () => {
+        engine.beginFrame();
+        scene.render();
+        engine.endFrame();
+      };
+      const loop = () => {
+        rafId = requestAnimationFrame(loop);
+        loopTick++;
+        if (reduceMotion) {
+          drawFrame();
+          if (performance.now() > settleUntil && loopTick > 3) stopLoop();
+          return;
+        }
+        if (loopTick % 2 === 0) drawFrame();
+      };
+      const startLoop = () => { if (!rafId) rafId = requestAnimationFrame(loop); };
+      const stopLoop = () => { cancelAnimationFrame(rafId); rafId = 0; };
+      startLoop();
+      const onResize = () => { engine.resize(); if (!rafId) drawFrame(); };
       window.addEventListener("resize", onResize);
 
-      // Pause the render loop when the tab is hidden. The 3D scene was
-      // burning CPU/GPU in the background otherwise.
+      // Pause when the tab is hidden (rAF already throttles there, but this
+      // also stops the reduced-motion settle loop from resuming).
       const onVisibility = () => {
         if (!engine) return;
-        if (document.hidden) {
-          engine.stopRenderLoop();
-        } else {
-          engine.runRenderLoop(() => scene.render());
-        }
+        if (document.hidden) stopLoop();
+        else if (!reduceMotion) startLoop();
       };
       document.addEventListener("visibilitychange", onVisibility);
+      (engine as any).__stopLoop = stopLoop;
       // Stash on engine so cleanup can find it.
       (engine as any).__onVisibility = onVisibility;
       (engine as any).__onResize = onResize;
@@ -402,6 +432,7 @@ export default function GameBoardBabylonScene({ className = "", activeSin, curre
       disposed.current = true;
       sceneRef.current = null;
       if (engine) {
+        (engine as any).__stopLoop?.();
         engine.stopRenderLoop();
         const vis = (engine as any).__onVisibility;
         const res = (engine as any).__onResize;

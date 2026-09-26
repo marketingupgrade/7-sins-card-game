@@ -79,10 +79,13 @@ const DeathSequence: React.FC<DeathSequenceProps> = ({
           {lethalBlow && (
             <motion.div
               className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
-              initial={{ width: 0, height: 0, opacity: 0.8 }}
-              animate={{ width: '140vw', height: '140vw', opacity: 0 }}
+              // Fixed final size, animated with scale: growing width/height
+              // re-laid-out and re-painted a 140vw ring every frame. The
+              // border reaches its true 2px exactly as the ring fades out.
+              initial={{ scale: 0, opacity: 0.8 }}
+              animate={{ scale: 1, opacity: 0 }}
               transition={{ duration: 1.2, ease: 'easeOut' }}
-              style={{ borderColor: color }}
+              style={{ borderColor: color, width: '140vw', height: '140vw' }}
             />
           )}
 

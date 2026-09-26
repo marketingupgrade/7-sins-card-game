@@ -33,6 +33,9 @@ const EmberField = memo(function EmberField({ count = 20, className = "" }: Embe
       // Warm gold tones
       color: `oklch(${0.7 + Math.random() * 0.15} ${0.08 + Math.random() * 0.06} ${65 + Math.random() * 20})`,
       drift: `${-30 + Math.random() * 60}px`,
+      // Rolled once here, not in render — a render-time Math.random()
+      // teleported every mote whenever the field re-rendered.
+      bottom: `${Math.random() * 80}%`,
     }));
 
     const embers = Array.from({ length: emberCount }).map((_, i) => ({
@@ -46,6 +49,7 @@ const EmberField = memo(function EmberField({ count = 20, className = "" }: Embe
       // Warm ember orange-red
       color: `oklch(${0.6 + Math.random() * 0.2} ${0.12 + Math.random() * 0.08} ${30 + Math.random() * 30})`,
       drift: `${-15 + Math.random() * 30}px`,
+      bottom: "-10px",
     }));
 
     return [...dust, ...embers];
@@ -59,7 +63,7 @@ const EmberField = memo(function EmberField({ count = 20, className = "" }: Embe
           className={p.type === "dust" ? "dust-mote" : "ember"}
           style={{
             left: p.left,
-            bottom: p.type === "dust" ? `${Math.random() * 80}%` : "-10px",
+            bottom: p.bottom,
             width: p.size,
             height: p.size,
             animationDuration: p.duration,

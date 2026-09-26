@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef } from "react";
+import { useReducedMotion } from "framer-motion";
 import type { SinType } from "@shared/gameTypes";
 
 interface CardImpactVFXProps {
@@ -87,6 +88,14 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
   const sceneRef = useRef<any>(null);
   const disposed = useRef(false);
   const triggerRef = useRef(trigger);
+  // Render only while a burst is alive. This canvas is full-screen and
+  // blended with mix-blend-mode: screen, so an always-on render loop made
+  // the browser re-render and re-composite the whole viewport every frame
+  // for the entire match — even though it only has pixels for ~1s after
+  // an impact. Idle, it's hidden and costs nothing.
+  const onResizeRef = useRef<(() => void) | null>(null);
+  const startBurstLoopRef = useRef<((untilMs: number) => void) | null>(null);
+  const reducedMotion = useReducedMotion();
 
   // Initialize Babylon engine once
   useEffect(() => {
@@ -127,18 +136,38 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
       camera.orthoTop = 5;
       camera.orthoBottom = -5;
 
-      engine.runRenderLoop(() => scene.render());
-      const onResize = () => {
+      let running = false;
+      let activeUntil = 0;
+      canvas.style.visibility = "hidden";
+      startBurstLoopRef.current = (untilMs: number) => {
+        activeUntil = Math.max(activeUntil, untilMs);
+        canvas.style.visibility = "visible";
+        if (running) return;
+        running = true;
+        engine.runRenderLoop(() => {
+          scene.render();
+          // disposeOnStop removes each system once its last particle dies;
+          // the time bound is a backstop in case one never reports done.
+          if (scene.particleSystems.length === 0 || performance.now() > activeUntil + 1500) {
+            engine.stopRenderLoop();
+            running = false;
+            canvas.style.visibility = "hidden";
+          }
+        });
+      };
+      onResizeRef.current = () => {
         engine.resize();
         const a = canvas.width / canvas.height;
         camera.orthoLeft = -5 * a;
         camera.orthoRight = 5 * a;
       };
-      window.addEventListener("resize", onResize);
+      window.addEventListener("resize", onResizeRef.current);
     })();
 
     return () => {
       disposed.current = true;
+      startBurstLoopRef.current = null;
+      if (onResizeRef.current) window.removeEventListener("resize", onResizeRef.current);
       sceneRef.current = null;
       if (engine) {
         engine.stopRenderLoop();
@@ -154,7 +183,7 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
     triggerRef.current = trigger;
 
     const scene = sceneRef.current;
-    if (!scene) return;
+    if (!scene || reducedMotion) return;
 
     (async () => {
       const BABYLON = await import("@babylonjs/core");
@@ -185,8 +214,9 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
       ps.targetStopDuration = 0.15;
       ps.disposeOnStop = true;
       ps.start();
+      startBurstLoopRef.current?.(performance.now() + (0.15 + behavior.maxLife) * 1000);
     })();
-  }, [trigger, sin, intensity]);
+  }, [trigger, sin, intensity, reducedMotion]);
 
   return (
     <canvas

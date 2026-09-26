@@ -72,7 +72,6 @@ const EnergyOrb: React.FC<EnergyOrbProps> = ({
   type 
 }) => {
   const size = type === 'bonus' ? 12 : 14;
-  const glowIntensity = type === 'bonus' ? 1.3 : 1;
 
   return (
     <motion.div
@@ -109,21 +108,15 @@ const EnergyOrb: React.FC<EnergyOrbProps> = ({
       {/* Glow effect when filled */}
       {isFilled && (
         <>
-          <motion.div
-            animate={{
-              opacity: [0.4, 0.8, 0.4],
-              scale: [0.8, 1, 0.8],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="absolute inset-0 rounded-full"
+          {/* CSS keyframe, not framer: a looping `scale` in framer is
+              written to style from JS every frame for every filled orb on
+              every bar. As a CSS animation of transform/opacity it runs on
+              the compositor. */}
+          <div
+            className="absolute inset-0 rounded-full orb-breathe"
             style={{
               backgroundColor: sinColor,
               filter: 'blur(1px)',
-              opacity: 0.6 * glowIntensity,
             }}
           />
           

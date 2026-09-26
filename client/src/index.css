@@ -498,14 +498,19 @@
     position: absolute;
     inset: -50%;
     background: conic-gradient(
-      from var(--holo-angle, 0deg),
+      from 0deg,
       oklch(0.55 0.22 25 / 0.04),
       oklch(0.7 0.15 80 / 0.04),
       oklch(0.45 0.14 280 / 0.04),
       oklch(0.5 0.16 155 / 0.04),
       oklch(0.55 0.22 25 / 0.04)
     );
+    /* Rotate the oversized layer itself (compositor-only). This used to
+       animate a --holo-angle custom property inside the conic-gradient,
+       which re-painted the gradient (4× the card's area, blended) on every
+       playable card, every frame. */
     animation: holo-spin 10s linear infinite;
+    will-change: transform;
     pointer-events: none;
     mix-blend-mode: screen;
   }
@@ -834,6 +839,20 @@
     border: 1px solid oklch(0.7 0.15 80 / 0.3);
     color: oklch(0.7 0.15 80);
     text-shadow: 0 0 6px oklch(0.7 0.15 80 / 0.3);
+    position: relative;
+  }
+  /* The pulse lives on a pseudo-layer painted at its peak (brighter border
+     + glow) and only its opacity animates. Looping border-color and
+     box-shadow directly repainted every badge on every frame. */
+  .badge-compound::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    border: 1px solid oklch(0.7 0.15 80 / 0.5);
+    box-shadow: 0 0 10px oklch(0.7 0.15 80 / 0.15);
+    pointer-events: none;
+    opacity: 0;
     animation: compound-badge-pulse 3s ease-in-out infinite;
   }
 }
@@ -848,20 +867,34 @@
   initial-value: 0deg;
   inherits: false;
 }
-@property --holo-angle {
-  syntax: '<angle>';
-  initial-value: 0deg;
-  inherits: false;
-}
 
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
 
+/* Small always-on UI loops, as compositor animations instead of
+   framer's per-frame JS style writes. */
+.pulse-scale-110 { animation: pulse-scale-110 1.5s ease-in-out infinite; }
+.pulse-scale-120 { animation: pulse-scale-120 1.5s ease-in-out infinite; }
+.spin-30s { animation: spin-slow 30s linear infinite; }
+@keyframes pulse-scale-110 { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+@keyframes pulse-scale-120 { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.2); } }
+@keyframes spin-slow { to { transform: rotate(360deg); } }
+
+/* EnergyOrbs filled-orb glow */
+.orb-breathe {
+  animation: orb-breathe 2s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes orb-breathe {
+  0%, 100% { opacity: 0.4; transform: scale(0.8); }
+  50% { opacity: 0.8; transform: scale(1); }
+}
+
 @keyframes holo-spin {
-  from { --holo-angle: 0deg; }
-  to { --holo-angle: 360deg; }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 @keyframes ember-rise {
@@ -929,8 +962,8 @@
 }
 
 @keyframes compound-badge-pulse {
-  0%, 100% { border-color: oklch(0.7 0.15 80 / 0.3); box-shadow: 0 0 4px oklch(0.7 0.15 80 / 0.08); }
-  50% { border-color: oklch(0.7 0.15 80 / 0.5); box-shadow: 0 0 10px oklch(0.7 0.15 80 / 0.15); }
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
 }
 
 @keyframes float-drift {
@@ -1077,4 +1110,19 @@ textarea:focus-visible {
     transparent 100%
   );
   margin: 2rem 0;
+}
+
+/* ─── Reduced motion ─────────────────────────────────────────────────
+   Honour the OS setting for every CSS keyframe/transition (ember drift,
+   shimmer, glow-breathe, holo-spin, damage-shake…). Framer-driven motion
+   is handled by lib/reducedMotion.ts. Loops stop on their first frame's
+   end state rather than disappearing. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

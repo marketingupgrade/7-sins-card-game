@@ -77,9 +77,7 @@ const TurnPhaseTimeline = memo(function TurnPhaseTimeline(props: TurnPhaseTimeli
               {/* Phase node */}
               <div className="flex flex-col items-center flex-1">
                 <motion.div
-                  animate={isActive ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-                  transition={isActive ? { duration: 1.5, repeat: Infinity } : {}}
-                  className="relative flex items-center justify-center w-7 h-7 rounded-full border"
+                  className={`relative flex items-center justify-center w-7 h-7 rounded-full border ${isActive ? "pulse-scale-110" : ""}`}
                   style={{
                     backgroundColor: isActive
                       ? "oklch(0.25 0.1 80 / 0.6)"

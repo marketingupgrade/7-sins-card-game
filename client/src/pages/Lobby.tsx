@@ -10,6 +10,7 @@
 import { useState, useEffect, useCallback, useRef, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
+import "@/lib/reducedMotion";
 import { useLocation, useParams } from "wouter";
 import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock, Timer, Sparkles, MessageSquare } from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";

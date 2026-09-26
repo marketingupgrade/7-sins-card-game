@@ -33,31 +33,29 @@ export default function SinCorruptionBorder({ sin, intensity, hpRatio }: SinCorr
   const corruption = Math.min(1, intensity * 0.6 + (1 - hpRatio) * 0.4);
   if (corruption < 0.05) return null;
 
-  const borderGlow = `0 0 ${Math.round(corruption * 60)}px ${hex}${Math.round(corruption * 200).toString(16).padStart(2, "0")}`;
-  const innerSpread = `${Math.round(corruption * 20)}px`;
 
   return (
     <div className="fixed inset-0 pointer-events-none z-[5]">
-      {/* Main border glow */}
+      {/* Main border glow. Painted once at its peak; only opacity breathes.
+          (Looping the inset box-shadow itself re-rasterised the entire
+          viewport every frame for most of the match.) */}
       <motion.div
         className="absolute inset-0"
-        animate={{
-          boxShadow: [
-            `inset 0 0 ${Math.round(corruption * 40)}px ${hex}${Math.round(corruption * 100).toString(16).padStart(2, "0")}`,
-            `inset 0 0 ${Math.round(corruption * 60)}px ${hex}${Math.round(corruption * 150).toString(16).padStart(2, "0")}`,
-            `inset 0 0 ${Math.round(corruption * 40)}px ${hex}${Math.round(corruption * 100).toString(16).padStart(2, "0")}`,
-          ],
+        style={{
+          boxShadow: `inset 0 0 ${Math.round(corruption * 60)}px ${hex}${Math.round(corruption * 150).toString(16).padStart(2, "0")}`,
         }}
+        initial={{ opacity: 0.67 }}
+        animate={{ opacity: [0.67, 1, 0.67] }}
         transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
       />
 
       {/* Corner corruption patches */}
       {[
-        { corner: "top-0 left-0", origin: "top left" },
-        { corner: "top-0 right-0", origin: "top right" },
-        { corner: "bottom-0 left-0", origin: "bottom left" },
-        { corner: "bottom-0 right-0", origin: "bottom right" },
-      ].map(({ corner, origin }) => (
+        { corner: "top-0 left-0", origin: "top left", delay: 0 },
+        { corner: "top-0 right-0", origin: "top right", delay: 0.8 },
+        { corner: "bottom-0 left-0", origin: "bottom left", delay: 1.3 },
+        { corner: "bottom-0 right-0", origin: "bottom right", delay: 0.4 },
+      ].map(({ corner, origin, delay }) => (
         <motion.div
           key={corner}
           className={`absolute ${corner}`}
@@ -67,7 +65,9 @@ export default function SinCorruptionBorder({ sin, intensity, hpRatio }: SinCorr
             background: `radial-gradient(circle at ${origin}, ${hex}${Math.round(corruption * 60).toString(16).padStart(2, "0")} 0%, transparent 70%)`,
           }}
           animate={{ opacity: [0.4, 0.8, 0.4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: Math.random() * 1.5 }}
+          // Fixed stagger. This used Math.random() in render, so every game
+          // state refresh handed framer a new delay and the pulses restarted.
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay }}
         />
       ))}
 
@@ -96,10 +96,14 @@ export default function SinCorruptionBorder({ sin, intensity, hpRatio }: SinCorr
               strokeOpacity="0.6"
               filter="url(#crack-glow)"
             />
-            {/* Bottom-right crack */}
-            <polyline
-              points={`100%,${`${100 - Math.round(corruption * 20)}%`} ${`${100 - Math.round(corruption * 15)}%`},${`${100 - Math.round(corruption * 35)}%`}`}
-              fill="none"
+            {/* Bottom-right crack. <polyline> points are unitless — the old
+                "100%,…" coordinates were invalid, so this never rendered.
+                <line> accepts percentages. */}
+            <line
+              x1="100%"
+              y1={`${100 - Math.round(corruption * 20)}%`}
+              x2={`${100 - Math.round(corruption * 15)}%`}
+              y2={`${100 - Math.round(corruption * 35)}%`}
               stroke={hex}
               strokeWidth="1.5"
               strokeOpacity="0.5"

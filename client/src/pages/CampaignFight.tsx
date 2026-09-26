@@ -22,6 +22,7 @@
  */
 
 import { AnimatePresence, motion } from "framer-motion";
+import "@/lib/reducedMotion";
 import { ChevronRight, FastForward, Loader2, Swords } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useRoute } from "wouter";

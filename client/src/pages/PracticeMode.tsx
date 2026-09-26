@@ -15,6 +15,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import "@/lib/reducedMotion";
 import { useLocation } from "wouter";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { GraduationCap, ArrowRight, Swords, Shield, Zap, Heart, Target, Sparkles, ChevronRight, RotateCcw } from "lucide-react";

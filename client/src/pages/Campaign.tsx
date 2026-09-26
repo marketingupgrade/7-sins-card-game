@@ -13,6 +13,7 @@
  */
 
 import { motion } from "framer-motion";
+import "@/lib/reducedMotion";
 import { ChevronRight, Lock, Sparkles, Swords } from "lucide-react";
 import { useMemo } from "react";
 import { useLocation } from "wouter";

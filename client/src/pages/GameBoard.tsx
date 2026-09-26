@@ -32,6 +32,8 @@ import { playCard, passTurn, lockInCards, getGameLog, consumeCard } from "@/lib/
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
+import "@/lib/reducedMotion";
+import GlowPulse from "@/components/GlowPulse";
 import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense } from "react";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
@@ -1387,10 +1389,8 @@ export default function GameBoard() {
             {/* Compact ritual circle */}
             <div className="flex items-center gap-4">
               <div className="w-16 h-16 rounded-full border-2 border-candle/30 flex items-center justify-center relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 20px oklch(0.75 0.12 70 / 0.1)' }}>
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-                  className="absolute inset-0 rounded-full border border-candle/10"
+                <div
+                  className="absolute inset-0 rounded-full border border-candle/10 spin-30s"
                   style={{ borderStyle: 'dashed' }}
                 />
                 <p className="text-xl font-black text-candle" style={{ fontFamily: "var(--font-heading)", textShadow: '0 0 10px oklch(0.75 0.12 70 / 0.4)' }}>
@@ -1639,15 +1639,17 @@ export default function GameBoard() {
                   </span>
                   {/* Progress bar */}
                   <div className="absolute bottom-0 left-0 right-0 h-0.5 rounded-b-lg overflow-hidden">
+                    {/* scaleX, not width: this re-animates every second for
+                        the whole countdown, and width forces layout each frame. */}
                     <motion.div
-                      className="h-full"
+                      className="h-full w-full origin-left"
                       style={{
                         background: turnTimerSeconds <= 3
                           ? "oklch(0.70 0.25 30)"
                           : "oklch(0.70 0.15 85)",
                       }}
-                      initial={{ width: "100%" }}
-                       animate={{ width: `${(turnTimerSeconds / configuredTimer) * 100}%` }}
+                      initial={{ scaleX: 1 }}
+                      animate={{ scaleX: turnTimerSeconds / configuredTimer }}
                       transition={{ duration: 1, ease: "linear" }}
                     />
                   </div>
@@ -1720,15 +1722,7 @@ export default function GameBoard() {
                   data-tutorial="lock-in-btn"
                   whileHover={{ scale: 1.08, boxShadow: "0 0 24px oklch(0.75 0.15 85 / 0.4)" }}
                   whileTap={{ scale: 0.95 }}
-                  animate={{
-                    boxShadow: selectedCards.length > 0 ? [
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
-                      "0 0 20px oklch(0.75 0.15 85 / 0.4)",
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2)",
-                    ] : "none",
-                  }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="px-6 md:px-10 py-3 md:py-3 rounded-lg text-base md:text-lg font-black uppercase tracking-wider disabled:opacity-50"
+                  className="relative px-6 md:px-10 py-3 md:py-3 rounded-lg text-base md:text-lg font-black uppercase tracking-wider disabled:opacity-50"
                   style={{
                     fontFamily: "var(--font-heading)",
                     background: selectedCards.length > 0
@@ -1741,26 +1735,16 @@ export default function GameBoard() {
                   onClick={handleLockIn}
                   disabled={isLockingIn || selectedCards.length === 0}
                 >
+                  {selectedCards.length > 0 && !isLockingIn && (
+                    <GlowPulse shadow="0 0 20px oklch(0.75 0.15 85 / 0.4)" min={0.4} />
+                  )}
                   {isLockingIn ? "SEALING..." : `SEAL FATE${selectedCards.length > 0 ? ` (${selectedCards.length})` : ""}`}
                 </motion.button>
                 <motion.button
                   data-tutorial="pass-btn"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  animate={!canAffordAnyCard && selectedCards.length === 0 ? {
-                    boxShadow: [
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2), inset 0 0 0 oklch(0.75 0.15 85 / 0)",
-                      "0 0 21px oklch(0.75 0.15 85 / 0.5), inset 0 0 8px oklch(0.75 0.15 85 / 0.1)",
-                      "0 0 8px oklch(0.75 0.15 85 / 0.2), inset 0 0 0 oklch(0.75 0.15 85 / 0)",
-                    ],
-                    borderColor: [
-                      "oklch(0.75 0.15 85 / 0.3)",
-                      "oklch(0.75 0.15 85 / 0.7)",
-                      "oklch(0.75 0.15 85 / 0.3)",
-                    ],
-                  } : {}}
-                  transition={!canAffordAnyCard && selectedCards.length === 0 ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
-                  className={`px-5 md:px-8 py-3 md:py-3 rounded-lg border-2 text-base md:text-lg font-bold uppercase tracking-wide transition-all ${
+                  className={`relative px-5 md:px-8 py-3 md:py-3 rounded-lg border-2 text-base md:text-lg font-bold uppercase tracking-wide transition-all ${
                     !canAffordAnyCard && selectedCards.length === 0
                       ? "border-candle/50 text-candle"
                       : "border-border/40 text-muted-foreground hover:border-border/60 hover:text-foreground"
@@ -1769,7 +1753,14 @@ export default function GameBoard() {
                   onClick={handlePassLockIn}
                   disabled={isLockingIn}
                 >
-                  {isLockingIn ? "..." : !canAffordAnyCard && selectedCards.length === 0 ? "ABSTAIN" : "ABSTAIN"}
+                  {!canAffordAnyCard && selectedCards.length === 0 && !isLockingIn && (
+                    // Nothing affordable: Abstain is the only move, so it breathes.
+                    <GlowPulse
+                      shadow="0 0 21px oklch(0.75 0.15 85 / 0.5), inset 0 0 8px oklch(0.75 0.15 85 / 0.1), inset 0 0 0 2px oklch(0.75 0.15 85 / 0.45)"
+                      min={0.3}
+                    />
+                  )}
+                  {isLockingIn ? "..." : "ABSTAIN"}
                 </motion.button>
                 {/* Brandbook narrator hint when corruption runs dry */}
                 {!canAffordAnyCard && selectedCards.length === 0 && (

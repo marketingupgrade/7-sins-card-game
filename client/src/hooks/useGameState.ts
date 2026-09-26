@@ -24,13 +24,21 @@ export function useGameState(gameId: string | null) {
   const channelRef = useRef<any>(null);
   const roundEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastPhaseRef = useRef<string | null>(null);
+  const lastStateJsonRef = useRef<string>("");
 
   // Fetch game state
   const fetchState = useCallback(async () => {
     if (!gameId) return;
     try {
       const state = await getGameState(gameId);
-      setGameState(state);
+      // Polling (and realtime bursts) mostly return an identical state.
+      // A fresh object every time re-rendered the entire board — and
+      // restarted anything keyed off it — for nothing.
+      const json = JSON.stringify(state);
+      if (json !== lastStateJsonRef.current) {
+        lastStateJsonRef.current = json;
+        setGameState(state);
+      }
       setError(null);
     } catch (err: any) {
       console.error("[GameState]", err);

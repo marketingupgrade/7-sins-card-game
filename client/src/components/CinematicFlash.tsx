@@ -42,10 +42,12 @@ export default function CinematicFlash({ trigger, color = "#ffffff", intensity =
           {/* Impact ripple */}
           <motion.div
             className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-4"
-            initial={{ width: 0, height: 0, opacity: 1 }}
-            animate={{ width: "200vw", height: "200vw", opacity: 0 }}
+            // scale, not width/height — see DeathSequence: same ring, no
+            // per-frame layout of a 200vw box during the impact.
+            initial={{ scale: 0, opacity: 1 }}
+            animate={{ scale: 1, opacity: 0 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            style={{ borderColor: color }}
+            style={{ borderColor: color, width: "200vw", height: "200vw" }}
           />
         </motion.div>
       )}

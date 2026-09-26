@@ -8,6 +8,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import GlowPulse from "./GlowPulse";
 import { motion, AnimatePresence } from "framer-motion";
 import type { SinType } from "@shared/gameTypes";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
@@ -244,17 +245,10 @@ function Pile({ sin, count, label, isDiscard = false, pileRef, pulse }: PileProp
         {count > 0 ? (
           <motion.div
             className="absolute top-0 left-0"
-            animate={pulse ? {
-              boxShadow: [
-                `0 0 0px ${hex}00`,
-                `0 0 16px ${hex}88`,
-                `0 0 0px ${hex}00`,
-              ],
-            } : {}}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             style={{ borderRadius: 8 }}
           >
             <CardBack sin={sin} size="sm" />
+            {pulse && <GlowPulse shadow={`0 0 16px ${hex}88`} min={0} radius={8} />}
           </motion.div>
         ) : (
           // Empty pile placeholder
