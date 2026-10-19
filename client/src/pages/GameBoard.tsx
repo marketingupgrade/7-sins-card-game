@@ -9,15 +9,13 @@
  * - Floor runes (via BabylonScene props)
  * - Arena decay (via BabylonScene currentRound prop)
  * - SinCorruptionBorder (growing glowing border cracks)
- * - CinematicFlash (screen flash + ripple for big damage)
- * - ComboChainBanner (chain counter for consecutive same-sin plays)
- * - EpicCardReveal (cinematic spotlight for high-cost cards)
+ * - Impact layer (particle burst, bloom + flash on epics), driven by
+ *   ResolutionReveal's per-card impact beat
  * - VictoryCinematic (5-step win cinematic)
  * - Dynamic music tempo (speeds up as rounds progress)
  * - HP reactions (avatar portraits shake/desaturate on damage)
  */
 
-import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import GameCard from "@/components/GameCard";
 import CompoundBalanceSheet from "@/components/CompoundBalanceSheet";
@@ -28,7 +26,7 @@ import { getBossCardQuip } from "@shared/bossCards";
 import CampaignRoundOneOverlay from "@/components/CampaignRoundOneOverlay";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useBotController } from "@/hooks/useBotController";
-import { playCard, passTurn, lockInCards, getGameLog, consumeCard } from "@/lib/gameEngine";
+import { lockInCards, getGameLog, consumeCard } from "@/lib/gameEngine";
 import { isBot } from "@/lib/botEngine";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { motion, AnimatePresence } from "framer-motion";
@@ -38,9 +36,17 @@ import { useCallback, useEffect, useMemo, useState, useRef, memo, lazy, Suspense
 import { useTutorial } from "@/contexts/TutorialContext";
 import { useLocation, useParams } from "wouter";
 import { CARD_MAP } from "@shared/cardData";
-import { PlayerState, SinType, getCompoundTickValue, MAX_ENERGY, MAX_ROUNDS, LockedPlay, TurnPhase, PASSIVE_INFO, CONSUME_ENERGY_REFUND, SERVER_TURN_TIMER_SECONDS } from "@shared/gameTypes";
+import {
+  PlayerState,
+  SinType,
+  getCompoundTickValue,
+  MAX_ENERGY,
+  MAX_ROUNDS,
+  LockedPlay,
+  PASSIVE_INFO,
+  SERVER_TURN_TIMER_SECONDS,
+} from "@shared/gameTypes";
 import { trpc } from "@/lib/trpc";
-import { ICON_URLS } from "@/lib/assetUrls";
 import EmberField from "@/components/EmberField";
 const GameBoardBabylonScene = lazy(() => import("@/components/GameBoardBabylonScene"));
 const GameOverScreen = lazy(() => import("@/components/GameOverScreen").then(m => ({ default: m.GameOverScreen })));
@@ -50,7 +56,6 @@ import { musicEngine } from "@/lib/musicEngine";
 import { MusicToggle } from "@/components/MusicToggle";
 import FloatingNumbers from "@/components/FloatingNumbers";
 import YourTurnBanner from "@/components/YourTurnBanner";
-import ScreenShake from "@/components/ScreenShake";
 import EnergyOrbs from "@/components/EnergyOrbs";
 import HpCriticalOverlay from "@/components/HpCriticalOverlay";
 import GameCoach, { markGamePlayed } from "@/components/GameCoach";
@@ -63,16 +68,10 @@ const DeathSequence = lazy(() => import("@/components/DeathSequence"));
 import SinCursor from "@/components/SinCursor";
 import GameLoadingScreen from "@/components/GameLoadingScreen";
 import CathedralTransition from "@/components/CathedralTransition";
-const CardPlayArc = lazy(() => import("@/components/CardPlayArc"));
-const SinShaderOverlay = lazy(() => import("@/components/WebGLSinShaders"));
-import WebSpeechNarrator from "@/components/WebSpeechNarrator";
 import DynamicMusic from "@/components/DynamicMusic";
-const CorruptionCascade = lazy(() => import("@/components/CorruptionCascade"));
 import PlayerAfflictionTable from "@/components/PlayerAfflictionTable";
 import DeckPile from "@/components/DeckPile";
 const CinematicFlash = lazy(() => import("@/components/CinematicFlash"));
-const ComboChainBanner = lazy(() => import("@/components/ComboChainBanner"));
-const EpicCardReveal = lazy(() => import("@/components/EpicCardReveal"));
 const ResolutionReveal = lazy(() => import("@/components/ResolutionReveal"));
 import TargetingTracer from "@/components/TargetingTracer";
 import SinCorruptionBorder from "@/components/SinCorruptionBorder";
@@ -115,13 +114,10 @@ export default function GameBoard() {
   const playerId = usePlayerId();
   const [, setLocation] = useLocation();
   const { gameState, isLoading, refetch } = useGameState(gameId || null);
-  const { displayedText, addMessage, addRandomLine } = useNarrator();
-  const [selectedCard, setSelectedCard] = useState<string | null>(null);
+  const { addMessage, addRandomLine } = useNarrator();
   const [selectedTarget, setSelectedTarget] = useState<string | null>(null);
   const [showLog, setShowLog] = useState(false);
   const [logEntries, setLogEntries] = useState<any[]>([]);
-  const [isPlayingCard, setIsPlayingCard] = useState(false);
-  const [isPassing, setIsPassing] = useState(false);
   const [selectedCards, setSelectedCards] = useState<Array<{ cardId: string; targetPlayerId?: string }>>([]);
   const [isLockingIn, setIsLockingIn] = useState(false);
   const [hasLockedIn, setHasLockedIn] = useState(false);
@@ -139,8 +135,6 @@ export default function GameBoard() {
   // Tier 1 Multimedia State
   const [floatingNumbers, setFloatingNumbers] = useState<Array<{id: string, value: number, type: 'damage'|'heal'|'shield', x: number, y: number}>>([]);
   const [showYourTurn, setShowYourTurn] = useState(false);
-  const [shakeTrigger, setShakeTrigger] = useState(0);
-  const [shakeIntensity, setShakeIntensity] = useState<'light'|'heavy'>('light');
   const [showRoundWipe, setShowRoundWipe] = useState(false);
   const [wipeRound, setWipeRound] = useState(1);
   const prevIsMyTurn = useRef(false);
@@ -151,31 +145,16 @@ export default function GameBoard() {
   const [deathSin, setDeathSin] = useState<SinType>('wrath');
   const [deathLethalBlow, setDeathLethalBlow] = useState(false);
   const [deathKillerCard, setDeathKillerCard] = useState<string | undefined>(undefined);
-  const lastPlayedCardRef = useRef<string | null>(null);
-  const [cardArcShow, setCardArcShow] = useState(false);
-  const [cardArcName, setCardArcName] = useState('');
-  const [cardArcColor, setCardArcColor] = useState('');
-  const [cardArcEndPos, setCardArcEndPos] = useState({ x: 0, y: 0 });
   const prevAliveCounts = useRef<number>(4);
   const [soundVolume] = useState(0.3);
-  const [narratorText, setNarratorText] = useState<string | null>(null);
-  const [narratorEnabled, setNarratorEnabled] = useState(true);
-  const [dynamicMusicEnabled, setDynamicMusicEnabled] = useState(true);
 
   // Epic visual features state
   const [cinematicFlashTrigger, setCinematicFlashTrigger] = useState(0);
   const [cinematicFlashColor, setCinematicFlashColor] = useState('#ffffff');
-  const [comboChain, setComboChain] = useState(0);
-  const [comboSin, setComboSin] = useState<SinType>('wrath');
-  const lastCardSinRef = useRef<SinType | null>(null);
-  const comboTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [epicRevealShow, setEpicRevealShow] = useState(false);
-  const [epicRevealCard, setEpicRevealCard] = useState('');
-  const [epicRevealSin, setEpicRevealSin] = useState<SinType>('wrath');
-  const [epicRevealEnergy, setEpicRevealEnergy] = useState(4);
+  // Fed by ResolutionReveal's impact beat (handleImpact below): drives the
+  // arena's floor runes. Previously only the removed play-one-card path set
+  // these, so since simultaneous lock-in the runes never appeared.
   const [cardPlayCount, setCardPlayCount] = useState(0);
-  const [cardsThisTurn, setCardsThisTurn] = useState(0);
-  const [corruptionCascadeTrigger, setCorruptionCascadeTrigger] = useState(0);
   const [lastPlayedSin, setLastPlayedSin] = useState<SinType>('wrath');
   const [victoryCinematicShow, setVictoryCinematicShow] = useState(false);
   const [showGameOver, setShowGameOver] = useState(false);
@@ -195,7 +174,6 @@ export default function GameBoard() {
   const turnTimerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const autoLockTriggeredRef = useRef(false);
   const handleLockInRef = useRef<() => void>(() => {});
-  const handlePassLockInRef = useRef<() => void>(() => {});
 
   // Server-side timer enforcement: poll server to auto-pass idle players
   const checkTimerMutation = trpc.game.checkTimer.useMutation();
@@ -210,11 +188,12 @@ export default function GameBoard() {
 
   // Resolution Reveal: Cache lockedPlays so animation persists after server clears them
   const [cachedLockedPlays, setCachedLockedPlays] = useState<LockedPlay[]>([]);
+  const cachedLockedPlaysRef = useRef<LockedPlay[]>([]);
+  cachedLockedPlaysRef.current = cachedLockedPlays;
   const [cachedResolutionPlayers, setCachedResolutionPlayers] = useState<PlayerState[]>([]);
   const [preResolutionPlayers, setPreResolutionPlayers] = useState<PlayerState[]>([]);
   const [isShowingResolution, setIsShowingResolution] = useState(false);
   const resolutionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const prevRoundRef = useRef<number>(0);
 
   // End-of-round prompt state
   const [showRoundEndPrompt, setShowRoundEndPrompt] = useState(false);
@@ -245,6 +224,24 @@ export default function GameBoard() {
 
   // Resolution complete callback — called by ResolutionReveal when animation finishes
   // Now shows the round-end prompt instead of immediately clearing
+  // One card's impact beat in the resolution reveal. Layers the board-wide
+  // effects on top of ResolutionReveal's own shake/particles/sound.
+  const handleImpact = useCallback((play: LockedPlay, casterSin: SinType) => {
+    const card = CARD_MAP[play.cardId];
+    if (!card) return;
+    setImpactVfxSin(casterSin);
+    setImpactVfxIntensity(card.cost >= 5 ? "heavy" : card.cost <= 1 ? "light" : "medium");
+    setImpactVfxTrigger(t => t + 1);
+    setLastPlayedSin(casterSin);
+    setCardPlayCount(c => c + 1);
+    if (card.tier === "epic") {
+      setBloomSin(casterSin);
+      setBloomTrigger(t => t + 1);
+      setCinematicFlashColor(getSinHexColor(casterSin));
+      setCinematicFlashTrigger(t => t + 1);
+    }
+  }, []);
+
   const handleResolutionComplete = useCallback(() => {
     setShowRoundEndPrompt(true);
     // Auto-dismiss after 6 seconds if user doesn't interact
@@ -262,6 +259,22 @@ export default function GameBoard() {
   // Track which boss-twist plays we've already announced this game so the
   // narrator only fires the dramatic quip the first time the card resolves.
   const announcedBossPlaysRef = useRef<Set<string>>(new Set());
+
+  // One reveal per set of sealed plays. Five paths can start a reveal (my
+  // seal, a bot's seal, the timer, a pass, and this phase watcher), and the
+  // game row often sits in round_end with the same locked_plays after the
+  // player dismisses the prompt — which re-cached them and replayed the
+  // round they had just watched. Keeps the last few keys only.
+  const revealedPlaysRef = useRef<string[]>([]);
+  const claimReveal = useCallback((plays: LockedPlay[]) => {
+    const key = plays
+      .map(p => `${p.playerId}:${p.cardId ?? "pass"}:${p.targetPlayerId ?? ""}`)
+      .sort()
+      .join("|");
+    if (revealedPlaysRef.current.includes(key)) return false;
+    revealedPlaysRef.current = [...revealedPlaysRef.current.slice(-4), key];
+    return true;
+  }, []);
 
   useEffect(() => {
     if (!gameState) return;
@@ -281,8 +294,12 @@ export default function GameBoard() {
       }
     }
 
-    // When locked plays appear (during resolution or round_end phase), cache them
-    if (lp && lp.length > 0 && !isShowingResolution) {
+    // Cache and reveal sealed plays only once the round is actually
+    // resolving. locked_plays is written the moment each player seals, so
+    // without the phase check the reveal fired during selection and showed
+    // whoever sealed second the opponent's cards and targets first.
+    const resolving = gameState.turnPhase === "resolution" || gameState.turnPhase === "round_end";
+    if (resolving && lp && lp.length > 0 && !isShowingResolution && claimReveal(lp)) {
       setCachedLockedPlays([...lp]);
       setCachedResolutionPlayers([...gameState.players]);
       setPreResolutionPlayers([...gameState.players]);
@@ -304,7 +321,7 @@ export default function GameBoard() {
       }, maxDuration);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState?.lockedPlays, gameState?.currentRound, gameState?.players, isShowingResolution]);
+  }, [gameState?.lockedPlays, gameState?.turnPhase, gameState?.currentRound, gameState?.players, isShowingResolution]);
 
   useEffect(() => {
     musicEngine.init();
@@ -318,6 +335,9 @@ export default function GameBoard() {
     if (!gameState) return;
     if (gameState.status === 'finished' && prevGameStatus.current === 'active') {
       setVictoryCinematicShow(true);
+      // Closes GameCoach's "first game" window. This was imported but never
+      // called, so unseen coaching tips kept appearing in every later game.
+      markGamePlayed();
     }
     prevGameStatus.current = gameState.status;
   }, [gameState?.status]);
@@ -364,7 +384,7 @@ export default function GameBoard() {
     },
     onResolutionTriggered: (plays, players) => {
       // A bot's lock-in triggered resolution — start the animation
-      if (plays.length > 0 && players.length > 0 && !isShowingResolution) {
+      if (plays.length > 0 && players.length > 0 && !isShowingResolution && claimReveal(plays)) {
         setCachedLockedPlays(plays);
         setCachedResolutionPlayers(players);
         setPreResolutionPlayers([...players]);
@@ -508,7 +528,7 @@ export default function GameBoard() {
         const result = await checkTimerMutation.mutateAsync({ gameId });
         if (result.enforced) {
           // Server auto-passed idle players and triggered resolution
-          if (result.resolvedPlays && result.resolutionPlayers) {
+          if (result.resolvedPlays && result.resolutionPlayers && claimReveal(result.resolvedPlays)) {
             setCachedLockedPlays(result.resolvedPlays);
             setCachedResolutionPlayers(result.resolutionPlayers);
             setPreResolutionPlayers([...result.resolutionPlayers]);
@@ -595,7 +615,6 @@ export default function GameBoard() {
   useEffect(() => {
     if (isMyTurn && !prevIsMyTurn.current) {
       setShowYourTurn(true);
-      setCardsThisTurn(0); // Reset cards-per-turn counter on new turn
     }
     prevIsMyTurn.current = isMyTurn;
   }, [isMyTurn]);
@@ -612,7 +631,13 @@ export default function GameBoard() {
         // Lethal blow: overkill by 10+ HP or killed by a big card
         const overkill = Math.abs(deadPlayer.currentHp);
         setDeathLethalBlow(overkill >= 10);
-        setDeathKillerCard(lastPlayedCardRef.current || undefined);
+        // Name the last sealed sin aimed at them this round. (This read a
+        // ref only the removed play-one-card path ever set, so the death
+        // screen's "slain by" callout never appeared.)
+        const killer = [...cachedLockedPlaysRef.current]
+          .reverse()
+          .find(p => p.cardId && p.targetPlayerId === deadPlayer.id);
+        setDeathKillerCard(killer ? CARD_MAP[killer.cardId]?.name : undefined);
         setDeathShow(true);
       }
     }
@@ -758,8 +783,6 @@ export default function GameBoard() {
       }
       return [...prev, { cardId }];
     });
-    // Also set selectedCard for target selection UI
-    setSelectedCard(cardId);
   }, [myPlayer?.currentEnergy, gameState?.players, playerId]);
 
   const handleLockIn = useCallback(async () => {
@@ -773,13 +796,12 @@ export default function GameBoard() {
       setHasLockedIn(true);
       addMessage(result.narratorQuip, "action");
       addToActionFeed(`${myPlayer?.username} sealed ${selectedCards.length} sin${selectedCards.length !== 1 ? "s" : ""}`);
-      setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
 
       // If resolution was triggered, start animation from returned data
       // (the DB is already resolved by now, so we can't rely on polling)
-      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
+      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers && claimReveal(result.resolvedPlays)) {
         setCachedLockedPlays(result.resolvedPlays);
         setCachedResolutionPlayers(result.resolutionPlayers);
         setPreResolutionPlayers([...result.resolutionPlayers]);
@@ -821,12 +843,11 @@ export default function GameBoard() {
       setHasLockedIn(true);
       addMessage("Choosing to do nothing? Bold strategy.", "action");
       addToActionFeed(`${myPlayer?.username} abstains this rite.`);
-      setSelectedCard(null);
       setSelectedTarget(null);
       setSelectedCards([]);
 
       // If resolution was triggered (all others already locked in), start animation
-      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers) {
+      if (result.resolvedPlays && result.resolvedPlays.length > 0 && result.resolutionPlayers && claimReveal(result.resolvedPlays)) {
         setCachedLockedPlays(result.resolvedPlays);
         setCachedResolutionPlayers(result.resolutionPlayers);
         setPreResolutionPlayers([...result.resolutionPlayers]);
@@ -861,149 +882,6 @@ export default function GameBoard() {
     handleLockInRef.current = selectedCards.length > 0 ? handleLockIn : handlePassLockIn;
   }, [selectedCards.length, handleLockIn, handlePassLockIn]);
 
-  const handlePlayCard = useCallback(async (overrideTarget?: string) => {
-    if (!gameId || !selectedCard) return;
-    const card = CARD_MAP[selectedCard];
-    if (!card) return;
-    const target = overrideTarget || selectedTarget;
-    const needsTarget = card.effects.some((e) => e.targetMode === "single" || e.targetMode === "duo");
-    if (needsTarget && !target) {
-      addMessage("Pick a target, sinner. The card won't throw itself.", "info");
-      return;
-    }
-    setIsPlayingCard(true);
-    try {
-      const soundTypes = card.effects.map(e => e.type);
-      if (soundTypes.includes("damage")) {
-        const sin = card.sin;
-        if (sin === "wrath") soundEngine.play("damage_fire");
-        else if (sin === "sloth") soundEngine.play("damage_ice");
-        else if (sin === "envy") soundEngine.play("damage_electric");
-        else soundEngine.play("damage_generic");
-      } else if (soundTypes.includes("heal_gain") || soundTypes.includes("heal_steal")) {
-        soundEngine.play("heal");
-      } else if (soundTypes.includes("shield_gain") || soundTypes.includes("shield_steal")) {
-        soundEngine.play("shield");
-      } else if (soundTypes.includes("energy_steal") || soundTypes.includes("energy_block")) {
-        soundEngine.play("energy_drain");
-      } else if (soundTypes.includes("affliction_amplify") || soundTypes.includes("affliction_transfer")) {
-        soundEngine.play("steal");
-      } else {
-        soundEngine.play("card_play");
-      }
-
-      // Feature: Epic card reveal for high-energy cards (4+)
-      const energyCost = card.cost || 0;
-      if (energyCost >= 4) {
-        setEpicRevealCard(card.name);
-        setEpicRevealSin(card.sin as SinType);
-        setEpicRevealEnergy(energyCost);
-        setEpicRevealShow(true);
-      }
-
-      const result = await playCard(gameId, playerId, selectedCard, target || undefined);
-      addMessage(result.narratorQuip, "action");
-
-      // Phase 2: Impact VFX — particle burst on every card play
-      const cardSin = card.sin as SinType;
-      setImpactVfxSin(cardSin);
-      setImpactVfxIntensity(energyCost >= 4 ? 'heavy' : energyCost >= 2 ? 'medium' : 'light');
-      setImpactVfxTrigger(prev => prev + 1);
-      // Bloom on epic cards
-      if (energyCost >= 4) {
-        setBloomSin(cardSin);
-        setBloomTrigger(prev => prev + 1);
-      }
-
-      // Feature: Combo chain tracking
-      setLastPlayedSin(cardSin);
-      setCardPlayCount(prev => prev + 1);
-      lastPlayedCardRef.current = card.name;
-      setCardsThisTurn(prev => {
-        const next = prev + 1;
-        if (next >= 3) setCorruptionCascadeTrigger(prev => prev + 1);
-        return next;
-      });
-      if (lastCardSinRef.current === cardSin) {
-        setComboChain(prev => {
-          const next = prev + 1;
-          setComboSin(cardSin);
-          return next;
-        });
-      } else {
-        setComboChain(1);
-        setComboSin(cardSin);
-      }
-      lastCardSinRef.current = cardSin;
-      if (comboTimerRef.current) clearTimeout(comboTimerRef.current);
-      comboTimerRef.current = setTimeout(() => {
-        setComboChain(0);
-        lastCardSinRef.current = null;
-      }, 4000);
-
-      // Floating numbers + screen shake + cinematic flash
-
-      for (const eff of card.effects) {
-        const val = eff.baseValue || 0;
-        if (val > 0) {
-          const numType: 'damage'|'heal'|'shield'|null = (eff.type === 'damage' || eff.type === 'self_damage') ? 'damage' : (eff.type === 'heal_gain' || eff.type === 'heal_steal') ? 'heal' : (eff.type === 'shield_gain' || eff.type === 'shield_steal') ? 'shield' : null;
-          if (numType) {
-            const xBase = 50 + (Math.random() - 0.5) * 30;
-            const yBase = eff.targetMode === 'self' ? 70 : 30;
-            setFloatingNumbers(prev => [...prev, { id: `${Date.now()}-${eff.type}`, value: val, type: numType, x: xBase, y: yBase }]);
-          }
-          if (eff.type === 'damage') {
-            if (val >= 8) {
-              setShakeIntensity(val >= 15 ? 'heavy' : 'light');
-              setShakeTrigger(prev => prev + 1);
-            }
-            // Feature: Cinematic flash for big damage (20+)
-            if (val >= 20) {
-              setCinematicFlashColor(getSinHexColor(card.sin));
-              setCinematicFlashTrigger(prev => prev + 1);
-            }
-          }
-        }
-      }
-      
-      // Trigger card play arc animation toward target
-      setCardArcName(card.name);
-      setCardArcColor(getSinHexColor(card.sin));
-      // Calculate target position from the target player's panel element
-      const actualTarget = target || undefined;
-      if (actualTarget) {
-        const targetEl = document.querySelector(`[data-player-id="${actualTarget}"]`);
-        if (targetEl) {
-          const rect = targetEl.getBoundingClientRect();
-          setCardArcEndPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
-        } else {
-          setCardArcEndPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-        }
-      } else {
-        // Self-target: arc to center arena
-        setCardArcEndPos({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-      }
-      setCardArcShow(true);
-
-      const targetName = target 
-        ? gameState?.players.find(p => p.id === target)?.username || "target"
-        : "";
-      const actionText = targetName 
-        ? `${myPlayer?.username} played ${card.name} → ${targetName}`
-        : `${myPlayer?.username} played ${card.name}`;
-      addToActionFeed(actionText);
-      
-      setSelectedCard(null);
-      setSelectedTarget(null);
-      refetch();
-    } catch (err: any) {
-      console.error("[PlayCard]", err);
-      addMessage("Even hell has its bureaucracy. Try again.", "info");
-    } finally {
-      setIsPlayingCard(false);
-    }
-  }, [gameId, selectedCard, selectedTarget, playerId, addMessage, refetch, myPlayer, gameState, addToActionFeed]);
-
   const handleSelectTarget = useCallback((targetId: string) => {
     // In simultaneous mode, clicking a target assigns it to the first card that still needs a target
     if (selectedCards.length === 0) return;
@@ -1030,26 +908,6 @@ export default function GameBoard() {
     const targetEl = document.querySelector(`[data-player-id="${targetId}"]`) as HTMLElement | null;
     tracerTargetRef.current = targetEl;
   }, [selectedCards]);
-
-  const handlePass = async () => {
-    if (!gameId) return;
-    setIsPassing(true);
-    soundEngine.play("turn_pass");
-    try {
-      await passTurn(gameId, playerId);
-      addRandomLine("pass", { player: myPlayer?.username || "Someone" });
-      addToActionFeed(`${myPlayer?.username} passed`);
-      setSelectedCard(null);
-      refetch();
-    } catch (err: any) {
-      console.error("[Pass]", err);
-      addMessage("Could not pass. Try again.", "info");
-    } finally {
-      setIsPassing(false);
-    }
-  };
-
-
 
   const getPlayerEffects = (player: PlayerState) =>
     gameState?.activeEffects.filter((e) => e.targetPlayerId === player.gamePlayerId) || [];
@@ -1094,7 +952,7 @@ export default function GameBoard() {
   const mySin = (myPlayer?.chosenSin || 'wrath') as SinType;
 
   return (
-    <ScreenShake trigger={shakeTrigger} intensity={shakeIntensity}>
+    <>
     <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
       {/* Campaign Round-1 boss reveal — fires once per gameId */}
       <CampaignRoundOneOverlay
@@ -1148,22 +1006,6 @@ export default function GameBoard() {
           trigger={cinematicFlashTrigger}
           color={cinematicFlashColor}
           intensity="epic"
-        />
-      </Suspense>
-
-      {/* Feature: Combo Chain Banner */}
-      <Suspense fallback={null}>
-        <ComboChainBanner combo={comboChain} sin={comboSin} />
-      </Suspense>
-
-      {/* Feature: Epic Card Reveal for high-cost cards */}
-      <Suspense fallback={null}>
-        <EpicCardReveal
-          show={epicRevealShow}
-          cardName={epicRevealCard}
-          sin={epicRevealSin}
-          energyCost={epicRevealEnergy}
-          onComplete={() => setEpicRevealShow(false)}
         />
       </Suspense>
 
@@ -1361,8 +1203,11 @@ export default function GameBoard() {
 
           {/* CENTER — Battle Hub: Ritual Circle + Action Feed + Resolution Reveal */}
           <div className="col-start-2 row-start-2 flex flex-col items-center justify-center relative gap-3">
-            {/* Resolution card reveal overlay */}
+            {/* Resolution card reveal overlay. Fixed under the header, not
+                inside this grid cell: in a duel the cell is ~130px tall and
+                the reveal (overflow-hidden) showed as a thin strip. */}
             {isShowingResolution && cachedLockedPlays.length > 0 && (
+              <div className="fixed inset-x-0 top-28 bottom-0 z-40 pointer-events-none">
               <Suspense fallback={null}>
                 <ResolutionReveal
                   lockedPlays={cachedLockedPlays}
@@ -1370,8 +1215,10 @@ export default function GameBoard() {
                   currentRound={gameState.currentRound}
                   isResolving={isShowingResolution}
                   onComplete={handleResolutionComplete}
+                  onImpact={handleImpact}
                 />
               </Suspense>
+              </div>
             )}
             {/* End-of-round prompt: View Battle Log or Continue */}
             <Suspense fallback={null}>
@@ -1537,6 +1384,7 @@ export default function GameBoard() {
                     currentRound={gameState.currentRound}
                     isResolving={isShowingResolution}
                     onComplete={handleResolutionComplete}
+                    onImpact={handleImpact}
                   />
                 </Suspense>
               </div>
@@ -2041,14 +1889,6 @@ export default function GameBoard() {
       />
     </Suspense>
 
-    {/* Tier 2: Corruption Cascade — CD3 reward for 3+ cards in one turn */}
-    <Suspense fallback={null}>
-      <CorruptionCascade
-        trigger={corruptionCascadeTrigger}
-        sin={(myPlayer?.chosenSin || 'wrath') as SinType}
-      />
-    </Suspense>
-
     {/* Phase 2: GPU Particle Impact VFX */}
     <Suspense fallback={null}>
       <CardImpactVFX
@@ -2074,28 +1914,10 @@ export default function GameBoard() {
       />
     </Suspense>
 
-    {/* Tier 3: Card Play Arc */}
-    <Suspense fallback={null}>
-      <CardPlayArc
-        show={cardArcShow}
-        cardName={cardArcName}
-        sinColor={cardArcColor}
-        startPosition={{ x: window.innerWidth / 2, y: window.innerHeight - 160 }}
-        endPosition={cardArcEndPos}
-        onComplete={() => setCardArcShow(false)}
-      />
-    </Suspense>
-
-    {/* Tier 3: Web Speech Narrator */}
-    <WebSpeechNarrator
-      text={narratorText}
-      enabled={narratorEnabled}
-    />
-
     {/* Tier 3: Dynamic Music Intensity */}
     <DynamicMusic
       round={gameState.currentRound}
-      enabled={dynamicMusicEnabled}
+      enabled
       volume={0.12}
     />
 
@@ -2118,7 +1940,7 @@ export default function GameBoard() {
       />
     </Suspense>
     </div>
-    </ScreenShake>
+    </>
   );
 }
 

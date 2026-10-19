@@ -10,7 +10,6 @@
  * Defensive card values scaled ×1.75.
  */
 
-import { nanoid } from "nanoid";
 import { getCardById, getDeckForSin } from "../shared/cardData";
 import {
   ActiveEffect,
@@ -38,7 +37,6 @@ import {
   GREED_TAX_PCT,
   GREED_TAX_TICK,
   ENVY_JEALOUSY_PCT,
-  PRIDE_HUBRIS_MULT,
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
   CONSUME_ENERGY_REFUND,

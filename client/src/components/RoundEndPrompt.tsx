@@ -1,7 +1,6 @@
 import { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { LockedPlay, PlayerState, SinType } from "@shared/gameTypes";
-import { CARD_MAP } from "@shared/cardData";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 
 interface RoundSummaryPlayer {

@@ -15,12 +15,10 @@
 
 import { useState, useMemo, memo, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { SinType, PASSIVE_INFO } from "@shared/gameTypes";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import EmberField from "@/components/EmberField";
-import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
 import { usePageMeta } from "@/hooks/usePageMeta";
 

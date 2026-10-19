@@ -19,14 +19,13 @@
  * UX: Follows Saffer's microinteraction model (Trigger → Rules → Feedback → Loops)
  * Behavioral: Octalysis CD5 (Social Influence) + CD2 (Accomplishment via likes/win rates)
  */
-import { useState, useMemo, useCallback, useEffect, useRef, memo } from "react";
+import { useState, useCallback, useEffect, useRef, memo } from "react";
 import { createPortal } from "react-dom";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
-import { ALL_CARDS, getCardById } from "@shared/cardData";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
-import { SinType, PASSIVE_INFO } from "@shared/gameTypes";
+import { SinType } from "@shared/gameTypes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { encodeDeck } from "@/lib/deckCodes";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -392,7 +391,6 @@ function PublishModal({
   onClose: () => void;
 }) {
   const [deckName, setDeckName] = useState("");
-  const [faction, setFaction] = useState<SinType>("wrath");
   const [strategy, setStrategy] = useState("");
   const [savedDecks, setSavedDecks] = useState<any[]>([]);
   const [selectedDeckIdx, setSelectedDeckIdx] = useState(-1);
@@ -419,7 +417,6 @@ function PublishModal({
     setSelectedDeckIdx(idx);
     if (idx >= 0 && savedDecks[idx]) {
       setDeckName(savedDecks[idx].name || "");
-      setFaction(savedDecks[idx].faction as SinType);
     }
   };
 

@@ -40,13 +40,6 @@ function escapeHtml(str: string): string {
 }
 
 /**
- * Strip HTML tags to get plain text for meta descriptions
- */
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
-}
-
-/**
  * Build a full HTML page with meta tags and content for crawlers.
  */
 function buildHtmlPage(opts: {

@@ -107,8 +107,23 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
     let scene: any;
 
     (async () => {
-      const BABYLON = await import("@babylonjs/core");
+      // Subpath imports — the "@babylonjs/core" barrel pulls the whole
+      // engine into the bundle, and this component loads on every match.
+      const [
+        { Engine },
+        { Scene },
+        { FreeCamera },
+        { Camera },
+        { Color4, Vector3 },
+      ] = await Promise.all([
+        import("@babylonjs/core/Engines/engine"),
+        import("@babylonjs/core/scene"),
+        import("@babylonjs/core/Cameras/freeCamera"),
+        import("@babylonjs/core/Cameras/camera"),
+        import("@babylonjs/core/Maths/math"),
+      ]);
       if (disposed.current) return;
+      const BABYLON = { Engine, Scene, FreeCamera, Camera, Color4, Vector3 };
 
       engine = new BABYLON.Engine(canvas, true, {
         preserveDrawingBuffer: false,
@@ -186,7 +201,11 @@ export default function CardImpactVFX({ trigger, sin, intensity = "medium" }: Ca
     if (!scene || reducedMotion) return;
 
     (async () => {
-      const BABYLON = await import("@babylonjs/core");
+      const [{ ParticleSystem }, { Color4, Vector3 }] = await Promise.all([
+        import("@babylonjs/core/Particles/particleSystem"),
+        import("@babylonjs/core/Maths/math"),
+      ]);
+      const BABYLON = { ParticleSystem, Color4, Vector3 };
       const colors = SIN_COLORS[sin] || SIN_COLORS.wrath;
       const behavior = SIN_BEHAVIOR[sin] || SIN_BEHAVIOR.wrath;
       const mult = intensity === "heavy" ? 1.5 : intensity === "light" ? 0.6 : 1;

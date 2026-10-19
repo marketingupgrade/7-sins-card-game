@@ -7275,7 +7275,6 @@ function getCompoundTickValue(baseValue, pattern, tickIndex) {
 }
 var MAX_ENERGY = 7;
 var ENERGY_PER_TURN = 1;
-var CONSUME_ENERGY_REFUND = 1;
 var WRATH_VENGEANCE_PCT = 0.62;
 var SLOTH_ENDURANCE_MULT = 0.288;
 var SLOTH_ENDURANCE_CAP = 23;
@@ -7285,13 +7284,9 @@ var GREED_TAX_TICK = 2;
 var ENVY_JEALOUSY_PCT = 0.476;
 var LUST_TEMPTATION_PCT = 0.01;
 var GLUTTONY_DEVOURER_ENERGY = 1.698;
-var STARTING_ENERGY = 2;
-var SERVER_TURN_TIMER_SECONDS = 12;
 var MAX_ROUNDS = 20;
 var STARTING_HP = 333;
-var HAND_SIZE = 5;
 var MAX_HAND_SIZE = 10;
-var CARDS_PER_DECK = 30;
 var ROUND_16_DOUBLING = 16;
 var FINAL_RECKONING_ROUND = 20;
 
@@ -7315,14 +7310,6 @@ function getServerSupabase() {
 }
 
 // server/gameEngine.ts
-function generateRoomCode() {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let code = "";
-  for (let i = 0; i < 6; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)];
-  }
-  return code;
-}
 function shuffleDeck(cardIds) {
   const deck = [...cardIds];
   for (let i = deck.length - 1; i > 0; i--) {
@@ -7330,198 +7317,6 @@ function shuffleDeck(cardIds) {
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return deck;
-}
-async function ensurePlayer(playerId, username) {
-  const sb = getServerSupabase();
-  const { data: existing } = await sb.from("players").select("id").eq("id", playerId).single();
-  if (!existing) {
-    await sb.from("players").insert({ id: playerId, username });
-  }
-}
-async function createGame(playerId, username) {
-  const sb = getServerSupabase();
-  const roomCode = generateRoomCode();
-  const { data: game, error: gameError } = await sb.from("games").insert({ room_code: roomCode, status: "lobby" }).select("id").single();
-  if (gameError || !game) throw new Error(`Failed to create game: ${gameError?.message}`);
-  await ensurePlayer(playerId, username);
-  const { error: joinError } = await sb.from("game_players").insert({
-    game_id: game.id,
-    player_id: playerId,
-    seat_index: 0
-  });
-  if (joinError) throw new Error(`Failed to join game: ${joinError.message}`);
-  await sb.from("game_log").insert({
-    game_id: game.id,
-    action_type: "game_created",
-    action_data: { creator: username },
-    round_number: 0
-  });
-  return { gameId: game.id, roomCode };
-}
-async function joinGame(roomCode, playerId, username) {
-  const sb = getServerSupabase();
-  const { data: game, error: gameError } = await sb.from("games").select("id, status").eq("room_code", roomCode.toUpperCase()).single();
-  if (gameError || !game) throw new Error("Game not found");
-  if (game.status !== "lobby") throw new Error("Game already started");
-  const { data: players } = await sb.from("game_players").select("seat_index, player_id").eq("game_id", game.id).order("seat_index");
-  if (!players) throw new Error("Failed to fetch players");
-  if (players.length >= 4) throw new Error("Game is full");
-  const existing = players.find((p) => p.player_id === playerId);
-  if (existing) return { gameId: game.id, seatIndex: existing.seat_index };
-  const takenSeats = new Set(players.map((p) => p.seat_index));
-  let seatIndex = 0;
-  while (takenSeats.has(seatIndex)) seatIndex++;
-  await ensurePlayer(playerId, username);
-  const { error: joinError } = await sb.from("game_players").insert({
-    game_id: game.id,
-    player_id: playerId,
-    seat_index: seatIndex
-  });
-  if (joinError) throw new Error(`Failed to join: ${joinError.message}`);
-  return { gameId: game.id, seatIndex };
-}
-async function chooseSin(gameId, playerId, sin) {
-  const sb = getServerSupabase();
-  const { error } = await sb.from("game_players").update({ chosen_sin: sin }).eq("game_id", gameId).eq("player_id", playerId);
-  if (error) throw new Error(`Failed to choose sin: ${error.message}`);
-}
-async function startGame(gameId) {
-  const sb = getServerSupabase();
-  const { data: players } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  if (!players || players.length < 2) throw new Error("Need at least 2 players");
-  const allReady = players.every((p) => p.chosen_sin);
-  if (!allReady) throw new Error("All players must choose a sin");
-  for (const player of players) {
-    const fullDeck = getDeckForSin(player.chosen_sin);
-    const customDeckIds = player.custom_deck_ids;
-    const deckCards = customDeckIds && Array.isArray(customDeckIds) && customDeckIds.length > 0 ? customDeckIds : shuffleDeck(fullDeck).slice(0, CARDS_PER_DECK);
-    const shuffled = shuffleDeck(deckCards);
-    const hand = shuffled.slice(0, HAND_SIZE);
-    const remainingDeck = shuffled.slice(HAND_SIZE);
-    await sb.from("game_players").update({
-      hand,
-      deck: remainingDeck,
-      discard_pile: [],
-      current_hp: STARTING_HP,
-      max_hp: STARTING_HP,
-      is_alive: true,
-      current_energy: STARTING_ENERGY,
-      max_energy: MAX_ENERGY,
-      bonus_energy: 0
-    }).eq("id", player.id);
-  }
-  await sb.from("games").update({
-    status: "active",
-    current_round: 1,
-    current_player_index: 0,
-    turn_phase: "selection",
-    locked_plays: [],
-    started_at: (/* @__PURE__ */ new Date()).toISOString()
-  }).eq("id", gameId);
-  for (const player of players) {
-    await sb.from("game_players").update({ locked_cards: [] }).eq("id", player.id);
-  }
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    action_type: "game_started",
-    action_data: { playerCount: players.length },
-    round_number: 1
-  });
-}
-async function lockInCards(gameId, playerId, selections) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
-  if (!game || game.status !== "active") throw new Error("Game not active");
-  if (game.turn_phase !== "selection") throw new Error("Not in selection phase");
-  const { data: player } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
-  if (!player) throw new Error("Player not in game");
-  if (!player.is_alive) throw new Error("Player is eliminated");
-  const hand = player.hand || [];
-  let energyBudget = player.current_energy ?? 0;
-  const lockedPlays = [];
-  for (const sel of selections) {
-    if (!hand.includes(sel.cardId)) throw new Error(`Card ${sel.cardId} not in hand`);
-    const card = getCardById(sel.cardId);
-    if (!card) throw new Error(`Invalid card ${sel.cardId}`);
-    if (card.cost > energyBudget) throw new Error(`Not enough energy for ${card.name}`);
-    energyBudget -= card.cost;
-    lockedPlays.push({
-      playerId: player.player_id,
-      gamePlayerId: player.id,
-      cardId: sel.cardId,
-      targetPlayerId: sel.targetPlayerId,
-      skipQueue: card.skipQueue || false
-    });
-  }
-  const storedLocked = lockedPlays.length > 0 ? lockedPlays : [{ pass: true }];
-  await sb.from("game_players").update({ locked_cards: storedLocked }).eq("id", player.id);
-  const existingLocked = (Array.isArray(game.locked_plays) ? game.locked_plays : []).filter(
-    (lp) => lp.playerId !== playerId
-  );
-  const allLocked = [...existingLocked, ...lockedPlays];
-  const gameUpdate = { locked_plays: allLocked };
-  if (!game.selection_deadline) {
-    const timerSeconds = game.turn_timer_seconds ?? SERVER_TURN_TIMER_SECONDS;
-    const deadline = new Date(Date.now() + timerSeconds * 1e3).toISOString();
-    gameUpdate.selection_deadline = deadline;
-  }
-  await sb.from("games").update(gameUpdate).eq("id", gameId);
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    player_id: player.id,
-    action_type: "lock_in",
-    action_data: { cardCount: selections.length, energyRemaining: energyBudget },
-    round_number: game.current_round
-  });
-  const { data: allPlayers } = await sb.from("game_players").select("*").eq("game_id", gameId).order("seat_index");
-  const alivePlayers = (allPlayers || []).filter((p) => p.is_alive);
-  const allConfirmed = alivePlayers.every((p) => {
-    if (p.player_id === playerId) return true;
-    const pLocked = Array.isArray(p.locked_cards) ? p.locked_cards : [];
-    return pLocked.length > 0;
-  });
-  if (allConfirmed) {
-    const { data: guardCheck } = await sb.from("games").update({ turn_phase: "resolution", selection_deadline: null }).eq("id", gameId).eq("turn_phase", "selection").select("id").maybeSingle();
-    if (guardCheck) {
-      const { data: preResGame } = await sb.from("games").select("locked_plays").eq("id", gameId).single();
-      const preResLocked = Array.isArray(preResGame?.locked_plays) ? preResGame.locked_plays : allLocked;
-      const { data: preResPlayers } = await sb.from("game_players").select("*, players(username)").eq("game_id", gameId).order("seat_index");
-      const resolutionPlayers = (preResPlayers || []).map((gp) => {
-        const playerLocked = preResLocked.filter((lp) => lp.playerId === gp.player_id);
-        return {
-          id: gp.player_id,
-          gamePlayerId: gp.id,
-          username: gp.players?.username || "Unknown",
-          seatIndex: gp.seat_index,
-          chosenSin: gp.chosen_sin,
-          currentHp: gp.current_hp,
-          maxHp: gp.max_hp,
-          isAlive: gp.is_alive,
-          hand: gp.hand || [],
-          deckSize: (gp.deck || []).length,
-          discardSize: (gp.discard_pile || []).length,
-          currentEnergy: gp.current_energy ?? 0,
-          maxEnergy: gp.max_energy ?? 0,
-          bonusEnergy: gp.bonus_energy ?? 0,
-          lockedCards: playerLocked,
-          hasLockedIn: playerLocked.length > 0,
-          consumedThisRound: gp.consumed_this_round ?? false
-        };
-      });
-      await resolveLockedPlays(gameId);
-      const quip2 = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
-      return {
-        success: true,
-        narratorQuip: quip2,
-        resolvedPlays: preResLocked,
-        resolutionPlayers
-      };
-    } else {
-      console.log("[lockInCards] Resolution already in progress, skipping");
-    }
-  }
-  const quip = selections.length === 0 ? "Choosing to do nothing? Bold strategy." : selections.length === 1 ? "One card locked. Let fate decide." : `${selections.length} cards locked. The arena trembles.`;
-  return { success: true, narratorQuip: quip };
 }
 async function resolveLockedPlays(gameId) {
   const sb = getServerSupabase();
@@ -7616,13 +7411,6 @@ async function resolveLockedPlays(gameId) {
   }
   await advanceRound(gameId);
 }
-async function playCard(gameId, playerId, cardId, targetPlayerId) {
-  const result = await lockInCards(gameId, playerId, [{ cardId, targetPlayerId }]);
-  return { narratorQuip: result.narratorQuip, effects: [] };
-}
-async function passTurn(gameId, playerId) {
-  await lockInCards(gameId, playerId, []);
-}
 async function getGameState(gameId) {
   const sb = getServerSupabase();
   const { data: game } = await sb.from("games").select("*").eq("id", gameId).single();
@@ -7688,40 +7476,6 @@ async function getGameLog(gameId) {
   const sb = getServerSupabase();
   const { data } = await sb.from("game_log").select("*").eq("game_id", gameId).order("timestamp", { ascending: true });
   return data || [];
-}
-async function consumeCard(gameId, playerId, cardId) {
-  const sb = getServerSupabase();
-  const { data: game } = await sb.from("games").select("current_round").eq("id", gameId).single();
-  const { data: gp, error } = await sb.from("game_players").select("*").eq("game_id", gameId).eq("player_id", playerId).single();
-  if (error || !gp) return { success: false, message: "The void cannot find you." };
-  if (!gp.is_alive) return { success: false, message: "The dead cannot sacrifice." };
-  if (gp.consumed_this_round) return { success: false, message: "The void has had its fill this round." };
-  const hand = gp.hand || [];
-  if (!hand.includes(cardId)) return { success: false, message: "That card has already slipped away." };
-  const newHand = hand.filter((id) => id !== cardId);
-  const newEnergy = Math.min((gp.current_energy || 0) + CONSUME_ENERGY_REFUND, MAX_ENERGY);
-  await sb.from("game_players").update({
-    hand: newHand,
-    current_energy: newEnergy,
-    consumed_this_round: true
-  }).eq("game_id", gameId).eq("player_id", playerId);
-  const card = getCardById(cardId);
-  await sb.from("game_log").insert({
-    game_id: gameId,
-    round_number: game?.current_round || 1,
-    player_id: playerId,
-    action_type: "consume",
-    action_data: {
-      cardId,
-      cardName: card?.name || cardId,
-      energyRefund: CONSUME_ENERGY_REFUND,
-      newEnergy
-    }
-  });
-  return {
-    success: true,
-    message: `Banished ${card?.name || "a card"} to the void. +${CONSUME_ENERGY_REFUND} energy.`
-  };
 }
 function resolveTargets(effect, source, allPlayers, targetPlayerId) {
   const alive = allPlayers.filter((p) => p.is_alive);
@@ -8925,55 +8679,12 @@ async function assembleAndSaveChronicle(gameId) {
 
 // server/routers/game.ts
 var gameRouter = router({
-  create: publicProcedure.input(
-    z7.object({
-      username: z7.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")),
-      playerId: z7.string().min(1).max(64)
-    })
-  ).mutation(async ({ input }) => createGame(input.playerId, input.username)),
-  join: publicProcedure.input(
-    z7.object({
-      roomCode: z7.string().min(4).max(8).regex(/^[A-Z0-9]+$/i),
-      username: z7.string().min(1).max(20).transform((s) => s.replace(/[<>"'&]/g, "")),
-      playerId: z7.string().min(1).max(64)
-    })
-  ).mutation(async ({ input }) => joinGame(input.roomCode, input.playerId, input.username)),
-  /** Choose your sin — must be one of the seven SinType values */
-  chooseSin: publicProcedure.input(
-    z7.object({
-      gameId: z7.string().uuid(),
-      sin: z7.enum(["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"]),
-      playerId: z7.string().min(1).max(64)
-    })
-  ).mutation(async ({ input }) => {
-    await chooseSin(input.gameId, input.playerId, input.sin);
-    return { success: true };
-  }),
-  start: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => {
-    await startGame(input.gameId);
-    return { success: true };
-  }),
-  playCard: publicProcedure.input(
-    z7.object({
-      gameId: z7.string().uuid(),
-      cardId: z7.string().max(64),
-      playerId: z7.string().min(1).max(64),
-      targetPlayerId: z7.string().max(64).optional()
-    })
-  ).mutation(
-    async ({ input }) => playCard(input.gameId, input.playerId, input.cardId, input.targetPlayerId)
-  ),
-  pass: publicProcedure.input(z7.object({ gameId: z7.string().uuid(), playerId: z7.string().min(1).max(64) })).mutation(async ({ input }) => {
-    await passTurn(input.gameId, input.playerId);
-    return { success: true };
-  }),
-  consume: publicProcedure.input(
-    z7.object({
-      gameId: z7.string().uuid(),
-      playerId: z7.string().min(1).max(64),
-      cardId: z7.string().max(64)
-    })
-  ).mutation(async ({ input }) => consumeCard(input.gameId, input.playerId, input.cardId)),
+  // Match lifecycle mutations (create/join/chooseSin/start/playCard/pass/
+  // consume) used to live here, wired to the legacy server engine with the
+  // service-role key. The client never called them — it runs
+  // client/src/lib/gameEngine.ts against Supabase directly — but they were
+  // public and unauthenticated, so anyone could play cards as any playerId
+  // in any game, bypassing RLS, via a stale copy of the rules. Removed.
   getState: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => getGameState(input.gameId)),
   getLog: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).query(async ({ input }) => getGameLog(input.gameId)),
   checkTimer: publicProcedure.input(z7.object({ gameId: z7.string().uuid() })).mutation(async ({ input }) => enforceSelectionDeadline(input.gameId)),

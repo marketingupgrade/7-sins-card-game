@@ -7,7 +7,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLocation, Link } from "wouter";
+import { Link } from "wouter";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import EmberField from "@/components/EmberField";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -20,7 +20,6 @@ export default function ResetPassword() {
     noindex: true,
   });
 
-  const [, navigate] = useLocation();
   const { user, updatePassword, isLoading: authLoading } = useSupabaseAuth();
 
   const [password, setPassword] = useState("");

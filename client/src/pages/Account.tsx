@@ -20,7 +20,7 @@ import { getClientSupabase } from "../../../shared/supabaseClient";
 import { ALL_CARDS } from "@shared/cardData";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { trpc } from "@/lib/trpc";
-import type { SinType, CardDefinition } from "@shared/gameTypes";
+import type { SinType } from "@shared/gameTypes";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────

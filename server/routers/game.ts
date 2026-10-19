@@ -6,7 +6,6 @@
  * on a live gameId.
  */
 import { z } from "zod";
-import { SinType } from "../../shared/gameTypes";
 import {
   analyzePlayerBehaviors,
   buildMatchContext,
@@ -26,99 +25,16 @@ import {
   saveChronicle,
   saveChronicleSegment,
 } from "../chronicleEngine";
-import {
-  chooseSin,
-  consumeCard,
-  createGame,
-  enforceSelectionDeadline,
-  getGameLog,
-  getGameState,
-  joinGame,
-  passTurn,
-  playCard,
-  startGame,
-} from "../gameEngine";
+import { enforceSelectionDeadline, getGameLog, getGameState } from "../gameEngine";
 import { publicProcedure, router } from "../_core/trpc";
 
 export const gameRouter = router({
-  create: publicProcedure
-    .input(
-      z.object({
-        username: z
-          .string()
-          .min(1)
-          .max(20)
-          .transform((s) => s.replace(/[<>"'&]/g, "")),
-        playerId: z.string().min(1).max(64),
-      })
-    )
-    .mutation(async ({ input }) => createGame(input.playerId, input.username)),
-
-  join: publicProcedure
-    .input(
-      z.object({
-        roomCode: z.string().min(4).max(8).regex(/^[A-Z0-9]+$/i),
-        username: z
-          .string()
-          .min(1)
-          .max(20)
-          .transform((s) => s.replace(/[<>"'&]/g, "")),
-        playerId: z.string().min(1).max(64),
-      })
-    )
-    .mutation(async ({ input }) => joinGame(input.roomCode, input.playerId, input.username)),
-
-  /** Choose your sin — must be one of the seven SinType values */
-  chooseSin: publicProcedure
-    .input(
-      z.object({
-        gameId: z.string().uuid(),
-        sin: z.enum(["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"]),
-        playerId: z.string().min(1).max(64),
-      })
-    )
-    .mutation(async ({ input }) => {
-      await chooseSin(input.gameId, input.playerId, input.sin as SinType);
-      return { success: true };
-    }),
-
-  start: publicProcedure
-    .input(z.object({ gameId: z.string().uuid() }))
-    .mutation(async ({ input }) => {
-      await startGame(input.gameId);
-      return { success: true };
-    }),
-
-  playCard: publicProcedure
-    .input(
-      z.object({
-        gameId: z.string().uuid(),
-        cardId: z.string().max(64),
-        playerId: z.string().min(1).max(64),
-        targetPlayerId: z.string().max(64).optional(),
-      })
-    )
-    .mutation(async ({ input }) =>
-      playCard(input.gameId, input.playerId, input.cardId, input.targetPlayerId)
-    ),
-
-  pass: publicProcedure
-    .input(z.object({ gameId: z.string().uuid(), playerId: z.string().min(1).max(64) }))
-    .mutation(async ({ input }) => {
-      await passTurn(input.gameId, input.playerId);
-      return { success: true };
-    }),
-
-  consume: publicProcedure
-    .input(
-      z.object({
-        gameId: z.string().uuid(),
-        playerId: z.string().min(1).max(64),
-        cardId: z.string().max(64),
-      })
-    )
-    .mutation(async ({ input }) => consumeCard(input.gameId, input.playerId, input.cardId)),
-
+  // Match lifecycle mutations (create/join/chooseSin/start/playCard/pass/
+  // consume) used to live here, wired to the legacy server engine with the
+  // service-role key. The client never called them — it runs
+  // client/src/lib/gameEngine.ts against Supabase directly — but they were
+  // public and unauthenticated, so anyone could play cards as any playerId
+  // in any game, bypassing RLS, via a stale copy of the rules. Removed.
   getState: publicProcedure
     .input(z.object({ gameId: z.string().uuid() }))
     .query(async ({ input }) => getGameState(input.gameId)),

@@ -10,14 +10,12 @@
  */
 
 import { getClientSupabase } from "../../../shared/supabaseClient";
-import { getCardById, getDeckForSin } from "../../../shared/cardData";
+import { getCardById } from "../../../shared/cardData";
 import {
   SinType,
-  HAND_SIZE,
   STARTING_HP,
   MAX_ENERGY,
   type CardDefinition,
-  type CardEffect,
   type LockedPlay,
   type PlayerState,
 } from "../../../shared/gameTypes";
@@ -44,16 +42,6 @@ const BOT_NAMES = [
 
 function getRandomBotName(): string {
   return BOT_NAMES[Math.floor(Math.random() * BOT_NAMES.length)];
-}
-
-// ─── Shuffle Helper ─────────────────────────────────────────
-function shuffleDeck(cardIds: string[]): string[] {
-  const deck = [...cardIds];
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
 }
 
 // ─── Bot ID Generation ──────────────────────────────────────

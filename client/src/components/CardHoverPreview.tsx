@@ -11,7 +11,6 @@ import type { CardDefinition, CompoundPattern } from "@shared/gameTypes";
 import { getCompoundTickValue } from "@shared/gameTypes";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
-import { getSinCssVar } from "@/lib/sinColors";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
 
 interface CardHoverPreviewProps {
@@ -73,7 +72,6 @@ export const CardHoverPreview = memo(function CardHoverPreview({
   if (!card) return null;
 
   const sinColor = SIN_COLORS[card.sin] || "#ef4444";
-  const sinCssVar = getSinCssVar(card.sin);
   const targetMode = getCardTargetMode(card);
   const sinIcon = SIN_ARCHETYPE_ICONS[card.sin as keyof typeof SIN_ARCHETYPE_ICONS];
   const pattern = card.compoundPattern || "standard";

@@ -95,43 +95,6 @@ function ImpactParticles({ color, count = 12 }: { color: string; count?: number 
   );
 }
 
-/* ─── Floating Damage Number ───────────────────────────────── */
-function FloatingNumber({ value, color, icon, delay = 0 }: { value: string; color: string; icon: string; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 0, scale: 0.5 }}
-      animate={{ opacity: [0, 1, 1, 0], y: -50, scale: [0.5, 1.2, 1, 0.8] }}
-      transition={{ duration: 1.2, delay, ease: "easeOut" }}
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none z-50"
-    >
-      <span className="text-lg">{icon}</span>
-      <span
-        className="text-xl font-black tabular-nums"
-        style={{
-          color,
-          fontFamily: "var(--font-heading)",
-          textShadow: `0 0 10px ${color}, 0 2px 4px rgba(0,0,0,0.8)`,
-        }}
-      >
-        {value}
-      </span>
-    </motion.div>
-  );
-}
-
-/* ─── Projectile Trail ─────────────────────────────────────── */
-function ProjectileTrail({ gradient, delay = 0 }: { gradient: string; delay?: number }) {
-  return (
-    <motion.div
-      initial={{ scaleX: 0, opacity: 0 }}
-      animate={{ scaleX: [0, 1, 1, 0], opacity: [0, 1, 0.8, 0] }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="absolute left-0 right-0 top-1/2 h-1 -translate-y-1/2 origin-left rounded-full"
-      style={{ background: gradient, filter: "blur(1px)" }}
-    />
-  );
-}
-
 /* ─── HP Tracker Mini-Bar ──────────────────────────────────── */
 function HpTrackerBar({ player, preHp }: { player: PlayerState; preHp: number }) {
   const maxHp = player.maxHp || 333;
@@ -194,6 +157,9 @@ interface ResolutionRevealProps {
   currentRound: number;
   isResolving: boolean;
   onComplete?: () => void;
+  /** Fired at each card's impact beat, so the board can layer its own
+   *  full-screen effects (particle burst, bloom) in sync with the reveal. */
+  onImpact?: (play: LockedPlay, casterSin: SinType) => void;
 }
 
 export default function ResolutionReveal({
@@ -202,6 +168,7 @@ export default function ResolutionReveal({
   currentRound,
   isResolving,
   onComplete,
+  onImpact,
 }: ResolutionRevealProps) {
   const [currentIndex, setCurrentIndex] = useState(-1);
   const [phase, setPhase] = useState<AnimPhase>("idle");
@@ -245,14 +212,30 @@ export default function ResolutionReveal({
     return id;
   }, []);
 
+  // The sequence reads the latest props through refs, so a parent re-render
+  // with new array identities (polling, realtime, the bot's lock-in landing)
+  // can't change animateCard's identity and cancel the in-flight timers.
+  // Previously that cancelled the 500ms kickoff, hasStartedRef blocked a
+  // restart, and the reveal sat at "0/N" for the whole round.
+  const sortedPlaysRef = useRef(sortedPlays);
+  sortedPlaysRef.current = sortedPlays;
+  const playersRef = useRef(players);
+  playersRef.current = players;
+  const onImpactRef = useRef(onImpact);
+  onImpactRef.current = onImpact;
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
+
   // Animate a single card play
   const animateCard = useCallback((idx: number) => {
+    const sortedPlays = sortedPlaysRef.current;
+    const players = playersRef.current;
     if (idx >= sortedPlays.length) {
       // All cards resolved — finish
       setPhase("idle");
       setCurrentIndex(-1);
       completedRef.current = true;
-      addTimer(() => onComplete?.(), 600);
+      addTimer(() => onCompleteRef.current?.(), 600);
       return;
     }
 
@@ -285,6 +268,7 @@ export default function ResolutionReveal({
         else if (hasShield) soundEngine.playSinShield(casterSin);
         else soundEngine.playSinDamage(casterSin);
       } catch {}
+      if (play) onImpactRef.current?.(play, casterSin as SinType);
       addTimer(() => setScreenShake(false), 300);
       addTimer(() => setShowImpactParticles(false), 800);
     }, 1300);
@@ -297,50 +281,37 @@ export default function ResolutionReveal({
       setPhase("exit");
       addTimer(() => animateCard(idx + 1), 400);
     }, 2600);
-  }, [sortedPlays, addTimer, onComplete]);
+  }, [addTimer]);
 
   // Start animation sequence
+  const hasPlays = sortedPlays.length > 0;
   useEffect(() => {
-    if (!isResolving || sortedPlays.length === 0) {
-      if (!isResolving) {
-        setCurrentIndex(-1);
-        setPhase("idle");
-        hasStartedRef.current = false;
-        completedRef.current = false;
-        clearTimers();
-      }
+    if (!isResolving) {
+      setCurrentIndex(-1);
+      setPhase("idle");
+      hasStartedRef.current = false;
+      completedRef.current = false;
+      clearTimers();
       return;
     }
-
-    if (hasStartedRef.current) return;
+    if (!hasPlays || hasStartedRef.current) return;
     hasStartedRef.current = true;
     completedRef.current = false;
 
     // Small delay before starting
     addTimer(() => animateCard(0), 500);
+  }, [isResolving, hasPlays, animateCard, clearTimers, addTimer]);
 
-    return () => clearTimers();
-  }, [isResolving, sortedPlays, animateCard, clearTimers, addTimer]);
+  // Timers only die with the component (or via the resets above/below).
+  useEffect(() => () => clearTimers(), [clearTimers]);
 
-  // Reset on round change
-  useEffect(() => {
-    hasStartedRef.current = false;
-    completedRef.current = false;
-    setCurrentIndex(-1);
-    setPhase("idle");
-    clearTimers();
-  }, [currentRound, clearTimers]);
-
-  if (!isResolving || sortedPlays.length === 0) return null;
+  // (No reset on currentRound: the engine advances the round as soon as its
+  // DB writes finish — usually mid-animation — and resetting here killed the
+  // reveal partway through. The isResolving false→true cycle above already
+  // resets between rounds.)
 
   const currentPlay = currentIndex >= 0 && currentIndex < sortedPlays.length ? sortedPlays[currentIndex] : null;
   const currentCard = currentPlay ? CARD_MAP[currentPlay.cardId] : null;
-  const caster = currentPlay ? players.find((p) => p.id === currentPlay.playerId) : null;
-  const target = currentPlay?.targetPlayerId ? players.find((p) => p.id === currentPlay.targetPlayerId) : null;
-  const sin = (caster?.chosenSin || "wrath") as string;
-  const theme = FACTION_THEMES[sin] || FACTION_THEMES.wrath;
-  const isAoE = currentCard?.effects.some((e) => e.targetMode === "aoe");
-  const isSelf = currentCard?.effects.every((e) => e.targetMode === "self");
 
   // Compute effect summary for damage numbers
   const effectSummary = useMemo(() => {
@@ -352,6 +323,18 @@ export default function ResolutionReveal({
       return { ...vis, value: `${prefix}${value}`, type: eff.type };
     });
   }, [currentCard]);
+
+  // After every hook: returning before useMemo changed the hook count
+  // between renders, which React rejects.
+  if (!isResolving || sortedPlays.length === 0) return null;
+  const caster = currentPlay ? players.find((p) => p.id === currentPlay.playerId) : null;
+  const target = currentPlay?.targetPlayerId ? players.find((p) => p.id === currentPlay.targetPlayerId) : null;
+  const sin = (caster?.chosenSin || "wrath") as string;
+  const theme = FACTION_THEMES[sin] || FACTION_THEMES.wrath;
+  const isAoE = currentCard?.effects.some((e) => e.targetMode === "aoe");
+  const isSelf = currentCard?.effects.every((e) => e.targetMode === "self");
+
+
 
   return (
     <motion.div

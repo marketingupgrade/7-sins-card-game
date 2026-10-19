@@ -27,7 +27,7 @@ import {
   type Era,
 } from "../shared/chronicleTypes";
 import { getCardById } from "../shared/cardData";
-import { analyzePlayerBehaviors, detectRivalries, type PlayerBehavior } from "./aiNarrator";
+import { analyzePlayerBehaviors, detectRivalries } from "./aiNarrator";
 
 // ---- LLM Setup (Google Gemini Flash) ----
 // Uses GOOGLE_GENERATIVE_AI_API_KEY env var automatically

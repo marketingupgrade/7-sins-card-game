@@ -13,12 +13,22 @@
  * a PracticeOverlay component with teaching annotations.
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/lib/reducedMotion";
 import { useLocation } from "wouter";
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { GraduationCap, ArrowRight, Swords, Shield, Zap, Heart, Target, Sparkles, ChevronRight, RotateCcw } from "lucide-react";
+import {
+  GraduationCap,
+  ArrowRight,
+  Swords,
+  Shield,
+  Zap,
+  Heart,
+  Target,
+  Sparkles,
+  ChevronRight,
+} from "lucide-react";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import { PASSIVE_INFO } from "@shared/gameTypes";

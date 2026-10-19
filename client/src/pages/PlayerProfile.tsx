@@ -26,14 +26,9 @@ import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ─── Constants ──────────────────────────────────────────────
-const SINS: SinType[] = ["wrath", "sloth", "greed", "envy", "pride", "lust", "gluttony"];
 const SIN_COLORS: Record<SinType, string> = {
   wrath: "#ef4444", sloth: "#a855f7", greed: "#eab308",
   envy: "#10b981", pride: "#f0f0f0", lust: "#ec4899", gluttony: "#b45309",
-};
-const SIN_LABELS: Record<SinType, string> = {
-  wrath: "Wrath", sloth: "Sloth", greed: "Greed",
-  envy: "Envy", pride: "Pride", lust: "Lust", gluttony: "Gluttony",
 };
 
 // Rank tiers (same as Profile.tsx for consistency)

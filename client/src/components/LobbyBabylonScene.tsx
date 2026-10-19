@@ -23,6 +23,7 @@ export default function LobbyBabylonScene({ className = "" }: LobbyBabylonSceneP
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<any>(null);
   const disposed = useRef(false);
+  const teardownRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,8 +34,32 @@ export default function LobbyBabylonScene({ className = "" }: LobbyBabylonSceneP
     let scene: any;
 
     (async () => {
-      const BABYLON = await import("@babylonjs/core");
+      // Subpath imports, not the "@babylonjs/core" barrel: the barrel pulls
+      // the entire engine into the bundle (this and CardImpactVFX were the
+      // only two barrel importers, and they made the babylon chunk ~6.8MB).
+      const [
+        { Engine },
+        { Scene },
+        { ArcRotateCamera },
+        { HemisphericLight, PointLight },
+        { MeshBuilder },
+        { StandardMaterial },
+        { Color3, Color4, Vector3 },
+        { ParticleSystem },
+        { GlowLayer },
+      ] = await Promise.all([
+        import("@babylonjs/core/Engines/engine"),
+        import("@babylonjs/core/scene"),
+        import("@babylonjs/core/Cameras/arcRotateCamera"),
+        import("@babylonjs/core/Lights"),
+        import("@babylonjs/core/Meshes/meshBuilder"),
+        import("@babylonjs/core/Materials/standardMaterial"),
+        import("@babylonjs/core/Maths/math"),
+        import("@babylonjs/core/Particles/particleSystem"),
+        import("@babylonjs/core/Layers/glowLayer"),
+      ]);
       if (disposed.current) return;
+      const BABYLON = { Engine, Scene, ArcRotateCamera, HemisphericLight, PointLight, MeshBuilder, StandardMaterial, Color3, Color4, Vector3, ParticleSystem, GlowLayer };
 
       const isMobile = window.innerWidth < 768;
 
@@ -46,7 +71,9 @@ export default function LobbyBabylonScene({ className = "" }: LobbyBabylonSceneP
         adaptToDeviceRatio: true,
       });
       engineRef.current = engine;
-      if (isMobile) engine.setHardwareScalingLevel(2);
+      // Same render-scale policy as the board backdrop: it's a fogged,
+      // glow-blurred background, so full Retina resolution is wasted work.
+      engine.setHardwareScalingLevel(isMobile ? 2 : Math.max(1.25, (window.devicePixelRatio || 1) / 1.5));
 
       // Scene
       scene = new BABYLON.Scene(engine);
@@ -318,16 +345,51 @@ export default function LobbyBabylonScene({ className = "" }: LobbyBabylonSceneP
         (innerRing.material as any).alpha = 0.2 + Math.sin(time * 0.8 + 1) * 0.08;
       });
 
-      // Render loop
-      engine.runRenderLoop(() => scene.render());
+      // Render loop — mirrors GameBoardBabylonScene: ~30fps driven by our
+      // own rAF so Babylon's deltaTime stays real, paused while the tab is
+      // hidden, and a settled still frame for reduced-motion users.
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+      const settleUntil = performance.now() + 1500;
+      let rafId = 0;
+      let loopTick = 0;
+      const drawFrame = () => {
+        engine.beginFrame();
+        scene.render();
+        engine.endFrame();
+      };
+      const loop = () => {
+        rafId = requestAnimationFrame(loop);
+        loopTick++;
+        if (reduceMotion) {
+          drawFrame();
+          if (performance.now() > settleUntil && loopTick > 3) stopLoop();
+          return;
+        }
+        if (loopTick % 2 === 0) drawFrame();
+      };
+      const startLoop = () => { if (!rafId) rafId = requestAnimationFrame(loop); };
+      const stopLoop = () => { cancelAnimationFrame(rafId); rafId = 0; };
+      startLoop();
 
-      // Resize
-      const onResize = () => engine.resize();
+      const onResize = () => { engine.resize(); if (!rafId) drawFrame(); };
+      const onVisibility = () => {
+        if (document.hidden) stopLoop();
+        else if (!reduceMotion) startLoop();
+      };
       window.addEventListener("resize", onResize);
+      document.addEventListener("visibilitychange", onVisibility);
+      // Cleanup runs outside this async block; this listener used to leak.
+      teardownRef.current = () => {
+        stopLoop();
+        window.removeEventListener("resize", onResize);
+        document.removeEventListener("visibilitychange", onVisibility);
+      };
     })();
 
     return () => {
       disposed.current = true;
+      teardownRef.current?.();
+      teardownRef.current = null;
       if (engine) {
         engine.stopRenderLoop();
         engine.dispose();

@@ -11,12 +11,10 @@
 import { memo, useMemo } from "react";
 import {
   CardDefinition,
-  CardEffect,
   CompoundPattern,
   getCompoundTickValue,
   STARTING_HP,
   MAX_ROUNDS,
-  COMPOUND_TICKS,
 } from "@shared/gameTypes";
 
 interface CardValueCalcProps {

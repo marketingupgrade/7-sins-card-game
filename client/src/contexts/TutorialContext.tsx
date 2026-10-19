@@ -10,13 +10,12 @@
  * way to restart it after dismissal.
  */
 
-import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useRef, type ReactNode } from "react";
 import {
   type TutorialPage,
   type TutorialStep,
   getStepsForPage,
   getGlobalStepIndex,
-  ALL_TUTORIAL_STEPS,
   TOTAL_STEPS,
 } from "@/lib/tutorialSteps";
 

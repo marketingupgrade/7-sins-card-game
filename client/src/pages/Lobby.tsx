@@ -12,22 +12,40 @@ import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import "@/lib/reducedMotion";
 import { useLocation, useParams } from "wouter";
-import { Copy, Check, Bot, Play, Crown, ArrowLeft, Users, Lock, Timer, Sparkles, MessageSquare } from "lucide-react";
+import {
+  Copy,
+  Check,
+  Bot,
+  Play,
+  Crown,
+  ArrowLeft,
+  Users,
+  Lock,
+  Timer,
+  Sparkles,
+  MessageSquare,
+} from "lucide-react";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
 import FactionUnlockCelebration from "@/components/FactionUnlockCelebration";
-import { useFactionUnlocks, UNLOCK_THRESHOLD, LOCKED_FACTIONS } from "@/hooks/useFactionUnlocks";
+import { useFactionUnlocks, UNLOCK_THRESHOLD } from "@/hooks/useFactionUnlocks";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";
 import { soundEngine } from "@/lib/soundEngine";
 import { musicEngine } from "@/lib/musicEngine";
 import { usePlayerId } from "@/hooks/usePlayerId";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { chooseSin, startGame, getGameState, setCustomDeck, setTurnTimer, setAISettings } from "@/lib/gameEngine";
-import { getDeckForSin, ALL_CARDS } from "@shared/cardData";
+import {
+  chooseSin,
+  startGame,
+  getGameState,
+  setCustomDeck,
+  setTurnTimer,
+  setAISettings,
+} from "@/lib/gameEngine";
 import { addBot, botChooseSin, isBot as checkIsBot } from "@/lib/botEngine";
 import { getClientSupabase } from "@shared/supabaseClient";
 import { useNarrator } from "@/hooks/useNarrator";
-import QuickStartModal, { useQuickStartNeeded } from "@/components/QuickStartModal";
+import QuickStartModal from "@/components/QuickStartModal";
 import type { GameState, PlayerState, SinType } from "@shared/gameTypes";
 import { PASSIVE_INFO, FACTION_SWOT, TIMER_OPTIONS, DEFAULT_TURN_TIMER } from "@shared/gameTypes";
 import { usePageMeta } from "@/hooks/usePageMeta";
@@ -195,7 +213,7 @@ export default function Lobby() {
   const [isStarting, setIsStarting] = useState(false);
   const [isAddingBot, setIsAddingBot] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { displayedText, addMessage, addRandomLine } = useNarrator();
+  const { displayedText, addMessage } = useNarrator();
   const { setCurrentPage } = useTutorial();
   const factionUnlocks = useFactionUnlocks();
   const [showDeckPicker, setShowDeckPicker] = useState(false);

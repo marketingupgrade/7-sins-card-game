@@ -29,7 +29,7 @@
  *   gluttony_devourer_energy: 1.585
  *   greed_tax_tick: 2
  */
-import type { CardDefinition, SinType, CompoundPattern, EffectType, TargetMode, CardTier } from "./gameTypes";
+import type { CardDefinition, SinType } from "./gameTypes";
 import { getBossCardById } from "./bossCards";
 // ═══════════════════════════════════════════════════════════════
 // WRATH — 60 cards

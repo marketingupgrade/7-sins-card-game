@@ -17,7 +17,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { trpc } from "@/lib/trpc";
-import type { GameState, SinType } from "@shared/gameTypes";
+import type { GameState } from "@shared/gameTypes";
 
 interface UseAINarratorOptions {
   gameId: string | null;

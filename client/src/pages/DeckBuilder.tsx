@@ -17,14 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ALL_CARDS } from "@shared/cardData";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { SIN_ARCHETYPE_ICONS, getEffectIconUrl } from "@/lib/iconUtils";
-import {
-  CardDefinition,
-  SinType,
-  CardTier,
-  EffectType,
-  CompoundPattern,
-  getCompoundTickValue,
-} from "@shared/gameTypes";
+import { CardDefinition, SinType, CardTier, CompoundPattern, getCompoundTickValue } from "@shared/gameTypes";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { getCardTargetMode } from "@/lib/targetModeUtils";
 import { STRATEGIES, autoFillByStrategy, type StrategyType } from "@/lib/deckStrategies";
@@ -1125,7 +1118,6 @@ export default function DeckBuilder() {
   const [showDeckPanel, setShowDeckPanel] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<string | null>(null);
-  const [isLoadingDecks, setIsLoadingDecks] = useState(false);
   const [detailCard, setDetailCard] = useState<CardDefinition | null>(null);
   const deckPanelRef = useRef<HTMLDivElement>(null);
 
@@ -1159,7 +1151,6 @@ export default function DeckBuilder() {
   // Load saved decks on mount
   useEffect(() => {
     if (user) {
-      setIsLoadingDecks(true);
       trpcQuery("deck.list", { supabaseUserId: user.id })
         .then((decks: any[]) => {
           setSavedDecks(
@@ -1175,8 +1166,7 @@ export default function DeckBuilder() {
         })
         .catch(() => {
           setSavedDecks(loadLocalDecks());
-        })
-        .finally(() => setIsLoadingDecks(false));
+        });
     } else {
       setSavedDecks(loadLocalDecks());
     }
@@ -1270,7 +1260,6 @@ export default function DeckBuilder() {
 
   // Strategy auto-fill
   const [showStrategyPicker, setShowStrategyPicker] = useState(false);
-  const [lastStrategy, setLastStrategy] = useState<StrategyType | null>(null);
   const strategyPickerRef = useRef<HTMLDivElement>(null);
 
   // Close strategy picker on click outside
@@ -1289,7 +1278,6 @@ export default function DeckBuilder() {
     const toAdd = autoFillByStrategy(factionCards, deckCardIds, strategy, MAX_DECK_SIZE);
     if (toAdd.length > 0) {
       setDeckCardIds((prev) => [...prev, ...toAdd]);
-      setLastStrategy(strategy);
       setSaveMessage(`${STRATEGIES.find(s => s.type === strategy)?.label} strategy applied! ${toAdd.length} cards added.`);
       setTimeout(() => setSaveMessage(null), 3000);
     }

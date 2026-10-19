@@ -13,13 +13,7 @@
 
 import { memo, useMemo } from "react";
 import { motion } from "framer-motion";
-import {
-  ActiveEffect,
-  PlayerState,
-  SinType,
-  getCompoundTickValue,
-  CompoundPattern,
-} from "@shared/gameTypes";
+import { ActiveEffect, PlayerState, getCompoundTickValue, CompoundPattern } from "@shared/gameTypes";
 
 interface ActiveEffectsDashboardProps {
   player: PlayerState;

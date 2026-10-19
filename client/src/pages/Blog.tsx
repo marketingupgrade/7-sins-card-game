@@ -6,12 +6,12 @@
  * Wikipedia-style internal linking between posts for maximum SEO value.
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useSearch } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, ChevronLeft, ChevronRight, BookOpen, Filter } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, BookOpen } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   "game-guides": "Game Guides",

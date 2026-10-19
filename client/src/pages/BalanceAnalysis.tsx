@@ -13,8 +13,6 @@ import { useState, memo, useCallback, lazy, Suspense } from "react";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import EmberField from "@/components/EmberField";
-import PageTransition from "@/components/PageTransition";
-import ScrollReveal from "@/components/ScrollReveal";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 /* Lazy-load the discussion thread to keep initial bundle lean */

@@ -7,7 +7,7 @@
  */
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useRef, useEffect, useState, useCallback } from "react";
+import { useMemo, useRef, useEffect, useState } from "react";
 import { CARD_MAP } from "@shared/cardData";
 import { CARD_ART_URLS } from "@/lib/cardArtUrls";
 import { FACTION_PORTRAITS } from "@/lib/factionPortraits";

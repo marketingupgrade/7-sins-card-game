@@ -13,7 +13,17 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { useTutorial } from "@/contexts/TutorialContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation, Link } from "wouter";
-import { Users, Bot, GraduationCap, ChevronLeft, ChevronRight, BookOpen, LogIn, Swords, Github } from "lucide-react";
+import {
+  Users,
+  Bot,
+  GraduationCap,
+  ChevronLeft,
+  ChevronRight,
+  BookOpen,
+  LogIn,
+  Swords,
+  Github,
+} from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/AuthContext";
 import { ICON_URLS } from "@/lib/assetUrls";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
@@ -22,7 +32,6 @@ import type { SinType } from "@shared/gameTypes";
 // HeroBabylonScene removed from homepage for performance (Babylon.js = 3MB+ bundle)
 // The EmberField CSS particle system provides the atmospheric background instead
 import EmberField from "@/components/EmberField";
-import PageTransition from "@/components/PageTransition";
 import ScrollReveal from "@/components/ScrollReveal";
 import CampaignContinueTile from "@/components/CampaignContinueTile";
 // Code-split. The scroll chapters are eleven sections' worth of client JS
@@ -32,7 +41,6 @@ import CampaignContinueTile from "@/components/CampaignContinueTile";
 // gzipped. Do not "tidy" this into a static import.
 const HomeScrollChapters = lazy(() => import("@/components/HomeScrollChapters"));
 import { usePlayerId } from "@/hooks/usePlayerId";
-import { useFactionUnlocks } from "@/hooks/useFactionUnlocks";
 // Dynamic import for code splitting - defers cardData (90KB) + supabase from initial load
 const lazyGameEngine = () => import("@/lib/gameEngine");
 // Dynamic imports for audio engines - only needed after user interaction
@@ -118,8 +126,7 @@ const SIN_HEROES: SinHeroData[] = [
 
 export default function Home() {
   const playerId = usePlayerId();
-  const { startTutorial, hasCompleted: tutorialCompleted, isActive: tutorialActive, setCurrentPage } = useTutorial();
-  const factionUnlocks = useFactionUnlocks(); // kept for tutorial context
+  const { setCurrentPage } = useTutorial();
   const { user: authUser, isLoading: authLoading } = useSupabaseAuth();
 
   useEffect(() => { setCurrentPage("home"); }, [setCurrentPage]);

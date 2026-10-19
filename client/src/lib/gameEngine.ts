@@ -38,7 +38,6 @@ import {
   GREED_TAX_PCT,
   GREED_TAX_TICK,
   ENVY_JEALOUSY_PCT,
-  PRIDE_HUBRIS_MULT,
   LUST_TEMPTATION_PCT,
   GLUTTONY_DEVOURER_ENERGY,
   CONSUME_ENERGY_REFUND,
@@ -299,6 +298,12 @@ export async function startGame(gameId: string): Promise<void> {
  * in game_players.locked_cards and games.locked_plays.
  * Once all alive players lock in, resolution begins automatically.
  */
+/** Games this browser is currently resolving (see lockInCards). */
+const resolvingGames = new Set<string>();
+export function isResolvingLocally(gameId: string): boolean {
+  return resolvingGames.has(gameId);
+}
+
 export async function lockInCards(
   gameId: string,
   playerId: string,
@@ -428,8 +433,16 @@ export async function lockInCards(
         consumedThisRound: gp.consumed_this_round ?? false,
       }));
 
-      // Resolve all locked plays
-      await resolveLockedPlays(gameId);
+      // Resolve all locked plays. Flagged so useGameState's stuck-phase
+      // watchdog leaves this game alone while we're still writing it —
+      // resolution is many sequential round trips and can outlast the
+      // watchdog's timeout on a slow connection.
+      resolvingGames.add(gameId);
+      try {
+        await resolveLockedPlays(gameId);
+      } finally {
+        resolvingGames.delete(gameId);
+      }
     } else {
       // Another client already started resolution — skip
       console.log("[lockInCards] Resolution already in progress, skipping");

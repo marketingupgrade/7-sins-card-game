@@ -23,18 +23,7 @@
 import { useState, useMemo } from "react";
 import { Link } from "wouter";
 import { trpc } from "@/lib/trpc";
-import {
-  BookOpen,
-  Eye,
-  Crown,
-  Sword,
-  Sparkles,
-  Scale,
-  Filter,
-  ChevronRight,
-  Scroll,
-  ImageIcon,
-} from "lucide-react";
+import { Eye, Crown, Sword, Sparkles, Scale, Filter, ChevronRight, Scroll } from "lucide-react";
 import { usePageMeta } from "@/hooks/usePageMeta";
 
 // ---- Rarity Config ----

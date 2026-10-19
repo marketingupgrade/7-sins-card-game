@@ -14,7 +14,6 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useParams } from "wouter";
 import { trpc } from "@/lib/trpc";
 import {
-  ChevronRight,
   Download,
   Share2,
   Swords,
@@ -62,13 +61,6 @@ const RARITY_GLOW: Record<string, string> = {
   rare: "text-blue-400",
   epic: "text-purple-400",
   legendary: "text-amber-400",
-};
-
-const RARITY_BORDER_COLOR: Record<string, string> = {
-  common: "border-zinc-700/30",
-  rare: "border-blue-500/30",
-  epic: "border-purple-500/40",
-  legendary: "border-amber-500/50",
 };
 
 const SIN_COLORS: Record<string, string> = {
@@ -179,7 +171,6 @@ export default function ChronicleView() {
   const civConfig = CIV_CONFIG[chronicle.civilization_type] || CIV_CONFIG.balanced;
   const CivIcon = civConfig.icon;
   const rarityColor = RARITY_GLOW[chronicle.rarity_tier] || "";
-  const rarityBorder = RARITY_BORDER_COLOR[chronicle.rarity_tier] || "";
   const playerFactions = Array.isArray(chronicle.player_factions) ? chronicle.player_factions : [];
   const hasCoverArt = !!chronicle.cover_image_url;
 

@@ -16,9 +16,9 @@
  * Shows a subtle indicator on first use.
  */
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowUpDown, Zap, Layers, Sparkles, X } from "lucide-react";
+import { ArrowUpDown, Zap, Layers, Sparkles } from "lucide-react";
 import type { CardDefinition } from "@shared/gameTypes";
 
 export type SortMode = "default" | "cost" | "type" | "recommended";
@@ -75,7 +75,6 @@ export default function HandSorter({
   if (!isMyTurn) return null;
 
   const currentOption = SORT_OPTIONS.find(o => o.mode === sortMode) || SORT_OPTIONS[0];
-  const CurrentIcon = currentOption.icon;
 
   return (
     <div className="relative">

@@ -217,28 +217,6 @@ function bossDeck(
 
 // ─── Stub builder (kept for future stubbed missions) ─────────────
 
-function stub(id: string, sin: SinType, act: 1 | 2 | 3, title: string, hook: string): CampaignMission {
-  return {
-    id,
-    sin,
-    act,
-    title,
-    hook,
-    intro: "(Coming soon — this scenario hasn't been written yet.)",
-    outro: "",
-    defeatLine: "",
-    playerDeck: playerStarterDeck(sin),
-    boss: {
-      name: "TBD",
-      sin,
-      epithet: "TBD",
-      deck: playerStarterDeck(sin),
-    },
-    unlockedBy: act === 1 ? null : `${sin}_${act - 1}`,
-    comingSoon: true,
-  };
-}
-
 // ─── Wrath: The Forge / The Berserker / The Apostate ─────────────
 
 const WRATH_ACT_1: CampaignMission = {

@@ -5,7 +5,7 @@
  * Filter by faction, tier, effect type, compound pattern, and search by name.
  * Click a card to see its full details in a modal.
  */
-import { useState, useMemo, useCallback, memo, lazy, Suspense } from "react";
+import { useState, useMemo, useCallback, memo } from "react";
 import { Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { ALL_CARDS } from "@shared/cardData";

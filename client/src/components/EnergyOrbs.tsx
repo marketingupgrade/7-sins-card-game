@@ -19,7 +19,6 @@ const EnergyOrbs: React.FC<EnergyOrbsProps> = ({
   sinColor, 
   bonusEnergy = 0 
 }) => {
-  const totalOrbs = Math.max(max, current + bonusEnergy);
 
   return (
     <div className="flex items-center gap-0.5">

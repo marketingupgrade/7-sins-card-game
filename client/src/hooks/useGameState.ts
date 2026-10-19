@@ -3,14 +3,14 @@
  *
  * Subscribes to Supabase Realtime channels for live game updates.
  * Calls the client-side game engine directly (no tRPC/server needed).
- * Includes a self-healing watchdog that detects stuck "round_end" states
- * and forces the transition to "selection" after a timeout.
+ * Includes a self-healing watchdog that rescues a game stuck in
+ * "round_end"/"resolution" after a period with no progress.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getClientSupabase } from "../../../shared/supabaseClient";
 import { GameState } from "../../../shared/gameTypes";
-import { getGameState } from "../lib/gameEngine";
+import { getGameState, isResolvingLocally } from "../lib/gameEngine";
 
 // How long to wait in round_end before self-healing (ms)
 const STUCK_ROUND_END_TIMEOUT = 15000;
@@ -22,8 +22,7 @@ export function useGameState(gameId: string | null) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const channelRef = useRef<any>(null);
-  const roundEndTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPhaseRef = useRef<string | null>(null);
+  const lastProgressAtRef = useRef(Date.now());
   const lastStateJsonRef = useRef<string>("");
 
   // Fetch game state
@@ -37,6 +36,7 @@ export function useGameState(gameId: string | null) {
       const json = JSON.stringify(state);
       if (json !== lastStateJsonRef.current) {
         lastStateJsonRef.current = json;
+        lastProgressAtRef.current = Date.now();
         setGameState(state);
       }
       setError(null);
@@ -48,68 +48,50 @@ export function useGameState(gameId: string | null) {
     }
   }, [gameId]);
 
-  // Self-healing watchdog: detect stuck round_end / resolution phases
+  // Self-healing watchdog: rescue a game stuck in round_end / resolution
+  // (e.g. the resolving client closed its tab mid-round).
+  //
+  // "Stuck" means NO PROGRESS for the timeout, not "in this phase for the
+  // timeout". Resolution is many sequential DB writes and on a slow
+  // connection legitimately takes longer than 15s; the old phase-entry
+  // timer fired on the very client still resolving, forced the game back
+  // to selection, cleared everyone's sealed cards, and let the in-flight
+  // resolution keep writing over it — a ~15s stall and a half-applied round.
+  // Now: never heal a game this browser is resolving, and any observed
+  // state change resets the clock.
   useEffect(() => {
-    if (!gameState || !gameId) return;
-
-    const phase = gameState.turnPhase;
-    const status = gameState.status;
-
-    // Only watch active games
-    if (status !== "active") {
-      if (roundEndTimerRef.current) {
-        clearTimeout(roundEndTimerRef.current);
-        roundEndTimerRef.current = null;
-      }
-      lastPhaseRef.current = phase;
-      return;
-    }
-
-    // If we entered round_end or resolution, start the watchdog timer
-    if ((phase === "round_end" || phase === "resolution") && lastPhaseRef.current !== phase) {
-      // Phase just changed to round_end/resolution — start countdown
-      if (roundEndTimerRef.current) clearTimeout(roundEndTimerRef.current);
-      roundEndTimerRef.current = setTimeout(async () => {
-        console.warn(`[GameState] Self-healing: game stuck in "${phase}" for ${STUCK_ROUND_END_TIMEOUT / 1000}s, forcing transition to selection`);
-        try {
-          const sb = getClientSupabase();
-          // Force transition to selection
-          await sb.from("games").update({
-            turn_phase: "selection",
-            locked_plays: [],
-          }).eq("id", gameId);
-          // Clear locked_cards on all players
+    const phase = gameState?.turnPhase;
+    const watching = !!gameId && gameState?.status === "active" && (phase === "round_end" || phase === "resolution");
+    if (!watching) return;
+    lastProgressAtRef.current = Date.now();
+    const iv = setInterval(async () => {
+      if (isResolvingLocally(gameId!)) { lastProgressAtRef.current = Date.now(); return; }
+      if (Date.now() - lastProgressAtRef.current < STUCK_ROUND_END_TIMEOUT) return;
+      clearInterval(iv);
+      console.warn(`[GameState] Self-healing: game stuck in "${phase}" with no progress for ${STUCK_ROUND_END_TIMEOUT / 1000}s, forcing transition to selection`);
+      try {
+        const sb = getClientSupabase();
+        // Compare-and-swap on the phase so we never clobber a round that
+        // moved on while we were deciding.
+        const { data: healed } = await sb.from("games").update({
+          turn_phase: "selection",
+          locked_plays: [],
+        }).eq("id", gameId!).eq("turn_phase", phase!).select("id").maybeSingle();
+        if (healed) {
           const { data: players } = await sb
             .from("game_players")
             .select("id")
-            .eq("game_id", gameId);
-          if (players) {
-            for (const p of players) {
-              await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
-            }
+            .eq("game_id", gameId!);
+          for (const p of players ?? []) {
+            await sb.from("game_players").update({ locked_cards: [] }).eq("id", p.id);
           }
-          // Refetch to update UI
-          fetchState();
-        } catch (e) {
-          console.error("[GameState] Self-healing failed:", e);
         }
-      }, STUCK_ROUND_END_TIMEOUT);
-    } else if (phase !== "round_end" && phase !== "resolution") {
-      // Phase moved away from round_end/resolution — cancel watchdog
-      if (roundEndTimerRef.current) {
-        clearTimeout(roundEndTimerRef.current);
-        roundEndTimerRef.current = null;
+        fetchState();
+      } catch (e) {
+        console.error("[GameState] Self-healing failed:", e);
       }
-    }
-
-    lastPhaseRef.current = phase;
-
-    return () => {
-      if (roundEndTimerRef.current) {
-        clearTimeout(roundEndTimerRef.current);
-        roundEndTimerRef.current = null;
-      }
-    };
+    }, 2000);
+    return () => clearInterval(iv);
   }, [gameState?.turnPhase, gameState?.status, gameId, fetchState]);
 
   // Initial load

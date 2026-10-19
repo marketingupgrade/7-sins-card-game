@@ -12,12 +12,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "wouter";
 import { useEffect, useMemo, useState, lazy, Suspense } from "react";
-import { RotateCcw, BookOpen, Loader2, Download } from "lucide-react";
+import { RotateCcw, BookOpen, Loader2 } from "lucide-react";
 import PostGameAnalysis from "./PostGameAnalysis";
 import TypewriterText from "./TypewriterText";
 import { trpc } from "@/lib/trpc";
 import { ICON_URLS } from "@/lib/assetUrls";
-import type { PlayerState, GameLogEntry, SinType } from "@shared/gameTypes";
+import type { PlayerState, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
 import { getGameLog } from "@/lib/gameEngine";
 import { SIN_ARCHETYPE_ICONS } from "@/lib/iconUtils";
@@ -324,7 +324,7 @@ function StatCard({ icon, value, label, color, delay }: {
 
 function ChronicleSection({ gameId, sinColor, showContent }: { gameId: string; sinColor: string; showContent: boolean }) {
   const [, setLocation] = useLocation();
-  const { data: chronicle, isLoading } = trpc.game.getChronicle.useQuery(
+  const { data: chronicle } = trpc.game.getChronicle.useQuery(
     { gameId },
     {
       refetchInterval: (query) => {
@@ -507,7 +507,6 @@ export function GameOverScreen({ players, winnerId, currentPlayerId, currentRoun
   const currentPlayer = players.find((p) => p.id === currentPlayerId);
   const [logEntries, setLogEntries] = useState<any[]>([]);
   const [showContent, setShowContent] = useState(false);
-  const [showShareMenu, setShowShareMenu] = useState(false);
   const [copiedToClipboard, setCopiedToClipboard] = useState(false);
 
   const mySin = (currentPlayer?.chosenSin || 'wrath') as SinType;

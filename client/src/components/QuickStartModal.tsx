@@ -8,7 +8,7 @@
 
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ChevronRight, ChevronLeft, Heart, Zap, Layers, Crown, Swords, Skull, Sparkles } from "lucide-react";
+import { X, ChevronRight, ChevronLeft, Heart, Zap, Crown, Swords, Skull, Sparkles } from "lucide-react";
 
 const STORAGE_KEY = "7sins_quickstart_seen";
 

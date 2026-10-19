@@ -15,10 +15,10 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useMemo } from "react";
-import { ChevronDown, ChevronUp, Lightbulb, AlertTriangle, TrendingUp, Zap, Target, Shield, Swords } from "lucide-react";
+import { ChevronDown, Lightbulb, AlertTriangle, TrendingUp, Zap, Target, Shield, Swords } from "lucide-react";
 import type { PlayerState, SinType } from "@shared/gameTypes";
 import { CARD_MAP } from "@shared/cardData";
-import { PASSIVE_INFO, MAX_ENERGY, MAX_ROUNDS } from "@shared/gameTypes";
+import { PASSIVE_INFO, MAX_ROUNDS } from "@shared/gameTypes";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -133,8 +133,6 @@ function analyzeGame(
   }
 
   // ─── 3. HP Analysis ───
-  const hpLost = me.maxHp - me.currentHp;
-  const hpPct = me.currentHp / me.maxHp;
 
   if (!me.isAlive && currentRound <= 12) {
     tips.push({

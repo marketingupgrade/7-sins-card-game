@@ -13,7 +13,7 @@
 
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-import type { GameState, PlayerState, SinType, LockedPlay } from "../shared/gameTypes";
+import type { GameState, PlayerState, SinType } from "../shared/gameTypes";
 import { getCardById } from "../shared/cardData";
 import { NARRATOR_LINES } from "../shared/cardData";
 

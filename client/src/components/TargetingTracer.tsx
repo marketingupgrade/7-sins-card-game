@@ -8,18 +8,11 @@
  * endpoint, and pulsing source/target nodes.
  */
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { SinType } from "@shared/gameTypes";
 import { getSinHexColor } from "@/lib/sinColors";
 
 /* ── Helpers ─────────────────────────────────────────────── */
-
-function hexToRgba(hex: string, alpha: number): string {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 /** Lighten a hex color by mixing with white */
 function lightenHex(hex: string, amount: number): string {
@@ -57,7 +50,6 @@ export default function TargetingTracer({
   const sourceRect = useRef({ x: 0, y: 0 });
   const targetRect = useRef({ x: 0, y: 0 });
   const timeRef = useRef(0);
-  const [, forceUpdate] = useState(0);
 
   const factionHex = getSinHexColor(sin);
   const factionLight = lightenHex(factionHex, 0.5);
