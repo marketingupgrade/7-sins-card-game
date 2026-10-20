@@ -2,6 +2,11 @@
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
+/* Game board layout switch: the full board needs width AND height. A
+   landscape phone (e.g. 844×390) is "md" by width alone, but no desktop
+   board fits in 390px of height — it gets the phone layout instead.
+   Keep in sync with useIsMobile(). */
+@custom-variant board (@media (min-width: 768px) and (min-height: 540px));
 
 /* ─── Self-hosted fonts (eliminates Google Fonts render-blocking chain) ─── */
 @font-face {

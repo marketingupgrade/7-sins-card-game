@@ -191,7 +191,9 @@ function RoundEndPromptInner({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
-          className={`absolute inset-0 z-50 flex items-center justify-center ${isMobile ? 'px-4' : ''}`}
+          // Mobile: its own screen layer. It used to fill the battle overview,
+          // which on small phones can shrink to almost nothing.
+          className={`${isMobile ? 'fixed inset-x-0 top-12 bottom-0 px-4' : 'absolute inset-0'} z-50 flex items-center justify-center`}
           style={{ background: 'oklch(0.05 0.02 280 / 0.8)' }}
         >
           <motion.div

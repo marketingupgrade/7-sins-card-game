@@ -12,7 +12,7 @@
 
 import { memo } from "react";
 import { motion } from "framer-motion";
-import { TurnPhase, MAX_ROUNDS } from "@shared/gameTypes";
+import { TurnPhase } from "@shared/gameTypes";
 
 interface TurnPhaseTimelineProps {
   currentPhase: TurnPhase;
@@ -38,34 +38,14 @@ const PHASE_HINTS: Record<TurnPhase, (props: TurnPhaseTimelineProps) => string> 
 };
 
 const TurnPhaseTimeline = memo(function TurnPhaseTimeline(props: TurnPhaseTimelineProps) {
-  const { currentPhase, currentRound } = props;
+  const { currentPhase } = props;
   const phaseIndex = PHASES.findIndex((p) => p.key === currentPhase);
   const hint = PHASE_HINTS[currentPhase](props);
 
   return (
     <div className="w-full max-w-md mx-auto">
-      {/* Round counter */}
-      <div className="flex items-center justify-center gap-2 mb-1.5">
-        <span
-          className="text-[10px] tracking-[0.3em] uppercase"
-          style={{ fontFamily: "var(--font-heading)", color: "oklch(0.5 0.05 80 / 0.7)" }}
-        >
-          Round
-        </span>
-        <span
-          className="text-sm font-black"
-          style={{ fontFamily: "var(--font-heading)", color: "oklch(0.8 0.1 80)" }}
-        >
-          {currentRound}
-        </span>
-        <span
-          className="text-[10px]"
-          style={{ fontFamily: "var(--font-body)", color: "oklch(0.5 0 0 / 0.4)" }}
-        >
-          / {MAX_ROUNDS}
-        </span>
-      </div>
-
+      {/* (No round counter here: the board header already shows "Rite N of
+          20" right beside this, and the duplicate row cost ~20px of height.) */}
       {/* Phase progression bar */}
       <div className="flex items-center gap-1 px-2">
         {PHASES.map((phase, i) => {

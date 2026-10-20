@@ -19,6 +19,8 @@
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import GameCard from "@/components/GameCard";
 import CompoundBalanceSheet from "@/components/CompoundBalanceSheet";
+import FitToBox from "@/components/FitToBox";
+import { useViewportSize } from "@/hooks/useViewportSize";
 import EffectBadge from "@/components/EffectBadge";
 import { useGameState } from "@/hooks/useGameState";
 import { useNarrator } from "@/hooks/useNarrator";
@@ -577,6 +579,25 @@ export default function GameBoard() {
     [myCardsUnsorted, cardSortMode, myPlayer?.currentEnergy, myPlayer?.currentHp, myPlayer?.maxHp, gameState?.currentRound]
   );
 
+  // Desktop hand scale. A full card is 220×340 and the hand row needs
+  // ~400px with hover headroom — fine on a 1440px-tall monitor, but on a
+  // 900px laptop it alone was 45% of the screen. Give it ~34% of the window
+  // height (never below 0.62, where card text stops being legible), and
+  // shrink further only if the hand is wider than the window. Below that
+  // floor the cards fan (overlap) instead of shrinking or scrolling
+  // sideways; the hovered card already lifts above its neighbours.
+  const viewport = useViewportSize();
+  const { handZoom, handOverlap } = useMemo(() => {
+    const n = Math.max(1, myCards.length);
+    const CARD = 228; // 220px card + 8px gap, at zoom 1
+    const byHeight = (viewport.h * 0.34) / 400;
+    const byWidth = (viewport.w - 64) / (n * CARD);
+    const zoom = Math.max(0.62, Math.min(1.15, byHeight, byWidth));
+    const available = (viewport.w - 64) / zoom; // in the hand's own (zoomed) px
+    const overlap = n > 1 ? Math.max(0, (n * CARD - 8 - available) / (n - 1)) : 0;
+    return { handZoom: zoom, handOverlap: Math.ceil(overlap) };
+  }, [viewport.w, viewport.h, myCards.length]);
+
   // A card that leaves the hand (sealed, discarded, burned) unmounts under
   // the cursor, so its mouseleave never fires and the big hover preview
   // would hang on screen for the rest of the round. Drop it here instead.
@@ -953,7 +974,7 @@ export default function GameBoard() {
 
   return (
     <>
-    <div className="h-screen relative overflow-hidden flex flex-col bg-arena noise-overlay">
+    <div className="h-dvh relative overflow-hidden flex flex-col bg-arena noise-overlay">
       {/* Campaign Round-1 boss reveal — fires once per gameId */}
       <CampaignRoundOneOverlay
         gameId={gameId}
@@ -1089,7 +1110,7 @@ export default function GameBoard() {
       )}
 
       {/* Top Bar — Gothic Stone Header (compact on mobile) */}
-      <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1 md:py-3 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
+      <div className="relative z-10 flex items-center justify-between px-2 md:px-4 py-1 md:py-3 [@media(min-width:768px)_and_(max-height:900px)]:py-1.5 border-b-2 border-candle/20 bg-gradient-to-b from-background/80 to-background/40 backdrop-blur-sm" style={{ boxShadow: 'inset 0 -1px 0 oklch(0.75 0.12 70 / 0.15)' }}>
         <div className="flex items-center gap-2 md:gap-4">
           <div className="flex items-center gap-1.5 md:gap-2">
             <img src="https://game-icons.net/icons/ffffff/000000/1x1/lorc/scroll-unfurled.svg" alt="" aria-hidden="true" className="w-3.5 md:w-5 h-3.5 md:h-5 opacity-60" />
@@ -1132,8 +1153,16 @@ export default function GameBoard() {
       </div>
 
       {/* Arena Grid — Gothic Cathedral Interior */}
-      <div className="relative z-10 flex-1 flex flex-col overflow-y-auto overflow-x-hidden">
-        <div className="hidden md:grid flex-1 grid-cols-[minmax(220px,300px)_1fr_minmax(220px,300px)] grid-rows-[auto_1fr_auto] gap-2 p-3">
+      {/* Below the header. Desktop: the arena grid scales to fit whatever
+          height is left (FitToBox), and the action bar + hand are fixed-size
+          rows, so nothing is ever pushed off-screen. Previously this whole
+          column (~1,150px of content at any window size) scrolled inside a
+          box with no visible scrollbar, and on anything shorter than ~1440px
+          the hand and Seal button sat below the fold. Mobile works the same
+          way, with the battle overview as the flexible part. */}
+      <div className="relative z-10 flex-1 min-h-0 flex flex-col overflow-hidden">
+        <FitToBox className="hidden board:block flex-1" minZoom={0.55} maxZoom={1.2}>
+        <div className="grid grid-cols-[minmax(220px,300px)_1fr_minmax(220px,300px)] grid-rows-[auto_auto_auto] gap-2 p-3">
           
           {/* NORTH */}
           <div className="col-start-2 row-start-1 flex justify-center items-start gap-2">
@@ -1168,7 +1197,9 @@ export default function GameBoard() {
           </div>
 
           {/* WEST */}
-          <div className="col-start-1 row-start-2 flex items-center justify-center gap-2">
+          {/* Short windows: all three opponents share the top row, so the
+              arena is two panel-rows tall instead of three. */}
+          <div className="col-start-1 row-start-2 [@media(min-width:768px)_and_(max-height:860px)]:row-start-1 flex items-center [@media(min-width:768px)_and_(max-height:860px)]:items-start justify-center gap-2">
             {opponents.west && (
               <>
                 <DeckPile
@@ -1203,23 +1234,7 @@ export default function GameBoard() {
 
           {/* CENTER — Battle Hub: Ritual Circle + Action Feed + Resolution Reveal */}
           <div className="col-start-2 row-start-2 flex flex-col items-center justify-center relative gap-3">
-            {/* Resolution card reveal overlay. Fixed under the header, not
-                inside this grid cell: in a duel the cell is ~130px tall and
-                the reveal (overflow-hidden) showed as a thin strip. */}
-            {isShowingResolution && cachedLockedPlays.length > 0 && (
-              <div className="fixed inset-x-0 top-28 bottom-0 z-40 pointer-events-none">
-              <Suspense fallback={null}>
-                <ResolutionReveal
-                  lockedPlays={cachedLockedPlays}
-                  players={cachedResolutionPlayers}
-                  currentRound={gameState.currentRound}
-                  isResolving={isShowingResolution}
-                  onComplete={handleResolutionComplete}
-                  onImpact={handleImpact}
-                />
-              </Suspense>
-              </div>
-            )}
+
             {/* End-of-round prompt: View Battle Log or Continue */}
             <Suspense fallback={null}>
               <RoundEndPrompt
@@ -1233,8 +1248,9 @@ export default function GameBoard() {
                 currentPlayerId={playerId}
               />
             </Suspense>
-            {/* Compact ritual circle */}
-            <div className="flex items-center gap-4">
+            {/* Compact ritual circle — decorative (the header already says
+                which rite it is), so it gives way on short windows. */}
+            <div className="flex items-center gap-4 [@media(min-width:768px)_and_(max-height:860px)]:hidden">
               <div className="w-16 h-16 rounded-full border-2 border-candle/30 flex items-center justify-center relative" style={{ background: 'radial-gradient(circle, oklch(0.15 0.02 70 / 0.6), transparent)', boxShadow: '0 0 20px oklch(0.75 0.12 70 / 0.1)' }}>
                 <div
                   className="absolute inset-0 rounded-full border border-candle/10 spin-30s"
@@ -1253,8 +1269,9 @@ export default function GameBoard() {
                 </p>
               </div>
             </div>
-            {/* Inline action feed — shows last 3 actions */}
-            <div className="w-full max-w-xs px-3 py-2 rounded-lg" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.08)' }}>
+            {/* Inline action feed — shows last 3 actions. Hidden on very
+                short windows; the same entries are in the battle log. */}
+            <div className="w-full max-w-xs px-3 py-2 rounded-lg [@media(min-width:768px)_and_(max-height:760px)]:hidden" style={{ background: 'oklch(0.10 0.01 70 / 0.5)', border: '1px solid oklch(0.75 0.12 70 / 0.08)' }}>
               <AnimatePresence mode="popLayout">
                 {actionFeedState.length > 0 ? actionFeedState.slice(-3).map((entry) => (
                   <motion.p
@@ -1278,7 +1295,7 @@ export default function GameBoard() {
           </div>
 
           {/* EAST */}
-          <div className="col-start-3 row-start-2 flex items-center justify-center gap-2">
+          <div className="col-start-3 row-start-2 [@media(min-width:768px)_and_(max-height:860px)]:row-start-1 flex items-center [@media(min-width:768px)_and_(max-height:860px)]:items-start justify-center gap-2">
             {opponents.east && (
               <>
                 <div className="flex flex-col items-center gap-2">
@@ -1344,11 +1361,40 @@ export default function GameBoard() {
             )}
           </div>
         </div>
+        </FitToBox>
+
+        {/* Desktop resolution reveal. Fixed under the header and outside the
+            FitToBox (so it isn't scaled down with the arena): in a duel the
+            centre grid cell is ~130px tall and the reveal used to render as a
+            thin strip inside it. */}
+        {isShowingResolution && cachedLockedPlays.length > 0 && (
+          <div className="hidden board:block fixed inset-x-0 top-24 bottom-0 z-40 pointer-events-none">
+          <Suspense fallback={null}>
+            <ResolutionReveal
+              lockedPlays={cachedLockedPlays}
+              players={cachedResolutionPlayers}
+              currentRound={gameState.currentRound}
+              isResolving={isShowingResolution}
+              onComplete={handleResolutionComplete}
+              onImpact={handleImpact}
+            />
+          </Suspense>
+          </div>
+        )}
 
         {/* Mobile Layout — Marvel Snap / LoR inspired */}
-        <div className="md:hidden flex-1 flex flex-col overflow-hidden">
-          {/* Opponents — larger bars with better touch targets */}
-          <div className="flex flex-col gap-1.5 px-2 pt-2 pb-1">
+        {/* min-h-0: the battle overview below is the flexible part, so it
+            shrinks instead of pushing the action bar and hand off a phone.
+            When even the player bars don't fit (small phones, landscape)
+            this column scrolls on its own; the action bar and hand stay
+            pinned below it. */}
+        <div className="board:hidden flex-1 min-h-0 flex flex-col overflow-y-auto overscroll-contain">
+          {/* Opponents — larger bars with better touch targets. On short
+              (landscape-phone) screens they sit side by side in one row. Both
+              this block and your bar are shrink-0: the battle overview is the
+              only part that gives way, instead of the bars sliding under each
+              other. */}
+          <div className="shrink-0 flex flex-col gap-1.5 px-2 pt-2 pb-1 [@media(max-height:539px)]:flex-row [@media(max-height:539px)]:pt-1 [@media(max-height:539px)]:*:flex-1 [@media(max-height:539px)]:*:min-w-0">
             {[opponents.west, opponents.north, opponents.east].filter(Boolean).map((opp) => (
               <MobilePlayerBar
                 key={opp!.id}
@@ -1376,7 +1422,9 @@ export default function GameBoard() {
             />
             {/* Mobile Resolution Reveal — overlays the battle overview */}
             {isShowingResolution && cachedLockedPlays.length > 0 && (
-              <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
+              // Fixed under the header (not the overview it sits in): the
+              // overview is the part that shrinks on small phones.
+              <div className="fixed inset-x-0 top-12 bottom-0 z-40 flex items-center justify-center" style={{ background: 'oklch(0.05 0.02 280 / 0.85)' }}>
                 <Suspense fallback={null}>
                   <ResolutionReveal
                     lockedPlays={cachedLockedPlays}
@@ -1407,7 +1455,7 @@ export default function GameBoard() {
 
           {/* My player bar */}
           {myPlayer && (
-            <div data-tutorial="player-panel" className="px-2 pb-1">
+            <div data-tutorial="player-panel" className="shrink-0 px-2 pb-1">
               <MobilePlayerBar
                 player={myPlayer}
                 isCurrentTurn={isMyTurn}
@@ -1441,14 +1489,17 @@ export default function GameBoard() {
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-1.5 py-2"
+              // One row on desktop (wrapping on narrow windows): stacked, the
+              // timer / steps / buttons took ~180px of height away from the
+              // arena and hand.
+              className="flex flex-col md:flex-row md:flex-wrap md:justify-center [@media(max-height:539px)]:flex-row [@media(max-height:539px)]:flex-wrap [@media(max-height:539px)]:justify-center items-center gap-1.5 md:gap-x-5 md:gap-y-1 py-2 md:py-1.5 [@media(max-height:539px)]:py-1"
             >
               {/* Turn timer countdown */}
               {turnTimerActive && !hasLockedIn && turnTimerSeconds > 0 && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center gap-2 px-4 py-1.5 rounded-lg mb-1"
+                  className="relative overflow-hidden flex items-center gap-2 px-4 py-1.5 rounded-lg mb-1 md:mb-0"
                   style={{
                     background: turnTimerSeconds <= 3
                       ? "oklch(0.45 0.25 30 / 0.3)"
@@ -1508,7 +1559,7 @@ export default function GameBoard() {
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="flex items-center gap-2 text-sm text-candle/50"
+                  className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm whitespace-nowrap text-candle/50 [@media(max-height:539px)]:hidden"
                   style={{ fontFamily: "var(--font-body)" }}
                 >
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-candle/20 text-candle text-xs font-black">1</span>
@@ -1644,9 +1695,10 @@ export default function GameBoard() {
         </div>
 
         {/* Card Hand — Desktop: full cards, Mobile: compact thumbnails */}
-        <div data-tutorial="card-hand" className="px-2 md:px-4 pb-4 md:pb-6 shrink-0 overflow-visible">
-          {/* Sort controls */}
-          <div className="flex justify-center mb-1">
+        <div data-tutorial="card-hand" className="relative px-2 md:px-4 pb-4 md:pb-3 shrink-0 overflow-visible">
+          {/* Sort controls — docked in the hand row's corner on desktop
+              rather than taking a row of their own. */}
+          <div className="flex justify-center mb-1 md:mb-0 md:absolute md:left-4 md:bottom-4 md:z-30">
             <HandSorter
               energy={myPlayer?.currentEnergy ?? 0}
               hp={myPlayer?.currentHp ?? 0}
@@ -1658,16 +1710,10 @@ export default function GameBoard() {
             />
           </div>
           {/* Desktop hand — UX: tighter gap, hover-lift for Fitts's Law proximity */}
-          <div className="hidden md:flex items-end justify-center gap-2 overflow-x-auto pb-4 pt-2 scrollbar-thin" style={{ minHeight: '200px' }}>
-            {myPlayer && (
-              <DeckPile
-                sin={(myPlayer.chosenSin as SinType) || "wrath"}
-                deckSize={myPlayer.deckSize}
-                discardSize={myPlayer.discardSize}
-                handSize={myCards.length}
-                isMyTurn={isMyTurn}
-              />
-            )}
+          {/* Scales with the window (see handZoom). No deck pile here: the
+              same pile already sits beside your panel in the arena, and the
+              duplicate cost ~150px of hand width. */}
+          <div className="hidden board:flex items-end justify-center gap-2 pb-4 pt-6" style={{ zoom: handZoom }}>
             <AnimatePresence>
               {myCards.map((card, i) => (
                 <motion.div
@@ -1688,6 +1734,7 @@ export default function GameBoard() {
                     mass: 0.8,
                     delay: i * 0.06,
                   }}
+                  style={i > 0 && handOverlap ? { marginLeft: -handOverlap } : undefined}
                   className="flex-shrink-0 relative"
                 >
                   <div
@@ -1752,7 +1799,7 @@ export default function GameBoard() {
           </div>
 
           {/* Mobile hand — compact thumbnails */}
-          <div className="md:hidden">
+          <div className="board:hidden">
             <div className="flex items-end gap-1.5 overflow-x-auto pb-1 scrollbar-thin px-2 pr-4" style={{ WebkitOverflowScrolling: 'touch' }}>
               {myPlayer && (
                 <DeckPile

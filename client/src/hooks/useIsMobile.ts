@@ -1,21 +1,24 @@
 import { useState, useEffect } from "react";
 
 /**
- * Returns true when viewport width < 768px (md breakpoint).
- * Uses matchMedia for efficiency (no resize listener spam).
+ * True on phone-sized viewports: narrower than `breakpoint` (768px, the md
+ * breakpoint) OR shorter than `minHeight`. The height test makes landscape
+ * phones (e.g. 844×390) count as mobile — no desktop layout fits in 390px of
+ * height. Matches the `board` variant in index.css.
  */
-export function useIsMobile(breakpoint = 768): boolean {
+export function useIsMobile(breakpoint = 768, minHeight = 540): boolean {
+  const query = `(max-width: ${breakpoint - 1}px), (max-height: ${minHeight - 1}px)`;
   const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth < breakpoint : false
+    typeof window !== "undefined" ? window.matchMedia(query).matches : false
   );
 
   useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const mql = window.matchMedia(query);
     const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
     mql.addEventListener("change", handler);
     setIsMobile(mql.matches);
     return () => mql.removeEventListener("change", handler);
-  }, [breakpoint]);
+  }, [query]);
 
   return isMobile;
 }
